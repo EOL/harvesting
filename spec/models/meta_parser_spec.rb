@@ -1,3 +1,5 @@
+require 'rails_helper'
+
 RSpec.describe MetaParser do
   describe "#parse" do
     # NOTE: we really are reading from an actual file, here. I want to prove
@@ -10,18 +12,19 @@ RSpec.describe MetaParser do
       subject(:parser) { MetaParser.new(resource) }
 
       before(:each) do
-        allow(Table).to receive(:create) { double(Table) }
+        allow(Table).to receive(:create).and_return(double(Table, id: 1),
+          double(Table, id: 2))
         allow(FileLoc).to receive(:create) { double(FileLoc) }
         allow(Field).to receive(:create) { double(Field) }
       end
 
       it "creates a table with the right params" do
-        subject
+        subject.parse
         expect(Table).to have_received(:create).at_least(1).times.with(
           resource_id: 123,
           header_lines: 2,
-          field_sep: ",",
-          line_sep: "\r\n",
+          field_sep: "\\t",
+          line_sep: "\\n",
           utf8: true
         )
       end

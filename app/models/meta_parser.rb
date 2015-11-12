@@ -21,14 +21,19 @@ class MetaParser
   end
 
   def read_table(node)
+    utf8 = node.attributes["encoding"] and
+      node.attributes["encoding"].value == "UTF-8"
+    # Yes, we're forcing actual true/false values here, rather than returning
+    # any non-nil object to represent True.
+    utf8 = utf8 ? true : false
     table = Table.create(
       resource_id: @resource.id,
-      header_lines: node.attributes["ignoreHeaderLines"].value,
+      header_lines: node.attributes["ignoreHeaderLines"].value.to_i,
       field_sep: node.attributes["fieldsTerminatedBy"].value,
       line_sep: node.attributes["linesTerminatedBy"].value,
-      utf8: node.attributes["encoding"].value == "UTF-8"
+      utf8: utf8
     )
-    node.css("files/location").each { |filenode| read_fileloc(table, locnode) }
+    node.css("files/location").each { |locnode| read_fileloc(table, locnode) }
     node.css("field").each { |fieldnode| read_field(table, fieldnode) }
   end
 

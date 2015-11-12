@@ -16,14 +16,14 @@ class InitialSchema < ActiveRecord::Migration
       t.string :acronym, null: false, limit: 16, default: ""
       t.string :short_name, null: false, limit: 32, default: ""
       t.string :url, null: false, default: ""
-      t.text :description, null: false, default: ""
+      t.text :description, null: false
       # links_json used for creating arbitrary pairs of link names/urls:
       t.string :links_json, null: false, default: "{}"
       # auto_publish applies to _all_ resources!
       t.boolean :auto_publish, null: false, default: false
       # not_trusted applies to _all_ resources!
       t.boolean :not_trusted, null: false, default: false
-      t.timestamps
+      t.timestamps, null: false
     end
 
     create_table :resources do |t|
@@ -48,7 +48,7 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :stop_harvesting, null: false, default: false
       t.boolean :has_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
-      t.timestamps
+      t.timestamps, null: false
     end
 
     create_table :harvests do |t|
@@ -58,7 +58,7 @@ class InitialSchema < ActiveRecord::Migration
     end
 
     create_table :errors do |t|
-      t.integer, :harvest_id, null: false
+      t.integer :harvest_id, null: false
       t.string :filename
       t.string :description
       t.text :backtrace
@@ -78,7 +78,7 @@ class InitialSchema < ActiveRecord::Migration
       t.string :body
       t.float :lat
       t.float :long
-      t.timestamps
+      t.timestamps, null: false
     end
 
     create_table :nodes do |t|
@@ -97,7 +97,8 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :node_id, null: false
       t.integer :site_pk, null: false
       t.string :resource_pk
-      t.text :metadata_json, null: false, default: "{}"
+      # Can't have a default, so you should make sure this is at least "{}"
+      t.text :metadata_json, null: false
     end
 
     create_table :measurements do |t|
@@ -111,7 +112,8 @@ class InitialSchema < ActiveRecord::Migration
       t.string :units
       t.string :resource_pk
       t.string :value
-      t.text :metadata_json, null: false, default: "{}"
+      # Can't have a default, so you should make sure this is at least "{}"
+      t.text :metadata_json, null: false
     end
 
     create_table :associations do |t|

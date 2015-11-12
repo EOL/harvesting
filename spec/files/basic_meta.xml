@@ -1,13 +1,16 @@
 <?xml version="1.0"?>
-<archive xmlns="http://rs.tdwg.org/dwc/text/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:        schemaLocation="http://rs.tdwg.org/dwc/text/  http://services.eol.org/schema/dwca/tdwg_dwc_text.xsd">
-  <table encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" ignoreHeaderLines="2"                  rowType="http://eol.org/schema/media/Document">
+<archive xmlns="http://rs.tdwg.org/dwc/text/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://rs.tdwg.org/dwc/text/  http://services.eol.org/schema/dwca/tdwg_dwc_text.xsd">
+  <table encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n"
+    ignoreHeaderLines="2" rowType="http://eol.org/schema/media/Document">
     <files><location>media.txt</location></files>
     <field index="0" term="http://purl.org/dc/terms/identifier"/>
     <field index="1" term="http://rs.tdwg.org/dwc/terms/taxonID"/>
     <field index="2" term="http://purl.org/dc/terms/type"/>
     <field index="3" term="http://rs.tdwg.org/audubon_core/subtype"/>
   </table>
-  <table fieldsTerminatedBy="," linesTerminatedBy="\r\n" ignoreHeaderLines="2"                  rowType="http://rs.tdwg.org/dwc/terms/Taxon">
+  <table fieldsTerminatedBy="," linesTerminatedBy="\r\n" ignoreHeaderLines="2" rowType="http://rs.tdwg.org/dwc/terms/Taxon">
     <files><location>taxa.txt</location></files>
     <field index="0" term="http://rs.tdwg.org/dwc/terms/taxonID"/>
     <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>

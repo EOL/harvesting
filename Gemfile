@@ -10,7 +10,7 @@ gem "jbuilder", "~> 2.0"
 gem "jquery-rails"
 
 # Use mysql as the database for Active Record
-gem "mysql2"
+gem "mysql2", "~> 0.3.18"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
 gem "rails", "4.2.4"
@@ -33,7 +33,7 @@ group :development, :test do
   gem "byebug"
 
   # Testing framework:
-  gem "rspec"
+  gem "rspec-rails", "~> 3"
 end
 
 group :development do
@@ -43,4 +43,3 @@ group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
   gem "web-console", "~> 2.0"
 end
-
