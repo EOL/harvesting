@@ -1,7 +1,7 @@
 # This is really long: sorry. Getting all the inital ideas in one place is, IMO,
 # valuable, though.
 class InitialSchema < ActiveRecord::Migration
-  def up
+  def change
     # NOTE: skipping a "sites" table, because the harvester doesn't really care
     # about that information. It simply needs the ID.
     create_table :partners do |t|
@@ -86,10 +86,13 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :site_pk
       t.integer :parent_id, null: false, default: 0
       t.string :resource_pk
+      # rank is a _normalized_ rank string:
       t.string :rank
+      # original_rank is whatever rank string they actually used:
+      t.string :original_rank
       t.string :name, null: false
-      t.string :remarks # TODO: is this the same as literature_references?
-      t.string :ancestors_json, null: false, default: "{}"
+      # TODO: is this the same as literature_references?
+      t.string :remarks
     end
 
     create_table :traits do |t|
@@ -158,26 +161,7 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :table_id
       t.string :location
     end
-  end
 
-  def down
-    drop_table :partners
-    drop_table :resources
-    drop_table :harvests
-    drop_table :contents
-    drop_table :errors
-    drop_table :nodes
-    drop_table :literature_references
-    drop_table :traits
-    drop_table :references
-    drop_table :data_references
-    drop_table :measurements
-    drop_table :associations
-    drop_table :common_names
-    drop_table :scientific_names
-    drop_table :synonyms
-    drop_table :tables
-    drop_table :fields
-    drop_table :file_locs
+    # TODO: NAMES!
   end
 end
