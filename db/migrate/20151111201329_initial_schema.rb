@@ -107,16 +107,14 @@ class InitialSchema < ActiveRecord::Migration
     create_table :measurements do |t|
       t.integer :trait_id, null: false
       t.integer :resource_id, null: false
-      # Some measurements are measurements of measurements (but not many)
+      # Some measurements are measurements of measurements (but not many), i.e.:
+      # of_taxon = false
       t.integer :parent_id, null: false
-      t.boolean :of_taxon, null: false, default: true
       # predicate AKA "measurementType"
       t.string :predicate
       t.string :units
       t.string :resource_pk
       t.string :value
-      # Can't have a default, so you should make sure this is at least "{}"
-      t.text :metadata_json, null: false
     end
 
     create_table :associations do |t|
