@@ -1,0 +1,12 @@
+{
+"resource_id": "123",
+"headers": {
+"taxon": ["row_type", "id", "scientific_name", "parent_id", "ref_id"],
+"_comment": "we're going to ignore 'agents,' as that was a concept that never panned out. We are keeping contributor information separate here, but we will store it as JSON in the website DB. ...Same with URLs. ",
+"media": ["id", "taxon_id", "type", "subtype", "format", "section", "title", "description", "source_url", "thumbnail_url", "info_url", "derived_from_url", "language", "terms_of_use", "rights", "owner", "bibliographic_citation", "publisher", "contributor", "creator", "iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated", "purl.org/dc/terms/spatial", "www.w3.org/2003/01/geo/wgs84_pos#lat", "www.w3.org/2003/01/geo/wgs84_pos#long", "www.w3.org/2003/01/geo/wgs84_pos#alt", "eol.org/schema/reference/referenceID"],
+}
+"data": [
+["taxon", "T1170", "Trichocoleus delicatulus", "T1257", ""],
+[]
+]
+}

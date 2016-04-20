@@ -65,6 +65,8 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :line
     end
 
+    # I don't know what I was thinking with this. Ignore it. :(
+    # We're not going to store things like this.
     create_table :contents do |t|
       t.integer :resource_id, null: false
       t.integer :partner_id, null: false
