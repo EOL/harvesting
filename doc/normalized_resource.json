@@ -1,12 +1,14 @@
 {
 "resource_id": "123",
 "headers": {
+"media": ["row_type", "id", "taxon_id", "type", "section", "title", "description", "source_url", "language", "source_info", "lat", "long", "alt", "ref_id"],
+"name": ["row_type", "taxon_id", "name", "language", "is_preferred"],
+"ref": ["row_type", "id", "publication_type", "body", "title", "secondary_title", "pages", "page_start", "page_end", "volume", "edition", "publisher", "author_list", "editor_list", "date_created", "language", "url", "doi", "publisher_locality"],
 "taxon": ["row_type", "id", "scientific_name", "parent_id", "ref_id"],
-"_comment": "we're going to ignore 'agents,' as that was a concept that never panned out. We are keeping contributor information separate here, but we will store it as JSON in the website DB. ...Same with URLs. ",
-"media": ["id", "taxon_id", "type", "subtype", "format", "section", "title", "description", "source_url", "thumbnail_url", "info_url", "derived_from_url", "language", "terms_of_use", "rights", "owner", "bibliographic_citation", "publisher", "contributor", "creator", "iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated", "purl.org/dc/terms/spatial", "www.w3.org/2003/01/geo/wgs84_pos#lat", "www.w3.org/2003/01/geo/wgs84_pos#long", "www.w3.org/2003/01/geo/wgs84_pos#alt", "eol.org/schema/reference/referenceID"],
-}
+"trait": ["row_type", "id", "taxon_id", "parent_id", "predicate", "value", "unit", "ref_id", "http://a", "http://bunch", "http://of", "http://urls", "http://specific", "http://to", "http://what", "http://this", "http://resource", "http://gave", "http://us"]
+},
 "data": [
 ["taxon", "T1170", "Trichocoleus delicatulus", "T1257", ""],
-[]
+["trait", "d13C1", "T1170", "", "http://eol.org/schema/terms/d13C", "-16.6", "", "", "http://semanticscience.org/resource/SIO_001109", "", "", "", "", "", "Reid WDK, Wigham BD, McGill RAR, Polunin NVC (2012) Elucidating trophic pathways in benthic deep-sea assemblages of the Mid-Atlantic Ridge north and south of the Charlie-Gibbs Fracture Zone. Mar Ecol Prog Ser 463:89-103. doi:10.3354/meps09863", "", ""]
 ]
 }
