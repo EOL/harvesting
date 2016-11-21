@@ -24,10 +24,12 @@ class InitialSchema < ActiveRecord::Migration
       # not_trusted applies to _all_ resources!
       t.boolean :not_trusted, null: false, default: false
       t.timestamps, null: false
+      # TODO: deafult licensure
+      # TODO: deafult values
     end
 
     create_table :resources do |t|
-      t.integer :site_id, null: false, default: Rails.configuration.site_id
+      t.integer :site_id, null: false
       t.integer :site_pk
       # position for sorting. Lower position means high-priority harvesting
       t.integer :position
@@ -40,6 +42,7 @@ class InitialSchema < ActiveRecord::Migration
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
       t.string :name, null: false
+      t.string :abbr, null: false
       # harvest_from could be a URL or a path; the code must check.
       t.string :harvest_from, null: false
       t.string :pk_url, null: false, default: "$PK"
@@ -49,52 +52,91 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :has_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
       t.timestamps, null: false
+      # TODO: deafult licensure
+      # TODO: deafult values
     end
 
     create_table :harvests do |t|
       t.integer :resource_id, null: false
       t.datetime :created_at
       t.datetime :completed_at
+      t.string :filename
+      t.string :normalized_filename
+      t.string :path
+      t.string :stage # enumeration
+      t.string :file_type
+      t.datetime :started_at
+      t.datetime :finished_at
+      t.timestamps
     end
 
-    create_table :errors do |t|
+    create_table :hlogs do |t|
       t.integer :harvest_id, null: false
-      t.string :filename
-      t.string :description
+      t.string :type # enumeration
+      t.string :message
       t.text :backtrace
       t.integer :line
+      t.datetime :created_at
     end
 
-    # I don't know what I was thinking with this. Ignore it. :(
-    # We're not going to store things like this.
-    create_table :contents do |t|
-      t.integer :resource_id, null: false
-      t.integer :partner_id, null: false
-      t.integer :site_pk
-      t.integer :language_id
-      t.integer :info_item_id
-      t.string :resource_pk
-      # type is a class name, can be complex (i.e.: Image::Map or the like)
-      t.string :type, limit: 32
-      t.string :title
-      t.string :body
-      t.float :lat
-      t.float :long
-      t.timestamps, null: false
-    end
+    # TODO: all of the content. It's a copy/paste, I'm skipping it for now.
 
     create_table :nodes do |t|
       t.integer :resource_id, null: false
+      t.integer :page_id, comment: "null means unassigned, of course"
       t.integer :site_pk
       t.integer :parent_id, null: false, default: 0
+      t.integer :normalized_name_id, null: false
       t.string :resource_pk
-      # rank is a _normalized_ rank string:
+      # rank is a _normalized_ rank string... really an enumeration
       t.string :rank
       # original_rank is whatever rank string they actually used:
       t.string :original_rank
-      t.string :name, null: false
       # TODO: is this the same as literature_references?
       t.string :remarks
+    end
+
+    create_table :names do |t|
+      t.integer :resource_id, null: false
+      t.integer :node_id, null: false
+      t.integer :normalized_name_id
+      t.string :verbatim
+      t.string :warnings
+      t.string :genus
+      t.string :specific_epithet
+      t.string :authorship
+      t.integer :year
+      t.boolean :hybrid
+      t.boolean :surrogate
+      t.boolean :virus
+    end
+
+    # This gives us a way to say "these names are considered 'the same'."
+    create_table :normalized_names do |t|
+      t.string :string
+      t.string :canonical
+    end
+
+    create_table :traits do |t|
+      t.integer :resource_id, null: false
+      t.integer :node_id, null: false
+      t.integer :site_pk, null: false
+      t.string :resource_pk
+      # Can't have a default, so you should make sure this is at least "{}"
+      t.text :metadata_json, null: false
+    end
+
+    create_table :measurements do |t|
+      t.integer :trait_id, null: false
+      t.integer :resource_id, null: false
+      # Some measurements are measurements of measurements (but not many), i.e.:
+      # of_taxon = false
+      t.integer :parent_id, null: false
+      # predicate AKA "measurementType"
+      t.string :predicate
+      t.string :units
+      t.string :resource_pk
+      t.string :value
     end
 
     create_table :traits do |t|
