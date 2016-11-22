@@ -131,11 +131,10 @@ class InitialSchema < ActiveRecord::Migration
       t.string :description
     end
 
-    # Nodes, measurements, and contents can have references...
     create_table :data_references do |t|
       t.integer :reference_id, null: false
-      t.integer :data_id, null: false
-      t.string :data_type, null: false
+      t.references :data, polymorphic: true, index: true, null: false,
+        comment: "Nodes, measurements, and contents can have references."
     end
 
     create_table :formats do |t|
