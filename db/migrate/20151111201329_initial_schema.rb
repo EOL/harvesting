@@ -23,7 +23,7 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :auto_publish, null: false, default: false
       # not_trusted applies to _all_ resources!
       t.boolean :not_trusted, null: false, default: false
-      t.timestamps, null: false
+      t.timestamps null: false
       # TODO: deafult licensure
       # TODO: deafult values
     end
@@ -51,7 +51,7 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :stop_harvesting, null: false, default: false
       t.boolean :has_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
-      t.timestamps, null: false
+      t.timestamps null: false
       # TODO: deafult licensure
       # TODO: deafult values
     end
@@ -67,7 +67,7 @@ class InitialSchema < ActiveRecord::Migration
       t.string :file_type
       t.datetime :started_at
       t.datetime :finished_at
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_table :hlogs do |t|
@@ -80,7 +80,7 @@ class InitialSchema < ActiveRecord::Migration
     end
 
     create_table :pages do |t|
-      t.native_node_id, null: false
+      t.integer :native_node_id, null: false
     end
 
     # NOTE: content will be handled in a separate migration, since they seem a
@@ -124,11 +124,13 @@ class InitialSchema < ActiveRecord::Migration
       t.string :canonical
     end
 
+    # These are citations made by the partner, citing sources used to synthesize
+    # that content. These show up below the content (only applies to articles);
+    # this is effectively a "section" of the content; it's part of the object.
     create_table :references do |t|
-      t.integer :resource_id, null: false
-      t.integer :site_pk, null: false
-      t.string :resource_pk
-      t.string :description
+      t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
+
+      t.timestamps null: false
     end
 
     create_table :data_references do |t|

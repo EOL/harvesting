@@ -36,7 +36,7 @@ class InitialContent < ActiveRecord::Migration
         comment: "for images, you will add size info to this; was: object_url"
 
       t.datetime :downloaded_at
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_join_table :media, :sections
@@ -44,7 +44,7 @@ class InitialContent < ActiveRecord::Migration
     create_table :media_download_error do |t|
       t.integer :content_id, null: false, index: true
       t.text :message
-      t.timestamps
+      t.timestamps null: false
     end
 
     # TODO: do we DOWNLOAD articles? I don't think so...
@@ -69,7 +69,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :body, null: false,
         comment: "html; run through namelinks; was description_linked"
 
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_join_table :articles, :sections
@@ -87,7 +87,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :description, null: false,
         comment: "html; run through namelinks; was description_linked"
 
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_join_table :links, :sections
@@ -101,16 +101,7 @@ class InitialContent < ActiveRecord::Migration
     create_table :bibliographic_citations do |t|
       t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
 
-      t.timestamps
-    end
-
-    # These are citations made by the partner, citing sources used to synthesize
-    # that content. These show up below the content (only applies to articles);
-    # this is effectively a "section" of the content; it's part of the object.
-    create_table :references do |t|
-      t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
-
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_join_table(:articles, :references) do |t|
@@ -120,7 +111,7 @@ class InitialContent < ActiveRecord::Migration
     create_table :roles do |t|
       t.string :name, null: false, comment: "passed to I18n.t"
 
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_table :attributions do |t|
@@ -129,7 +120,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :role_id, null: false, index: true
       t.text :value, null: false, comment: "html"
 
-      t.timestamps
+      t.timestamps null: false
     end
 
     create_table :term do |t|
