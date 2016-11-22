@@ -79,14 +79,21 @@ class InitialSchema < ActiveRecord::Migration
       t.datetime :created_at
     end
 
-    # TODO: all of the content. It's a copy/paste, I'm skipping it for now.
+    create_table :pages do |t|
+      t.native_node_id, null: false
+    end
+
+    # NOTE: content will be handled in a separate migration, since they seem a
+    # salient "piece" of things.
 
     create_table :nodes do |t|
       t.integer :resource_id, null: false
       t.integer :page_id, comment: "null means unassigned, of course"
       t.integer :site_pk
       t.integer :parent_id, null: false, default: 0
-      t.integer :normalized_name_id, null: false
+      t.integer :name_id, null: false
+
+      t.string :verbatim_name, null: false
       t.string :resource_pk
       # rank is a _normalized_ rank string... really an enumeration
       t.string :rank
@@ -117,54 +124,6 @@ class InitialSchema < ActiveRecord::Migration
       t.string :canonical
     end
 
-    create_table :traits do |t|
-      t.integer :resource_id, null: false
-      t.integer :node_id, null: false
-      t.integer :site_pk, null: false
-      t.string :resource_pk
-      # Can't have a default, so you should make sure this is at least "{}"
-      t.text :metadata_json, null: false
-    end
-
-    create_table :measurements do |t|
-      t.integer :trait_id, null: false
-      t.integer :resource_id, null: false
-      # Some measurements are measurements of measurements (but not many), i.e.:
-      # of_taxon = false
-      t.integer :parent_id, null: false
-      # predicate AKA "measurementType"
-      t.string :predicate
-      t.string :units
-      t.string :resource_pk
-      t.string :value
-    end
-
-    create_table :traits do |t|
-      t.integer :resource_id, null: false
-      t.integer :node_id, null: false
-      t.integer :site_pk, null: false
-      t.string :resource_pk
-      # Can't have a default, so you should make sure this is at least "{}"
-      t.text :metadata_json, null: false
-    end
-
-    create_table :measurements do |t|
-      t.integer :trait_id, null: false
-      t.integer :resource_id, null: false
-      # Some measurements are measurements of measurements (but not many), i.e.:
-      # of_taxon = false
-      t.integer :parent_id, null: false
-      # predicate AKA "measurementType"
-      t.string :predicate
-      t.string :units
-      t.string :resource_pk
-      t.string :value
-    end
-
-    create_table :associations do |t|
-      t.integer :trait_id, null: false
-    end
-
     create_table :references do |t|
       t.integer :resource_id, null: false
       t.integer :site_pk, null: false
@@ -179,14 +138,16 @@ class InitialSchema < ActiveRecord::Migration
       t.string :data_type, null: false
     end
 
-    create_table :tables do |t|
+    create_table :formats do |t|
       t.integer :resource_id, null: false
       t.integer :header_lines, null: false, default: 1
+      t.string :filename, comment: "null implies that the name can vary"
       t.string :field_sep, limit: 4
       t.string :line_sep, limit: 4
       # type indicates what kind of contents there are in the file, e.g.:
-      # http://eol.org/schema/media/Document for articles.
-      t.string :type, null: false
+      # http://eol.org/schema/media/Document for :articles.
+      t.string :type, null: false,
+        comment: "enum: articles, attributions, images, js_maps, links, media, maps, references, sounds, videos"
       t.boolean :utf8, null: false, default: false
     end
 
@@ -203,7 +164,5 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :table_id
       t.string :location
     end
-
-    # TODO: NAMES!
   end
 end
