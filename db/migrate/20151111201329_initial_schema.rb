@@ -38,6 +38,8 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :harvest_day_of_month
       t.integer :last_harvest_minutes
       t.integer :nodes_count
+      t.integer :format_id,
+        comment: "this is a *default*... each harvest can have it's own format, if needed."
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
@@ -56,8 +58,29 @@ class InitialSchema < ActiveRecord::Migration
       # TODO: deafult values
     end
 
+    create_table :formats do |t|
+      t.integer :resource_id, null: false
+      t.integer :header_lines, null: false, default: 1
+      t.string :filename, comment: "null implies that the name can vary"
+      t.string :field_sep, limit: 4
+      t.string :line_sep, limit: 4
+      # type indicates what kind of contents there are in the file, e.g.:
+      # http://eol.org/schema/media/Document for :articles.
+      t.string :type, null: false,
+        comment: "enum: articles, attributions, images, js_maps, links, media, maps, references, sounds, videos"
+      t.boolean :utf8, null: false, default: false
+    end
+
+    create_table :fields do |t|
+      t.integer :format_id, null: false
+      t.integer :position, null: false
+      t.string :term
+    end
+
     create_table :harvests do |t|
       t.integer :resource_id, null: false
+      t.integer :format_id,
+        comment: "This should be copied from the resource by default. A null implies the format must be 'discovered'."
       t.datetime :created_at
       t.datetime :completed_at
       t.string :filename
@@ -137,33 +160,6 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :reference_id, null: false
       t.references :data, polymorphic: true, index: true, null: false,
         comment: "Nodes, measurements, and contents can have references."
-    end
-
-    create_table :formats do |t|
-      t.integer :resource_id, null: false
-      t.integer :header_lines, null: false, default: 1
-      t.string :filename, comment: "null implies that the name can vary"
-      t.string :field_sep, limit: 4
-      t.string :line_sep, limit: 4
-      # type indicates what kind of contents there are in the file, e.g.:
-      # http://eol.org/schema/media/Document for :articles.
-      t.string :type, null: false,
-        comment: "enum: articles, attributions, images, js_maps, links, media, maps, references, sounds, videos"
-      t.boolean :utf8, null: false, default: false
-    end
-
-    create_table :fields do |t|
-      t.integer :table_id, null: false
-      t.integer :position, null: false
-      t.string :term
-    end
-
-    # There is almost _always_ only one file per type, but just in case we get
-    # some huge resource that wants to break things up into separate files, we
-    # can handle that:
-    create_table :file_locs do |t|
-      t.integer :table_id
-      t.string :location
     end
   end
 end
