@@ -79,14 +79,9 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "data_references", ["data_type", "data_id"], name: "index_data_references_on_data_type_and_data_id", using: :btree
 
   create_table "fields", force: :cascade do |t|
-    t.integer "table_id", limit: 4,   null: false
-    t.integer "position", limit: 4,   null: false
-    t.string  "term",     limit: 255
-  end
-
-  create_table "file_locs", force: :cascade do |t|
-    t.integer "table_id", limit: 4
-    t.string  "location", limit: 255
+    t.integer "format_id", limit: 4,   null: false
+    t.integer "position",  limit: 4,   null: false
+    t.string  "term",      limit: 255
   end
 
   create_table "formats", force: :cascade do |t|
@@ -101,6 +96,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "harvests", force: :cascade do |t|
     t.integer  "resource_id",         limit: 4,   null: false
+    t.integer  "format_id",           limit: 4
     t.datetime "created_at",                      null: false
     t.datetime "completed_at"
     t.string   "filename",            limit: 255
@@ -268,6 +264,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "last_harvest_minutes",      limit: 4
     t.integer  "nodes_count",               limit: 4
+    t.integer  "format_id",                 limit: 4
     t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
     t.string   "name",                      limit: 255,                 null: false
     t.string   "abbr",                      limit: 255,                 null: false
