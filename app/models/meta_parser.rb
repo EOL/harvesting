@@ -26,7 +26,7 @@ class MetaParser
     # Yes, we're forcing actual true/false values here, rather than returning
     # any non-nil object to represent True.
     utf8 = utf8 ? true : false
-    table = Table.create(
+    table = Format.create(
       resource_id: @resource.id,
       header_lines: node.attributes["ignoreHeaderLines"].value.to_i,
       field_sep: node.attributes["fieldsTerminatedBy"].value,

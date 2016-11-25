@@ -1,8 +1,7 @@
 source "https://rubygems.org"
 
-
-# Use CoffeeScript for .coffee assets and views
-gem "coffee-rails", "~> 4.1.0"
+# Parse Excel files:
+gem "creek", "~> 1.1"
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem "jbuilder", "~> 2.0"

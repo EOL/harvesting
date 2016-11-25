@@ -86,6 +86,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "formats", force: :cascade do |t|
     t.integer "resource_id",  limit: 4,                   null: false
+    t.integer "sheet",        limit: 4,   default: 1,     null: false
     t.integer "header_lines", limit: 4,   default: 1,     null: false
     t.string  "filename",     limit: 255
     t.string  "field_sep",    limit: 4

@@ -60,6 +60,8 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :formats do |t|
       t.integer :resource_id, null: false
+      t.integer :sheet, null: false, default: 1,
+        comment: "which sheet to read, if it's in a multi-sheet file"
       t.integer :header_lines, null: false, default: 1
       t.string :filename, comment: "null implies that the name can vary"
       t.string :field_sep, limit: 4
