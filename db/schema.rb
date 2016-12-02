@@ -79,40 +79,52 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "data_references", ["data_type", "data_id"], name: "index_data_references_on_data_type_and_data_id", using: :btree
 
   create_table "fields", force: :cascade do |t|
-    t.integer "format_id", limit: 4,   null: false
-    t.integer "position",  limit: 4,   null: false
-    t.string  "term",      limit: 255
+    t.integer "format_id",       limit: 4,   null: false
+    t.integer "position",        limit: 4,   null: false
+    t.string  "expected_header", limit: 255
+    t.string  "map_to_table",    limit: 255
+    t.string  "map_to_field",    limit: 255
+    t.string  "mapping",         limit: 255
   end
 
   create_table "formats", force: :cascade do |t|
     t.integer "resource_id",  limit: 4,                   null: false
+    t.integer "harvest_id",   limit: 4
     t.integer "sheet",        limit: 4,   default: 1,     null: false
     t.integer "header_lines", limit: 4,   default: 1,     null: false
-    t.string  "filename",     limit: 255
-    t.string  "field_sep",    limit: 4
-    t.string  "line_sep",     limit: 4
-    t.string  "type",         limit: 255,                 null: false
+    t.integer "position",     limit: 4
+    t.string  "get_from",     limit: 255,                 null: false
+    t.string  "file",         limit: 255
+    t.string  "file_type",    limit: 255
+    t.string  "field_sep",    limit: 4,   default: ","
+    t.string  "line_sep",     limit: 4,   default: "\n"
+    t.string  "represents",   limit: 255,                 null: false
     t.boolean "utf8",                     default: false, null: false
   end
 
   create_table "harvests", force: :cascade do |t|
-    t.integer  "resource_id",         limit: 4,   null: false
-    t.integer  "format_id",           limit: 4
-    t.datetime "created_at",                      null: false
+    t.integer  "resource_id",            limit: 4,                 null: false
+    t.boolean  "hold",                             default: false, null: false
+    t.datetime "fetched_at"
+    t.datetime "validated_at"
+    t.datetime "deltas_created_at"
+    t.datetime "stored_at"
+    t.datetime "consistency_checked_at"
+    t.datetime "names_parsed_at"
+    t.datetime "nodes_matched_at"
+    t.datetime "ancestry_built_at"
+    t.datetime "units_normalized_at"
+    t.datetime "linked_at"
+    t.datetime "indexed_at"
+    t.datetime "failed_at"
     t.datetime "completed_at"
-    t.string   "filename",            limit: 255
-    t.string   "normalized_filename", limit: 255
-    t.string   "path",                limit: 255
-    t.string   "stage",               limit: 255
-    t.string   "file_type",           limit: 255
-    t.datetime "started_at"
-    t.datetime "finished_at"
-    t.datetime "updated_at",                      null: false
+    t.datetime "created_at",                                       null: false
+    t.datetime "updated_at",                                       null: false
   end
 
   create_table "hlogs", force: :cascade do |t|
     t.integer  "harvest_id", limit: 4,     null: false
-    t.string   "type",       limit: 255
+    t.string   "category",   limit: 255
     t.string   "message",    limit: 255
     t.text     "backtrace",  limit: 65535
     t.integer  "line",       limit: 4
@@ -194,32 +206,17 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.string  "literal",                    limit: 255
   end
 
-  create_table "names", force: :cascade do |t|
-    t.integer "resource_id",        limit: 4,   null: false
-    t.integer "node_id",            limit: 4,   null: false
-    t.integer "normalized_name_id", limit: 4
-    t.string  "verbatim",           limit: 255
-    t.string  "warnings",           limit: 255
-    t.string  "genus",              limit: 255
-    t.string  "specific_epithet",   limit: 255
-    t.string  "authorship",         limit: 255
-    t.integer "year",               limit: 4
-    t.boolean "hybrid"
-    t.boolean "surrogate"
-    t.boolean "virus"
-  end
-
   create_table "nodes", force: :cascade do |t|
-    t.integer "resource_id",   limit: 4,               null: false
-    t.integer "page_id",       limit: 4
-    t.integer "site_pk",       limit: 4
-    t.integer "parent_id",     limit: 4,   default: 0, null: false
-    t.integer "name_id",       limit: 4,               null: false
-    t.string  "verbatim_name", limit: 255,             null: false
-    t.string  "resource_pk",   limit: 255
-    t.string  "rank",          limit: 255
-    t.string  "original_rank", limit: 255
-    t.string  "remarks",       limit: 255
+    t.integer "resource_id",        limit: 4,               null: false
+    t.integer "page_id",            limit: 4
+    t.integer "site_pk",            limit: 4
+    t.integer "parent_id",          limit: 4,   default: 0, null: false
+    t.integer "scientific_name_id", limit: 4,               null: false
+    t.string  "verbatim_name",      limit: 255,             null: false
+    t.string  "resource_pk",        limit: 255
+    t.string  "rank",               limit: 255
+    t.string  "original_rank",      limit: 255
+    t.string  "remarks",            limit: 255
   end
 
   create_table "normalized_names", force: :cascade do |t|
@@ -251,7 +248,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "partner_id", limit: 4, null: false
   end
 
-  create_table "references", force: :cascade do |t|
+  create_table "refs", force: :cascade do |t|
     t.text     "body",       limit: 65535
     t.datetime "created_at",               null: false
     t.datetime "updated_at",               null: false
@@ -265,16 +262,14 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "last_harvest_minutes",      limit: 4
     t.integer  "nodes_count",               limit: 4
-    t.integer  "format_id",                 limit: 4
     t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
     t.string   "name",                      limit: 255,                 null: false
     t.string   "abbr",                      limit: 255,                 null: false
-    t.string   "harvest_from",              limit: 255,                 null: false
     t.string   "pk_url",                    limit: 255, default: "$PK", null: false
     t.boolean  "auto_publish",                          default: false, null: false
     t.boolean  "not_trusted",                           default: false, null: false
-    t.boolean  "stop_harvesting",                       default: false, null: false
-    t.boolean  "has_duplicate_taxa",                    default: false, null: false
+    t.boolean  "hold_harvesting",                       default: false, null: false
+    t.boolean  "might_have_duplicate_taxa",             default: false, null: false
     t.boolean  "force_harvest",                         default: false, null: false
     t.datetime "created_at",                                            null: false
     t.datetime "updated_at",                                            null: false
@@ -284,6 +279,24 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.string   "name",       limit: 255, null: false
     t.datetime "created_at",             null: false
     t.datetime "updated_at",             null: false
+  end
+
+  create_table "scientific_names", force: :cascade do |t|
+    t.integer "resource_id",        limit: 4,     null: false
+    t.integer "node_id",            limit: 4,     null: false
+    t.integer "normalized_name_id", limit: 4
+    t.string  "verbatim",           limit: 255
+    t.string  "warnings",           limit: 255
+    t.string  "genus",              limit: 255
+    t.string  "specific_epithet",   limit: 255
+    t.string  "authorship",         limit: 255
+    t.string  "source_reference",   limit: 255
+    t.text    "remarks",            limit: 65535
+    t.integer "year",               limit: 4
+    t.boolean "is_preferred"
+    t.boolean "hybrid"
+    t.boolean "surrogate"
+    t.boolean "virus"
   end
 
   create_table "section", force: :cascade do |t|
@@ -333,6 +346,17 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   create_table "users", force: :cascade do |t|
     t.string "name",        limit: 255
     t.text   "description", limit: 65535
+  end
+
+  create_table "vernaculars", force: :cascade do |t|
+    t.integer "resource_id",            limit: 4,     null: false
+    t.integer "node_id",                limit: 4,     null: false
+    t.string  "verbatim",               limit: 255
+    t.string  "language_code_verbatim", limit: 255
+    t.string  "language_code",          limit: 255
+    t.string  "language_group_code",    limit: 255
+    t.text    "remarks",                limit: 65535
+    t.boolean "is_preferred"
   end
 
 end

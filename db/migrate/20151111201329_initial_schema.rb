@@ -38,20 +38,16 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :harvest_day_of_month
       t.integer :last_harvest_minutes
       t.integer :nodes_count
-      t.integer :format_id,
-        comment: "this is a *default*... each harvest can have it's own format, if needed."
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
       t.string :name, null: false
       t.string :abbr, null: false
-      # harvest_from could be a URL or a path; the code must check.
-      t.string :harvest_from, null: false
       t.string :pk_url, null: false, default: "$PK"
       t.boolean :auto_publish, null: false, default: false
       t.boolean :not_trusted, null: false, default: false
-      t.boolean :stop_harvesting, null: false, default: false
-      t.boolean :has_duplicate_taxa, null: false, default: false
+      t.boolean :hold_harvesting, null: false, default: false
+      t.boolean :might_have_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
       t.timestamps null: false
       # TODO: deafult licensure
@@ -60,44 +56,58 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :formats do |t|
       t.integer :resource_id, null: false
+      t.integer :harvest_id,
+        comment: "if null, only associated to resource, and is 'abstract'"
       t.integer :sheet, null: false, default: 1,
         comment: "which sheet to read, if it's in a multi-sheet file"
       t.integer :header_lines, null: false, default: 1
-      t.string :filename, comment: "null implies that the name can vary"
-      t.string :field_sep, limit: 4
-      t.string :line_sep, limit: 4
-      # type indicates what kind of contents there are in the file, e.g.:
-      # http://eol.org/schema/media/Document for :articles.
-      t.string :type, null: false,
-        comment: "enum: articles, attributions, images, js_maps, links, media, maps, references, sounds, videos"
+      t.integer :position,
+        comment: "Because each file should be read in a specific order..."
+      t.string :get_from, null: false,
+        comment: "may be remote URL or full file system path"
+      t.string :file, comment: "full path"
+      t.string :file_type, comment: "enum: csv, excel, dwca"
+      t.string :field_sep, limit: 4, default: ","
+      t.string :line_sep, limit: 4, default: "\n"
+      # represents e.g.: :articles for http://eol.org/schema/media/Document
+      t.string :represents, null: false,
+        comment: "enum: articles, attributions, images, js_maps, links, media, maps, refs, sounds, videos"
       t.boolean :utf8, null: false, default: false
     end
 
     create_table :fields do |t|
       t.integer :format_id, null: false
       t.integer :position, null: false
-      t.string :term
+      t.string :expected_header,
+        comment: "Does NOT need to literally match, but produces a warning if it doesn't (with some slop allowed)"
+      t.string :map_to_table
+      t.string :map_to_field
+      t.string :mapping,
+        comment: "can replace map_to_field or be used for transforms"
     end
 
     create_table :harvests do |t|
       t.integer :resource_id, null: false
-      t.integer :format_id,
-        comment: "This should be copied from the resource by default. A null implies the format must be 'discovered'."
-      t.datetime :created_at
+      t.boolean :hold, null: false, default: false
+      t.datetime :fetched_at
+      t.datetime :validated_at
+      t.datetime :deltas_created_at
+      t.datetime :stored_at
+      t.datetime :consistency_checked_at
+      t.datetime :names_parsed_at
+      t.datetime :nodes_matched_at
+      t.datetime :ancestry_built_at
+      t.datetime :units_normalized_at
+      t.datetime :linked_at
+      t.datetime :indexed_at
+      t.datetime :failed_at
       t.datetime :completed_at
-      t.string :filename
-      t.string :normalized_filename
-      t.string :path
-      t.string :stage # enumeration
-      t.string :file_type
-      t.datetime :started_at
-      t.datetime :finished_at
       t.timestamps null: false
     end
 
     create_table :hlogs do |t|
       t.integer :harvest_id, null: false
-      t.string :type # enumeration
+      t.string :category
       t.string :message
       t.text :backtrace
       t.integer :line
@@ -116,7 +126,7 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :page_id, comment: "null means unassigned, of course"
       t.integer :site_pk
       t.integer :parent_id, null: false, default: 0
-      t.integer :name_id, null: false
+      t.integer :scientific_name_id, null: false
 
       t.string :verbatim_name, null: false
       t.string :resource_pk
@@ -128,7 +138,7 @@ class InitialSchema < ActiveRecord::Migration
       t.string :remarks
     end
 
-    create_table :names do |t|
+    create_table :scientific_names do |t|
       t.integer :resource_id, null: false
       t.integer :node_id, null: false
       t.integer :normalized_name_id
@@ -137,10 +147,24 @@ class InitialSchema < ActiveRecord::Migration
       t.string :genus
       t.string :specific_epithet
       t.string :authorship
+      t.string :source_reference
+      t.text :remarks
       t.integer :year
+      t.boolean :is_preferred
       t.boolean :hybrid
       t.boolean :surrogate
       t.boolean :virus
+    end
+
+    create_table :vernaculars do |t|
+      t.integer :resource_id, null: false
+      t.integer :node_id, null: false
+      t.string :verbatim
+      t.string :language_code_verbatim
+      t.string :language_code
+      t.string :language_group_code
+      t.text :remarks
+      t.boolean :is_preferred
     end
 
     # This gives us a way to say "these names are considered 'the same'."
@@ -152,7 +176,7 @@ class InitialSchema < ActiveRecord::Migration
     # These are citations made by the partner, citing sources used to synthesize
     # that content. These show up below the content (only applies to articles);
     # this is effectively a "section" of the content; it's part of the object.
-    create_table :references do |t|
+    create_table :refs do |t|
       t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
 
       t.timestamps null: false
@@ -161,7 +185,7 @@ class InitialSchema < ActiveRecord::Migration
     create_table :data_references do |t|
       t.integer :reference_id, null: false
       t.references :data, polymorphic: true, index: true, null: false,
-        comment: "Nodes, measurements, and contents can have references."
+        comment: "Nodes, measurements, and contents can have data_references."
     end
   end
 end

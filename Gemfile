@@ -1,5 +1,8 @@
 source "https://rubygems.org"
 
+# Acts As List simplifies ordered lists of models:
+gem 'acts_as_list', '~> 0.7.6'
+
 # Parse Excel files:
 gem "creek", "~> 1.1"
 
@@ -30,6 +33,8 @@ group :development, :test do
   # Call "byebug" anywhere in the code to stop execution and get a debugger
   # console
   gem "byebug"
+
+  gem "factory_girl_rails"
 
   # Testing framework:
   gem "rspec-rails", "~> 3"
