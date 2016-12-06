@@ -4,6 +4,7 @@ class Format < ActiveRecord::Base
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats
 
+  enum file_type: [ :csv, :excel, :dwca ]
   enum represents: [ :articles, :attributions, :images, :js_maps, :links,
     :media, :maps, :refs, :sounds, :videos ]
 

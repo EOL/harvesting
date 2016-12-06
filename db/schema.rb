@@ -79,12 +79,15 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "data_references", ["data_type", "data_id"], name: "index_data_references_on_data_type_and_data_id", using: :btree
 
   create_table "fields", force: :cascade do |t|
-    t.integer "format_id",       limit: 4,   null: false
-    t.integer "position",        limit: 4,   null: false
-    t.string  "expected_header", limit: 255
-    t.string  "map_to_table",    limit: 255
-    t.string  "map_to_field",    limit: 255
-    t.string  "mapping",         limit: 255
+    t.integer "format_id",        limit: 4,                   null: false
+    t.integer "position",         limit: 4,                   null: false
+    t.integer "validation",       limit: 4
+    t.string  "expected_header",  limit: 255
+    t.string  "map_to_table",     limit: 255
+    t.string  "map_to_field",     limit: 255
+    t.string  "mapping",          limit: 255
+    t.boolean "unique_in_format",             default: false, null: false
+    t.boolean "can_be_empty",                 default: true,  null: false
   end
 
   create_table "formats", force: :cascade do |t|
@@ -93,12 +96,12 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "sheet",        limit: 4,   default: 1,     null: false
     t.integer "header_lines", limit: 4,   default: 1,     null: false
     t.integer "position",     limit: 4
+    t.integer "file_type",    limit: 4
+    t.integer "represents",   limit: 4,                   null: false
     t.string  "get_from",     limit: 255,                 null: false
     t.string  "file",         limit: 255
-    t.string  "file_type",    limit: 255
     t.string  "field_sep",    limit: 4,   default: ","
     t.string  "line_sep",     limit: 4,   default: "\n"
-    t.string  "represents",   limit: 255,                 null: false
     t.boolean "utf8",                     default: false, null: false
   end
 

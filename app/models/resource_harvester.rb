@@ -41,10 +41,10 @@ class ResourceHarvester
     @harvest.formats.each do |fmt|
       # TODO: for now, pretending we only read Excel files! We will want to
       # abstract this and move it.
-      parser = if fmt.file_type == :excel
+      parser = if fmt.excel?
           ExcelParser.new(fmt.file, sheet: fmt.sheet,
             header_lines: fmt.header_lines)
-        elsif fmt.file_type == :csv
+        elsif fmt.csv?
           CsvParser.new(fmt.file, field_sep: fmt.field_sep,
             line_sep: fmt.line_sep, header_lines: fmt.header_lines)
         else

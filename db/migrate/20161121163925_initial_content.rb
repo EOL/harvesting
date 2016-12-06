@@ -89,7 +89,7 @@ class InitialContent < ActiveRecord::Migration
 
       t.timestamps null: false
     end
-    
+
     create_join_table :links, :sections
 
     # There are currently 1,084,941 published data objects with a non-empty

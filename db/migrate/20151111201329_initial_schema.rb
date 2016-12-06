@@ -63,29 +63,29 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :header_lines, null: false, default: 1
       t.integer :position,
         comment: "Because each file should be read in a specific order..."
+      t.integer :file_type, comment: "enum: csv, excel, dwca"
+      # represents e.g.: :articles for http://eol.org/schema/media/Document
+      t.integer :represents, null: false,
+        comment: "enum: articles, attributions, images, js_maps, links, media, maps, refs, sounds, videos"
       t.string :get_from, null: false,
         comment: "may be remote URL or full file system path"
       t.string :file, comment: "full path"
-      t.string :file_type, comment: "enum: csv, excel, dwca", default: "excel"
       t.string :field_sep, limit: 4, default: ","
       t.string :line_sep, limit: 4, default: "\n"
-      # represents e.g.: :articles for http://eol.org/schema/media/Document
-      t.string :represents, null: false,
-        comment: "enum: articles, attributions, images, js_maps, links, media, maps, refs, sounds, videos"
       t.boolean :utf8, null: false, default: false
     end
 
     create_table :fields do |t|
       t.integer :format_id, null: false
       t.integer :position, null: false
+      t.integer :validation,
+        comment: "enum, but the values can be extended, so they are not listed here"
       t.string :expected_header,
         comment: "Does NOT need to literally match, but produces a warning if it doesn't (with some slop allowed)"
       t.string :map_to_table
       t.string :map_to_field
       t.string :mapping,
         comment: "can replace map_to_field or be used for transforms"
-      t.string :validation,
-        comment: "enum, but the values can be extended, so they are not listed here"
       t.boolean :unique_in_format, default: false, null: false
       t.boolean :can_be_empty, default: true, null: false
     end
@@ -134,7 +134,7 @@ class InitialSchema < ActiveRecord::Migration
 
       t.string :verbatim_name, null: false
       t.string :resource_pk
-      # rank is a _normalized_ rank string... really an enumeration
+      # rank is a _normalized_ rank string... really an enumeration, but not stored that way.
       t.string :rank
       # original_rank is whatever rank string they actually used:
       t.string :original_rank
