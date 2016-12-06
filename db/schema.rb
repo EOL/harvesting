@@ -96,7 +96,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "sheet",        limit: 4,   default: 1,     null: false
     t.integer "header_lines", limit: 4,   default: 1,     null: false
     t.integer "position",     limit: 4
-    t.integer "file_type",    limit: 4
+    t.integer "file_type",    limit: 4,   default: 0
     t.integer "represents",   limit: 4,                   null: false
     t.string  "get_from",     limit: 255,                 null: false
     t.string  "file",         limit: 255
@@ -311,7 +311,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "term_id",    limit: 4, null: false
   end
 
-  create_table "term", force: :cascade do |t|
+  create_table "terms", force: :cascade do |t|
     t.string  "uri",                     limit: 255,   null: false
     t.string  "name",                    limit: 255
     t.text    "definition",              limit: 65535
@@ -321,7 +321,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.boolean "is_hidden_from_glossary"
   end
 
-  add_index "term", ["uri"], name: "index_term_on_uri", using: :btree
+  add_index "terms", ["uri"], name: "index_terms_on_uri", using: :btree
 
   create_table "traits", force: :cascade do |t|
     t.integer "resource_id",                limit: 4,     null: false

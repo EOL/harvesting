@@ -63,10 +63,11 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :header_lines, null: false, default: 1
       t.integer :position,
         comment: "Because each file should be read in a specific order..."
-      t.integer :file_type, comment: "enum: csv, excel, dwca"
+      # NOTE: default is the first value, in this case, excel.
+      t.integer :file_type, comment: "enum: excel, csv, dwca", default: 0
       # represents e.g.: :articles for http://eol.org/schema/media/Document
       t.integer :represents, null: false,
-        comment: "enum: articles, attributions, images, js_maps, links, media, maps, refs, sounds, videos"
+        comment: "enum: articles, attributions, images, js_maps, links, media, maps, refs, sounds, videos, nodes, vernaculars"
       t.string :get_from, null: false,
         comment: "may be remote URL or full file system path"
       t.string :file, comment: "full path"
@@ -79,7 +80,7 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :format_id, null: false
       t.integer :position, null: false
       t.integer :validation,
-        comment: "enum, but the values can be extended, so they are not listed here"
+        comment: "enum: must_be_integers, must_be_numerical, must_know_uris"
       t.string :expected_header,
         comment: "Does NOT need to literally match, but produces a warning if it doesn't (with some slop allowed)"
       t.string :map_to_table

@@ -6,6 +6,7 @@ class ResourceHarvester
   def initialize(resource)
     @resource = resource
     @harvest = nil
+    @uris = {}
   end
 
   def start
@@ -63,11 +64,33 @@ class ResourceHarvester
       end
       raise Exceptions::ColumnUnmatched.new(expected_by_file.join(",")) if
         expected_by_file.size > 0
-      # parser.rows_as_hashes do |row_hash|
-      #   headers.each do |header|
-      #     ...
-      #   end
-      # end
+      line = fmt.header_lines
+      parser.rows_as_hashes do |row_hash|
+        line += 1
+        headers.each do |header|
+          check = fields[header]
+          next unless check
+          val = row_hash[header]
+          if val.blank?
+            next if check.can_be_empty?
+            raise "Illegal empty value for #{header} on line #{line}."
+          end
+          if check.must_be_integers?
+            raise "Illegal non-integer for #{header}, got #{val} on line #{line}." unless row_hash[header] =~ /\a[\d,]+\z/m
+          elsif check.must_know_uris?
+            raise "Illegal unknown URI <#{val}> for #{header} on line #{line}." unless uri_exists?(val)
+          end
+        end
+      end
+    end
+  end
+
+  def uri_exists?(uri)
+    return true if @uris.has_key?(uri)
+    if Terms.where(uri: uri).exist?
+      @uris[uri] = true
+    else
+      false
     end
   end
 

@@ -4,9 +4,9 @@ class Format < ActiveRecord::Base
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats
 
-  enum file_type: [ :csv, :excel, :dwca ]
+  enum file_type: [ :excel, :dwca, :csv ]
   enum represents: [ :articles, :attributions, :images, :js_maps, :links,
-    :media, :maps, :refs, :sounds, :videos ]
+    :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars ]
 
   def copy_to_harvest(new_harvest)
     new_harvest.formats << self.clone

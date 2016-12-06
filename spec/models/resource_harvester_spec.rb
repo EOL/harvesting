@@ -14,6 +14,13 @@ RSpec.describe ResourceHarvester do
 
   # tid,predicate,value,units,source
 
+  let(:raw_uris) { ["http://domain.com/path/first_pred_term",
+    "http://domain.com/path/first_val_term",
+    "http://domain.com/path/second_val_term",
+    "http://domain.com/path/first_unit_term",
+    "http://domain.com/path/second_pred_term"] }
+  let(:uris) { raw_uris.each { |u| create(:term, uri: u) } }
+
   let!(:cols) { [
      create(:field,
        format: fmt,
@@ -96,6 +103,16 @@ RSpec.describe ResourceHarvester do
         Field.last.update_attribute(:expected_header, "nothing good")
         harvester.create_harvest_instance
         expect { harvester.validate }.to raise_error(Exceptions::ColumnMismatch)
+      end
+    end
+  end
+
+  context "with an expectation of known URIs in first field" do
+    describe "#validate" do
+      it "raises an exception" do
+        Field.first.update_attribute(:validation, Field.validations[:must_know_uris])
+        harvester.create_harvest_instance
+        expect { harvester.validate }.to raise_error()
       end
     end
   end

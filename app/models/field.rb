@@ -3,5 +3,6 @@ class Field < ActiveRecord::Base
 
   acts_as_list scope: :format
 
-  enum validation: [:integer, :number, :uri]
+  enum validation: [ :must_be_integers, :must_be_numerical, :must_know_uris ]
+
 end

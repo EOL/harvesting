@@ -123,7 +123,7 @@ class InitialContent < ActiveRecord::Migration
       t.timestamps null: false
     end
 
-    create_table :term do |t|
+    create_table :terms do |t|
       t.string :uri, null: false, index: true
       t.string :name
       t.text :definition
