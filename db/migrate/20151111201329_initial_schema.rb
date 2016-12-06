@@ -84,6 +84,10 @@ class InitialSchema < ActiveRecord::Migration
       t.string :map_to_field
       t.string :mapping,
         comment: "can replace map_to_field or be used for transforms"
+      t.string :validation,
+        comment: "enum, but the values can be extended, so they are not listed here"
+      t.boolean :unique_in_format, default: false, null: false
+      t.boolean :can_be_empty, default: true, null: false
     end
 
     create_table :harvests do |t|
