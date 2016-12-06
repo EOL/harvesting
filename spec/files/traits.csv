@@ -1,0 +1,4 @@
+tid,predicate,value,units,source
+1,http://domain.com/path/first_pred_term,http://domain.com/path/first_val_term,,Raw source
+2,http://domain.com/path/first_pred_term,http://domain.com/path/second_val_term,http://domain.com/path/first_unit_term,
+3,http://domain.com/path/second_pred_term,Raw value,,Another source

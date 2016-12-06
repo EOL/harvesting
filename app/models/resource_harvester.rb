@@ -41,8 +41,15 @@ class ResourceHarvester
     @harvest.formats.each do |fmt|
       # TODO: for now, pretending we only read Excel files! We will want to
       # abstract this and move it.
-      parser = ExcelParser.new(fmt.file, sheet: fmt.sheet,
-        header_lines: fmt.header_lines)
+      parser = if fmt.file_type == :excel
+          ExcelParser.new(fmt.file, sheet: fmt.sheet,
+            header_lines: fmt.header_lines)
+        elsif fmt.file_type == :csv
+          CsvParser.new(fmt.file, field_sep: fmt.field_sep,
+            line_sep: fmt.line_sep, header_lines: fmt.header_lines)
+        else
+          raise "I don't know how to read formats of #{fmt.file_type}!"
+        end
       headers = parser.headers
       fields = {}
       expected_by_file = headers.dup

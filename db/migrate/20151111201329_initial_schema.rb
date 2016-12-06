@@ -66,7 +66,7 @@ class InitialSchema < ActiveRecord::Migration
       t.string :get_from, null: false,
         comment: "may be remote URL or full file system path"
       t.string :file, comment: "full path"
-      t.string :file_type, comment: "enum: csv, excel, dwca"
+      t.string :file_type, comment: "enum: csv, excel, dwca", default: "excel"
       t.string :field_sep, limit: 4, default: ","
       t.string :line_sep, limit: 4, default: "\n"
       # represents e.g.: :articles for http://eol.org/schema/media/Document

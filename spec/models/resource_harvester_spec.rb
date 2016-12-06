@@ -2,14 +2,14 @@ require 'rails_helper'
 
 RSpec.describe ResourceHarvester do
   before(:all) do
-    @path_to_excel = Rails.root.join("spec", "files", "t.xlsx")
+    @path_to_csv = Rails.root.join("spec", "files", "traits.csv")
   end
 
   let(:resource) { create(:resource) }
   # NOTE: specifying "file" here only for convenience. It SHOULD be set by the
   # "fetch" routine, but we don't want to rely on that during tests.
   let(:fmt) { create(:format, resource: resource, get_from: @path_to_excel,
-    file: @path_to_excel, header_lines: 2, sheet: 3) }
+    file: @path_to_excel, header_lines: 1, file_type: :csv) }
   let(:harvester) { ResourceHarvester.new(resource) }
 
   let!(:cols) { [
