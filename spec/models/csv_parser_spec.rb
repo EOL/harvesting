@@ -21,11 +21,11 @@ RSpec.describe CsvParser do
         row
       }
 
-      it { expect(row[cols[0]]).to eq("3") }
-      it { expect(row[cols[1]]).to eq("http://domain.com/path/second_pred_term") }
-      it { expect(row[cols[2]]).to eq("Raw value") }
+      it { expect(row[cols[0]]).to eq("1") }
+      it { expect(row[cols[1]]).to eq("http://domain.com/path/first_pred_term") }
+      it { expect(row[cols[2]]).to eq("http://domain.com/path/first_val_term") }
       it { expect(row[cols[3]]).to be_nil }
-      it { expect(row[cols[4]]).to eq("Another source") }
+      it { expect(row[cols[4]]).to eq("Raw source") }
     end
   end
 end
