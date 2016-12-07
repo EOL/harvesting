@@ -87,7 +87,7 @@ class ResourceHarvester
 
   def uri_exists?(uri)
     return true if @uris.has_key?(uri)
-    if Terms.where(uri: uri).exist?
+    if Term.where(uri: uri).exists?
       @uris[uri] = true
     else
       false

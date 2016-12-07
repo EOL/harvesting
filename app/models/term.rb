@@ -1,0 +1,3 @@
+class Term < ActiveRecord::Base
+  # Nothing here yet...
+end
