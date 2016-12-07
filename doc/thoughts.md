@@ -1,3 +1,9 @@
+## Name Changes
+
+taxon_concept => page
+hierarchy_entry => node
+data_object => "media" -> "image", "map", "article"
+
 ## Process
 
 The "normalization" process is where we should apply any formatting/field

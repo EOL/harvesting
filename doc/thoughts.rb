@@ -9,26 +9,31 @@ per_page = 1000
 deltas = {}
 types = [:names, :nodes, :concepts, :media, :etc]
 actions = [:create, :update, :delete]
-repository.diffs_since?(RepositorySync.last.created_at).each do |diff|
-  # { id: 123, resource_id: 345, deltas: { names: { create: 10000, update: 12,
-  # delete: 0}, nodes: { create: 100, update: 0, delete: 10}, etc }
-  types.each do |type|
-    actions.each do |action|
-      next unless diff[:deltas][type][action] &&
-                  diff[:deltas][type][action] > 0
-      page = 1
-      have = 0
-      # TODO: protect against infinite loop (if we stop getting results):
-      while have < diff[:deltas][type][action]
-        # { nodes: { create: [ {id: 123, name: "Foo bar", etc}, {etc} ] } }
-        response = repository.get_diff_deltas(diff: diff[:id],
-          type: type, page: page, per_page: per_page)
-        # TODO: error-handling
-        response[type].each do |action, items|
-          deltas[type][action] ||= []
-          deltas[type][action] += items
+# TODO: first we need to communicate which resources are available, so we get new resources,
+resources = repository.diffs_since?(RepositorySync.last.created_at)
+resources.each do |resource|
+  repository.resource_diffs_since?(resource, RepositorySync.last.created_at).each do |diff|
+    # { resource_id: 345, deltas: { names: { create: 10000, update: 12,
+    # delete: 0}, nodes: { create: 100, update: 0, delete: 10}, etc }
+    types.each do |type|
+      actions.each do |action|
+        next unless diff[:deltas][type][action] &&
+                    diff[:deltas][type][action] > 0
+        page = 1
+        have = 0
+        # TODO: protect against infinite loop (if we stop getting results):
+        while have < diff[:deltas][type][action]
+          # { nodes: { create: [ {id: 123, name: "Foo bar", etc}, {etc} ] } }
+          response = repository.get_diff_deltas(resource_id: resource.id,
+            since: RepositorySync.last.created_at, type: type, page: page,
+            per_page: per_page)
+          # TODO: error-handling
+          response[type].each do |action, items|
+            deltas[type][action] ||= []
+            deltas[type][action] += items
+          end
+          have += response.size
         end
-        have += response.size
       end
     end
   end
@@ -57,7 +62,8 @@ response = repository.history_of(node)
 #
 
 # Harvest workflow:
-#   download resource file -> validate -> diff -> download media
+# TODO: rename validate to normalize
+#   download resource file -> validate -> diff -> download media (parallel) -> merging
 
 some_kind_of_cron_thing(:hourly) do
   Resource.enqueue_pending_harvests
@@ -150,28 +156,16 @@ class Resource < AR::B
     # log errors & raise exceptions if invalid, missing, etc...
   end
 
-  def enqueue_download
-    Resqueue.enqueue(ResourceDownloadWorker, resource_id: id)
-  end
-
-  def enqueue_diff
-    Resqueue.enqueue(DiffWorker, resource_id: id)
-  end
-
-  def enqueue_validation
-    Resqueue.enqueue(ValidationWorker, resource_id: id)
-  end
-
   def validate
     # NOTE Actually belongs in its own class.
     # Check the file format
-    # Check the metadata
     # Check that the fields match expected fields
     # Check for obvious problems in the data (many of these), for example:
       # Unused IDs
       # Missing IDs
       # Illegal characters
       # Illegal values (wrong types, unknown URIs)
+      # Etc...
     # log errors (ValidationLog) for all problems (many of these).
     # Raise exceptions for critical problems
 
