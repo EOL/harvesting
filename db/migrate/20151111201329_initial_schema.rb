@@ -112,7 +112,9 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :hlogs do |t|
       t.integer :harvest_id, null: false
-      t.string :category
+      t.integer :format_id, null: false
+      t.integer :category,
+        comment: "Enum: errors, warns, infos, progs, loops, starts, ends, counts, queries"
       t.string :message
       t.text :backtrace
       t.integer :line

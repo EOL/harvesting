@@ -111,8 +111,12 @@ RSpec.describe ResourceHarvester do
     describe "#validate" do
       it "raises an exception" do
         Field.first.update_attribute(:validation, Field.validations[:must_know_uris])
+        Hlog.delete_all
         harvester.create_harvest_instance
-        expect { harvester.validate }.to raise_error()
+        harvester.validate
+        expect(fmt.hlogs.first.line).to eq(2)
+        expect(fmt.hlogs.first.warns?).to be true
+        expect(fmt.hlogs.first.message).to match(/URI/)
       end
     end
   end

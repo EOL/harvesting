@@ -127,7 +127,8 @@ ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "hlogs", force: :cascade do |t|
     t.integer  "harvest_id", limit: 4,     null: false
-    t.string   "category",   limit: 255
+    t.integer  "format_id",  limit: 4,     null: false
+    t.integer  "category",   limit: 4
     t.string   "message",    limit: 255
     t.text     "backtrace",  limit: 65535
     t.integer  "line",       limit: 4

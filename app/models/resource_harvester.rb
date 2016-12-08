@@ -73,12 +73,16 @@ class ResourceHarvester
           val = row_hash[header]
           if val.blank?
             next if check.can_be_empty?
-            raise "Illegal empty value for #{header} on line #{line}."
+            fmt.warn("Illegal empty value for #{header}", line)
           end
           if check.must_be_integers?
-            raise "Illegal non-integer for #{header}, got #{val} on line #{line}." unless row_hash[header] =~ /\a[\d,]+\z/m
+            unless row_hash[header] =~ /\a[\d,]+\z/m
+              fmt.warn("Illegal non-integer for #{header}, got #{val}", line)
+            end
           elsif check.must_know_uris?
-            raise "Illegal unknown URI <#{val}> for #{header} on line #{line}." unless uri_exists?(val)
+            unless uri_exists?(val)
+              fmt.warn("Illegal unknown URI <#{val}> for #{header}", line)
+            end
           end
         end
       end
