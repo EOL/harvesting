@@ -30,14 +30,13 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :resources do |t|
       t.integer :site_id, null: false
-      t.integer :site_pk
       # position for sorting. Lower position means high-priority harvesting
       t.integer :position
       t.integer :min_days_between_harvests, null: false, default: 0
       # If harvest_day_of_month is null, use min_days_between_harvests
       t.integer :harvest_day_of_month
-      t.integer :last_harvest_minutes
       t.integer :nodes_count
+      t.string :site_pk
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
@@ -67,7 +66,8 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :file_type, comment: "enum: excel, csv, dwca", default: 0
       # represents e.g.: :articles for http://eol.org/schema/media/Document
       t.integer :represents, null: false,
-        comment: "enum: articles, attributions, images, js_maps, links, media, maps, refs, sounds, videos, nodes, vernaculars"
+        comment: "enum: articles, attributions, images, js_maps, links, media, "\
+          "maps, refs, sounds, videos, nodes, vernaculars, scientific_names"
       t.string :get_from, null: false,
         comment: "may be remote URL or full file system path"
       t.string :file, comment: "full path"
@@ -93,6 +93,7 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :harvests do |t|
       t.integer :resource_id, null: false
+      t.integer :time_in_minutes
       t.boolean :hold, null: false, default: false
       t.datetime :fetched_at
       t.datetime :validated_at

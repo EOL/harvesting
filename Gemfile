@@ -6,6 +6,9 @@ gem 'acts_as_list', '~> 0.7.6'
 # Parse Excel files:
 gem "creek", "~> 1.1"
 
+# Because ERB is just plain silly compared to Haml:
+gem 'haml-rails'
+
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem "jbuilder", "~> 2.0"
 # Use jquery as the JavaScript library

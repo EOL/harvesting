@@ -107,6 +107,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "harvests", force: :cascade do |t|
     t.integer  "resource_id",            limit: 4,                 null: false
+    t.integer  "time_in_minutes",        limit: 4
     t.boolean  "hold",                             default: false, null: false
     t.datetime "fetched_at"
     t.datetime "validated_at"
@@ -260,12 +261,11 @@ ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "resources", force: :cascade do |t|
     t.integer  "site_id",                   limit: 4,                   null: false
-    t.integer  "site_pk",                   limit: 4
     t.integer  "position",                  limit: 4
     t.integer  "min_days_between_harvests", limit: 4,   default: 0,     null: false
     t.integer  "harvest_day_of_month",      limit: 4
-    t.integer  "last_harvest_minutes",      limit: 4
     t.integer  "nodes_count",               limit: 4
+    t.string   "site_pk",                   limit: 255
     t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
     t.string   "name",                      limit: 255,                 null: false
     t.string   "abbr",                      limit: 255,                 null: false

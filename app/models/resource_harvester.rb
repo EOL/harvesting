@@ -26,8 +26,7 @@ class ResourceHarvester
   end
 
   def create_harvest_instance
-    @harvest = Harvest.create(resource_id: resource.id)
-    resource.formats.each { |fmt| fmt.copy_to_harvest(@harvest) }
+    @harvest = @resource.create_harvest_instance
   end
 
   # grab the file from each format

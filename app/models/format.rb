@@ -7,10 +7,25 @@ class Format < ActiveRecord::Base
 
   enum file_type: [ :excel, :dwca, :csv ]
   enum represents: [ :articles, :attributions, :images, :js_maps, :links,
-    :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars ]
+    :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars,
+    :scientific_names ]
+
+  acts_as_list scope: :resource
+
+  scope :abstract, -> { where("harvest_id IS NULL") }
 
   def copy_to_harvest(new_harvest)
-    new_harvest.formats << self.clone
+    new_format = self.dup
+    new_harvest.formats << new_format
+    fields.each do |field|
+      new_field = field.dup
+      # TODO: see if these two commands are redundant:
+      new_field.format_id = new_format.id
+      new_format.fields << new_field
+      new_field.save!
+    end
+    new_format.save!
+    new_format
   end
 
   # You can pass in :cat, :e, :line as options
