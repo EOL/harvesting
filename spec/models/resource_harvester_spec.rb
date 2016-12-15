@@ -109,7 +109,7 @@ RSpec.describe ResourceHarvester do
 
   context "with an expectation of known URIs in first field" do
     describe "#validate" do
-      it "raises an exception" do
+      it "logs an exception" do
         harvester.create_harvest_instance
         harvester.harvest.formats.first.fields.first.update_attribute(:validation, Field.validations[:must_know_uris])
         harvester.validate
@@ -122,13 +122,26 @@ RSpec.describe ResourceHarvester do
 
   context "with an expectation of non-null source" do
     describe "#validate" do
-      it "raises an exception" do
+      it "logs an exception" do
         harvester.create_harvest_instance
         harvester.harvest.formats.first.fields.last.update_attribute(:can_be_empty, false)
         harvester.validate
         expect(harvester.harvest.hlogs.first.line).to eq(3)
         expect(harvester.harvest.hlogs.first.warns?).to be true
         expect(harvester.harvest.hlogs.first.message).to match(/empty/)
+      end
+    end
+  end
+
+  context "with an expectation of integer" do
+    describe "#validate" do
+      it "logs an exception" do
+        harvester.create_harvest_instance
+        harvester.harvest.formats.first.fields.last.must_be_integers!
+        harvester.validate
+        expect(harvester.harvest.hlogs.first.line).to eq(2)
+        expect(harvester.harvest.hlogs.first.warns?).to be true
+        expect(harvester.harvest.hlogs.first.message).to match(/non-integer/)
       end
     end
   end
