@@ -110,12 +110,12 @@ RSpec.describe ResourceHarvester do
   context "with an expectation of known URIs in first field" do
     describe "#validate" do
       it "raises an exception" do
-        Field.first.update_attribute(:validation, Field.validations[:must_know_uris])
         harvester.create_harvest_instance
+        harvester.harvest.formats.first.fields.first.update_attribute(:validation, Field.validations[:must_know_uris])
         harvester.validate
-        expect(fmt.hlogs.first.line).to eq(2)
-        expect(fmt.hlogs.first.warns?).to be true
-        expect(fmt.hlogs.first.message).to match(/URI/)
+        expect(harvester.harvest.hlogs.first.line).to eq(2)
+        expect(harvester.harvest.hlogs.first.warns?).to be true
+        expect(harvester.harvest.hlogs.first.message).to match(/URI/)
       end
     end
   end
@@ -123,12 +123,12 @@ RSpec.describe ResourceHarvester do
   context "with an expectation of non-null source" do
     describe "#validate" do
       it "raises an exception" do
-        Field.last.update_attribute(:can_be_empty, false)
         harvester.create_harvest_instance
+        harvester.harvest.formats.first.fields.last.update_attribute(:can_be_empty, false)
         harvester.validate
-        expect(fmt.hlogs.first.line).to eq(3)
-        expect(fmt.hlogs.first.warns?).to be true
-        expect(fmt.hlogs.first.message).to match(/empty/)
+        expect(harvester.harvest.hlogs.first.line).to eq(3)
+        expect(harvester.harvest.hlogs.first.warns?).to be true
+        expect(harvester.harvest.hlogs.first.message).to match(/empty/)
       end
     end
   end
