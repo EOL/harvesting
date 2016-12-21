@@ -60,6 +60,7 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :sheet, null: false, default: 1,
         comment: "which sheet to read, if it's in a multi-sheet file"
       t.integer :header_lines, null: false, default: 1
+      t.integer :data_begins_on_line, null: false, default: 1
       t.integer :position,
         comment: "Because each file should be read in a specific order..."
       # NOTE: default is the first value, in this case, excel.
@@ -81,12 +82,14 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :position, null: false
       t.integer :validation,
         comment: "enum: must_be_integers, must_be_numerical, must_know_uris"
+      t.integer :mapping,
+        comment: "Enum: (but values TBD) ... can replace map_to_field or be used for transforms"
+      t.integer :special_handling,
+        comment: "Enum: (but values TBD) these allow post-filtering specific to 'trouble' resources, after mapping is applied"
+      t.string :submapping,
+        comment: "used for to_attribution and to_ancestor mappings to assign the proper association (role or rank); null by default"
       t.string :expected_header,
         comment: "Does NOT need to literally match, but produces a warning if it doesn't (with some slop allowed)"
-      t.string :map_to_table
-      t.string :map_to_field
-      t.string :mapping,
-        comment: "can replace map_to_field or be used for transforms"
       t.boolean :unique_in_format, default: false, null: false
       t.boolean :can_be_empty, default: true, null: false
     end
@@ -127,38 +130,56 @@ class InitialSchema < ActiveRecord::Migration
     end
 
     # NOTE: content will be handled in a separate migration, since they seem a
-    # salient "piece" of things.
+    # salient "piece" of things. NOTE: A lot of indexes on this table! :S
 
     create_table :nodes do |t|
-      t.integer :resource_id, null: false
+      t.integer :resource_id, null: false, index: true
       t.integer :page_id, comment: "null means unassigned, of course"
       t.integer :site_pk
-      t.integer :parent_id, null: false, default: 0
+      t.integer :parent_id, null: false, default: 0, index: true
       t.integer :scientific_name_id, null: false
 
-      t.string :verbatim_name, null: false
-      t.string :resource_pk
-      # rank is a _normalized_ rank string... really an enumeration, but not stored that way.
+      t.string :name_verbatim, null: false
+      t.string :taxonomic_status_verbatim
+      t.string :resource_pk, index: true
+      t.string :further_information_url
+      # rank is a _normalized_ rank string... really an enumeration, but not
+      # stored that way. TODO: why not? We should.
       t.string :rank
-      # original_rank is whatever rank string they actually used:
-      t.string :original_rank
+      t.string :rank_verbatim
       # TODO: is this the same as literature_references?
       t.string :remarks
     end
 
     create_table :scientific_names do |t|
       t.integer :resource_id, null: false
-      t.integer :node_id, null: false
+      t.integer :node_id, comment: "SHOULD be required, but that's a catch-22."
       t.integer :normalized_name_id
-      t.string :verbatim
+      # This list was captured from the document Katja produced (this link may
+      # not work for all):
+      # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
+      t.integer :taxonomic_status,
+        comment: "Enum: preferred, provisionally_accepted, acronym, synonym, unusable"
+
+      t.string :verbatim, null: false
+      t.string :taxonomic_status_verbatim
+      t.string :publication
+      t.string :source_reference
+      # The following are strings from GNA:
       t.string :warnings
       t.string :genus
       t.string :specific_epithet
       t.string :authorship
-      t.string :source_reference
+
       t.text :remarks
+
+      # The year is from GNA:
       t.integer :year
+
       t.boolean :is_preferred
+      t.boolean :is_used_for_merges, default: true
+      t.boolean :is_publishable, default: true
+      # The following are booleans from GNA:
       t.boolean :hybrid
       t.boolean :surrogate
       t.boolean :virus
@@ -171,6 +192,8 @@ class InitialSchema < ActiveRecord::Migration
       t.string :language_code_verbatim
       t.string :language_code
       t.string :language_group_code
+      t.string :locality
+      t.string :source_reference
       t.text :remarks
       t.boolean :is_preferred
     end
@@ -186,6 +209,8 @@ class InitialSchema < ActiveRecord::Migration
     # this is effectively a "section" of the content; it's part of the object.
     create_table :refs do |t|
       t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
+      t.string :url
+      t.string :doi
 
       t.timestamps null: false
     end

@@ -9,8 +9,14 @@ class InitialContent < ActiveRecord::Migration
       t.string :resource_pk, null: false, comment: "was: identifier"
       t.string :unmodified_url,
         comment: "This is the unmodified, original image that we store locally; includes extension (unlike base_url)"
+      t.string :name_verbatim, comment: "was: title"
+      t.string :name, comment: "was: title, we will sanitize and restrict HTML and normalize this"
       t.string :source_page_url,
         comment: "This is where the 'view original' link takes you (could be an remote image or a webpage)"
+      t.string :source_url
+      t.string :base_url, null: false,
+        comment: "for images, you will add size info to this; was: object_url"
+      t.string :rights_statement
 
       t.integer :subclass, null: false, default: 0, index: true,
         comment: "enum: image, video, sound, map, js_map"
@@ -28,12 +34,8 @@ class InitialContent < ActiveRecord::Migration
       t.text :owner, null: false,
         comment: "html; was rights_holder; current longest is 493; if missing, *must* be populated "\
           "with another attribution agent or the resource name: we MUST show an owner"
-
-      t.string :name, comment: "was: title"
-      t.string :source_url
-      t.text :description, comment: "html; run through namelinks"
-      t.string :base_url, null: false,
-        comment: "for images, you will add size info to this; was: object_url"
+      t.text :description_verbatim, comment: "assumed to be dirty html"
+      t.text :description, comment: "sanitized html; run through namelinks"
 
       t.datetime :downloaded_at
       t.timestamps null: false
@@ -114,13 +116,27 @@ class InitialContent < ActiveRecord::Migration
       t.timestamps null: false
     end
 
-    create_table :attributions do |t|
+    create_table :attributions_contents do |t|
       t.integer :attribution_id, null: false, index: true
       t.references :content, polymorphic: true, index: true, null: false
       t.integer :role_id, null: false, index: true
+    end
+
+    create_table :attributions do |t|
+      t.string :resource_pk, null: false, index: true
+      t.string :name
+      t.string :email
       t.text :value, null: false, comment: "html"
 
       t.timestamps null: false
+    end
+
+    create_table :locations do |t|
+      t.string :verbatim
+      t.string :created
+      t.decimal :lat, precision: 64, scale: 12
+      t.decimal :long, precision: 64, scale: 12
+      t.decimal :alt, precision: 64, scale: 12
     end
 
     create_table :terms do |t|

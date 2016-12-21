@@ -51,18 +51,26 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "attributions", force: :cascade do |t|
-    t.integer  "attribution_id", limit: 4,     null: false
-    t.integer  "content_id",     limit: 4,     null: false
-    t.string   "content_type",   limit: 255,   null: false
-    t.integer  "role_id",        limit: 4,     null: false
-    t.text     "value",          limit: 65535, null: false
-    t.datetime "created_at",                   null: false
-    t.datetime "updated_at",                   null: false
+    t.string   "resource_pk", limit: 255,   null: false
+    t.string   "name",        limit: 255
+    t.string   "email",       limit: 255
+    t.text     "value",       limit: 65535, null: false
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
   end
 
-  add_index "attributions", ["attribution_id"], name: "index_attributions_on_attribution_id", using: :btree
-  add_index "attributions", ["content_type", "content_id"], name: "index_attributions_on_content_type_and_content_id", using: :btree
-  add_index "attributions", ["role_id"], name: "index_attributions_on_role_id", using: :btree
+  add_index "attributions", ["resource_pk"], name: "index_attributions_on_resource_pk", using: :btree
+
+  create_table "attributions_contents", force: :cascade do |t|
+    t.integer "attribution_id", limit: 4,   null: false
+    t.integer "content_id",     limit: 4,   null: false
+    t.string  "content_type",   limit: 255, null: false
+    t.integer "role_id",        limit: 4,   null: false
+  end
+
+  add_index "attributions_contents", ["attribution_id"], name: "index_attributions_contents_on_attribution_id", using: :btree
+  add_index "attributions_contents", ["content_type", "content_id"], name: "index_attributions_contents_on_content_type_and_content_id", using: :btree
+  add_index "attributions_contents", ["role_id"], name: "index_attributions_contents_on_role_id", using: :btree
 
   create_table "bibliographic_citations", force: :cascade do |t|
     t.text     "body",       limit: 65535
@@ -82,27 +90,28 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "format_id",        limit: 4,                   null: false
     t.integer "position",         limit: 4,                   null: false
     t.integer "validation",       limit: 4
+    t.integer "mapping",          limit: 4
+    t.integer "special_handling", limit: 4
+    t.string  "submapping",       limit: 255
     t.string  "expected_header",  limit: 255
-    t.string  "map_to_table",     limit: 255
-    t.string  "map_to_field",     limit: 255
-    t.string  "mapping",          limit: 255
     t.boolean "unique_in_format",             default: false, null: false
     t.boolean "can_be_empty",                 default: true,  null: false
   end
 
   create_table "formats", force: :cascade do |t|
-    t.integer "resource_id",  limit: 4,                   null: false
-    t.integer "harvest_id",   limit: 4
-    t.integer "sheet",        limit: 4,   default: 1,     null: false
-    t.integer "header_lines", limit: 4,   default: 1,     null: false
-    t.integer "position",     limit: 4
-    t.integer "file_type",    limit: 4,   default: 0
-    t.integer "represents",   limit: 4,                   null: false
-    t.string  "get_from",     limit: 255,                 null: false
-    t.string  "file",         limit: 255
-    t.string  "field_sep",    limit: 4,   default: ","
-    t.string  "line_sep",     limit: 4,   default: "\n"
-    t.boolean "utf8",                     default: false, null: false
+    t.integer "resource_id",         limit: 4,                   null: false
+    t.integer "harvest_id",          limit: 4
+    t.integer "sheet",               limit: 4,   default: 1,     null: false
+    t.integer "header_lines",        limit: 4,   default: 1,     null: false
+    t.integer "data_begins_on_line", limit: 4,   default: 1,     null: false
+    t.integer "position",            limit: 4
+    t.integer "file_type",           limit: 4,   default: 0
+    t.integer "represents",          limit: 4,                   null: false
+    t.string  "get_from",            limit: 255,                 null: false
+    t.string  "file",                limit: 255
+    t.string  "field_sep",           limit: 4,   default: ","
+    t.string  "line_sep",            limit: 4,   default: "\n"
+    t.boolean "utf8",                            default: false, null: false
   end
 
   create_table "harvests", force: :cascade do |t|
@@ -156,11 +165,24 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "section_id", limit: 4, null: false
   end
 
+  create_table "locations", force: :cascade do |t|
+    t.string  "verbatim", limit: 255
+    t.string  "created",  limit: 255
+    t.decimal "lat",                  precision: 64, scale: 12
+    t.decimal "long",                 precision: 64, scale: 12
+    t.decimal "alt",                  precision: 64, scale: 12
+  end
+
   create_table "media", force: :cascade do |t|
     t.string   "guid",                      limit: 255,               null: false
     t.string   "resource_pk",               limit: 255,               null: false
     t.string   "unmodified_url",            limit: 255
+    t.string   "name_verbatim",             limit: 255
+    t.string   "name",                      limit: 255
     t.string   "source_page_url",           limit: 255
+    t.string   "source_url",                limit: 255
+    t.string   "base_url",                  limit: 255,               null: false
+    t.string   "rights_statement",          limit: 255
     t.integer  "subclass",                  limit: 4,     default: 0, null: false
     t.integer  "format",                    limit: 4,     default: 0, null: false
     t.integer  "resource_id",               limit: 4,                 null: false
@@ -171,10 +193,8 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer  "javascript_id",             limit: 4
     t.integer  "bibliographic_citation_id", limit: 4
     t.text     "owner",                     limit: 65535,             null: false
-    t.string   "name",                      limit: 255
-    t.string   "source_url",                limit: 255
+    t.text     "description_verbatim",      limit: 65535
     t.text     "description",               limit: 65535
-    t.string   "base_url",                  limit: 255,               null: false
     t.datetime "downloaded_at"
     t.datetime "created_at",                                          null: false
     t.datetime "updated_at",                                          null: false
@@ -212,17 +232,23 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "nodes", force: :cascade do |t|
-    t.integer "resource_id",        limit: 4,               null: false
-    t.integer "page_id",            limit: 4
-    t.integer "site_pk",            limit: 4
-    t.integer "parent_id",          limit: 4,   default: 0, null: false
-    t.integer "scientific_name_id", limit: 4,               null: false
-    t.string  "verbatim_name",      limit: 255,             null: false
-    t.string  "resource_pk",        limit: 255
-    t.string  "rank",               limit: 255
-    t.string  "original_rank",      limit: 255
-    t.string  "remarks",            limit: 255
+    t.integer "resource_id",               limit: 4,               null: false
+    t.integer "page_id",                   limit: 4
+    t.integer "site_pk",                   limit: 4
+    t.integer "parent_id",                 limit: 4,   default: 0, null: false
+    t.integer "scientific_name_id",        limit: 4,               null: false
+    t.string  "name_verbatim",             limit: 255,             null: false
+    t.string  "taxonomic_status_verbatim", limit: 255
+    t.string  "resource_pk",               limit: 255
+    t.string  "further_information_url",   limit: 255
+    t.string  "rank",                      limit: 255
+    t.string  "rank_verbatim",             limit: 255
+    t.string  "remarks",                   limit: 255
   end
+
+  add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
+  add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
+  add_index "nodes", ["resource_pk"], name: "index_nodes_on_resource_pk", using: :btree
 
   create_table "normalized_names", force: :cascade do |t|
     t.string "string",    limit: 255
@@ -255,6 +281,8 @@ ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "refs", force: :cascade do |t|
     t.text     "body",       limit: 65535
+    t.string   "url",        limit: 255
+    t.string   "doi",        limit: 255
     t.datetime "created_at",               null: false
     t.datetime "updated_at",               null: false
   end
@@ -286,18 +314,23 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "scientific_names", force: :cascade do |t|
-    t.integer "resource_id",        limit: 4,     null: false
-    t.integer "node_id",            limit: 4,     null: false
-    t.integer "normalized_name_id", limit: 4
-    t.string  "verbatim",           limit: 255
-    t.string  "warnings",           limit: 255
-    t.string  "genus",              limit: 255
-    t.string  "specific_epithet",   limit: 255
-    t.string  "authorship",         limit: 255
-    t.string  "source_reference",   limit: 255
-    t.text    "remarks",            limit: 65535
-    t.integer "year",               limit: 4
+    t.integer "resource_id",               limit: 4,                    null: false
+    t.integer "node_id",                   limit: 4
+    t.integer "normalized_name_id",        limit: 4
+    t.integer "taxonomic_status",          limit: 4
+    t.string  "verbatim",                  limit: 255,                  null: false
+    t.string  "taxonomic_status_verbatim", limit: 255
+    t.string  "publication",               limit: 255
+    t.string  "source_reference",          limit: 255
+    t.string  "warnings",                  limit: 255
+    t.string  "genus",                     limit: 255
+    t.string  "specific_epithet",          limit: 255
+    t.string  "authorship",                limit: 255
+    t.text    "remarks",                   limit: 65535
+    t.integer "year",                      limit: 4
     t.boolean "is_preferred"
+    t.boolean "is_used_for_merges",                      default: true
+    t.boolean "is_publishable",                          default: true
     t.boolean "hybrid"
     t.boolean "surrogate"
     t.boolean "virus"
@@ -359,6 +392,8 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.string  "language_code_verbatim", limit: 255
     t.string  "language_code",          limit: 255
     t.string  "language_group_code",    limit: 255
+    t.string  "locality",               limit: 255
+    t.string  "source_reference",       limit: 255
     t.text    "remarks",                limit: 65535
     t.boolean "is_preferred"
   end

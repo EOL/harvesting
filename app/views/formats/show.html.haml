@@ -15,6 +15,10 @@
     %li
       %strong= "Header Lines:"
       = @format.header_lines
+  - if @format.header_lines > 1
+    %li
+      %strong= "Data Begins on Line:"
+      = @format.data_begins_on_line
   %li
     %strong= "Read Position:"
     = @format.position

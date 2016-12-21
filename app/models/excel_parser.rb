@@ -13,6 +13,7 @@ class ExcelParser
     @sheet_num = options[:sheet] || 1
     @sheet_num -= 1
     @header_lines = options[:header_lines] || 1
+    @data_begins_on_line = options[:data_begins_on_line] || 1
     @path_to_file = path_to_file
     @file_open = false
     @headers = nil
@@ -35,6 +36,7 @@ class ExcelParser
       row.each do |cell, contents|
         column = cell.gsub(/\d+$/, "")
         headers[column] ||= []
+        next unless contents
         headers[column] << contents.gsub(/\r/, " ").gsub(/\n/, " ")
       end
     end
@@ -50,9 +52,9 @@ class ExcelParser
   def rows_as_hashes(&block)
     open_file
     @sheet.rows.each_with_index do |row, i|
-      next if i < @header_lines
+      next if i < @data_begins_on_line
       hash = Hash[headers.zip(row.values)]
-      yield(hash)
+      yield(hash, i)
     end
   end
 end

@@ -2,6 +2,7 @@ require 'csv'
 class CsvParser
   def initialize(path_to_file, options = {})
     @header_lines = options[:header_lines] || 1
+    @data_begins_on_line = options[:data_begins_on_line] || 1
     @col_sep = options[:field_sep] || ","
     @row_sep = options[:line_sep] || "\n"
     @path_to_file = path_to_file
@@ -37,9 +38,9 @@ class CsvParser
 
   def rows_as_hashes(&block)
     line_at_a_time do |row, i|
-      next if i < @header_lines
+      next if i < @data_begins_on_line
       hash = Hash[headers.zip(row)]
-      yield(hash)
+      yield(hash, i)
     end
   end
 end

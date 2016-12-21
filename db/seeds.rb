@@ -1,9 +1,9 @@
-resource = Resource.where(name: "Smithsonian").first_or_create do |r|
+resource = Resource.where(name: "Test CSV").first_or_create do |r|
   r.site_id = 1
-  r.site_pk = "SI"
+  r.site_pk = "CSV"
   r.position = 1
-  r.name = "Smithsonian"
-  r.abbr = "SI"
+  r.name = "Test CSV"
+  r.abbr = "CSV"
 end
 
 fmt = Format.where(
@@ -23,8 +23,7 @@ Field.where(format_id: fmt.id, position: 1).first_or_create do |f|
   f.position = 1
   f.validation = Field.validations[:must_be_integers]
   f.expected_header = "TID"
-  f.map_to_table = "nodes"
-  f.map_to_field = "resource_pk"
+  f.mapping = "to_nodes_pk"
   f.unique_in_format = true
   f.can_be_empty = false
 end
@@ -33,18 +32,278 @@ Field.where(format_id: fmt.id, position: 2).first_or_create do |f|
   f.format_id = fmt.id
   f.position = 2
   f.expected_header = "Kingdom"
-  f.map_to_table = "scientific_names"
-  f.map_to_field = "verbatim"
-  f.mapping = "kingdom"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "kingdom"
 end
 
 Field.where(format_id: fmt.id, position: 3).first_or_create do |f|
   f.format_id = fmt.id
   f.position = 3
   f.expected_header = "SciName"
-  f.map_to_table = "scientific_names"
-  f.map_to_field = "verbatim"
+  f.mapping = "to_nodes_scientific"
+  f.unique_in_format = true
   f.can_be_empty = false
 end
 
 resource.create_harvest_instance unless resource.harvests.count > 0
+
+# Apologies for the long "comment", but this describes the Excel file's format,
+# so it's useful:
+
+sheets = {
+sheet1_images: [
+  "MediaID http://purl.org/dc/terms/identifier", # media_pk
+  "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_fk
+  "Type http://purl.org/dc/terms/type", # media_type
+  "Subtype http://rs.tdwg.org/audubon_core/subtype", # media_subtype
+  "Format http://purl.org/dc/terms/format", # format
+  "Subject http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/CVterm", # section
+  "Title http://purl.org/dc/terms/title", # media_name
+  "Description http://purl.org/dc/terms/description",  # media_description
+  "AccessURI http://rs.tdwg.org/ac/terms/accessURI", # media_source_url
+  "ThumbnailURL http://eol.org/schema/media/thumbnailURL", # ignored (we build our own)
+  "FurtherInformationURL http://rs.tdwg.org/ac/terms/furtherInformationURL", # media_source_page_url
+  "DerivedFrom http://rs.tdwg.org/ac/terms/derivedFrom", # derived_from_reference
+  "CreateDate http://ns.adobe.com/xap/1.0/CreateDate", # to_ignored
+  "Modified http://purl.org/dc/terms/modified", # ignored
+  "Language http://purl.org/dc/terms/language", # to_language_639_1
+  "Rating http://ns.adobe.com/xap/1.0/Rating", # ignored
+  "Audience http://purl.org/dc/terms/audience", # ignored
+  "License http://ns.adobe.com/xap/1.0/rights/UsageTerms", # license
+  "Rights http://purl.org/dc/terms/rights", # media_rights_statement
+  "Owner http://ns.adobe.com/xap/1.0/rights/Owner", # media_owner
+  "BibliographicCitation http://purl.org/dc/terms/bibliographicCitation", # bibliographic_citation
+  "Publisher http://purl.org/dc/terms/publisher", # to_attribution submapping: publisher
+  "Contributor http://purl.org/dc/terms/contributor", # to_attribution submapping: contributor
+  "Creator http://purl.org/dc/terms/creator", # to_attribution submapping: creator
+  "AgentID http://eol.org/schema/agent/agentID", # to_attributions_fk
+  "LocationCreated http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated", # location
+  "GenericLocation http://purl.org/dc/terms/spatial", # loc_verbatim
+  "Latitude http://www.w3.org/2003/01/geo/wgs84_pos#lat", # loc_lat
+  "Longitude http://www.w3.org/2003/01/geo/wgs84_pos#long", # loc_long
+  "Altitude http://www.w3.org/2003/01/geo/wgs84_pos#alt", # loc_alt
+  "ReferenceID http://eol.org/schema/reference/referenceID" # ignored (because only articles now allow this)
+],
+sheet2_nodes: [
+  "Identifier http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_pk
+  "ScientificName http://rs.tdwg.org/dwc/terms/scientificName", # to_nodes_scientific
+  "Parent TaxonID http://rs.tdwg.org/dwc/terms/parentNameUsageID", # to_nodes_parent_fk
+  "Kingdom http://rs.tdwg.org/dwc/terms/kingdom", # to_nodes_ancestor submapping: kingdom
+  "Phylum http://rs.tdwg.org/dwc/terms/phylum", # to_nodes_ancestor submapping: phylum
+  "Class http://rs.tdwg.org/dwc/terms/class", # to_nodes_ancestor submapping: class
+  "Order http://rs.tdwg.org/dwc/terms/order", # to_nodes_ancestor submapping: order
+  "Family http://rs.tdwg.org/dwc/terms/family", # to_nodes_ancestor submapping: family
+  "Genus http://rs.tdwg.org/dwc/terms/genus", # to_nodes_ancestor submapping: genus
+  "TaxonRank http://rs.tdwg.org/dwc/terms/taxonRank", # to_nodes_rank
+  "FurtherInformationURL http://rs.tdwg.org/ac/terms/furtherInformationURL", # to_nodes_further_information_url
+  "TaxonomicStatus http://rs.tdwg.org/dwc/terms/taxonomicStatus", # to_taxonomic_status
+  "TaxonRemarks http://rs.tdwg.org/dwc/terms/taxonRemarks", # to_nodes_remarks
+  "NamePublishedIn http://rs.tdwg.org/dwc/terms/namePublishedIn", # to_nodes_publication
+  "ReferenceID http://eol.org/schema/reference/referenceID" #to_nodes_source_reference
+],
+sheet3_names: [
+  "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_fk
+  "Name http://rs.tdwg.org/dwc/terms/vernacularName", # to_vernaculars_verbatim
+  "Source Reference http://purl.org/dc/terms/source", # to_vernaculars_source_reference
+  "Language http://purl.org/dc/terms/language", # to_language_639_1
+  "Locality http://rs.tdwg.org/dwc/terms/locality", # to_vernaculars_locality
+  "CountryCode http://rs.tdwg.org/dwc/terms/countryCode", # to_vernaculars_locality
+  "IsPreferredName http://rs.gbif.org/terms/1.0/isPreferredName", # to_vernaculars_preferred
+  "TaxonRemarks http://rs.tdwg.org/dwc/terms/taxonRemarks" # to_vernaculars_remarks
+],
+sheet4_literature_references: [
+  "ReferenceID http://purl.org/dc/terms/identifier", # to_refs_pk
+  "PublicationType http://eol.org/schema/reference/publicationType", # to_ignored
+  "Full Reference http://eol.org/schema/reference/full_reference",
+  "PrimaryTitle http://eol.org/schema/reference/primaryTitle", # to_ignored
+  "SecondaryTitle http://purl.org/dc/terms/title", # to_ignored
+  "Pages http://purl.org/ontology/bibo/pages", # to_ignored
+  "PageStart http://purl.org/ontology/bibo/pageStart", # to_ignored
+  "PageEnd http://purl.org/ontology/bibo/pageEnd", # to_ignored
+  "Volume http://purl.org/ontology/bibo/volume", # to_ignored
+  "Edition http://purl.org/ontology/bibo/edition", # to_ignored
+  "Publisher http://purl.org/dc/terms/publisher", # to_ignored
+  "AuthorList http://purl.org/ontology/bibo/authorList", # to_ignored
+  "EditorList http://purl.org/ontology/bibo/editorList", # to_ignored
+  "DateCreated http://purl.org/dc/terms/created", # to_ignored
+  "Language http://purl.org/dc/terms/language", # to_ignored
+  "URL http://purl.org/ontology/bibo/uri", # to_refs_url
+  "DOI http://purl.org/ontology/bibo/doi", # to_refs_doi
+  "LocalityOfPublisher http://schemas.talis.com/2005/address/schema#localityName" # to_ignored
+],
+sheet5_agents: [
+  "AgentID http://purl.org/dc/terms/identifier", # to_attributions_pk
+  "Full Name http://xmlns.com/foaf/spec/#term_name", # to_attributions_name
+  "First Name http://xmlns.com/foaf/spec/#term_firstName", # to_ignored
+  "Family Name http://xmlns.com/foaf/spec/#term_familyName", # to_ignored
+  "Role http://eol.org/schema/agent/agentRole", # to_attributions_role
+  "Email http://xmlns.com/foaf/spec/#term_mbox", # to_attributions_email
+  "Homepage http://xmlns.com/foaf/spec/#term_homepage", # to_attributions_url
+  "Logo URL http://xmlns.com/foaf/spec/#term_logo", # to_ignored
+  "Project http://xmlns.com/foaf/spec/#term_currentProject", # to_ignored
+  "Organization http://eol.org/schema/agent/organization", # to_ignored
+  "AccountName http://xmlns.com/foaf/spec/#term_accountName", # to_ignored
+  "OpenID http://xmlns.com/foaf/spec/#term_openid" # to_ignored
+],
+sheet6_metadata_ignore_also_only_one_header_line: [
+  "Agent Roles", "Data Types", "Data Subtyes", "Subjects", "Licenses", "Ranks",
+  "TaxonStatus", "Audiences"
+] }
+
+excel_resource = Resource.where(name: "Test Excel").first_or_create do |r|
+  r.site_id = 1
+  r.site_pk = "XL"
+  r.position = 1
+  r.name = "Test Excel"
+  r.abbr = "XL"
+end
+
+fmt = Format.where(
+      resource_id: excel_resource.id,
+      represents: Format.represents[:nodes]).
+    abstract.
+    first_or_create do |f|
+  f.resource_id = excel_resource.id
+  f.represents = Format.represents[:nodes]
+  f.position = 1
+  f.sheet = 2
+  f.header_lines = 1
+  f.data_begins_on_line = 9
+  f.file_type = Format.file_types[:excel]
+  f.get_from = Rails.root.join("spec", "files", "t.xlsx")
+end
+
+Field.where(format_id: fmt.id, position: 1).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 1
+  f.expected_header = "Identifier"
+  f.mapping = "to_nodes_pk"
+  f.unique_in_format = true
+  f.can_be_empty = false
+end
+
+Field.where(format_id: fmt.id, position: 2).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 2
+  f.expected_header = "ScientificName"
+  f.mapping = "to_nodes_scientific"
+  f.unique_in_format = true
+  f.can_be_empty = false
+end
+
+Field.where(format_id: fmt.id, position: 3).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 3
+  f.expected_header = "Parent TaxonID"
+  f.mapping = "to_nodes_parent_fk"
+end
+
+Field.where(format_id: fmt.id, position: 4).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 4
+  f.expected_header = "Kingdom"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "kingdom"
+end
+
+Field.where(format_id: fmt.id, position: 5).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 5
+  f.expected_header = "Phylum"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "phylum"
+end
+
+Field.where(format_id: fmt.id, position: 6).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 6
+  f.expected_header = "Class"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "class"
+end
+
+Field.where(format_id: fmt.id, position: 7).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 7
+  f.expected_header = "Order"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "order"
+end
+
+Field.where(format_id: fmt.id, position: 8).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 8
+  f.expected_header = "Family"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "family"
+end
+
+Field.where(format_id: fmt.id, position: 9).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 9
+  f.expected_header = "Genus"
+  f.mapping = "to_nodes_ancestor"
+  f.submapping = "genus"
+end
+
+Field.where(format_id: fmt.id, position: 10).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 10
+  f.expected_header = "TaxonRank"
+  f.mapping = "to_nodes_rank"
+end
+
+Field.where(format_id: fmt.id, position: 11).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 11
+  f.expected_header = "FurtherInformationURL"
+  f.mapping = "to_nodes_further_information_url"
+end
+
+Field.where(format_id: fmt.id, position: 12).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 12
+  f.expected_header = "TaxonomicStatus"
+  f.mapping = "to_taxonomic_status"
+end
+
+Field.where(format_id: fmt.id, position: 13).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 13
+  f.expected_header = "TaxonRemarks"
+  f.mapping = "to_nodes_remarks"
+end
+
+Field.where(format_id: fmt.id, position: 14).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 14
+  f.expected_header = "NamePublishedIn"
+  f.mapping = "to_nodes_publication"
+end
+
+Field.where(format_id: fmt.id, position: 15).first_or_create do |f|
+  f.format_id = fmt.id
+  f.position = 15
+  f.expected_header = "ReferenceID"
+  f.mapping = "to_nodes_source_reference"
+end
+
+# You don't want this code to run with db:seed, but you DO want to copy/paste
+# this code manually, when you want to see the Excel file get tested:
+if(false)
+  # @all_at_once = false
+  excel_resource = Resource.where(name: "Test Excel").first
+  # if(@all_at_once)
+  #   excel_resource.start_harvest
+  # else
+    harvester = ResourceHarvester.new(excel_resource)
+    harvester.create_harvest_instance
+    harvester.fetch
+    # harvester.validate
+    harvester.store
+  # end
+  # OOOORRRRR...
+  harvester = ResourceHarvester.new(Resource.where(name: "Test Excel").first)
+  harvester.create_harvest_instance && harvester.fetch
+  harvester.store
+end

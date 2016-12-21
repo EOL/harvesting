@@ -1,5 +1,8 @@
 require 'rails_helper'
 
+# Seeds has a (really) long "comment" describing the format of that Excel file!
+
+
 RSpec.describe ExcelParser do
   before(:all) do
     # This takes a long time (about 1.5 sec on my machine), so you only want to
@@ -24,7 +27,7 @@ RSpec.describe ExcelParser do
       let(:row) {
         i = 0
         row = nil
-        @parser.rows_as_hashes do |r|
+        @parser.rows_as_hashes do |r, _|
           row = r
           break if i > 5
           i += 1
