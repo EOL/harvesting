@@ -154,7 +154,8 @@ class InitialSchema < ActiveRecord::Migration
     create_table :scientific_names do |t|
       t.integer :resource_id, null: false
       t.integer :node_id, comment: "SHOULD be required, but that's a catch-22."
-      t.integer :normalized_name_id
+      t.integer :normalized_name_id, index: true
+      t.integer :parse_quality
       # This list was captured from the document Katja produced (this link may
       # not work for all):
       # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr

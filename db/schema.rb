@@ -317,6 +317,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "resource_id",               limit: 4,                    null: false
     t.integer "node_id",                   limit: 4
     t.integer "normalized_name_id",        limit: 4
+    t.integer "parse_quality",             limit: 4
     t.integer "taxonomic_status",          limit: 4
     t.string  "verbatim",                  limit: 255,                  null: false
     t.string  "taxonomic_status_verbatim", limit: 255
@@ -335,6 +336,8 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.boolean "surrogate"
     t.boolean "virus"
   end
+
+  add_index "scientific_names", ["normalized_name_id"], name: "index_scientific_names_on_normalized_name_id", using: :btree
 
   create_table "section", force: :cascade do |t|
     t.string "name", limit: 255
