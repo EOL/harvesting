@@ -145,6 +145,11 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.datetime "created_at"
   end
 
+  create_table "languages", force: :cascade do |t|
+    t.string "code",       limit: 255
+    t.string "group_code", limit: 255
+  end
+
   create_table "links", force: :cascade do |t|
     t.string   "guid",        limit: 255,   null: false
     t.string   "resource_pk", limit: 255,   null: false
@@ -186,11 +191,10 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer  "subclass",                  limit: 4,     default: 0, null: false
     t.integer  "format",                    limit: 4,     default: 0, null: false
     t.integer  "resource_id",               limit: 4,                 null: false
+    t.integer  "node_id",                   limit: 4
     t.integer  "license_id",                limit: 4,                 null: false
     t.integer  "language_id",               limit: 4
     t.integer  "location_id",               limit: 4
-    t.integer  "stylesheet_id",             limit: 4
-    t.integer  "javascript_id",             limit: 4
     t.integer  "bibliographic_citation_id", limit: 4
     t.text     "owner",                     limit: 65535,             null: false
     t.text     "description_verbatim",      limit: 65535
@@ -201,6 +205,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   add_index "media", ["guid"], name: "index_media_on_guid", using: :btree
+  add_index "media", ["node_id"], name: "index_media_on_node_id", using: :btree
   add_index "media", ["resource_id"], name: "index_media_on_resource_id", using: :btree
   add_index "media", ["subclass"], name: "index_media_on_subclass", using: :btree
 
@@ -247,6 +252,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
+  add_index "nodes", ["resource_id", "resource_pk"], name: "by_resource_and_pk", using: :btree
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
   add_index "nodes", ["resource_pk"], name: "index_nodes_on_resource_pk", using: :btree
 
@@ -391,10 +397,9 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   create_table "vernaculars", force: :cascade do |t|
     t.integer "resource_id",            limit: 4,     null: false
     t.integer "node_id",                limit: 4,     null: false
+    t.integer "language_id",            limit: 4,     null: false
     t.string  "verbatim",               limit: 255
     t.string  "language_code_verbatim", limit: 255
-    t.string  "language_code",          limit: 255
-    t.string  "language_group_code",    limit: 255
     t.string  "locality",               limit: 255
     t.string  "source_reference",       limit: 255
     t.text    "remarks",                limit: 65535

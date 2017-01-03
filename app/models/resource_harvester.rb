@@ -3,6 +3,12 @@ require "open3"
 class ResourceHarvester
   attr_accessor :resource, :harvest
 
+  # NOTE: Composition pattern, here. Too much to have in one file:
+  include Store::Nodes
+  include Store::Media
+  include Store::Vernaculars
+  include Store::ModelBuilder
+
   # NOTE: I'll make this "classy" later; for now I just want to read in our test
   # file and "feel out" how the class should actually work.
   def initialize(resource)
@@ -127,11 +133,14 @@ class ResourceHarvester
       fields = build_fields(fmt, headers)
       parser.rows_as_hashes do |row, line|
         @models = { node: nil, parent_node: nil, scientific_name: nil,
-          ancestors: [] }
+          ancestors: [], medium: nil, vernacular: nil }
         begin
           headers.each do |header|
             field = fields[header]
-            send(field.mapping, field, row[header]) unless row[header].blank?
+            next if row[header].blank?
+            next if field.to_ignored?
+            # NOTE: that these methods are defined in the Harvest::* mixins:
+            send(field.mapping, field, row[header])
           end
         rescue => e
           puts "Failed to parse row #{line}..."
@@ -139,42 +148,8 @@ class ResourceHarvester
           raise e
         end
         begin
-          if @models[:scientific_name]
-            @models[:scientific_name].resource_id = @resource.id
-            @models[:scientific_name].save!
-            @models[:node].scientific_name_id =
-              @models[:scientific_name].id if @models[:node]
-          end
-          if @models[:parent_node]
-            @models[:parent_node].resource_id = @resource.id
-            @models[:parent_node].save!
-            @models[:node].parent_id = @models[:parent_node].id if
-              @models[:node]
-          end
-          if @models[:node]
-            @models[:node].resource_id = @resource.id
-            @nodes[@models[:node].resource_pk] = @models[:node].save!
-            @models[:scientific_name].update_attribute(:node_id,
-              @models[:node].id) if @models[:scientific_name]
-          end
-          unless @models[:ancestors].empty?
-            parent_id = 0
-            @models[:ancestors].each do |ancestor|
-              if ancestor[:node].new_record?
-                ancestor[:sci_name].save!
-                ancestor[:node].scientific_name_id = ancestor[:sci_name].id
-                ancestor[:node].parent_id = parent_id
-                ancestor[:node].save!
-                @ancestors[ancestor[:name]] = ancestor
-              end
-              parent_id = ancestor[:node].id
-            end
-            if @models[:parent_node]
-              @models[:parent_node].update_attribute(:parent_id, parent_id)
-            else
-              @models[:node].update_attribute(:parent_id, parent_id)
-            end
-          end
+          # NOTE: see Store::ModelBuilder mixin for this (Composition):
+          build_models
         rescue => e
           if row.values.compact.size < (row.values.size / 5)
             fmt.warn("Empty row?", line)
@@ -186,63 +161,6 @@ class ResourceHarvester
         end
       end
     end
-  end
-
-  # TODO: Move things around...
-  def to_nodes_pk(field, val)
-    @models[:node] ||= Node.new
-    @models[:node].resource_pk = val
-  end
-  def to_nodes_scientific(field, val)
-    @models[:node] ||= Node.new
-    @models[:scientific_name] ||= ScientificName.new
-    @models[:scientific_name].verbatim = val
-    @models[:node].name_verbatim = val
-  end
-  def to_nodes_parent_fk(field, val)
-    @models[:node] ||= Node.new
-    @models[:parent_node] ||= Node.new
-    @models[:parent_node].resource_pk = val
-  end
-  def to_nodes_ancestor(field, val)
-    if @ancestors[val]
-      @models[:ancestors] << {
-        name: val,
-        sci_name: @ancestors[val][:sci_name],
-        node: @ancestors[val][:node]
-      }
-    else
-      @models[:ancestors] << {
-        name: val,
-        sci_name: ScientificName.new(verbatim: val, resource_id: @resource.id),
-        node: Node.new(rank_verbatim: field.submapping,
-          resource_id: @resource.id, name_verbatim: val)
-      }
-    end
-  end
-  def to_nodes_rank(field, val)
-    @models[:node] ||= Node.new
-    @models[:node].rank_verbatim = val
-  end
-  def to_nodes_further_information_url(field, val)
-    @models[:node] ||= Node.new
-    @models[:node].further_information_url = val
-  end
-  def to_taxonomic_status(field, val)
-    @models[:scientific_name] ||= ScientificName.new
-    @models[:scientific_name].taxonomic_status_verbatim = val
-  end
-  def to_nodes_remarks(field, val)
-    @models[:node] ||= Node.new
-    @models[:node].remarks = val
-  end
-  def to_nodes_publication(field, val)
-    @models[:scientific_name] ||= ScientificName.new
-    @models[:scientific_name].publication = val
-  end
-  def to_nodes_source_reference(field, val)
-    @models[:scientific_name] ||= ScientificName.new
-    @models[:scientific_name].source_reference = val
   end
 
   def build_fields(fmt, headers)
@@ -259,63 +177,8 @@ class ResourceHarvester
   def queue_downloads
   end
 
-  # TODO: cleanup, test
   def parse_names
-    # NOTE: we may change the way we do this, from using a file of names to
-    # calling a service, but for now, this will work fine and should be pretty
-    # scalable. THAT said, TODO is that we don't want all of the names from the
-    # resource, we only want the "new" ones (that is, new or modified). Perhaps
-    # we can achieve that with a timestamp. but for now, I'm ignoring it, since
-    # we don't have delta-detection, yet.
-    names = ScientificName.where(resource_id: @resource.id)
-    verbatims = names.pluck(:verbatim).join("\n")
-    filename = Rails.root.join("tmp", "names-#{@resource.id}.txt")
-    File.unlink(filename)
-    outfile = Rails.root.join("tmp", "names-parsed-#{@resource.id}.json")
-    File.unlink(outfile)
-    File.open(filename, "w") { |file| file.write(verbatims) }
-    _, stdout, stderr = Open3.popen3("gnparse file --input #{filename} "\
-      "--output #{outfile}")
-    # TODO: DO SOMETHING WITH stdout/stderr ... ecpect err to be nil, expect out
-    # to be something like "running with parallelism: 12\n" NOTE: it's a little
-    # awkward in that the output is one-per-line, rather than the whole file
-    # actually being json. We force it into an array syntax:
-    json = "[" + File.read(outfile).gsub("\n", ",").chop + "]"
-    JSON.parse(json).each do |result|
-      # Examples: https://github.com/GlobalNamesArchitecture/gnparser/blob/master/parser/src/test/resources/test_data.txt
-      genus = nil
-      epi = nil
-      authors = nil
-      if result.has_key?("details")
-        result["details"].each do |hash|
-          hash.each do |k, v|
-            case k
-            when "genus"
-              genus = v["value"]
-            when "specific_epithet"
-              epi = v["value"]
-              if v.has_key?("authorship")
-                authors = v["authorship"]["value"]
-              end
-            end
-          end
-        end
-      end
-      warns = result.has_key?("quality_warnings") ?
-        result["quality_warnings"].map { |a| a[1] }.join("; ") :
-        nil
-
-      # NOTE: interestingly, this skips updating if nothing changed, and only
-      # changes fields that actually did get a change. Thanks, Rails.  ...That
-      # said, it's damn slow.
-      names.find { |n| n.verbatim == result["verbatim"] }.update_attributes(
-        warnings: warns,
-        genus: genus,
-        specific_epithet: epi,
-        authorship: authors,
-        parse_quality: result["quality"]
-      )
-    end
+    NameParser.for_resrouce(@resource)
   end
 
   # match node names against the DWH, store "hints", report on unmatched

@@ -125,6 +125,11 @@ class InitialSchema < ActiveRecord::Migration
       t.datetime :created_at
     end
 
+    create_table :languages do |t|
+      t.string :code, comment: "iso_639_3"
+      t.string :group_code, comment: "iso_639_2"
+    end
+
     create_table :pages do |t|
       t.integer :native_node_id, null: false
     end
@@ -150,6 +155,7 @@ class InitialSchema < ActiveRecord::Migration
       # TODO: is this the same as literature_references?
       t.string :remarks
     end
+    add_index :nodes, [:resource_id, :resource_pk], name: "by_resource_and_pk"
 
     create_table :scientific_names do |t|
       t.integer :resource_id, null: false
@@ -189,10 +195,9 @@ class InitialSchema < ActiveRecord::Migration
     create_table :vernaculars do |t|
       t.integer :resource_id, null: false
       t.integer :node_id, null: false
+      t.integer :language_id, null: false
       t.string :verbatim
       t.string :language_code_verbatim
-      t.string :language_code
-      t.string :language_group_code
       t.string :locality
       t.string :source_reference
       t.text :remarks

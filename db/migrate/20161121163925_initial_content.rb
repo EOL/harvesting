@@ -19,16 +19,15 @@ class InitialContent < ActiveRecord::Migration
       t.string :rights_statement
 
       t.integer :subclass, null: false, default: 0, index: true,
-        comment: "enum: image, video, sound, map, js_map"
+        comment: "enum: image, video, sound, map_image, map_js"
       t.integer :format, null: false, default: 0,
         comment: "enum: jpg, youtube, flash, vimeo, mp3, ogg, wav"
 
       t.integer :resource_id, null: false, index: true
+      t.integer :node_id, index: true
       t.integer :license_id, null: false
       t.integer :language_id
       t.integer :location_id
-      t.integer :stylesheet_id
-      t.integer :javascript_id
       t.integer :bibliographic_citation_id
 
       t.text :owner, null: false,

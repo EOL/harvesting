@@ -55,20 +55,20 @@ sheet1_images: [
   "MediaID http://purl.org/dc/terms/identifier", # media_pk
   "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_fk
   "Type http://purl.org/dc/terms/type", # media_type
-  "Subtype http://rs.tdwg.org/audubon_core/subtype", # media_subtype
+  "Subtype http://rs.tdwg.org/audubon_core/subtype", # to_ignored
   "Format http://purl.org/dc/terms/format", # format
   "Subject http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/CVterm", # section
   "Title http://purl.org/dc/terms/title", # media_name
   "Description http://purl.org/dc/terms/description",  # media_description
   "AccessURI http://rs.tdwg.org/ac/terms/accessURI", # media_source_url
-  "ThumbnailURL http://eol.org/schema/media/thumbnailURL", # ignored (we build our own)
+  "ThumbnailURL http://eol.org/schema/media/thumbnailURL", # to_ignored (we build our own)
   "FurtherInformationURL http://rs.tdwg.org/ac/terms/furtherInformationURL", # media_source_page_url
   "DerivedFrom http://rs.tdwg.org/ac/terms/derivedFrom", # derived_from_reference
   "CreateDate http://ns.adobe.com/xap/1.0/CreateDate", # to_ignored
-  "Modified http://purl.org/dc/terms/modified", # ignored
+  "Modified http://purl.org/dc/terms/modified", # to_ignored
   "Language http://purl.org/dc/terms/language", # to_language_639_1
-  "Rating http://ns.adobe.com/xap/1.0/Rating", # ignored
-  "Audience http://purl.org/dc/terms/audience", # ignored
+  "Rating http://ns.adobe.com/xap/1.0/Rating", # to_ignored
+  "Audience http://purl.org/dc/terms/audience", # to_ignored
   "License http://ns.adobe.com/xap/1.0/rights/UsageTerms", # license
   "Rights http://purl.org/dc/terms/rights", # media_rights_statement
   "Owner http://ns.adobe.com/xap/1.0/rights/Owner", # media_owner
@@ -82,7 +82,7 @@ sheet1_images: [
   "Latitude http://www.w3.org/2003/01/geo/wgs84_pos#lat", # loc_lat
   "Longitude http://www.w3.org/2003/01/geo/wgs84_pos#long", # loc_long
   "Altitude http://www.w3.org/2003/01/geo/wgs84_pos#alt", # loc_alt
-  "ReferenceID http://eol.org/schema/reference/referenceID" # ignored (because only articles now allow this)
+  "ReferenceID http://eol.org/schema/reference/referenceID" # to_ignored (because only articles now allow this)
 ],
 sheet2_nodes: [
   "Identifier http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_pk
@@ -153,7 +153,7 @@ sheet6_metadata_ignore_also_only_one_header_line: [
 excel_resource = Resource.where(name: "Test Excel").first_or_create do |r|
   r.site_id = 1
   r.site_pk = "XL"
-  r.position = 1
+  r.position = 2
   r.name = "Test Excel"
   r.abbr = "XL"
 end
@@ -306,4 +306,51 @@ if(false)
   harvester = ResourceHarvester.new(Resource.where(name: "Test Excel").first)
   harvester.create_harvest_instance && harvester.fetch
   harvester.store
+end
+
+# Okay, I want to be able to create these things (much) faster:
+simple_resource = Resource.quick_define(
+  site_id: 1,
+  name: "Simple Deltas",
+  type: :csv,
+  base_dir: Rails.root.join("spec", "files"),
+  formats: {
+    nodes: { loc: "t_d_nodes.csv", fields: [
+      { "TID" => "to_nodes_pk", is_unique: true, can_be_empty: false },
+      { "SciName" => "to_nodes_scientific", can_be_empty: false },
+      { "ParentTID" => "to_nodes_parent_fk", can_be_empty: false },
+      { "Kingdom" => "to_nodes_ancestor", submapping: "kingdom" },
+      { "Phylum" => "to_nodes_ancestor", submapping: "phylum" },
+      { "Class" => "to_nodes_ancestor", submapping: "class" },
+      { "Order" => "to_nodes_ancestor", submapping: "order" },
+      { "Family" => "to_nodes_ancestor", submapping: "order" },
+      { "Rank" => "to_nodes_rank" }
+    ]},
+    media: { loc: "t_d_media.csv", fields: [
+      { "MID" => "to_media_pk", is_unique: true, can_be_empty: false },
+      { "TID" => "to_nodes_fk", can_be_empty: false },
+      { "type" => "to_media_type" },
+      { "name" => "to_media_name" },
+      { "description" => "to_media_description" },
+      { "source" => "to_media_source_url" }
+    ]},
+    vernaculars: { loc: "t_d_names.csv", fields: [
+      { "TID" => "to_nodes_fk", can_be_empty: false },
+      { "name" => "to_vernaculars_verbatim" },
+      { "language" => "to_language_639_1" },
+      { "preferred" => "to_vernaculars_preferred" }
+    ]}
+  }
+)
+
+if(false)
+  resource = Resource.where(name: "Simple Deltas").first
+  resource.harvests.each { |h| h.destroy }
+  harvester = ResourceHarvester.new(resource)
+  harvester.create_harvest_instance && harvester.fetch
+  harvester.store
+  # YOU WERE HERE -- trying to get this to work. ...but for some odd reason, the
+  # first field (MID) of the media format is not being read in (it appears to be
+  # ignored entirely). Figure out why then re-run this code, and figure out the
+  # next error...
 end

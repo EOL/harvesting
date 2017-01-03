@@ -1,6 +1,7 @@
 class Format < ActiveRecord::Base
-  has_many :fields, -> { order(position: :asc) }, inverse_of: :format
-  has_many :hlogs, inverse_of: :format
+  has_many :fields, -> { order(position: :asc) }, inverse_of: :format,
+    dependent: :destroy
+  has_many :hlogs, inverse_of: :format, dependent: :destroy
 
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats
