@@ -178,9 +178,9 @@ class Resource < AR::B
   end
 end
 
-# YOU WERE HERE TODO: change this. We need to store all versions of everything,
-# so we should probably just use a "current" flag on each table and only read
-# the most recent things with that flag set. Oh well.
+# TODO: change this. We need to store all versions of everything, so we should
+# probably just use a "current" flag on each table and only read the most recent
+# things with that flag set. Oh well.
 
 # This is just a log of what was diffed when; something to hang deltas off of.
 class Diff < AR::B

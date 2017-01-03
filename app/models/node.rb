@@ -8,4 +8,5 @@ class Node < ActiveRecord::Base
   has_many :media, inverse_of: :node
   has_many :children, class_name: "Node", inverse_of: :parent,
     foreign_key: "parent_id"
+  has_many :vernaculars, inverse_of: :node
 end

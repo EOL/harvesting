@@ -68,15 +68,16 @@ module Store
     # NOTE: this can and should fail if there was no node PK or if it's
     # unmatched:
     def build_medium
-      node_fk = @models[:medium].delete(:node_resource_pk)
+      node_pk = @models[:medium].delete(:node_resource_pk)
       # TODO: of course, this is slow... we should queue these up and find them
       # all in one batch. For now, though, this is adequate:
-      node = @nodes[node_fk] ||
-        Node.where(resource_id: @resource.id, resource_pk: node_fk)
+      node = @nodes[node_pk] ||
+        Node.where(resource_id: @resource.id, resource_pk: node_pk).first
       @models[:medium][:node_id] = node.id
       @models[:medium][:resource_id] = @resource.id
+      @models[:medium][:resource_pk] = node_pk
       # TODO: errr... yeah:
-      @models[:medium][:guid] = "TODO/#{@resource.id}/#{node_fk}"
+      @models[:medium][:guid] = "TODO/#{@resource.id}/#{node_pk}"
       # TODO: Yeah. This too:
       @models[:medium][:base_url] = "PENDING"
       # TODO: And licenses:
@@ -93,13 +94,25 @@ module Store
     end
 
     def build_vernacular
-      node_fk = @models[:vernacular].delete(:node_resource_pk)
+      node_pk = @models[:vernacular].delete(:node_resource_pk)
+      lang_code = @models[:vernacular].delete(:language_code_verbatim)
+
+      lang =
+        if Language.exists?(code: lang_code)
+          Language.where(code: lang_code).first
+        elsif Language.exists?(group_code: lang_code)
+          Language.where(group_code: lang_code).first
+        else
+          Language.create!(code: lang_code, group_code: lang_code)
+        end
+
       # TODO: of course, this is slow... we should queue these up and find them
       # all in one batch. For now, though, this is adequate:
-      node = @nodes[node_fk] ||
-        Vernacular.where(resource_id: @resource.id, resource_pk: node_fk)
+      node = @nodes[node_pk] ||
+        Node.where(resource_id: @resource.id, resource_pk: node_pk).first
       @models[:vernacular][:node_id] = node.id
       @models[:vernacular][:resource_id] = @resource.id
+      @models[:vernacular][:language_id] = lang.id
       # TODO: there are some other normalizations and checks we should do here,
       # including some handling of languages, I expect.
       Vernacular.create!(@models[:vernacular])

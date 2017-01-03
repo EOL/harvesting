@@ -349,8 +349,4 @@ if(false)
   harvester = ResourceHarvester.new(resource)
   harvester.create_harvest_instance && harvester.fetch
   harvester.store
-  # YOU WERE HERE -- trying to get this to work. ...but for some odd reason, the
-  # first field (MID) of the media format is not being read in (it appears to be
-  # ignored entirely). Figure out why then re-run this code, and figure out the
-  # next error...
 end
