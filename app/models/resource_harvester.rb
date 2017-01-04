@@ -22,7 +22,7 @@ class ResourceHarvester
     create_harvest_instance
     fetch
     validate
-    # TODO delta
+    delta
     store
     check_consistency
     # TODO queue_downloads
@@ -132,6 +132,7 @@ class ResourceHarvester
     each_format do |fmt, parser, headers|
       fields = build_fields(fmt, headers)
       parser.rows_as_hashes do |row, line|
+        # We *could* skip this, but I prefer not to deal with the missing keys.
         @models = { node: nil, parent_node: nil, scientific_name: nil,
           ancestors: [], medium: nil, vernacular: nil }
         begin

@@ -12,36 +12,41 @@ module Store
     end
 
     def build_scientific_name
-      @models[:scientific_name].resource_id = @resource.id
-      @models[:scientific_name].save!
-      @models[:node].scientific_name_id =
-        @models[:scientific_name].id if @models[:node]
+      @models[:scientific_name][:resource_id] = @resource.id
+      sci_name = ScientificName.create!(@models[:scientific_name])
+      @models[:node][:scientific_name_id] = sci_name.id if @models[:node]
     end
 
     def build_parent_node
-      @models[:parent_node].resource_id = @resource.id
-      if @models[:parent_node].scientific_name_id
-        @models[:parent_node].save
-        @models[:node].parent_id = @models[:parent_node].id if
-          @models[:node]
+      @models[:parent_node][:resource_id] = @resource.id
+      if @models[:parent_node][:scientific_name_id]
+        parent = Node.create!(@models[:parent_node])
+        @models[:node][:parent_id] = parent.id if @models[:node]
+        parent
       else
         if parent = @nodes[@models[:parent_node].resource_pk]
-          @models[:node].parent_id = parent.id
+          @models[:node][:parent_id] = parent.id if @models[:node]
+          parent
         else
           # TODO: issue a warning here that we couldn't (safely) build a parent.
           puts "I cannot build a parent without a (clear) name or prior ref."
+          nil
         end
       end
     end
 
     def build_node
-      @models[:node].resource_id = @resource.id
-      @models[:node].save!
-      @nodes[@models[:node].resource_pk] = @models[:node]
-      @models[:scientific_name].update_attribute(:node_id,
-        @models[:node].id) if @models[:scientific_name]
+      @models[:node][:resource_id] = @resource.id
+      node = Node.create!(@models[:node])
+      @nodes[node.resource_pk] = node
+      @models[:scientific_name][:node_id] = node.id if @models[:scientific_name]
     end
 
+
+    # YOU WERE HERE : I was in the middle of changing the models to hashes, and
+    # I stopped here. This one is a little tricky because of the lookups its
+    # doing on other ancestors, so be careful.
+    
     def build_ancestors
       parent_id = 0
       @models[:ancestors].each do |ancestor|
@@ -114,7 +119,7 @@ module Store
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:language_id] = lang.id
       # TODO: there are some other normalizations and checks we should do here,
-      # including some handling of languages, I expect.
+      # I expect.
       Vernacular.create!(@models[:vernacular])
     end
   end

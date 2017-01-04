@@ -349,4 +349,12 @@ if(false)
   harvester = ResourceHarvester.new(resource)
   harvester.create_harvest_instance && harvester.fetch
   harvester.store
+  # Deltas:
+  resource.formats.each do |f|
+    f.update_attribute(:get_from, f.get_from.sub(/\./, "_v2."))
+  end
+  harvester = ResourceHarvester.new(resource)
+  harvester.create_harvest_instance && harvester.fetch
+  harvester.fetch
+  # harvester.store
 end
