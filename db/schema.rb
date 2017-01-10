@@ -14,23 +14,23 @@
 ActiveRecord::Schema.define(version: 20161121181833) do
 
   create_table "articles", force: :cascade do |t|
-    t.string   "guid",                      limit: 255,                  null: false
-    t.string   "resource_pk",               limit: 255,                  null: false
-    t.integer  "resource_id",               limit: 4,                    null: false
-    t.integer  "harvest_id",                limit: 4,                    null: false
-    t.integer  "license_id",                limit: 4,                    null: false
+    t.string   "guid",                      limit: 255,   null: false
+    t.string   "resource_pk",               limit: 255,   null: false
+    t.integer  "resource_id",               limit: 4,     null: false
+    t.integer  "harvest_id",                limit: 4,     null: false
+    t.integer  "license_id",                limit: 4,     null: false
     t.integer  "language_id",               limit: 4
     t.integer  "location_id",               limit: 4
     t.integer  "stylesheet_id",             limit: 4
     t.integer  "javascript_id",             limit: 4
     t.integer  "bibliographic_citation_id", limit: 4
-    t.text     "owner",                     limit: 65535,                null: false
+    t.text     "owner",                     limit: 65535, null: false
     t.string   "name",                      limit: 255
     t.string   "source_url",                limit: 255
-    t.text     "body",                      limit: 65535,                null: false
-    t.boolean  "is_published",                            default: true
-    t.datetime "created_at",                                             null: false
-    t.datetime "updated_at",                                             null: false
+    t.text     "body",                      limit: 65535, null: false
+    t.integer  "removed_by_harvest_id",     limit: 4
+    t.datetime "created_at",                              null: false
+    t.datetime "updated_at",                              null: false
   end
 
   add_index "articles", ["guid"], name: "index_articles_on_guid", using: :btree
@@ -55,15 +55,15 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "attributions", force: :cascade do |t|
-    t.integer  "resource_id",  limit: 4,                    null: false
-    t.integer  "harvest_id",   limit: 4,                    null: false
-    t.string   "resource_pk",  limit: 255,                  null: false
-    t.string   "name",         limit: 255
-    t.string   "email",        limit: 255
-    t.text     "value",        limit: 65535,                null: false
-    t.boolean  "is_published",               default: true
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
+    t.integer  "resource_id",           limit: 4,     null: false
+    t.integer  "harvest_id",            limit: 4,     null: false
+    t.string   "resource_pk",           limit: 255,   null: false
+    t.string   "name",                  limit: 255
+    t.string   "email",                 limit: 255
+    t.text     "value",                 limit: 65535, null: false
+    t.integer  "removed_by_harvest_id", limit: 4
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
   end
 
   add_index "attributions", ["harvest_id"], name: "index_attributions_on_harvest_id", using: :btree
@@ -160,17 +160,17 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "links", force: :cascade do |t|
-    t.string   "guid",         limit: 255,                  null: false
-    t.string   "resource_pk",  limit: 255,                  null: false
-    t.integer  "resource_id",  limit: 4,                    null: false
-    t.integer  "harvest_id",   limit: 4,                    null: false
-    t.integer  "language_id",  limit: 4
-    t.string   "name",         limit: 255
-    t.string   "source_url",   limit: 255
-    t.text     "description",  limit: 65535,                null: false
-    t.boolean  "is_published",               default: true
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
+    t.string   "guid",                  limit: 255,   null: false
+    t.string   "resource_pk",           limit: 255,   null: false
+    t.integer  "resource_id",           limit: 4,     null: false
+    t.integer  "harvest_id",            limit: 4,     null: false
+    t.integer  "language_id",           limit: 4
+    t.string   "name",                  limit: 255
+    t.string   "source_url",            limit: 255
+    t.text     "description",           limit: 65535, null: false
+    t.integer  "removed_by_harvest_id", limit: 4
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
   end
 
   add_index "links", ["guid"], name: "index_links_on_guid", using: :btree
@@ -192,31 +192,31 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "media", force: :cascade do |t|
-    t.string   "guid",                      limit: 255,                  null: false
-    t.string   "resource_pk",               limit: 255,                  null: false
+    t.string   "guid",                      limit: 255,               null: false
+    t.string   "resource_pk",               limit: 255,               null: false
     t.string   "unmodified_url",            limit: 255
     t.string   "name_verbatim",             limit: 255
     t.string   "name",                      limit: 255
     t.string   "source_page_url",           limit: 255
     t.string   "source_url",                limit: 255
-    t.string   "base_url",                  limit: 255,                  null: false
+    t.string   "base_url",                  limit: 255,               null: false
     t.string   "rights_statement",          limit: 255
-    t.integer  "subclass",                  limit: 4,     default: 0,    null: false
-    t.integer  "format",                    limit: 4,     default: 0,    null: false
-    t.integer  "resource_id",               limit: 4,                    null: false
-    t.integer  "harvest_id",                limit: 4,                    null: false
+    t.integer  "subclass",                  limit: 4,     default: 0, null: false
+    t.integer  "format",                    limit: 4,     default: 0, null: false
+    t.integer  "resource_id",               limit: 4,                 null: false
+    t.integer  "harvest_id",                limit: 4,                 null: false
     t.integer  "node_id",                   limit: 4
-    t.integer  "license_id",                limit: 4,                    null: false
+    t.integer  "license_id",                limit: 4,                 null: false
     t.integer  "language_id",               limit: 4
     t.integer  "location_id",               limit: 4
     t.integer  "bibliographic_citation_id", limit: 4
-    t.text     "owner",                     limit: 65535,                null: false
+    t.text     "owner",                     limit: 65535,             null: false
     t.text     "description_verbatim",      limit: 65535
     t.text     "description",               limit: 65535
-    t.boolean  "is_published",                            default: true
+    t.integer  "removed_by_harvest_id",     limit: 4
     t.datetime "downloaded_at"
-    t.datetime "created_at",                                             null: false
-    t.datetime "updated_at",                                             null: false
+    t.datetime "created_at",                                          null: false
+    t.datetime "updated_at",                                          null: false
   end
 
   add_index "media", ["guid"], name: "index_media_on_guid", using: :btree
@@ -241,17 +241,17 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "meta_traits", force: :cascade do |t|
-    t.integer "resource_id",                limit: 4,                    null: false
-    t.integer "harvest_id",                 limit: 4,                    null: false
-    t.integer "trait_id",                   limit: 4,                    null: false
+    t.integer "resource_id",                limit: 4,     null: false
+    t.integer "harvest_id",                 limit: 4,     null: false
+    t.integer "trait_id",                   limit: 4,     null: false
     t.integer "object_term_id",             limit: 4
     t.integer "units_term_id",              limit: 4
     t.integer "normal_units_term_id",       limit: 4
     t.integer "statistical_method_term_id", limit: 4
-    t.string  "resource_pk",                limit: 255,                  null: false
+    t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
     t.string  "normal_measurement",         limit: 255
-    t.boolean "is_published",                             default: true
+    t.integer "removed_by_harvest_id",      limit: 4
     t.text    "source",                     limit: 65535
     t.string  "literal",                    limit: 255
   end
@@ -260,20 +260,20 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "meta_traits", ["resource_id", "resource_pk"], name: "index_meta_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "nodes", force: :cascade do |t|
-    t.integer "resource_id",               limit: 4,                  null: false
-    t.integer "harvest_id",                limit: 4,                  null: false
+    t.integer "resource_id",               limit: 4,               null: false
+    t.integer "harvest_id",                limit: 4,               null: false
     t.integer "page_id",                   limit: 4
     t.integer "site_pk",                   limit: 4
-    t.integer "parent_id",                 limit: 4,   default: 0,    null: false
-    t.integer "scientific_name_id",        limit: 4,                  null: false
-    t.string  "name_verbatim",             limit: 255,                null: false
+    t.integer "parent_id",                 limit: 4,   default: 0, null: false
+    t.integer "scientific_name_id",        limit: 4,               null: false
+    t.string  "name_verbatim",             limit: 255,             null: false
     t.string  "taxonomic_status_verbatim", limit: 255
     t.string  "resource_pk",               limit: 255
     t.string  "further_information_url",   limit: 255
     t.string  "rank",                      limit: 255
     t.string  "rank_verbatim",             limit: 255
     t.string  "remarks",                   limit: 255
-    t.boolean "is_published",                          default: true
+    t.integer "removed_by_harvest_id",     limit: 4
   end
 
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
@@ -312,15 +312,15 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "refs", force: :cascade do |t|
-    t.text     "body",         limit: 65535
-    t.integer  "resource_id",  limit: 4,                    null: false
-    t.integer  "harvest_id",   limit: 4,                    null: false
-    t.string   "resource_pk",  limit: 255,                  null: false
-    t.string   "url",          limit: 255
-    t.string   "doi",          limit: 255
-    t.boolean  "is_published",               default: true
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
+    t.text     "body",                  limit: 65535
+    t.integer  "resource_id",           limit: 4,     null: false
+    t.integer  "harvest_id",            limit: 4,     null: false
+    t.string   "resource_pk",           limit: 255,   null: false
+    t.string   "url",                   limit: 255
+    t.string   "doi",                   limit: 255
+    t.integer  "removed_by_harvest_id", limit: 4
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
   end
 
   add_index "refs", ["harvest_id"], name: "index_refs_on_harvest_id", using: :btree
@@ -375,7 +375,7 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.boolean "hybrid"
     t.boolean "surrogate"
     t.boolean "virus"
-    t.boolean "is_published",                            default: true
+    t.integer "removed_by_harvest_id",     limit: 4
   end
 
   add_index "scientific_names", ["harvest_id"], name: "index_scientific_names_on_harvest_id", using: :btree
@@ -405,9 +405,9 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "terms", ["uri"], name: "index_terms_on_uri", using: :btree
 
   create_table "traits", force: :cascade do |t|
-    t.integer "resource_id",                limit: 4,                    null: false
-    t.integer "harvest_id",                 limit: 4,                    null: false
-    t.integer "node_id",                    limit: 4,                    null: false
+    t.integer "resource_id",                limit: 4,     null: false
+    t.integer "harvest_id",                 limit: 4,     null: false
+    t.integer "node_id",                    limit: 4,     null: false
     t.integer "object_term_id",             limit: 4
     t.integer "object_node_id",             limit: 4
     t.integer "units_term_id",              limit: 4
@@ -415,10 +415,10 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.integer "statistical_method_term_id", limit: 4
     t.integer "sex_term_id",                limit: 4
     t.integer "lifestage_term_id",          limit: 4
-    t.string  "resource_pk",                limit: 255,                  null: false
+    t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
     t.string  "normal_measurement",         limit: 255
-    t.boolean "is_published",                             default: true
+    t.integer "removed_by_harvest_id",      limit: 4
     t.text    "source",                     limit: 65535
     t.string  "literal",                    limit: 255
   end
@@ -438,17 +438,17 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   end
 
   create_table "vernaculars", force: :cascade do |t|
-    t.integer "resource_id",            limit: 4,                    null: false
-    t.integer "harvest_id",             limit: 4,                    null: false
-    t.integer "node_id",                limit: 4,                    null: false
-    t.integer "language_id",            limit: 4,                    null: false
+    t.integer "resource_id",            limit: 4,     null: false
+    t.integer "harvest_id",             limit: 4,     null: false
+    t.integer "node_id",                limit: 4,     null: false
+    t.integer "language_id",            limit: 4,     null: false
     t.string  "verbatim",               limit: 255
     t.string  "language_code_verbatim", limit: 255
     t.string  "locality",               limit: 255
     t.string  "source_reference",       limit: 255
     t.text    "remarks",                limit: 65535
     t.boolean "is_preferred"
-    t.boolean "is_published",                         default: true
+    t.integer "removed_by_harvest_id",  limit: 4
   end
 
   add_index "vernaculars", ["harvest_id"], name: "index_vernaculars_on_harvest_id", using: :btree

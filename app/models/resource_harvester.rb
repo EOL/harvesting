@@ -105,7 +105,7 @@ class ResourceHarvester
       # line, heh). We'll have to convert those to CSV (which would be nice to
       # do after the "validate" step anyway) or use a different diff algorithm.
       other_fmt = @previous_harvest ?
-        @previous_harvest.formats.find { |f| f.file_type == fmt.file_type } :
+        @previous_harvest.formats.find { |f| f.represents == fmt.represents } :
         nil
       if other_fmt && other_fmt.file # There's no diff if the previous format failed!
         diff(other_fmt, fmt)
@@ -121,13 +121,17 @@ class ResourceHarvester
   end
 
   def diff(old_fmt, new_fmt)
-    File.unlink(new_fmt.diff)
+    File.unlink(new_fmt.diff) if File.exist?(new_fmt.diff)
     cmd = "/usr/bin/diff #{old_fmt.file} #{new_fmt.file} > #{new_fmt.diff}"
     # TODO: we should probably allow configuration of diff path. TODO: We can't
     # trust the exit code! diff exits 0 if the files are the same, and 1 if not.
     # unless system(cmd)
     #   raise "Diff failed! { #{cmd} } #{$?}"
     # end
+    puts "** DIFF " + "*" * 80
+    puts "*"
+    puts "* #{cmd}"
+    puts "*"
     system(cmd)
   end
 
@@ -145,7 +149,7 @@ class ResourceHarvester
     @ancestors = {}
     each_diff do |fmt, parser, headers|
       fields = build_fields(fmt, headers)
-      parser.diff_as_hashes do |row, line_number, diff|
+      any_diff = parser.diff_as_hashes(headers) do |row, line_number, diff|
         # Just to give access to the line number elsewhere:
         @line_number = line_number
         # We *could* skip this, but I prefer not to deal with the missing keys.
@@ -181,6 +185,9 @@ class ResourceHarvester
             raise e
           end
         end
+      end
+      unless any_diff
+        fmt.warn("There were no differences in this file!", 0)
       end
     end
   end
@@ -250,14 +257,15 @@ class ResourceHarvester
     end
   end
 
-  # This is very much like #each_format, but reads the diff file...
+  # This is very much like #each_format, but reads the diff file and ignores the
+  # headers in the file (it uses the DB instead)...
   def each_diff(&block)
     @harvest.formats.each do |fmt|
       fid = "#{fmt.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
         @formats[fid][:parser] = CsvParser.new(fmt.diff)
-        @formats[fid][:headers] = @formats[fid][:parser].headers
+        @formats[fid][:headers] = fmt.fields.sort_by(&:position).map(&:expected_header)
       end
       yield(fmt, @formats[fid][:parser], @formats[fid][:headers])
     end

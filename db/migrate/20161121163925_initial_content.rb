@@ -20,7 +20,7 @@ class InitialContent < ActiveRecord::Migration
       # TODO: is this the same as literature_references?
       t.string :remarks
 
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
     end
     add_index :nodes, [:resource_id, :resource_pk], name: "by_resource_and_pk"
 
@@ -59,7 +59,7 @@ class InitialContent < ActiveRecord::Migration
       t.boolean :hybrid
       t.boolean :surrogate
       t.boolean :virus
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
     end
     add_index :scientific_names, [:resource_id, :verbatim]
 
@@ -75,7 +75,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :source_reference
       t.text :remarks
       t.boolean :is_preferred
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
     end
     add_index :vernaculars, [:resource_id, :verbatim]
 
@@ -89,7 +89,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :resource_pk, null: false
       t.string :url
       t.string :doi
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.timestamps null: false
     end
     add_index :refs, [:resource_id, :resource_pk]
@@ -133,7 +133,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :description_verbatim, comment: "assumed to be dirty html"
       t.text :description, comment: "sanitized html; run through namelinks"
 
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.datetime :downloaded_at
       t.timestamps null: false
     end
@@ -164,7 +164,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :body, null: false,
         comment: "html; run through namelinks; was description_linked"
 
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.timestamps null: false
     end
     add_index :articles, [:resource_id, :resource_pk]
@@ -185,7 +185,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :description, null: false,
         comment: "html; run through namelinks; was description_linked"
 
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.timestamps null: false
     end
     add_index :links, [:resource_id, :resource_pk]
@@ -228,7 +228,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :email
       t.text :value, null: false, comment: "html"
 
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.timestamps null: false
     end
     add_index :attributions, [:resource_id, :resource_pk]
@@ -268,7 +268,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :resource_pk, null: false
       t.string :measurement
       t.string :normal_measurement
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.text :source
       t.string :literal
     end
@@ -286,7 +286,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :resource_pk, null: false
       t.string :measurement
       t.string :normal_measurement
-      t.boolean :is_published, default: true
+      t.integer :removed_by_harvest_id
       t.text :source
       t.string :literal
     end

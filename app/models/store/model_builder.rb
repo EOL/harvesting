@@ -140,6 +140,7 @@ module Store
       # all in one batch. For now, though, this is adequate:
       node = @nodes[node_pk] ||
         Node.where(resource_id: @resource.id, resource_pk: node_pk).first
+      debugger if node.nil?
       @models[:vernacular][:node_id] = node.id
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
@@ -162,7 +163,7 @@ module Store
         key = keys[klass]
         pk = model[key]
         klass.send(:where, { key => pk, :resource_id => @resource.id }).
-          update_attribute(:published, false)
+          update_all(removed_by_harvest_id: @harvest.id)
       end
       klass.send(:create!, model)
     end
