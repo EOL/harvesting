@@ -20,8 +20,13 @@ class CsvParser
   def headers
     return @headers if @headers
     headers = []
+    offset = 0
     line_at_a_time do |row, i|
-      break if i >= @header_lines
+      if row.size == 1
+        offset += 1
+        next
+      end
+      break if i >= (@header_lines + offset)
       row.each_with_index do |cell, j|
         headers[j] ||= []
         headers[j] << cell.gsub(/\r/, " ").gsub(/\n/, " ")
@@ -37,10 +42,51 @@ class CsvParser
   end
 
   def rows_as_hashes(&block)
+    offset = 0
+    hash = nil
     line_at_a_time do |row, i|
-      next if i < @data_begins_on_line
+      offset += 1 if row.size == 1 && hash.nil?
+      next if i < (@data_begins_on_line + offset)
       hash = Hash[headers.zip(row)]
       yield(hash, i)
+    end
+  end
+
+  def diff_as_hashes(&block)
+    line_num = 0
+    diff = nil
+    offset = 0
+    line_at_a_time do |row, i|
+      offset += 1 if row.size == 1 && line_num == 0
+      next if i < (@data_begins_on_line + offset)
+      if row.size == 1 && row.first =~ /^\d+(\D)(\d+)?$/
+        (diff_type, new_line) = [$1, $2]
+        diff = case diff_type
+        when "a"
+          :new
+        when "c"
+          :changed
+        when "d"
+          :removed
+        end
+        line_num = new_line if new_line
+        next
+      end
+      # "Removed" part of a change, we can ignore it:
+      next if diff == :changed && row.first =~ /^</
+      # "switch" part of a change, ignore:
+      next if diff == :changed && row.size == 1 && row.first =~ /^---/
+      # End of input (for "faked" new diffs):
+      next if row.size == 1 && row.first == "."
+      if diff == :changed || diff == :new
+        row.first.sub(/^ >/, "")
+      elsif diff == :removed
+        row.first.sub(/^ </, "")
+      end
+      line_num += 1
+      next if i < @data_begins_on_line
+      hash = Hash[headers.zip(row)]
+      yield(hash, line_num, diff)
     end
   end
 end

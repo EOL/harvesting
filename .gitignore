@@ -13,3 +13,6 @@
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /tmp
+
+# Created during specs, but not desirable to keep them around:
+spec/files/*diff

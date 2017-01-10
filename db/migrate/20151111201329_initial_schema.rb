@@ -72,6 +72,7 @@ class InitialSchema < ActiveRecord::Migration
       t.string :get_from, null: false,
         comment: "may be remote URL or full file system path"
       t.string :file, comment: "full path"
+      t.string :diff, comment: "full path to file diff'ed from previous version"
       t.string :field_sep, limit: 4, default: ","
       t.string :line_sep, limit: 4, default: "\n"
       t.boolean :utf8, null: false, default: false
@@ -134,74 +135,8 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :native_node_id, null: false
     end
 
-    # NOTE: content will be handled in a separate migration, since they seem a
-    # salient "piece" of things. NOTE: A lot of indexes on this table! :S
-
-    create_table :nodes do |t|
-      t.integer :resource_id, null: false, index: true
-      t.integer :page_id, comment: "null means unassigned, of course"
-      t.integer :site_pk
-      t.integer :parent_id, null: false, default: 0, index: true
-      t.integer :scientific_name_id, null: false
-
-      t.string :name_verbatim, null: false
-      t.string :taxonomic_status_verbatim
-      t.string :resource_pk, index: true
-      t.string :further_information_url
-      # rank is a _normalized_ rank string... really an enumeration, but not
-      # stored that way. TODO: why not? We should.
-      t.string :rank
-      t.string :rank_verbatim
-      # TODO: is this the same as literature_references?
-      t.string :remarks
-    end
-    add_index :nodes, [:resource_id, :resource_pk], name: "by_resource_and_pk"
-
-    create_table :scientific_names do |t|
-      t.integer :resource_id, null: false
-      t.integer :node_id, comment: "SHOULD be required, but that's a catch-22."
-      t.integer :normalized_name_id, index: true
-      t.integer :parse_quality
-      # This list was captured from the document Katja produced (this link may
-      # not work for all):
-      # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
-      t.integer :taxonomic_status,
-        comment: "Enum: preferred, provisionally_accepted, acronym, synonym, unusable"
-
-      t.string :verbatim, null: false
-      t.string :taxonomic_status_verbatim
-      t.string :publication
-      t.string :source_reference
-      # The following are strings from GNA:
-      t.string :warnings
-      t.string :genus
-      t.string :specific_epithet
-      t.string :authorship
-
-      t.text :remarks
-
-      # The year is from GNA:
-      t.integer :year
-
-      t.boolean :is_preferred
-      t.boolean :is_used_for_merges, default: true
-      t.boolean :is_publishable, default: true
-      # The following are booleans from GNA:
-      t.boolean :hybrid
-      t.boolean :surrogate
-      t.boolean :virus
-    end
-
-    create_table :vernaculars do |t|
-      t.integer :resource_id, null: false
-      t.integer :node_id, null: false
-      t.integer :language_id, null: false
-      t.string :verbatim
-      t.string :language_code_verbatim
-      t.string :locality
-      t.string :source_reference
-      t.text :remarks
-      t.boolean :is_preferred
+    create_table :section do |t|
+      t.string :name
     end
 
     # This gives us a way to say "these names are considered 'the same'."
@@ -210,21 +145,20 @@ class InitialSchema < ActiveRecord::Migration
       t.string :canonical
     end
 
-    # These are citations made by the partner, citing sources used to synthesize
-    # that content. These show up below the content (only applies to articles);
-    # this is effectively a "section" of the content; it's part of the object.
-    create_table :refs do |t|
-      t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
-      t.string :url
-      t.string :doi
-
+    create_table :media_download_error do |t|
+      t.integer :content_id, null: false, index: true
+      t.text :message
       t.timestamps null: false
     end
 
-    create_table :data_references do |t|
-      t.integer :reference_id, null: false
-      t.references :data, polymorphic: true, index: true, null: false,
-        comment: "Nodes, measurements, and contents can have data_references."
+    create_table :unit_conversion do |t|
+      t.integer :from_term_id, null: false
+      t.integer :to_term_id, null: false
+      t.string :method, null: false,
+        comment: "WARNING! this is *executable* Ruby code. Lock it down."
     end
+
+    # NOTE: resource content will be handled in a separate migration, since they
+    # seem a salient "piece" of things.
   end
 end

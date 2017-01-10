@@ -1,7 +1,103 @@
 class InitialContent < ActiveRecord::Migration
   def change
-    create_table :section do |t|
-      t.string :name
+    # NOTE: Quite a few indexes on this table! :S
+    create_table :nodes do |t|
+      t.integer :resource_id, null: false, index: true
+      t.integer :harvest_id, null: false, index: true
+      t.integer :page_id, comment: "null means unassigned, of course"
+      t.integer :site_pk
+      t.integer :parent_id, null: false, default: 0, index: true
+      t.integer :scientific_name_id, null: false
+
+      t.string :name_verbatim, null: false
+      t.string :taxonomic_status_verbatim
+      t.string :resource_pk, index: true
+      t.string :further_information_url
+      # rank is a _normalized_ rank string... really an enumeration, but not
+      # stored that way. TODO: why not? We should.
+      t.string :rank
+      t.string :rank_verbatim
+      # TODO: is this the same as literature_references?
+      t.string :remarks
+
+      t.boolean :is_published, default: true
+    end
+    add_index :nodes, [:resource_id, :resource_pk], name: "by_resource_and_pk"
+
+    create_table :scientific_names do |t|
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false, index: true
+      t.integer :node_id, comment: "SHOULD be required, but that's a catch-22."
+      t.integer :normalized_name_id, index: true
+      t.integer :parse_quality
+      # This list was captured from the document Katja produced (this link may
+      # not work for all):
+      # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
+      t.integer :taxonomic_status,
+        comment: "Enum: preferred, provisionally_accepted, acronym, synonym, unusable"
+
+      t.string :verbatim, null: false, index: true,
+        comment: "indexed because this is effectively the 'resource_pk'"
+      t.string :taxonomic_status_verbatim
+      t.string :publication
+      t.string :source_reference
+      # The following are strings from GNA:
+      t.string :warnings
+      t.string :genus
+      t.string :specific_epithet
+      t.string :authorship
+
+      t.text :remarks
+
+      # The year is from GNA:
+      t.integer :year
+
+      t.boolean :is_preferred
+      t.boolean :is_used_for_merges, default: true
+      t.boolean :is_publishable, default: true
+      # The following are booleans from GNA:
+      t.boolean :hybrid
+      t.boolean :surrogate
+      t.boolean :virus
+      t.boolean :is_published, default: true
+    end
+    add_index :scientific_names, [:resource_id, :verbatim]
+
+    create_table :vernaculars do |t|
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false, index: true
+      t.integer :node_id, null: false
+      t.integer :language_id, null: false
+      t.string :verbatim, index: true,
+        comment: "indexed because this is effectively the 'resource_pk'"
+      t.string :language_code_verbatim
+      t.string :locality
+      t.string :source_reference
+      t.text :remarks
+      t.boolean :is_preferred
+      t.boolean :is_published, default: true
+    end
+    add_index :vernaculars, [:resource_id, :verbatim]
+
+    # These are citations made by the partner, citing sources used to synthesize
+    # that content. These show up below the content (only applies to articles);
+    # this is effectively a "section" of the content; it's part of the object.
+    create_table :refs do |t|
+      t.text :body, comment: "html; can be *quite* large (over 10K chrs)"
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false, index: true
+      t.string :resource_pk, null: false
+      t.string :url
+      t.string :doi
+      t.boolean :is_published, default: true
+      t.timestamps null: false
+    end
+    add_index :refs, [:resource_id, :resource_pk]
+
+    create_table :data_references do |t|
+      t.integer :reference_id, null: false
+      t.references :data, polymorphic: true, index: true, null: false,
+        comment: "Nodes, measurements, and contents can have data_references."
     end
 
     create_table :media do |t|
@@ -24,6 +120,7 @@ class InitialContent < ActiveRecord::Migration
         comment: "enum: jpg, youtube, flash, vimeo, mp3, ogg, wav"
 
       t.integer :resource_id, null: false, index: true
+      t.integer :harvest_id, null: false, index: true
       t.integer :node_id, index: true
       t.integer :license_id, null: false
       t.integer :language_id
@@ -36,17 +133,13 @@ class InitialContent < ActiveRecord::Migration
       t.text :description_verbatim, comment: "assumed to be dirty html"
       t.text :description, comment: "sanitized html; run through namelinks"
 
+      t.boolean :is_published, default: true
       t.datetime :downloaded_at
       t.timestamps null: false
     end
+    add_index :media, [:resource_id, :resource_pk]
 
     create_join_table :media, :sections
-
-    create_table :media_download_error do |t|
-      t.integer :content_id, null: false, index: true
-      t.text :message
-      t.timestamps null: false
-    end
 
     # TODO: do we DOWNLOAD articles? I don't think so...
     create_table :articles do |t|
@@ -54,6 +147,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :resource_pk, null: false, comment: "was: identifier"
 
       t.integer :resource_id, null: false, index: true
+      t.integer :harvest_id, null: false, index: true
       t.integer :license_id, null: false
       t.integer :language_id
       t.integer :location_id
@@ -70,8 +164,10 @@ class InitialContent < ActiveRecord::Migration
       t.text :body, null: false,
         comment: "html; run through namelinks; was description_linked"
 
+      t.boolean :is_published, default: true
       t.timestamps null: false
     end
+    add_index :articles, [:resource_id, :resource_pk]
 
     create_join_table :articles, :sections
 
@@ -81,6 +177,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :resource_pk, null: false, comment: "was: identifier"
 
       t.integer :resource_id, null: false, index: true
+      t.integer :harvest_id, null: false, index: true
       t.integer :language_id
 
       t.string :name, comment: "was: title"
@@ -88,8 +185,10 @@ class InitialContent < ActiveRecord::Migration
       t.text :description, null: false,
         comment: "html; run through namelinks; was description_linked"
 
+      t.boolean :is_published, default: true
       t.timestamps null: false
     end
+    add_index :links, [:resource_id, :resource_pk]
 
     create_join_table :links, :sections
 
@@ -105,7 +204,7 @@ class InitialContent < ActiveRecord::Migration
       t.timestamps null: false
     end
 
-    create_join_table(:articles, :references) do |t|
+    create_join_table(:articles, :refs) do |t|
       t.index :article_id
     end
 
@@ -122,13 +221,17 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :attributions do |t|
-      t.string :resource_pk, null: false, index: true
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false, index: true
+      t.string :resource_pk, null: false
       t.string :name
       t.string :email
       t.text :value, null: false, comment: "html"
 
+      t.boolean :is_published, default: true
       t.timestamps null: false
     end
+    add_index :attributions, [:resource_id, :resource_pk]
 
     create_table :locations do |t|
       t.string :verbatim
@@ -152,8 +255,8 @@ class InitialContent < ActiveRecord::Migration
 
     create_table :traits do |t|
       t.integer :resource_id, null: false, comment: "Supplier"
+      t.integer :harvest_id, null: false, index: true
       t.integer :node_id, null: false
-      t.integer :resource_pk, null: false
       t.integer :object_term_id
       t.integer :object_node_id
       t.integer :units_term_id
@@ -162,35 +265,35 @@ class InitialContent < ActiveRecord::Migration
       t.integer :sex_term_id
       t.integer :lifestage_term_id
 
+      t.string :resource_pk, null: false
       t.string :measurement
       t.string :normal_measurement
+      t.boolean :is_published, default: true
       t.text :source
       t.string :literal
     end
+    add_index :traits, [:resource_id, :resource_pk]
 
     create_table :meta_traits do |t|
+      t.integer :resource_id, null: false, comment: "Supplier"
+      t.integer :harvest_id, null: false, index: true
       t.integer :trait_id, null: false
-      t.integer :resource_pk, null: false
       t.integer :object_term_id
       t.integer :units_term_id
       t.integer :normal_units_term_id
       t.integer :statistical_method_term_id
 
+      t.string :resource_pk, null: false
       t.string :measurement
       t.string :normal_measurement
+      t.boolean :is_published, default: true
       t.text :source
       t.string :literal
     end
+    add_index :meta_traits, [:resource_id, :resource_pk]
 
     create_table :associations do |t|
       t.integer :trait_id, null: false
-    end
-
-    create_table :unit_conversion do |t|
-      t.integer :from_term_id, null: false
-      t.integer :to_term_id, null: false
-      t.string :method, null: false,
-        comment: "WARNING! this is *executable* Ruby code. Lock it down."
     end
   end
 end

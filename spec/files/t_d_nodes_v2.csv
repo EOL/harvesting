@@ -1,4 +1,4 @@
-TID, SciName, ParentTID, Kingdom, Phylum, Class, Order, Family, Rank
+TID,SciName,ParentTID,Kingdom,Phylum,Class,Order,Family,Rank
 tax123,"Procyon lotor (Linnaeus, 1758)",tax12,Animalia,Chordata,Mammalia,Carnivora,Procyonidae,species
 tax124,"Procyon cancrivorus (G. [Baron] Cuvier, 1798)",tax12,Animalia,Chordata,Mammalia,Carnivora,Procyonidae,species
 tax125,"Procyon pygmaeus Merriam, 1901",tax12,Animalia,Chordata,Mammalia,Carnivora,Procyonidae,species

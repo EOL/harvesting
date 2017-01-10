@@ -28,9 +28,9 @@ module Store
       else
         @models[:ancestors] << {
           name: val,
-          sci_name: { verbatim: val, resource_id: @resource.id },
+          sci_name: { verbatim: val, resource_id: @resource.id, harvest_id: @harvest.id },
           node: { rank_verbatim: field.submapping, resource_id: @resource.id,
-            name_verbatim: val }
+            name_verbatim: val, harvest_id: @harvest.id }
         }
       end
     end

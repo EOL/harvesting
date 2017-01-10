@@ -5,7 +5,7 @@ module Store
       @models[:medium][:resource_pk] = val
     end
 
-    def to_nodes_fk(field, val)
+    def to_media_nodes_fk(field, val)
       @models[:medium] ||= {}
       @models[:medium][:node_resource_pk] = val # TODO: we will "find" it later.
     end
@@ -24,7 +24,9 @@ module Store
       type = if @media_type_mappings.has_key?(val.downcase)
         @media_type_mappings[val.downcase]
       else
-        field.fmt.warn("Could not find a media subtype of \"#{val.downcase}\"")
+        debugger
+        field.format.warn("Could not find a media subtype of \"#{val.downcase}\"",
+          @line_number)
         :image
       end
       @models[:medium][:subclass] = Medium.subclasses[type]

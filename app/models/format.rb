@@ -7,6 +7,8 @@ class Format < ActiveRecord::Base
   belongs_to :resource, inverse_of: :formats
 
   enum file_type: [ :excel, :dwca, :csv ]
+  # NOTE: every "represents" needs a corresponding response in #model_fks.
+  # TODO: this is missing traits.
   enum represents: [ :articles, :attributions, :images, :js_maps, :links,
     :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars,
     :scientific_names ]
@@ -14,6 +16,38 @@ class Format < ActiveRecord::Base
   acts_as_list scope: :resource
 
   scope :abstract, -> { where("harvest_id IS NULL") }
+
+  def model_fks
+    if articles?
+      { Article => :resource_pk }
+    elsif attributions?
+      { Attribution => :resource_pk }
+    elsif images?
+      { Medium => :resource_pk }
+    elsif js_maps?
+      { Medium => :resource_pk }
+    elsif links?
+      { Link => :resource_pk }
+    elsif media?
+      { Medium => :resource_pk }
+    elsif maps?
+      { Medium => :resource_pk }
+    elsif refs?
+      { Ref => :resource_pk }
+    elsif sounds?
+      { Medium => :resource_pk }
+    elsif videos?
+      { Medium => :resource_pk }
+    elsif nodes?
+      { Node => :resource_pk }
+    elsif vernaculars?
+      { Vernacular => :verbatim }
+    elsif scientific_names?
+      { ScientificName => :verbatim }
+    else
+      raise "Unimplemented #model_fks for type #{represents}!"
+    end
+  end
 
   def copy_to_harvest(new_harvest)
     new_format = self.dup

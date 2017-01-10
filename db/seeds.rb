@@ -53,7 +53,7 @@ resource.create_harvest_instance unless resource.harvests.count > 0
 sheets = {
 sheet1_images: [
   "MediaID http://purl.org/dc/terms/identifier", # media_pk
-  "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_fk
+  "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_media_nodes_fk
   "Type http://purl.org/dc/terms/type", # media_type
   "Subtype http://rs.tdwg.org/audubon_core/subtype", # to_ignored
   "Format http://purl.org/dc/terms/format", # format
@@ -102,7 +102,7 @@ sheet2_nodes: [
   "ReferenceID http://eol.org/schema/reference/referenceID" #to_nodes_source_reference
 ],
 sheet3_names: [
-  "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_nodes_fk
+  "TaxonID http://rs.tdwg.org/dwc/terms/taxonID", # to_media_nodes_fk
   "Name http://rs.tdwg.org/dwc/terms/vernacularName", # to_vernaculars_verbatim
   "Source Reference http://purl.org/dc/terms/source", # to_vernaculars_source_reference
   "Language http://purl.org/dc/terms/language", # to_language_639_1
@@ -304,8 +304,8 @@ if(false)
   # end
   # OOOORRRRR...
   harvester = ResourceHarvester.new(Resource.where(name: "Test Excel").first)
-  harvester.create_harvest_instance && harvester.fetch
-  harvester.store
+  harvester.create_harvest_instance && harvester.fetch && harvester.delta
+  harvester.store # NOTE that this takes a few minutes! It's a relatively big file.
 end
 
 # Okay, I want to be able to create these things (much) faster:
@@ -323,19 +323,19 @@ simple_resource = Resource.quick_define(
       { "Phylum" => "to_nodes_ancestor", submapping: "phylum" },
       { "Class" => "to_nodes_ancestor", submapping: "class" },
       { "Order" => "to_nodes_ancestor", submapping: "order" },
-      { "Family" => "to_nodes_ancestor", submapping: "order" },
+      { "Family" => "to_nodes_ancestor", submapping: "family" },
       { "Rank" => "to_nodes_rank" }
     ]},
     media: { loc: "t_d_media.csv", fields: [
       { "MID" => "to_media_pk", is_unique: true, can_be_empty: false },
-      { "TID" => "to_nodes_fk", can_be_empty: false },
+      { "TID" => "to_media_nodes_fk", can_be_empty: false },
       { "type" => "to_media_type" },
       { "name" => "to_media_name" },
       { "description" => "to_media_description" },
       { "source" => "to_media_source_url" }
     ]},
     vernaculars: { loc: "t_d_names.csv", fields: [
-      { "TID" => "to_nodes_fk", can_be_empty: false },
+      { "TID" => "to_vernacular_nodes_fk", can_be_empty: false },
       { "name" => "to_vernaculars_verbatim" },
       { "language" => "to_language_639_1" },
       { "preferred" => "to_vernaculars_preferred" }
@@ -345,16 +345,19 @@ simple_resource = Resource.quick_define(
 
 if(false)
   resource = Resource.where(name: "Simple Deltas").first
+  resource.formats.each do |f|
+    f.update_attribute(:get_from, f.get_from.sub(/_v2/, ""))
+  end
   resource.harvests.each { |h| h.destroy }
   harvester = ResourceHarvester.new(resource)
-  harvester.create_harvest_instance && harvester.fetch
+  harvester.create_harvest_instance && harvester.fetch && harvester.delta
   harvester.store
+  harvester.complete_harvest_instance
   # Deltas:
   resource.formats.each do |f|
     f.update_attribute(:get_from, f.get_from.sub(/\./, "_v2."))
   end
   harvester = ResourceHarvester.new(resource)
-  harvester.create_harvest_instance && harvester.fetch
-  harvester.fetch
-  # harvester.store
+  harvester.create_harvest_instance && harvester.fetch && harvester.delta
+  harvester.store
 end

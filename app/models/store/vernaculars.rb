@@ -1,8 +1,8 @@
 module Store
   module Vernaculars
-    def to_nodes_pk(field, val)
-      @models[:node] ||= { }
-      @models[:node][:resource_pk] = val
+    def to_vernacular_nodes_fk(field, val)
+      @models[:vernacular] ||= { }
+      @models[:vernacular][:node_resource_pk] = val
     end
 
     def to_vernaculars_verbatim(field, val)

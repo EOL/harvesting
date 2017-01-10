@@ -9,13 +9,13 @@ class ResourceHarvester
   include Store::Vernaculars
   include Store::ModelBuilder
 
-  # NOTE: I'll make this "classy" later; for now I just want to read in our test
-  # file and "feel out" how the class should actually work.
-  def initialize(resource)
+  def initialize(resource, harvest = nil)
     @resource = resource
+    @previous_harvest = @resource.harvests.completed.last
     @harvest = nil
     @uris = {}
     @formats = {}
+    @harvest = harvest
   end
 
   def start
@@ -43,29 +43,7 @@ class ResourceHarvester
   def fetch
     @harvest.formats.each do |fmt|
       # TODO ... I don't care right now. :)
-      fmt.file = fmt.get_from
-    end
-  end
-
-  def each_format(&block)
-    @harvest.formats.each do |fmt|
-      fid = fmt.id
-      unless @formats.has_key?(fid)
-        @formats[fid] = {}
-        @formats[fid][:parser] = if fmt.excel?
-            ExcelParser.new(fmt.file, sheet: fmt.sheet,
-              header_lines: fmt.header_lines,
-              data_begins_on_line: fmt.data_begins_on_line)
-          elsif fmt.csv?
-            CsvParser.new(fmt.file, field_sep: fmt.field_sep,
-              line_sep: fmt.line_sep, header_lines: fmt.header_lines,
-              data_begins_on_line: fmt.data_begins_on_line)
-          else
-            raise "I don't know how to read formats of #{fmt.file_type}!"
-          end
-        @formats[fid][:headers] = @formats[fid][:parser].headers
-      end
-      yield(fmt, @formats[fid][:parser], @formats[fid][:headers])
+      fmt.update_attribute(:file, fmt.get_from)
     end
   end
 
@@ -116,11 +94,47 @@ class ResourceHarvester
     end
   end
 
-  # check for deltas from previous harvests (if any)
+  # Create deltas from previous harvests (or fake one from "nothing")
   def delta
-    # TODO: I don't want to tackle this on the first pass; I will come back to
-    # it.
-    raise "Unimplemented"
+    each_format do |fmt, parser, headers|
+      pn = Pathname.new(fmt.file)
+      diff_fname = "fmt_#{fmt.id}_#{sanitize_resource_name}.diff"
+      fmt.diff = "#{pn.dirname}/#{diff_fname}"
+      # TODO: this "simple diff" will only work for line-per-item formats, like
+      # csv/tsv. XML and Excel won't work (unless it's XML with one item per
+      # line, heh). We'll have to convert those to CSV (which would be nice to
+      # do after the "validate" step anyway) or use a different diff algorithm.
+      other_fmt = @previous_harvest ?
+        @previous_harvest.formats.find { |f| f.file_type == fmt.file_type } :
+        nil
+      if other_fmt && other_fmt.file # There's no diff if the previous format failed!
+        diff(other_fmt, fmt)
+      else
+        fake_diff_from_nothing(fmt)
+      end
+    end
+  end
+
+  def sanitize_resource_name
+    name = @resource.abbr.blank? ? @resource.name : @resource.abbr
+    name.gsub(/[^a-z0-9\-]+/i, "_").sub(/_+$/, "").downcase
+  end
+
+  def diff(old_fmt, new_fmt)
+    File.unlink(new_fmt.diff)
+    cmd = "/usr/bin/diff #{old_fmt.file} #{new_fmt.file} > #{new_fmt.diff}"
+    # TODO: we should probably allow configuration of diff path. TODO: We can't
+    # trust the exit code! diff exits 0 if the files are the same, and 1 if not.
+    # unless system(cmd)
+    #   raise "Diff failed! { #{cmd} } #{$?}"
+    # end
+    system(cmd)
+  end
+
+  def fake_diff_from_nothing(fmt)
+    system("echo \"0a\" > #{fmt.diff}")
+    system("cat #{fmt.file} >> #{fmt.diff}")
+    system("echo \".\" >> #{fmt.diff}")
   end
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
@@ -129,9 +143,11 @@ class ResourceHarvester
     # is that the file describing the nodes MUST be first. (It MUST be.)
     @nodes = {}
     @ancestors = {}
-    each_format do |fmt, parser, headers|
+    each_diff do |fmt, parser, headers|
       fields = build_fields(fmt, headers)
-      parser.rows_as_hashes do |row, line|
+      parser.diff_as_hashes do |row, line_number, diff|
+        # Just to give access to the line number elsewhere:
+        @line_number = line_number
         # We *could* skip this, but I prefer not to deal with the missing keys.
         @models = { node: nil, parent_node: nil, scientific_name: nil,
           ancestors: [], medium: nil, vernacular: nil }
@@ -140,22 +156,27 @@ class ResourceHarvester
             field = fields[header]
             next if row[header].blank?
             next if field.to_ignored?
-            # NOTE: that these methods are defined in the Harvest::* mixins:
+            # NOTE: that these methods are defined in the Store::* mixins:
             send(field.mapping, field, row[header])
           end
         rescue => e
-          puts "Failed to parse row #{line}..."
+          puts "Failed to parse row #{line_number}..."
           debugger
           raise e
         end
         begin
-          # NOTE: see Store::ModelBuilder mixin for this (Composition):
-          build_models
+          # NOTE: see Store::ModelBuilder mixin for the methods called here:
+          # (Why? Composition.)
+          if diff == :removed
+            destroy_for_fmt(fmt.model_fks)
+          else # new or changed
+            build_models(diff, fmt.model_fks)
+          end
         rescue => e
           if row.values.compact.size < (row.values.size / 5)
-            fmt.warn("Empty row?", line)
+            fmt.warn("Empty row?", line_number)
           else
-            puts "Failed to save data from row #{line}..."
+            puts "Failed to save data from row #{line_number}..."
             debugger
             raise e
           end
@@ -205,5 +226,40 @@ class ResourceHarvester
   # send notifications and finish up the instance:
   def complete_harvest_instance
     @harvest.update_attribute(:completed_at, Time.now)
+  end
+
+  def each_format(&block)
+    @harvest.formats.each do |fmt|
+      fid = fmt.id
+      unless @formats.has_key?(fid)
+        @formats[fid] = {}
+        @formats[fid][:parser] = if fmt.excel?
+            ExcelParser.new(fmt.file, sheet: fmt.sheet,
+              header_lines: fmt.header_lines,
+              data_begins_on_line: fmt.data_begins_on_line)
+          elsif fmt.csv?
+            CsvParser.new(fmt.file, field_sep: fmt.field_sep,
+              line_sep: fmt.line_sep, header_lines: fmt.header_lines,
+              data_begins_on_line: fmt.data_begins_on_line)
+          else
+            raise "I don't know how to read formats of #{fmt.file_type}!"
+          end
+        @formats[fid][:headers] = @formats[fid][:parser].headers
+      end
+      yield(fmt, @formats[fid][:parser], @formats[fid][:headers])
+    end
+  end
+
+  # This is very much like #each_format, but reads the diff file...
+  def each_diff(&block)
+    @harvest.formats.each do |fmt|
+      fid = "#{fmt.id}_diff".to_sym
+      unless @formats.has_key?(fid)
+        @formats[fid] = {}
+        @formats[fid][:parser] = CsvParser.new(fmt.diff)
+        @formats[fid][:headers] = @formats[fid][:parser].headers
+      end
+      yield(fmt, @formats[fid][:parser], @formats[fid][:headers])
+    end
   end
 end
