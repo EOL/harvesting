@@ -41,10 +41,7 @@ class ResourceHarvester
 
   # grab the file from each format
   def fetch
-    @harvest.formats.each do |fmt|
-      # TODO ... I don't care right now. :)
-      fmt.update_attribute(:file, fmt.get_from)
-    end
+    Harvest::Fetcher.fetch_format_files(@harvest)
   end
 
   # validate each file; stop on errors, log warnings...

@@ -64,8 +64,6 @@ class CsvParser
     any_diff = line_at_a_time do |row, i|
       offset += 1 if row.size == 1 && line_num == 0
       if row.size == 1 && row.first =~ /^\d+(\D)(\d+)?$/
-        puts "&" * 100
-        puts "Found a diff indicator of #{row.first}"
         (diff_type, new_line) = [$1, $2]
         diff = case diff_type
         when "a"
@@ -85,15 +83,10 @@ class CsvParser
       next if diff == :changed && row.size == 1 && row.first =~ /^---/
       # End of input (for "faked" new diffs):
       next if row.size == 1 && row.first == "."
-      puts "#" * 100
       if diff == :changed || diff == :new
-        puts "Removing gt from #{row.first}"
         row.first.sub!(/^> /, "")
       elsif diff == :removed
-        puts "Removing lt from #{row.first}"
         row.first.sub!(/^< /, "")
-      else
-        puts "Nothing to remove from #{row.first} because diff is #{diff}"
       end
       line_num += 1
       next if i < @data_begins_on_line
