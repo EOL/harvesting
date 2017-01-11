@@ -122,13 +122,6 @@ class ResourceHarvester
     cmd = "/usr/bin/diff #{old_fmt.file} #{new_fmt.file} > #{new_fmt.diff}"
     # TODO: we should probably allow configuration of diff path. TODO: We can't
     # trust the exit code! diff exits 0 if the files are the same, and 1 if not.
-    # unless system(cmd)
-    #   raise "Diff failed! { #{cmd} } #{$?}"
-    # end
-    puts "** DIFF " + "*" * 80
-    puts "*"
-    puts "* #{cmd}"
-    puts "*"
     system(cmd)
   end
 
