@@ -1,12 +1,9 @@
-# TODO: This currently does NOT update things that already exist, and we want it
-# to.
 module Store
   module ModelBuilder
     def destroy_for_fmt(keys)
       keys.each do |klass, key|
-        pk = @models[klass.name.underscore.to_sym][key]
-        klass.send(:where, { key => pk, :resource_id => @resource.id }).
-          update_attribute(:published, false)
+        removed_by_harvest(klass, key,
+          @models[klass.name.underscore.to_sym][key])
       end
     end
 
@@ -41,7 +38,7 @@ module Store
           @models[:node][:parent_id] = parent.id if @models[:node]
           parent
         else
-          # TODO: issue a warning here that we couldn't (safely) build a parent.
+          # TODO: move this to a warning.
           puts "I cannot build a parent without a (clear) name or prior ref."
           nil
         end
@@ -124,6 +121,7 @@ module Store
     end
 
     def build_vernacular(diff, keys)
+      debugger if @models[:vernacular][:node_resource_pk].nil?
       node_pk = @models[:vernacular].delete(:node_resource_pk)
       lang_code = @models[:vernacular].delete(:language_code_verbatim)
 
@@ -140,7 +138,6 @@ module Store
       # all in one batch. For now, though, this is adequate:
       node = @nodes[node_pk] ||
         Node.where(resource_id: @resource.id, resource_pk: node_pk).first
-      debugger if node.nil?
       @models[:vernacular][:node_id] = node.id
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
@@ -161,11 +158,14 @@ module Store
     def create_or_update(diff, keys, klass, model)
       if diff == :changed
         key = keys[klass]
-        pk = model[key]
-        klass.send(:where, { key => pk, :resource_id => @resource.id }).
-          update_all(removed_by_harvest_id: @harvest.id)
+        removed_by_harvest(klass, key, model[key])
       end
       klass.send(:create!, model)
+    end
+
+    def removed_by_harvest(klass, key, pk)
+      klass.send(:where, { key => pk, :resource_id => @resource.id }).
+        update_all(removed_by_harvest_id: @harvest.id)
     end
   end
 end

@@ -56,6 +56,7 @@ class CsvParser
     end
   end
 
+  # TODO: parsing with diffs deserves its own class
   def diff_as_hashes(db_headers, &block)
     line_num = 0
     diff = nil
@@ -87,10 +88,10 @@ class CsvParser
       puts "#" * 100
       if diff == :changed || diff == :new
         puts "Removing gt from #{row.first}"
-        row.first.sub!(/^ >/, "")
+        row.first.sub!(/^> /, "")
       elsif diff == :removed
         puts "Removing lt from #{row.first}"
-        row.first.sub!(/^ </, "")
+        row.first.sub!(/^< /, "")
       else
         puts "Nothing to remove from #{row.first} because diff is #{diff}"
       end

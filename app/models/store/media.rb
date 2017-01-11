@@ -7,7 +7,7 @@ module Store
 
     def to_media_nodes_fk(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:node_resource_pk] = val # TODO: we will "find" it later.
+      @models[:medium][:node_resource_pk] = val # we will "find" it later.
     end
 
     def to_media_type(field, val)

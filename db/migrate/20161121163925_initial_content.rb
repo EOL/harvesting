@@ -17,7 +17,6 @@ class InitialContent < ActiveRecord::Migration
       # stored that way. TODO: why not? We should.
       t.string :rank
       t.string :rank_verbatim
-      # TODO: is this the same as literature_references?
       t.string :remarks
 
       t.integer :removed_by_harvest_id

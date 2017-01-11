@@ -181,6 +181,8 @@ class ResourceHarvester
             fmt.warn("Empty row?", line_number)
           else
             puts "Failed to save data from row #{line_number}..."
+            puts e.message
+            puts e.backtrace[0..10]
             debugger
             raise e
           end
