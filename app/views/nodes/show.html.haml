@@ -1,0 +1,83 @@
+%h1= @node.name_verbatim
+%ul
+  %li
+    %strong= t(:node_resource_field)
+    = link_to(@node.resource.name, @node.resource)
+  %li
+    %strong= t(:node_resource_pk_field)
+    = @node.resource_pk
+  %li
+    %strong= t(:node_created_field)
+    = l(@node.created_at, format: :short)
+    = t(:node_created_by_harvest,
+      date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
+  %li
+    - if @node.parent
+      %strong= t(:node_parent_field)
+      = link_to(@node.parent.name_verbatim, @node.parent)
+    - else
+      %strong= t(:node_root_node_notice)
+  %li
+    %strong= t(:node_name_field)
+    %ul
+      %li
+        %strong= t(:node_name_verbatim_field)
+        = @node.name_verbatim
+      - if @node.scientific_name
+        %li
+          %strong= t(:node_name_scientific_field)
+          TODO
+          -# = @node.scientific_name.normalized_name.string
+        %li
+          %strong= t(:node_name_canonical_field)
+          TODO
+          -# = @node.scientific_name.normalized_name.canonical
+        %li
+          %strong= t(:node_name_parse_quality_field)
+          = @node.scientific_name.parse_quality
+        %li
+          %strong= t(:node_name_taxonomic_status_verbatim_field)
+          = @node.scientific_name.taxonomic_status_verbatim
+        %li
+          %strong= t(:node_name_taxonomic_status_field)
+          = @node.scientific_name.taxonomic_status
+      - else
+        %li
+          %strong= t(:node_name_not_parsed_notice)
+      - if @node.vernaculars.published.empty?
+        %li
+          %strong= t(:node_vernaculars_empty_notice)
+      - else
+        %li
+          = t(:node_vernaculars_field)
+          %ul
+            - @node.vernaculars.published.each do |vern|
+              %li
+                = vern.verbatim
+                = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
+      %li TODO: ...blah blah blah, lots more fields here, later.
+    %li
+      %strong= t(:node_name_rank_verbatim_field)
+      = @node.rank_verbatim
+
+
+
+%h2= t(:node_children_header)
+- if @node.children.published.empty?
+  = t(:node_children_empty)
+- else
+  %ul
+    - @node.children.order(:name_verbatim).published.each do |child|
+      %li= link_to(child.name_verbatim, child)
+
+%h2= t(:node_media_header)
+- if @node.media.published.empty?
+  = t(:node_media_empty)
+- else
+  %ul
+    - @node.media.published.each do |medium|
+      %li
+        = link_to(medium.name_verbatim || truncate(medium.description_verbatim, 20), medium)
+        = "(#{medium.format})"
+
+%h2 TODO: articles, traits, etc...

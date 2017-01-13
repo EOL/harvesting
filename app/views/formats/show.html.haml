@@ -52,17 +52,15 @@
   %ul
     - @format.fields.each do |field|
       %li
-        %strong= "#{field.expected_header}:"
+        %strong= "#{field.expected_header}"
         = field.validation? ? field.validation : nil
         \&rarr;
-        - unless field.map_to_table.blank?
-          %strong Map to Table:
-          = field.map_to_table
-        - unless field.map_to_field.blank?
-          %strong Map to Field:
-          = field.map_to_field
         - unless field.mapping.blank?
-          %strong Special Handling:
           = field.mapping
+        - unless field.submapping.blank?
+          = "(#{field.submapping})"
+        - unless field.special_handling.blank?
+          %strong Special Handling:
+          = field.special_handling
         = field.unique_in_format? ? "(must be unique)" : nil
         = field.can_be_empty? ? nil : "(must not be empty)"

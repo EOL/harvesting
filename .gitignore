@@ -18,3 +18,7 @@
 
 # Created during specs, but not desirable to keep them around:
 spec/files/*diff
+
+# Created when processing resources:
+public/diff/*
+public/converted_csv/*

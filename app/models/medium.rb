@@ -8,4 +8,6 @@ class Medium < ActiveRecord::Base
 
   enum subclass: [:image, :video, :sound, :map_image ]
   enum format: [:jpg, :youtube, :flash, :vimeo, :mp3, :ogg, :wav]
+
+  scope :published, -> { where(removed_by_harvest_id: nil) }
 end

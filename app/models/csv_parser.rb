@@ -56,13 +56,11 @@ class CsvParser
     end
   end
 
-  # TODO: parsing with diffs deserves its own class
+  # TODO: parsing with diffs deserves its own class, move!
   def diff_as_hashes(db_headers, &block)
     line_num = 0
     diff = nil
-    offset = 0
     any_diff = line_at_a_time do |row, i|
-      offset += 1 if row.size == 1 && line_num == 0
       if row.size == 1 && row.first =~ /^\d+(\D)(\d+)?$/
         (diff_type, new_line) = [$1, $2]
         diff = case diff_type
@@ -76,7 +74,6 @@ class CsvParser
         line_num = new_line.to_i if new_line
         next
       end
-      next if i < (@data_begins_on_line + offset)
       # "Removed" part of a change, we can ignore it:
       next if diff == :changed && row.first =~ /^</
       # "switch" part of a change, ignore:
@@ -89,7 +86,6 @@ class CsvParser
         row.first.sub!(/^< /, "")
       end
       line_num += 1
-      next if i < @data_begins_on_line
       hash = Hash[db_headers.zip(row)]
       yield(hash, line_num, diff)
     end

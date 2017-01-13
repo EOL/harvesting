@@ -57,6 +57,13 @@ class Resource < ActiveRecord::Base
     harvest
   end
 
+  def name_brief
+    return @name_brief if @name_brief
+    @name_brief = abbr.blank? ? name : abbr
+    @name_brief.gsub(/[^a-z0-9\-]+/i, "_").sub(/_+$/, "").downcase
+    @name_brief
+  end
+
   def start_harvest
     harvester = ResourceHarvester.new(self)
     harvester.start

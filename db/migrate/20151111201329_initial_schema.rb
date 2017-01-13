@@ -40,7 +40,8 @@ class InitialSchema < ActiveRecord::Migration
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
-      t.string :name, null: false
+      t.string :name, null: false, index: true,
+        comment: "indexed to facilitate sorting by name"
       t.string :abbr, null: false
       t.string :pk_url, null: false, default: "$PK"
       t.boolean :auto_publish, null: false, default: false

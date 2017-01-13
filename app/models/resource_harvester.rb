@@ -16,22 +16,31 @@ class ResourceHarvester
     @uris = {}
     @formats = {}
     @harvest = harvest
+    @converted = {}
   end
 
-  def start
+  def harvest
     create_harvest_instance
     fetch
+    # TODO: CLEARLY the mkdirs do not belong here. I wasn't sure where would be
+    # best. TODO: really this (and the one in format.rb) should be configurable
+    Dir.mkdir(Rails.public_path.join("converted_csv")) unless
+      Dir.exist?(Rails.public_path.join("converted_csv"))
     validate
+    convert
+    # TODO: really this (and the one in format.rb) should be configurable
+    Dir.mkdir(Rails.public_path.join("diff")) unless
+      Dir.exist?(Rails.public_path.join("converted_csv"))
     delta
     store
-    check_consistency
-    # TODO queue_downloads
-    parse_names
-    match_nodes
-    build_ancestry
-    normalize_units
-    # TODO link
-    # TODO index_and_calculate_statistics
+    # TODO check_consistency
+    # TODO (LOW-PRIO) queue_downloads
+    # TODO parse_names
+    # TODO match_nodes
+    # TODO build_ancestry
+    # TODO normalize_units
+    # TODO (LOW-PRIO) link
+    # TODO (LOW-PRIO) index_and_calculate_statistics
     complete_harvest_instance
   end
 
@@ -59,25 +68,56 @@ class ResourceHarvester
       end
       raise Exceptions::ColumnUnmatched.new(expected_by_file.join(",")) if
         expected_by_file.size > 0
-      parser.rows_as_hashes do |row, line|
-        headers.each do |header|
-          check = fields[header]
-          next unless check
-          val = row[header]
-          if val.blank?
-            next if check.can_be_empty?
-            fmt.warn("Illegal empty value for #{header}", line)
+      CSV.open(fmt.converted_csv_path, "wb") do |csv|
+        parser.rows_as_hashes do |row, line|
+          csv_row = []
+          headers.each do |header|
+            check = fields[header]
+            next unless check
+            val = row[header]
+            if val.blank?
+              next if check.can_be_empty?
+              fmt.warn("Illegal empty value for #{header}", line)
+            end
+            if check.must_be_integers?
+              unless row[header] =~ /\a[\d,]+\z/m
+                fmt.warn("Illegal non-integer for #{header}, got #{val}", line)
+              end
+            elsif check.must_know_uris?
+              unless uri_exists?(val)
+                fmt.warn("Illegal unknown URI <#{val}> for #{header}", line)
+              end
+            end
+            csv_row << val
           end
-          if check.must_be_integers?
-            unless row[header] =~ /\a[\d,]+\z/m
-              fmt.warn("Illegal non-integer for #{header}, got #{val}", line)
+          csv << csv_row
+        end
+      end
+      @converted[fmt.id] = true
+      # Write each line to a CSV (no headers)
+    end
+  end
+
+  def convert
+    each_format do |fmt, parser, headers|
+      unless @converted[fmt.id]
+        CSV.open(fmt.converted_csv_path, "wb") do |csv|
+          parser.rows_as_hashes do |row, line|
+            csv_row = []
+            headers.each do |header|
+              csv_row << row[header]
             end
-          elsif check.must_know_uris?
-            unless uri_exists?(val)
-              fmt.warn("Illegal unknown URI <#{val}> for #{header}", line)
-            end
+            csv << csv_row
           end
         end
+        @converted[fmt.id] = true # Shouldn't need this, but being safe
+      end
+      cmd = "/usr/bin/sort #{fmt.converted_csv_path} > "\
+            "#{fmt.converted_csv_path}_sorted"
+      if system(cmd)
+        FileUtils.mv("#{fmt.converted_csv_path}_sorted", fmt.converted_csv_path)
+      else
+        raise "Failed system call { #{cmd} } #{$?}"
       end
     end
   end
@@ -95,16 +135,14 @@ class ResourceHarvester
   def delta
     each_format do |fmt, parser, headers|
       pn = Pathname.new(fmt.file)
-      diff_fname = "fmt_#{fmt.id}_#{sanitize_resource_name}.diff"
-      fmt.diff = "#{pn.dirname}/#{diff_fname}"
-      # TODO: this "simple diff" will only work for line-per-item formats, like
-      # csv/tsv. XML and Excel won't work (unless it's XML with one item per
-      # line, heh). We'll have to convert those to CSV (which would be nice to
-      # do after the "validate" step anyway) or use a different diff algorithm.
+      fmt.update_attribute(:diff, fmt.diff_path) # TODO - meh. Why save this name?
+      # YOU WERE HERE - Modify this to ensure that it's reading the
+      # converted_csv and doesn't bother with a header.
       other_fmt = @previous_harvest ?
         @previous_harvest.formats.find { |f| f.represents == fmt.represents } :
         nil
-      if other_fmt && other_fmt.file # There's no diff if the previous format failed!
+      # There's no diff if the previous format failed!
+      if other_fmt && File.exist?(other_fmt.converted_csv_path)
         diff(other_fmt, fmt)
       else
         fake_diff_from_nothing(fmt)
@@ -112,16 +150,12 @@ class ResourceHarvester
     end
   end
 
-  def sanitize_resource_name
-    name = @resource.abbr.blank? ? @resource.name : @resource.abbr
-    name.gsub(/[^a-z0-9\-]+/i, "_").sub(/_+$/, "").downcase
-  end
-
   def diff(old_fmt, new_fmt)
     File.unlink(new_fmt.diff) if File.exist?(new_fmt.diff)
-    cmd = "/usr/bin/diff #{old_fmt.file} #{new_fmt.file} > #{new_fmt.diff}"
-    # TODO: we should probably allow configuration of diff path. TODO: We can't
-    # trust the exit code! diff exits 0 if the files are the same, and 1 if not.
+    cmd = "/usr/bin/diff #{old_fmt.converted_csv_path} "\
+      "#{new_fmt.converted_csv_path} > #{new_fmt.diff}"
+    # TODO: We can't trust the exit code! diff exits 0 if the files are the
+    # same, and 1 if not.
     system(cmd)
   end
 
@@ -135,7 +169,7 @@ class ResourceHarvester
   def store
     # Recall these are in a specific order (and need to be). The assumption here
     # is that the file describing the nodes MUST be first. (It MUST be.)
-    @nodes = {}
+    gather_nodes
     @ancestors = {}
     each_diff do |fmt, parser, headers|
       fields = build_fields(fmt, headers)
@@ -184,6 +218,15 @@ class ResourceHarvester
     end
   end
 
+  # NOTE: yes, this could be *quite* large, but I believe memory is fine with a
+  # hash of two million (smallish) members, so I'm doing it.
+  def gather_nodes
+    @nodes = {}
+    @resource.nodes.published.find_each do |node|
+      @nodes[node.resource_pk] = node
+    end
+  end
+
   def build_fields(fmt, headers)
     fields = {}
     fmt.fields.each_with_index do |field, i|
@@ -224,7 +267,7 @@ class ResourceHarvester
 
   # send notifications and finish up the instance:
   def complete_harvest_instance
-    @harvest.update_attribute(:completed_at, Time.now)
+    @harvest.complete
   end
 
   def each_format(&block)
@@ -256,7 +299,7 @@ class ResourceHarvester
       fid = "#{fmt.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = CsvParser.new(fmt.diff)
+        @formats[fid][:parser] = CsvParser.new(fmt.converted_csv_path)
         @formats[fid][:headers] = fmt.fields.sort_by(&:position).map(&:expected_header)
       end
       yield(fmt, @formats[fid][:parser], @formats[fid][:headers])

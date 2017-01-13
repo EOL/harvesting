@@ -35,13 +35,13 @@
   = l(@harvest.stored_at, format: :short)
 - if @harvest.indexed_at
   %strong Indexed:
-  = #{l(@harvest.indexed_at, format: :short)}"
+  = l(@harvest.indexed_at, format: :short)
 - if @harvest.failed_at
   %strong Failed:
-  = "#{l(@harvest.failed_at, format: :short)}"
+  = l(@harvest.failed_at, format: :short)
 - if @harvest.completed_at
   %strong Completed:
-  = #{l(@harvest.completed_at, format: :short)}"
+  = l(@harvest.completed_at, format: :short)
 - if @harvest.time_in_minutes
   = "(took #{@harvest.time_in_minutes} minutes)"
 
@@ -60,7 +60,7 @@
 
 %h2 Harvesting Log
 - if @harvest.hlogs.empty?
-  %p There are no logs available for this harvest.
+  %p The logs for this harvest are empty.
 - else
   %ul
     - @harvest.hlogs.order(:created_at).each do |log|

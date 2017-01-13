@@ -10,8 +10,8 @@ module Store
     def build_models(diff, keys)
       build_scientific_name(diff, keys) if @models[:scientific_name]
       build_parent_node(diff, keys) if @models[:parent_node]
-      build_node(diff, keys) if @models[:node]
       build_ancestors(diff, keys) unless @models[:ancestors].empty?
+      build_node(diff, keys) if @models[:node]
       build_medium(diff, keys) if @models[:medium]
       build_vernacular(diff, keys) if @models[:vernacular]
     end
@@ -50,7 +50,7 @@ module Store
       @models[:scientific_name][:node_id] = node.id if @models[:scientific_name]
     end
 
-    # TODO: an update of this type might be trickier to hanlde than I have here.
+    # TODO: an update of this type might be trickier to handle than I have here.
     # e.g.: The only change on this row was to set "Karninvora" to "Carnivora";
     # we do not unpublish "Karnivora" (rightly, because we don't know whether
     # it's actually used elsewhere), so it will still exist and still be
@@ -96,8 +96,6 @@ module Store
     def build_medium(diff, keys)
       debugger unless @models[:medium][:resource_pk]
       node_pk = @models[:medium].delete(:node_resource_pk)
-      # TODO: of course, this is slow... we should queue these up and find them
-      # all in one batch. For now, though, this is adequate:
       node = @nodes[node_pk] ||
         Node.where(resource_id: @resource.id, resource_pk: node_pk).first
       @models[:medium][:node_id] = node.id
@@ -121,9 +119,8 @@ module Store
     end
 
     def build_vernacular(diff, keys)
-      debugger if @models[:vernacular][:node_resource_pk].nil?
       node_pk = @models[:vernacular].delete(:node_resource_pk)
-      lang_code = @models[:vernacular].delete(:language_code_verbatim)
+      lang_code = @models[:vernacular][:language_code_verbatim]
 
       lang =
         if Language.exists?(code: lang_code)
@@ -138,6 +135,7 @@ module Store
       # all in one batch. For now, though, this is adequate:
       node = @nodes[node_pk] ||
         Node.where(resource_id: @resource.id, resource_pk: node_pk).first
+      debugger if node.nil? # Means that we don't know what this is associated to...
       @models[:vernacular][:node_id] = node.id
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
@@ -150,8 +148,17 @@ module Store
     def build_any_node(node_hash, diff, keys)
       node_hash[:resource_id] = @resource.id
       node_hash[:harvest_id] = @harvest.id
-      node = create_or_update(diff, keys, Node, node_hash)
-      @nodes[node.resource_pk] = node
+      node_hash[:resource_pk] ||= node_hash[:name_verbatim]
+      # Node already existed, just update it and pass that back:
+      node = if @nodes[node_hash[:resource_pk]]
+        @nodes[node_hash[:resource_pk]].update_attributes(node_hash)
+        @nodes[node_hash[:resource_pk]]
+      else
+        n = create_or_update(diff, keys, Node, node_hash)
+        @nodes[n.resource_pk] = n
+      end
+
+      debugger if node.resource_pk.blank? # Shouldn't happen! :S
       node
     end
 

@@ -1,0 +1,4 @@
+%h1= t(:resources_header)
+%ul
+  - @resources.each do |resource|
+    %li= link_to(resource.name, resource)

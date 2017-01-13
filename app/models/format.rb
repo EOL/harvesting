@@ -49,6 +49,10 @@ class Format < ActiveRecord::Base
     end
   end
 
+  def converted_csv_path
+    special_path("converted_csv", "csv")
+  end
+
   def copy_to_harvest(new_harvest)
     new_format = self.dup
     new_harvest.formats << new_format
@@ -63,6 +67,10 @@ class Format < ActiveRecord::Base
     new_format
   end
 
+  def diff_path
+    special_path("diff", "diff")
+  end
+
   # You can pass in :cat, :e, :line as options
   def log(message, options = {})
     options[:cat] ||= :infos
@@ -74,6 +82,11 @@ class Format < ActiveRecord::Base
       backtrace: trace,
       line: options[:line]
     )
+  end
+
+  def special_path(dir, ext)
+    Rails.public_path.join(dir,
+      "#{resource.name_brief}_fmt_#{file_type}_#{id}.#{ext}")
   end
 
   def warn(message, line)

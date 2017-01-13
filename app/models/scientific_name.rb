@@ -10,4 +10,6 @@ class ScientificName < ActiveRecord::Base
   # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
   enum taxonomic_status: [ :preferred, :provisionally_accepted, :acronym,
     :synonym, :unusable ]
+
+  scope :published, -> { where(removed_by_harvest_id: nil) }
 end

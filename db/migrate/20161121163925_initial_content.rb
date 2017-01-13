@@ -9,7 +9,8 @@ class InitialContent < ActiveRecord::Migration
       t.integer :parent_id, null: false, default: 0, index: true
       t.integer :scientific_name_id, null: false
 
-      t.string :name_verbatim, null: false
+      t.string :name_verbatim, null: false, index: true,
+        comment: "indexed to facilitate sorting"
       t.string :taxonomic_status_verbatim
       t.string :resource_pk, index: true
       t.string :further_information_url
@@ -20,6 +21,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :remarks
 
       t.integer :removed_by_harvest_id
+      t.timestamps
     end
     add_index :nodes, [:resource_id, :resource_pk], name: "by_resource_and_pk"
 

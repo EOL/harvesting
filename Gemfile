@@ -14,6 +14,9 @@ gem "jbuilder", "~> 2.0"
 # Use jquery as the JavaScript library
 gem "jquery-rails"
 
+# Pagination!
+gem 'kaminari'
+
 # Use mysql as the database for Active Record
 gem "mysql2", "~> 0.3.18"
 

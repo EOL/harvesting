@@ -296,16 +296,8 @@ if(false)
   # if(@all_at_once)
   #   excel_resource.start_harvest
   # else
-    harvester = ResourceHarvester.new(excel_resource)
-    harvester.create_harvest_instance
-    harvester.fetch
-    # harvester.validate
-    harvester.store
-  # end
-  # OOOORRRRR...
-  harvester = ResourceHarvester.new(Resource.where(name: "Test Excel").first)
-  harvester.create_harvest_instance && harvester.fetch && harvester.delta
-  harvester.store # NOTE that this takes a few minutes! It's a relatively big file.
+  harvester = ResourceHarvester.new(excel_resource)
+  harvester.harvest
 end
 
 # Okay, I want to be able to create these things (much) faster:
@@ -318,12 +310,12 @@ simple_resource = Resource.quick_define(
     nodes: { loc: "t_d_nodes.csv", fields: [
       { "TID" => "to_nodes_pk", is_unique: true, can_be_empty: false },
       { "SciName" => "to_nodes_scientific", can_be_empty: false },
-      { "ParentTID" => "to_nodes_parent_fk", can_be_empty: false },
       { "Kingdom" => "to_nodes_ancestor", submapping: "kingdom" },
       { "Phylum" => "to_nodes_ancestor", submapping: "phylum" },
       { "Class" => "to_nodes_ancestor", submapping: "class" },
       { "Order" => "to_nodes_ancestor", submapping: "order" },
       { "Family" => "to_nodes_ancestor", submapping: "family" },
+      { "Genus" => "to_nodes_ancestor", submapping: "genus" },
       { "Rank" => "to_nodes_rank" }
     ]},
     media: { loc: "t_d_media.csv", fields: [
@@ -350,14 +342,11 @@ if(false)
   end
   resource.harvests.each { |h| h.destroy }
   harvester = ResourceHarvester.new(resource)
-  harvester.create_harvest_instance && harvester.fetch && harvester.delta
-  harvester.store
-  harvester.complete_harvest_instance
+  harvester.harvest
   # Deltas:
   resource.formats.each do |f|
     f.update_attribute(:get_from, f.get_from.sub(/\./, "_v2."))
   end
   harvester = ResourceHarvester.new(resource)
-  harvester.create_harvest_instance && harvester.fetch && harvester.delta
-  harvester.store
+  harvester.harvest
 end

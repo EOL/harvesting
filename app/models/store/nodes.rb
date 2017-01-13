@@ -22,8 +22,12 @@ module Store
       if @ancestors[val]
         @models[:ancestors] << {
           name: val,
-          sci_name: @ancestors[val][:sci_name],
           node: @ancestors[val][:node]
+        }
+      elsif @nodes[val]
+        @models[:ancestors] << {
+          name: val,
+          node: @nodes[val]
         }
       else
         @models[:ancestors] << {

@@ -260,23 +260,26 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "meta_traits", ["resource_id", "resource_pk"], name: "index_meta_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "nodes", force: :cascade do |t|
-    t.integer "resource_id",               limit: 4,               null: false
-    t.integer "harvest_id",                limit: 4,               null: false
-    t.integer "page_id",                   limit: 4
-    t.integer "site_pk",                   limit: 4
-    t.integer "parent_id",                 limit: 4,   default: 0, null: false
-    t.integer "scientific_name_id",        limit: 4,               null: false
-    t.string  "name_verbatim",             limit: 255,             null: false
-    t.string  "taxonomic_status_verbatim", limit: 255
-    t.string  "resource_pk",               limit: 255
-    t.string  "further_information_url",   limit: 255
-    t.string  "rank",                      limit: 255
-    t.string  "rank_verbatim",             limit: 255
-    t.string  "remarks",                   limit: 255
-    t.integer "removed_by_harvest_id",     limit: 4
+    t.integer  "resource_id",               limit: 4,               null: false
+    t.integer  "harvest_id",                limit: 4,               null: false
+    t.integer  "page_id",                   limit: 4
+    t.integer  "site_pk",                   limit: 4
+    t.integer  "parent_id",                 limit: 4,   default: 0, null: false
+    t.integer  "scientific_name_id",        limit: 4,               null: false
+    t.string   "name_verbatim",             limit: 255,             null: false
+    t.string   "taxonomic_status_verbatim", limit: 255
+    t.string   "resource_pk",               limit: 255
+    t.string   "further_information_url",   limit: 255
+    t.string   "rank",                      limit: 255
+    t.string   "rank_verbatim",             limit: 255
+    t.string   "remarks",                   limit: 255
+    t.integer  "removed_by_harvest_id",     limit: 4
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
+  add_index "nodes", ["name_verbatim"], name: "index_nodes_on_name_verbatim", using: :btree
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
   add_index "nodes", ["resource_id", "resource_pk"], name: "by_resource_and_pk", using: :btree
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
@@ -345,6 +348,8 @@ ActiveRecord::Schema.define(version: 20161121181833) do
     t.datetime "created_at",                                            null: false
     t.datetime "updated_at",                                            null: false
   end
+
+  add_index "resources", ["name"], name: "index_resources_on_name", using: :btree
 
   create_table "roles", force: :cascade do |t|
     t.string   "name",       limit: 255, null: false
