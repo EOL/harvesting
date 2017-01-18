@@ -26,21 +26,20 @@ class ResourceHarvester
     # best. TODO: really this (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join("converted_csv")) unless
       Dir.exist?(Rails.public_path.join("converted_csv"))
-    validate
+    validate # TODO: this should include a call to check_consistency
     convert
     # TODO: really this (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join("diff")) unless
       Dir.exist?(Rails.public_path.join("converted_csv"))
     delta
     store
-    # TODO check_consistency
     # TODO (LOW-PRIO) queue_downloads
     # TODO parse_names
     # TODO match_nodes
     # TODO build_ancestry
     # TODO normalize_units
     # TODO (LOW-PRIO) link
-    # TODO (LOW-PRIO) index_and_calculate_statistics
+    # TODO (LOW-PRIO) calculate_statistics
     complete_harvest_instance
   end
 
@@ -235,9 +234,6 @@ class ResourceHarvester
     fields
   end
 
-  def check_consistency
-  end
-
   def queue_downloads
   end
 
@@ -261,8 +257,8 @@ class ResourceHarvester
   def link
   end
 
-  # index and update statistics
-  def index_and_calculate_statistics
+  # update statistics
+  def calculate_statistics
   end
 
   # send notifications and finish up the instance:

@@ -68,22 +68,22 @@ end
 # action: "new" page: 1, per_page: 10
 {
   nodes: [
-    {"repository_id"=>603,
-     "page_id"=>1115346,
-     "rank"=>"species",
-     "parent_repository_id"=>602,
-     "scientific_name"=>"<i>Echinochloa crus-galli</i> (L.) P. Beauv.",
-     "canonical_form"=>"<i>Echinochloa crus-galli</i>",
-     "resource_pk"=>"9786302",
-     "source_url"=>
-      "http://www.catalogueoflife.org/annual-checklist/details/species/id/9786302" }
+    { "repository_id"=>603,
+      "page_id"=>1115346,
+      "rank"=>"species",
+      "parent_repository_id"=>602,
+      "scientific_name"=>"<i>Echinochloa crus-galli</i> (L.) P. Beauv.",
+      "canonical_form"=>"<i>Echinochloa crus-galli</i>",
+      "resource_pk"=>"9786302",
+      "source_url"=>
+        "http://www.catalogueoflife.org/annual-checklist/details/species/id/9786302" }
   ],
   no_more_items: "true"
 }
 # And for action: "removed"
 {
   nodes: [
-    {"resource_pk"=>"9786302"}
+    { "resource_pk"=>"9786302" }
   ],
   no_more_items: "true"
 }
@@ -91,8 +91,9 @@ end
 # reconciliation with curations (which occurred on that site)
 {
   nodes: [
-    {"resource_pk"=>"9786302",
-     "source_url"=> "http://www.catalogueoflife.org/annual-checklist/species/id/9786302" }
+    { "resource_pk"=>"9786302",
+      "repository_id"=>927845,
+      "source_url"=> "http://www.catalogueoflife.org/annual-checklist/species/id/9786302" }
   ],
   no_more_items: "true"
 }
