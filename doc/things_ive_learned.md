@@ -93,9 +93,38 @@ happy people. It's best to flood the developers with lots of little jobs.  :)
 It's important to pay attention to that, and to spend a little time looking
 around for more elegant solutions (this is easier to do with smaller changes).
 
+# Know Thyself, but Work for Others
+
+I think this is the most important thing I've learned over the past ten years: I
+went through a really rough spot where I wasn't working the way I knew I needed
+to work, *and* I knew I was just working to tick the box next to a long list of
+tasks. This didn't work. When things *did* work for me, they worked because I
+was doing things the way I knew I had to, and I was doing things with very
+specific goals in mind: these people are frustrated by how slow this is, solve
+the problem; this isn't working because people aren't interested in this aspect,
+they want that one; etc. It was important to me to stop "doing my job" and to
+start solving problems for people.
+
+Don't compromise your values. Focus on delivering things of value to people of
+value. Who do you work for? What do they need?
+
+
 ## Inspiration has a shelf-life
 
 ...If you want something done (or fixed), you have to do it now. Something else
 will be more pressing later. If it bugs you, fix (or add) it. It might interrupt
 an iteration. It will almost certainly make someone mad. But in the long term,
 I've found this moments produce the best solutions, features, and improvements.
+
+# It's Always a Problem of Communication
+
+* Clear communication of feature requirements
+* Project cohesion, integrated teams
+* Parity of management of various teams
+* Decision-making power
+* Clarity of the "big picture"
+* Periodic re-assessment and re-alignment of the big picture
+* Unity of visual design
+* Unity of "what we are trying to convey"
+* Stakeholder interaction during feature implementation
+* User interaction during product design
