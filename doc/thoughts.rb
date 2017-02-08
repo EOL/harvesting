@@ -142,7 +142,7 @@ root_nodes = "all of the nodes from the resource; stored as a nested "\
 # change a text file on the server and re-run something to try new values.
 @child_match_weight = 1 # We will want this for tweaking, over time...
 @ancestor_match_weight = 1 # Ditto...
-@max_ancestor_depth = 3 # We would like to be able to change this...
+@max_ancestor_depth = 2 # We would like to be able to change this...
 
 # The algorithm, as pseudo-code (Ruby, for brevity):
 def map_all_nodes(root_nodes)
@@ -177,18 +177,29 @@ def map_node(node, opts = {})
     # non-nil page, or nil if none.
     node.matched_ancestor(opts[:ancestor_depth])
   end
+  map_unflagged_node(node, ancestor, opts)
+end
+
+def map_unflagged_node(node, ancestor, opts)
   q = build_search_query(node, ancestor, opts)
   results = @index.pages.where(q)
   if results.size == 1
     return node.map_to_page(results.first)
   elsif results.size > 1
     return more_than_one_match(node, results)
-  else # no results found!
-    # YOU WERE HERE ... choose the next strategy (including looping around with
-    # a new ancestor depth if possible), try again, or use unmapped...
-    # opts[:ancestor_depth] ||= 1
-    # opts[:ancestor_depth] += 1
-    # need to check max_ancestor_depth, of course.
+  else # no results found! Tweak the options and try again, if possible.
+    opts[:strategy] ||= 0
+    opts[:strategy] += 1
+    if @strategies[opts[:strategy]].nil?
+      opts[:strategy] = 0
+      opts[:ancestor_depth] ||= 0
+      opts[:ancestor_depth] += 1
+      if opts[:ancestor_depth] > @max_ancestor_depth
+        # Too far! We must stop:
+        return unmapped(node, opts)
+      end
+    end
+    map_unflagged_node(node, ancestor, opts) # NOTE: recursion
   end
 end
 
@@ -235,7 +246,7 @@ def build_search_query(node, ancestor, opts)
   q += " AND is_hybrid = True" if node.is_hybrid?
 end
 
-def unmapped(node, options = {})
+def unmapped(node, opts = {})
   node.create_new_page
-  @harvest.log_unmapped_node(node)
+  @harvest.log_unmapped_node(node, opts)
 end
