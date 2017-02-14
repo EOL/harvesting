@@ -110,18 +110,18 @@ end
 
 # What should be stored in a speedy index... I'm writing the queries in
 # pseudo-SQL syntax for brevity/portability:
-Index:
-  Pages:
-    scientific_name: (preferred by DWH)
-    synonyms: (synonyms from DWH)
-    other_synonyms: (from all sources)
-    canonical_name: (from DWH)
-    canonical_synonyms: (from DWH)
-    other_canonical_synonyms: (from all sources)
-    ancestor_ids: ordered (proximal to root)
-    other_ancestor_ids: (from other hierarchies)
-    child_ids: (from DWH) # ... I am not sure we want/need this in the index, but we'll need to get it, and be mindful of performance.
-    is_hybrid: identified either expplicitly during import or by gnparser
+index: {
+  pages: {
+    scientific_name: "(ACTUALLY NOT! This is really canonical + authority and NOTHING ELSE. And only those preferred by DWH)",
+    synonyms: "(synonyms from DWH)",
+    other_synonyms: "(from all sources)",
+    canonical_name: "(from DWH)",
+    canonical_synonyms: "(from DWH)",
+    other_canonical_synonyms: "(from all sources)",
+    ancestor_ids: "ordered (proximal to root)",
+    other_ancestor_ids: "(from other hierarchies)",
+    child_ids: "(from DWH)", # ... I am not sure we want/need this in the index, but we'll need to get it, and be mindful of performance.
+    is_hybrid: "identified either expplicitly during import or by gnparser" } }
 
 # some variables which are assumed to be defined:
 @resource = "the resource that has been harvested"
@@ -130,7 +130,10 @@ Index:
 root_nodes = "all of the nodes from the resource; stored as a nested "\
   "hierarchy; this variable references the root nodes, which we'll walk down"
 # Method names, in the order in which they should be attempted:
-@strategies: [
+@strategies = [
+  # TODO: we might want to add an initial check to see if there are lots of
+  # ancestors / children, since in those cases, they might provide a better
+  # match.
   { attribute: :scientific_name, index: :scientific_name, type: :eq },
   { attribute: :scientific_name, index: :synonyms, type: :in },
   { attribute: :scientific_name, index: :other_synonyms, type: :in },
@@ -138,11 +141,18 @@ root_nodes = "all of the nodes from the resource; stored as a nested "\
   { attribute: :canonical_name, index: :canonical_synonyms, type: :in },
   { attribute: :canonical_name, index: :other_canonical_synonyms, type: :in }
 ]
+
+@first_non_scientific_strategy_index =
+  @strategies.index { |s| s[:attribute] != :scientific_name }
 # Constants like these really should be CONFIGURABLE, not hard-coded, so we can
 # change a text file on the server and re-run something to try new values.
 @child_match_weight = 1 # We will want this for tweaking, over time...
 @ancestor_match_weight = 1 # Ditto...
 @max_ancestor_depth = 2 # We would like to be able to change this...
+# If fewer (or equal to) this many ancestors match, then we assume this is just
+# a bad match (and we never allow it), regardless of how much "better" it might
+# look than others due to sheer numbers.
+@minimum_ancestry_match_pct = 0.2
 
 # The algorithm, as pseudo-code (Ruby, for brevity):
 def map_all_nodes(root_nodes)
@@ -159,6 +169,10 @@ end
 
 def map_if_needed(node)
   if node.needs_to_be_mapped?
+    strategy = 0
+    # Skip scientific name searches if all we have is a canonical (really)
+    strategy = @first_non_scientific_strategy_index unless
+      node.has_authority?
     map_node(node, ancestor_depth: 0, strategy: 0)
   end
   map_nodes(node.children) if node.children.any?
@@ -191,7 +205,7 @@ def map_unflagged_node(node, ancestor, opts)
     opts[:strategy] ||= 0
     opts[:strategy] += 1
     if @strategies[opts[:strategy]].nil?
-      opts[:strategy] = 0
+      opts[:strategy] = @first_non_scientific_strategy_index
       opts[:ancestor_depth] ||= 0
       opts[:ancestor_depth] += 1
       if opts[:ancestor_depth] > @max_ancestor_depth
@@ -215,10 +229,18 @@ def more_than_one_match(node, matching_pages)
     scores[matching_page][:matching_ancestors] =
       # NOTE: this is idiomatic ruby for "count the number of ancestors with
       # page_ids assigned":
-      node.ancestor.select { |a| ! a.page_id.nil? }.size
-    scores[matching_page][:score] =
-      scores[matching_page][:matching_children] * @child_match_weight +
-      scores[matching_page][:matching_ancestors] * @ancestor_match_weight
+      node.ancestors.select { |a| ! a.page_id.nil? }.size
+    if scores[matching_page][:matching_ancestors] <=
+       ( node.ancestors.size * @minimum_ancestry_match_pct )
+      scores[matching_page][:score] = 0
+      # This is just a warning, since it won't match, but might be worth
+      # investigating, since it's *possible* we're skipping a better match.
+      @harvest.log_insufficient_ancestry_matches(node, matching_page)
+    else
+      scores[matching_page][:score] =
+        scores[matching_page][:matching_children] * @child_match_weight +
+        scores[matching_page][:matching_ancestors] * @ancestor_match_weight
+    end
   end
   best_match = nil
   best_score = 0
@@ -235,7 +257,9 @@ def build_search_query(node, ancestor, opts)
   # TODO: in Solr I think this really just becomes ":" in BOTH cases...
   q += strategy[:type] == :in ? " IN " : " = "
   q += "'#{node.send(strategy[:attribute])}'" # TODO: proper quoting, of course.
-  if ancestor
+  # NOTE: we do NOT check ancestry for scientific names! We assume these will
+  # match across all of life, with few exceptions.
+  if ancestor && ! strategy[:attribute] == :scientific_name
     q += if opts[:other_ancestors]
       " AND (other_ancestor_ids INCLUDES "\
         "#{ancestor.node_ids.join(" OR other_ancestor_ids INCLUDES ")})"
