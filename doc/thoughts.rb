@@ -118,13 +118,13 @@ index: {
     canonical_name: "(from DWH)",
     canonical_synonyms: "(from DWH)",
     other_canonical_synonyms: "(from all sources)",
-    ancestor_ids: "ordered (proximal to root)",
+    ancestor_ids: "ordered (proximal to root), from DWH",
     other_ancestor_ids: "(from other hierarchies)",
     child_ids: "(from DWH)", # ... I am not sure we want/need this in the index, but we'll need to get it, and be mindful of performance.
-    is_hybrid: "identified either expplicitly during import or by gnparser" } }
+    is_hybrid: "identified either explicitly during import or by gnparser" } }
 
 # some variables which are assumed to be defined:
-@resource = "the resource that has been harvested"
+@resource = "the resource that is being harvested"
 @harvest = "some record of the harvest event itself"
 @index = "some kind of connection to the index"
 root_nodes = "all of the nodes from the resource; stored as a nested "\
@@ -155,7 +155,7 @@ root_nodes = "all of the nodes from the resource; stored as a nested "\
 @minimum_ancestry_match_pct = 0.2
 
 # The algorithm, as pseudo-code (Ruby, for brevity):
-def map_all_nodes(root_nodes)
+def map_all_nodes_to_pages(root_nodes)
   @harvest.log_mapping_started
   map_nodes(root_nodes)
   @harvest.log_mapping_completed
