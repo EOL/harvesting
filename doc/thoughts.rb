@@ -104,6 +104,28 @@ end
 # repository. Or something in between (say, ignoring curatorial edits, or
 # ignoring everything except node curation, etc). Thoughts required.
 
+class Node
+  def needs_to_be_mapped?
+    return true if page_id.blank?
+    return true if scientific_name.changed?
+    return true if is_virus.changed?
+    return true if in_unmapped_area?
+  end
+
+  def matched_ancestor(depth)
+    i = 0
+    ancestors.each do |ancestor|
+      unless ancestor.page_id.nil?
+        return ancestor if i >= depth
+        i += 1
+      end
+    end
+  end
+end
+
+# TODO: think about what happens if the DWH changes "Animalia" and gets
+# reharvested?
+
 #
 # Name Matching
 #
@@ -120,7 +142,7 @@ index: {
     other_canonical_synonyms: "(from all sources)",
     ancestor_ids: "ordered (proximal to root), from DWH",
     other_ancestor_ids: "(from other hierarchies)",
-    child_ids: "(from DWH)", # ... I am not sure we want/need this in the index, but we'll need to get it, and be mindful of performance.
+    children: "(names, from DWH)", # ... I am not sure we want/need this in the index, but we'll need to get it, and be mindful of performance.
     is_hybrid: "identified either explicitly during import or by gnparser" } }
 
 # some variables which are assumed to be defined:
@@ -142,6 +164,12 @@ root_nodes = "all of the nodes from the resource; stored as a nested "\
   { attribute: :canonical_name, index: :other_canonical_synonyms, type: :in }
 ]
 
+# We want the search to be as fast as possible
+# Unmatched names are expensive (so we really want to limit them)
+
+# Mmmmmaybe we could do an early check (after the firtst failure?) to see if the
+# name is there AT ALL... and stop if it's not.
+
 @first_non_scientific_strategy_index =
   @strategies.index { |s| s[:attribute] != :scientific_name }
 # Constants like these really should be CONFIGURABLE, not hard-coded, so we can
@@ -153,6 +181,8 @@ root_nodes = "all of the nodes from the resource; stored as a nested "\
 # a bad match (and we never allow it), regardless of how much "better" it might
 # look than others due to sheer numbers.
 @minimum_ancestry_match_pct = 0.2
+
+map_all_nodes_to_pages(root_nodes)
 
 # The algorithm, as pseudo-code (Ruby, for brevity):
 def map_all_nodes_to_pages(root_nodes)
@@ -171,8 +201,7 @@ def map_if_needed(node)
   if node.needs_to_be_mapped?
     strategy = 0
     # Skip scientific name searches if all we have is a canonical (really)
-    strategy = @first_non_scientific_strategy_index unless
-      node.has_authority?
+    strategy = @first_non_scientific_strategy_index if ! node.has_authority?
     map_node(node, ancestor_depth: 0, strategy: 0)
   end
   map_nodes(node.children) if node.children.any?
@@ -194,16 +223,91 @@ def map_node(node, opts = {})
   map_unflagged_node(node, ancestor, opts)
 end
 
+*** SKIP THESE:
+
+q = "canonical_name = 'Chordata' AND ancestor_ids INCLUDES 1"
+
+page =
+{
+  id: 1
+  node_ids: [ 1, 11, ... ]
+  canonical_name: ["Animalia"]
+  ...
+  ancestors: []
+},
+{
+  id: 2
+  node_ids: [ 2, 12, ... ]
+  canonical_name: ["Choradata"]
+  ...
+  ancestors: [1]
+},
+{
+  id: 5
+  node_ids: [ 5, 15, ... ]
+  ancestors: [1, 2, 3, 4]
+  canonical_name: ["Procyonidae"]
+}
+
+@index =
+  pages
+    {
+      page_id: 1
+      scientific_name: ["Animalia"]
+      synonyms: ["adsfl;ghjkasdl;f", "dsfgsdfg"],
+      other_synonyms: ["sdfg sdfg", "sdfgsdfgz"]
+      ...
+    }
+
+Resource = Dynamic Working Hierarchy
+1 "Animalia" page_id = 1
+  2 "Chordata" page_id = 2
+    3 "Mammalia" page_id = 3
+      4 "Carnivora" page_id = 4
+        5 "Procyonidae" page_id = 5
+          6 "Procyon" page_id = 6
+            7 "Procyon lotor" page_id = 7
+  2345 "Morus alba" page_id = 43563
+234 "Plantae"
+  90863 "Morus alba" page_id = 934573
+
+
+Resource = Foobar *NEW*
+11 "Animalia" = page_id = 1
+  12 "Chordata" = page_id = 2
+    13 "Mammalia" = page_id = 3
+      14 "Carnivora" = page_id = 4
+        15 "Procyonidae" = page_id = 5
+         18 "Procyonidillia"  = page_id == nil  UNMAPPED
+          16 "Procyon" = page_id = 6
+            17 "Procyon lotor" = page_id = nil
+
+Rersource = "Flickr"  *NEW*
+  "Morus alba"
+
+
+*** SKIP THOSE ^
+
+
+# TODO: this name is not accurate; change.
 def map_unflagged_node(node, ancestor, opts)
   q = build_search_query(node, ancestor, opts)
   results = @index.pages.where(q)
   if results.size == 1
-    return node.map_to_page(results.first)
+    return node.map_to_page(results.first["page_id"])
   elsif results.size > 1
     return more_than_one_match(node, results)
   else # no results found! Tweak the options and try again, if possible.
     opts[:strategy] ||= 0
     opts[:strategy] += 1
+    # TODO: mmmmmaybe we want to do a sanity check here and abort if the name is
+    # just NOT in the database at all, and NOT go through all of the strategies.
+
+    # TODO: MMmmmmmaybe we want a counter (across the whole resource) that, once
+    # it crosses some threshold of unmapped names (OR some limit on time),
+    # notifies someone. That will let us know that a resource is having trouble
+    # and someone can choose to stop it or consider things.
+
     if @strategies[opts[:strategy]].nil?
       opts[:strategy] = @first_non_scientific_strategy_index
       opts[:ancestor_depth] ||= 0
@@ -230,9 +334,11 @@ def more_than_one_match(node, matching_pages)
       # NOTE: this is idiomatic ruby for "count the number of ancestors with
       # page_ids assigned":
       node.ancestors.select { |a| ! a.page_id.nil? }.size
+    # NOTE: we are unsure of how effective this is; we really need to pay
+    # attention to how this performs.
     if scores[matching_page][:matching_ancestors] <=
        ( node.ancestors.size * @minimum_ancestry_match_pct )
-      scores[matching_page][:score] = 0
+      scores[matching_page][:matching_ancestors] = 0
       # This is just a warning, since it won't match, but might be worth
       # investigating, since it's *possible* we're skipping a better match.
       @harvest.log_insufficient_ancestry_matches(node, matching_page)
@@ -245,26 +351,31 @@ def more_than_one_match(node, matching_pages)
   best_match = nil
   best_score = 0
   scores.each do |page, details|
-    best_match = page if details[:score] > best_score
+    if details[:score] > best_score
+      best_match = page
+      best_score = details[:score]
+    end
   end
-  node.map_to_page(best_match)
+  node.map_to_page(best_match["page_id"])
+  # TODO: if all of the scores are 0, it's not a match, skip it.
+  # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
   @harvest.log_multiple_matches(node, scores)
 end
 
 def build_search_query(node, ancestor, opts)
   strategy = @strategies[opts[:strategy]]
-  q = strategy[:index]
+  q = strategy[:index].to_s
   # TODO: in Solr I think this really just becomes ":" in BOTH cases...
-  q += strategy[:type] == :in ? " IN " : " = "
+  q += strategy[:type] == :in ? " INCLUDES " : " = "
   q += "'#{node.send(strategy[:attribute])}'" # TODO: proper quoting, of course.
   # NOTE: we do NOT check ancestry for scientific names! We assume these will
   # match across all of life, with few exceptions.
-  if ancestor && ! strategy[:attribute] == :scientific_name
+  if ancestor && strategy[:attribute] != :scientific_name
     q += if opts[:other_ancestors]
       " AND (other_ancestor_ids INCLUDES "\
-        "#{ancestor.node_ids.join(" OR other_ancestor_ids INCLUDES ")})"
+        "#{ancestor.page.node_ids.join(" OR other_ancestor_ids INCLUDES ")})"
     else
-      " AND ancestor_ids INCLUDES #{ancestor.native_node.id}"
+      " AND ancestor_ids INCLUDES #{ancestor.page.native_node.id}"
     end
   end
   q += " AND is_hybrid = True" if node.is_hybrid?
