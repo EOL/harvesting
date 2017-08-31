@@ -28,6 +28,9 @@ gem "sass-rails", "~> 5.0"
 # bundle exec rake doc:rails generates the API under doc/api.
 gem "sdoc", "~> 0.4.0", group: :doc
 
+# Making forms simpler:
+gem "simple_form"
+
 # Turbolinks makes following links in your web application faster. Read more:
 # https://github.com/rails/turbolinks
 gem "turbolinks"

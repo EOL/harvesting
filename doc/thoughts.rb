@@ -1,7 +1,4 @@
-# Skip ahead for the local code.
 
-# From the website (i.e.: Not actually in this codebase, but I need to think
-# about it):
 
 # The website would periodically request harvests from the repository:
 repository = RepositoryApi.new
@@ -11,6 +8,7 @@ types = [:pages, :nodes, :scientific_names, :media, :etc]
 actions = [:new, :changed, :removed]
 # TODO: first we need to communicate which resources are available, so we get new resources,
 resources = repository.diffs_since?(RepositorySync.last.created_at)
+sync = RepositorySync.new  # more details later
 resources.each do |resource|
   repository.resource_diffs_since?(resource, RepositorySync.last.created_at).each do |diff|
     types.each do |type|
@@ -65,7 +63,7 @@ end
 
 # And then a response structure to get_diff_deltas something like this, assuming
 # the params were resource_id: 1, since: "2017-01-13 10:36:25", type: "nodes",
-# action: "new" page: 1, per_page: 10
+# action: "new" page: 1, per_page: 1000
 {
   nodes: [
     { "repository_id"=>603,

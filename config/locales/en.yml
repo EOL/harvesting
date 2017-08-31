@@ -52,4 +52,8 @@ en:
     zero: "There are no root nodes for this resource."
     one: "This resource has only one root node."
     other: "Root Nodes (%{count}):"
-  resources_header: "Resources"
+  resources:
+    create:
+      header: "Create a Resource"
+    index:
+      header: "Resources"

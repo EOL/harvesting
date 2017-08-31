@@ -9,4 +9,12 @@ class ResourcesController < ApplicationController
     @formats = Format.where(resource_id: @resource.id).abstract
     @root_nodes = @resource.nodes.published.root.order(:name_verbatim).page(1).per(10)
   end
+
+  def new
+    @resource = Resource.new
+  end
+
+  def create
+
+  end
 end
