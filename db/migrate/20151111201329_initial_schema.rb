@@ -47,7 +47,7 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :auto_publish, null: false, default: false
       t.boolean :not_trusted, null: false, default: false
       t.boolean :hold_harvesting, null: false, default: false
-      t.boolean :might_have_duplicate_taxa, null: false, default: false
+      t.boolean :has_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
       t.timestamps null: false
       # TODO: deafult licensure
