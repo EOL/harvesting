@@ -1,26 +1,42 @@
-# Files in the config/locales directory are used for internationalization
-# and are automatically loaded by Rails. If you want to use locales other
-# than English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t 'hello'
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t('hello') %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more, please read the Rails Internationalization guide
-# available at http://guides.rubyonrails.org/i18n.html.
-
+# Keep this alphabetical.
 en:
-  hello: "Hello world"
+  fields:
+    create:
+      header: "Create a Field for the <a href='%{url}'>%{name}</a> File"
+      labels:
+        mapping: "Map to database with:"
+        special_handling: "Additional filtering:"
+        submapping: "Submapping:"
+        submapping_help: "(only for specific additional filters)"
+        validation: "Validate with:"
+      special_handlings:
+        iso_639_1: "Treat as a language group (ISO 639-1)"
+        iso_639_3: "Treat as a specific language (ISO 639-3)"
+
+  formats:
+    create:
+      header: "Create a File Format for %{resource}"
+      labels:
+        file_type: "File Type:"
+        represents: "To be mapped to:"
+      represents:
+        articles: "Articles"
+        attributions: "Attributions"
+        images: "Images"
+        js_maps: "Interactive Maps"
+        links: "Links"
+        media: "Images"
+        maps: "Maps"
+        refs: "References"
+        sounds: "Sounds"
+        videos: "Videos"
+        nodes: "Nodes"
+        vernaculars: "Vernacular Names"
+        scientific_names: "Scientific Names"
+    flash:
+      created: "Created File Format %{name}"
+  layout:
+    title: "EOL Resource Harvester"
   link_simple_see_all: "see all"
   node_children_header: "Children:"
   node_children_empty: "This node has no children."
@@ -55,5 +71,9 @@ en:
   resources:
     create:
       header: "Create a Resource"
+    flash:
+      created: "Created resource <a href=%{path}>%{name}</a>"
     index:
       header: "Resources"
+    show:
+      add_format: "Add a file format definition"

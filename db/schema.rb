@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161121181833) do
+ActiveRecord::Schema.define(version: 20170901141247) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -330,12 +330,10 @@ ActiveRecord::Schema.define(version: 20161121181833) do
   add_index "refs", ["resource_id", "resource_pk"], name: "index_refs_on_resource_id_and_resource_pk", using: :btree
 
   create_table "resources", force: :cascade do |t|
-    t.integer  "site_id",                   limit: 4,                   null: false
     t.integer  "position",                  limit: 4
     t.integer  "min_days_between_harvests", limit: 4,   default: 0,     null: false
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "nodes_count",               limit: 4
-    t.string   "site_pk",                   limit: 255
     t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
     t.string   "name",                      limit: 255,                 null: false
     t.string   "abbr",                      limit: 255,                 null: false

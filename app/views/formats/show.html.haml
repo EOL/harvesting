@@ -64,3 +64,5 @@
           = field.special_handling
         = field.unique_in_format? ? "(must be unique)" : nil
         = field.can_be_empty? ? nil : "(must not be empty)"
+.ui.section
+  = link_to(t("formats.show.add_field"), new_format_field_path(@format))

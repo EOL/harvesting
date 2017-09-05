@@ -1,138 +1,17 @@
-%h1
+%h1.ui.block.header
   = t("resources.create.header")
-  = @resource.name
-%ul
-  - unless @resource.abbr.blank?
-    %li
-      %strong= "Abbreviation:"
-      = @resource.abbr
-  %li
-    %strong= "Site ID:"
-    = @resource.site_id
-  %li
-    %strong= "Site Self-Indenfies with ID:"
-    = @resource.site_pk
-  %li
-    %strong= "Minimum Days Between Harvests:"
-    = @resource.min_days_between_harvests
-  - if @resource.harvest_day_of_month
-    %li
-      %strong= "Harvests on Day of Month:"
-      = @resource.harvest_day_of_month
-  - if @resource.harvest_months_json && ! @resource.harvest_months_json == ""
-    %li
-      %strong= "Harvests on Months:"
-      - months = JSON.parse(@resource.harvest_months_json)
-      = months.join(", ")
-  - else
-    %li= "This resource has not had a successful harvest."
-  - if @resource.nodes_count
-    %li
-      %strong= "Nodes:"
-      = @resource.nodes_count
-  - else
-    %li= "No nodes have been created for this resource."
-  %li
-    %strong= "URLs for node IDs will direct the client to:"
-    - if @resource.pk_url == "$PK"
-      "(The ID itself: this assumes the IDs are valid URIs)"
-    - else
-      = @resource.pk_url.gsub("$PK", "[the identfier]")
-  - if @resource.auto_publish?
-    "This resource will auto-publish after harvesting."
-  - else
-    "This resource will NOT be published after harvesting. It must be published manually."
-  %li
-    %strong= "Trusted:"
-    = @resource.not_trusted? ? "No." : "Yes."
-  - if @resource.hold_harvesting?
-    %li
-      %strong= "THIS RESOURCE IS ON HOLD:"
-      = "It will not be harvested until an admin releases this hold."
-  %li
-    %strong= "May Contain Duplicate Taxa:"
-    = @resource.might_have_duplicate_taxa? ? "Yes." : "No."
-  - if @resource.force_harvest?
-    %li
-      %strong= "THIS RESOURCE WILL BE HARVESTED ASAP:"
-      = "An admin has set this resource to Force Harvest."
-  %li
-    %strong= "Created:"
-    = I18n.l @resource.created_at, format: :short
-  %li
-    %strong= "Last Updated:"
-    = I18n.l @resource.updated_at, format: :short
 
-%h2= "Expected File Format Definitions"
-- if @formats.empty?
-  "This resource has no file format definitions yet, and cannot be harvested."
-- else
-  %ul
-    - @formats.each do |fmt|
-      %li
-        %strong= "#{link_to(fmt.represents, fmt)}:".html_safe
-        = fmt.get_from
-        - if fmt.excel?
-          = ", sheet ##{fmt.sheet}"
-        = "(#{fmt.fields.size} fields)"
-
-%h2= "Harvests"
-- if @resource.harvests.empty?
-  "This resource has not been harvested."
-- else
-  %ul
-    - @resource.harvests.order(created_at: :desc).each do |harv|
-      %li
-        %strong= "#{link_to(l(harv.created_at, format: :short), harv)}:".html_safe
-        - if harv.completed_at
-          %strong Completed:
-          = "#{l(harv.completed_at, format: :short)}"
-        - elsif harv.failed_at
-          %strong Failed:
-          = "#{l(harv.failed_at, format: :short)}"
-        - elsif harv.indexed_at
-          %strong Indexed:
-          = #{l(harv.indexed_at, format: :short)}"
-        - elsif harv.stored_at
-          %strong Stored:
-          = l(harv.stored_at, format: :short)
-        - elsif harv.consistency_checked_at
-          %strong Consistency Checked:
-          = l(harv.consistency_checked_at, format: :short)
-        - elsif harv.names_parsed_at
-          %strong Names Parsed:
-          = l(harv.names_parsed_at, format: :short)
-        - elsif harv.nodes_matched_at
-          %strong Nodes Matched:
-          = l(harv.nodes_matched_at, format: :short)
-        - elsif harv.ancestry_built_at
-          %strong Ancestry Built:
-          = l(harv.ancestry_built_at, format: :short)
-        - elsif harv.units_normalized_at
-          %strong Units Normalized:
-          = l(harv.units_normalized_at, format: :short)
-        - elsif harv.linked_at
-          %strong Linked:
-          = l(harv.linked_at, format: :short)
-        - elsif harv.deltas_created_at
-          %strong Delats Created
-          = l(harv.deltas_created_at, format: :short)
-        - elsif harv.validated_at
-          %strong Validated:
-          = l(harv.validated_at, format: :short)
-        - elsif harv.fetched_at
-          %strong Fetched:
-          = l(harv.fetched_at, format: :short)
-        - else
-          \...just started...
-        - if harv.time_in_minutes
-          = "(took #{harv.time_in_minutes} minutes)"
-%h2= t(:resource_nodes_title)
-= t(:resource_nodes_count, count: @resource.nodes.published.count)
-- unless @resource.nodes.published.empty?
-  %h3= t(:resource_nodes_root_head_count, count: @resource.nodes.root.count)
-  %ul
-  - @root_nodes.each do |root_node|
-    %li= link_to(root_node.name_verbatim, root_node)
-  - if @root_nodes.total_count > @root_nodes.size
-    = link_to(t(:link_simple_see_all), resource_nodes_path(@resource))
+= simple_form_for @resource do |f|
+  .fields
+    = f.input :name, wrapper_html: { class: 'twelve wide' }
+    = f.input :abbr, wrapper_html: { class: 'four wide' }
+  = f.input :pk_url
+  .fields
+    = f.input :min_days_between_harvests, wrapper_html: { class: 'five wide' }
+    = f.input :harvest_day_of_month, wrapper_html: { class: 'five wide' }
+    = f.input :harvest_months_json, wrapper_html: { class: 'six wide' }
+  .fields
+    = f.input :auto_publish, wrapper_html: { class: 'three wide' }
+    = f.input :not_trusted, wrapper_html: { class: 'three wide' }
+    = f.input :might_have_duplicate_taxa, wrapper_html: { class: 'three wide' }
+  = f.button :submit

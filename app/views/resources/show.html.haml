@@ -6,12 +6,6 @@
       %strong= "Abbreviation:"
       = @resource.abbr
   %li
-    %strong= "Site ID:"
-    = @resource.site_id
-  %li
-    %strong= "Site Self-Indenfies with ID:"
-    = @resource.site_pk
-  %li
     %strong= "Minimum Days Between Harvests:"
     = @resource.min_days_between_harvests
   - if @resource.harvest_day_of_month
@@ -74,7 +68,8 @@
         - if fmt.excel?
           = ", sheet ##{fmt.sheet}"
         = "(#{fmt.fields.size} fields)"
-
+.ui.section
+  = link_to(t("resources.show.add_format"), new_resource_format_path(@resource))
 %h2= "Harvests"
 - if @resource.harvests.empty?
   "This resource has not been harvested."

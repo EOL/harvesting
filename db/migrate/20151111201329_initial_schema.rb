@@ -65,11 +65,11 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :position,
         comment: "Because each file should be read in a specific order..."
       # NOTE: default is the first value, in this case, excel.
-      t.integer :file_type, comment: "enum: excel, csv, dwca", default: 0
+      t.integer :file_type, comment: "enum: excel, csv", default: 0
       # represents e.g.: :articles for http://eol.org/schema/media/Document
       t.integer :represents, null: false,
         comment: "enum: articles, attributions, images, js_maps, links, media, "\
-          "maps, refs, sounds, videos, nodes, vernaculars, scientific_names"
+          "maps, refs, sounds, videos, nodes, vernaculars, scientific_names, data"
       t.string :get_from, null: false,
         comment: "may be remote URL or full file system path"
       t.string :file, comment: "full path"

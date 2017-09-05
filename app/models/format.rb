@@ -6,12 +6,12 @@ class Format < ActiveRecord::Base
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats
 
-  enum file_type: [ :excel, :dwca, :csv ]
+  enum file_type: [ :excel, :csv ]
   # NOTE: every "represents" needs a corresponding response in #model_fks.
   # TODO: this is missing traits.
   enum represents: [ :articles, :attributions, :images, :js_maps, :links,
     :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars,
-    :scientific_names ]
+    :scientific_names, :data ]
 
   acts_as_list scope: :resource
 
