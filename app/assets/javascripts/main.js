@@ -5,6 +5,7 @@ if(!EOL) {
 
   EOL.ready = function() {
     $('.ui.dropdown').dropdown();
+    $('.ui.nag').nag('show');
   };
 };
 

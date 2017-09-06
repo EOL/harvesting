@@ -1,4 +1,6 @@
 %h1= t("resources.index.header")
-%ul
+.ui.list
   - @resources.each do |resource|
-    %li= link_to(resource.name, resource)
+    .item= link_to(resource.name, resource)
+.ui.section
+  = link_to(t("resources.create.action"), new_resource_path)

@@ -1,38 +1,3 @@
 %h1.ui.block.header
   = t("formats.create.header", resource: link_to(@format.resource.name, @format.resource)).html_safe
-= simple_form_for [@format.resource, @format] do |f|
-  = f.hidden_field :resource_id, resource_id: @format.resource_id
-  .fields
-    = f.input :position, wrapper_html: { class: 'two wide' }
-    .six.wide.field
-      .label= t("formats.create.labels.represents")
-      .ui.selection.dropdown
-        = f.hidden_field :represents
-        %i.dropdown.icon
-        .default.text= t("formats.create.labels.represents")
-        .menu
-          - Format.represents.each do |name, _|
-            .item{ data: { value: name }}= t("formats.create.represents.#{name}")
-
-  .fields
-  .fields
-    = f.input :header_lines, wrapper_html: { class: 'two wide' }
-    = f.input :data_begins_on_line, wrapper_html: { class: 'three wide' }
-  .fields
-    .four.wide.field
-      .label= t("formats.create.labels.file_type")
-      .ui.selection.dropdown
-        = f.hidden_field :file_type
-        %i.dropdown.icon
-        .default.text= t("formats.create.labels.file_type")
-        .menu
-          - Format.file_types.each do |name, _|
-            .item{ data: { value: name }}= name
-    = f.input :field_sep, wrapper_html: { class: 'two wide' }
-    -# Skipping this, since it's complicated and will almost always be \n:
-    -# = f.input :line_sep, wrapper_html: { class: 'two wide' }
-    = f.input :sheet, wrapper_html: { class: 'two wide' }
-  .fields
-    = f.input :utf8, wrapper_html: { class: 'ui toggle checkbox two wide' }
-  = f.input :get_from
-  = f.button :submit
+= render("form")

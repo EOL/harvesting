@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   # Example of named route that can be invoked with purchase_url(id: product.id)
   #   get 'products/:id/purchase' => 'catalog#purchase', as: :purchase
 
-  resources :formats, only: [:show] do
+  resources :formats, only: [:show, :destroy] do
     resources :fields, only: [:create, :new]
   end
   resources :harvests
@@ -20,7 +20,7 @@ Rails.application.routes.draw do
   resources :resources do
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]
-    resources :formats
+    resources :formats, except: [:destroy]
   end
 
   # Example resource route with options:

@@ -9,13 +9,23 @@
         = @page_title
         \-
       = t("layout.title")
-    - cdn = "https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13"
-    = stylesheet_link_tag "#{cdn}/semantic.min.css"
+    - cdn = "https://cdnjs.cloudflare.com/ajax/libs"
+    - sematnic_cdn = "#{cdn}/semantic-ui/2.2.13"
+    = stylesheet_link_tag "#{sematnic_cdn}/semantic.min.css"
     = stylesheet_link_tag "application"
     = javascript_include_tag "application"
-    = javascript_include_tag "#{cdn}/semantic.min.js"
+    = javascript_include_tag "#{sematnic_cdn}/semantic.min.js"
+    = javascript_include_tag "#{cdn}/jquery-cookie/1.4.1/jquery.cookie.min.js"
     - if content_for?(:head)
       = yield :head
   %body
     .ui.container
+      .ui.inline.cookie.nag
+        %span.title= t("nags.beta")
+        %i.close.icon
+
+      - flash.each do |key, value|
+        .ui.inline.nag{ class: "flash-#{key}" }
+          %span.title= value.html_safe
+          %i.close.icon
       = content_for?(:body) ? yield(:body) : yield

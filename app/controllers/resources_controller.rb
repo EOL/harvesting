@@ -14,6 +14,10 @@ class ResourcesController < ApplicationController
     @resource = Resource.new
   end
 
+  def edit
+    @resource = Resource.find(params[:id])
+  end
+
   def create
     @resource = Resource.new(resource_params)
     if @resource.save
@@ -24,6 +28,27 @@ class ResourcesController < ApplicationController
       # TODO: some kind of hint as to the problem, in a flash...
       render "new"
     end
+  end
+
+  def update
+    @resource = Resource.find(params[:id])
+
+    if @resource.update(resource_params)
+      flash[:notice] = I18n.t("resources.flash.updated", name: @resource.name,
+        path: resource_path(@resource))
+      redirect_to @resource
+    else
+      # TODO: some kind of hint as to the problem, in a flash...
+      render "edit"
+    end
+  end
+
+  def destroy
+    @resource = Resource.find(params[:id])
+    name = @resource.name
+    @resource.destroy
+    flash[:notice] = I18n.t("resources.flash.destroyed", name: name)
+    redirect_to resources_path
   end
 
 private

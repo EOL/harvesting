@@ -1,7 +1,13 @@
 # Keep this alphabetical.
 en:
+  are_you_sure: "Are you sure? This action cannot be undone."
+  cancel: "cancel"
+  edit: "edit"
+  delete: "delete"
   fields:
     create:
+      actions:
+        cancel: "stop adding fields and return to file format"
       header: "Create a Field for the <a href='%{url}'>%{name}</a> File"
       labels:
         mapping: "Map to database with:"
@@ -12,7 +18,8 @@ en:
       special_handlings:
         iso_639_1: "Treat as a language group (ISO 639-1)"
         iso_639_3: "Treat as a specific language (ISO 639-3)"
-
+    flash:
+      created: "Created field for %{name}."
   formats:
     create:
       header: "Create a File Format for %{resource}"
@@ -33,11 +40,25 @@ en:
         nodes: "Nodes"
         vernaculars: "Vernacular Names"
         scientific_names: "Scientific Names"
+    edit:
+      header: "Editing %{type} Format File Definition for %{resource}"
     flash:
       created: "Created File Format %{name}"
+      edited: "Saved changes to \"%{name}\""
+      destroyed: "Deleted \"%{name}\" file format definiton. This cannot be undone."
+    show:
+      actions:
+        add_field: "add a field"
+        return: "return to resource"
+      header: "%{type} Format File Definition for %{resource}"
+    file_types:
+      excel: "MS Excel (with sheets)"
+      csv: "Delimited Text (csv, tsv, tab, etc)"
   layout:
     title: "EOL Resource Harvester"
   link_simple_see_all: "see all"
+  nags:
+    beta: "This site is currently in BETA. Not all functionality is complete and your data may not be preserved."
   node_children_header: "Children:"
   node_children_empty: "This node has no children."
   node_created_field: "Created:"
@@ -69,10 +90,17 @@ en:
     one: "This resource has only one root node."
     other: "Root Nodes (%{count}):"
   resources:
+    actions:
+      back: "back to all resources"
     create:
+      action: "create a new resource"
       header: "Create a Resource"
+    edit:
+      header: "You are Editing \"%{name}\""
     flash:
       created: "Created resource <a href=%{path}>%{name}</a>"
+      updated: "Saved changes to <a href=%{path}>%{name}</a>"
+      destroyed: "Deleted %{name} forever. You cannot get it back."
     index:
       header: "Resources"
     show:

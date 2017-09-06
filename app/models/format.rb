@@ -11,7 +11,7 @@ class Format < ActiveRecord::Base
   # TODO: this is missing traits.
   enum represents: [ :articles, :attributions, :images, :js_maps, :links,
     :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars,
-    :scientific_names, :data ]
+    :scientific_names, :data_occurrences, :data_measurements ]
 
   acts_as_list scope: :resource
 

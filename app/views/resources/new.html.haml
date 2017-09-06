@@ -1,17 +1,6 @@
 %h1.ui.block.header
   = t("resources.create.header")
 
-= simple_form_for @resource do |f|
-  .fields
-    = f.input :name, wrapper_html: { class: 'twelve wide' }
-    = f.input :abbr, wrapper_html: { class: 'four wide' }
-  = f.input :pk_url
-  .fields
-    = f.input :min_days_between_harvests, wrapper_html: { class: 'five wide' }
-    = f.input :harvest_day_of_month, wrapper_html: { class: 'five wide' }
-    = f.input :harvest_months_json, wrapper_html: { class: 'six wide' }
-  .fields
-    = f.input :auto_publish, wrapper_html: { class: 'three wide' }
-    = f.input :not_trusted, wrapper_html: { class: 'three wide' }
-    = f.input :might_have_duplicate_taxa, wrapper_html: { class: 'three wide' }
-  = f.button :submit
+= render("form")
+.ui.section
+  = link_to(t("cancel"), resources_path)
