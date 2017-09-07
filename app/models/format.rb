@@ -1,5 +1,5 @@
 class Format < ActiveRecord::Base
-  has_many :fields, -> { order(position: :asc) }, inverse_of: :format,
+  has_many :fields, -> { order(represents: :asc) }, inverse_of: :format,
     dependent: :destroy
   has_many :hlogs, inverse_of: :format, dependent: :destroy
 
@@ -8,9 +8,10 @@ class Format < ActiveRecord::Base
 
   enum file_type: [ :excel, :csv ]
   # NOTE: every "represents" needs a corresponding response in #model_fks.
-  # TODO: this is missing traits.
-  enum represents: [ :articles, :attributions, :images, :js_maps, :links,
-    :media, :maps, :refs, :sounds, :videos, :nodes, :vernaculars,
+  # NOTE: the order is *deterministic* and as follows:
+  # NOTE: we no longer support events.
+  enum represents: [ :agents, :refs, :attributions, :nodes, :articles, :images,
+    :js_maps, :links, :media, :maps, :sounds, :videos, :vernaculars,
     :scientific_names, :data_occurrences, :data_measurements ]
 
   acts_as_list scope: :resource

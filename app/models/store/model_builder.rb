@@ -14,6 +14,11 @@ module Store
       build_node(diff, keys) if @models[:node]
       build_medium(diff, keys) if @models[:medium]
       build_vernacular(diff, keys) if @models[:vernacular]
+      build_data_occurrence(diff, keys) if @models[:data_occurrence]
+      build_data_record(diff, keys) if @models[:data_record]
+      # TODO: still need to build agent, ref, attribution, article, image,
+      # js_map, link, map, sound, video
+
     end
 
     def build_scientific_name(diff, keys)

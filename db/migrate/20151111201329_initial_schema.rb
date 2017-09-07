@@ -62,6 +62,7 @@ class InitialSchema < ActiveRecord::Migration
         comment: "which sheet to read, if it's in a multi-sheet file"
       t.integer :header_lines, null: false, default: 1
       t.integer :data_begins_on_line, null: false, default: 1
+      # NOTE: this is removed in a later harvest.
       t.integer :position,
         comment: "Because each file should be read in a specific order..."
       # NOTE: default is the first value, in this case, excel.

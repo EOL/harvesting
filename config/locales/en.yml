@@ -13,7 +13,7 @@ en:
         mapping: "Map to database with:"
         special_handling: "Additional filtering:"
         submapping: "Submapping:"
-        submapping_help: "(only for specific additional filters)"
+        submapping_help: "(only for specific mappings)"
         validation: "Validate with:"
       special_handlings:
         iso_639_1: "Treat as a language group (ISO 639-1)"
