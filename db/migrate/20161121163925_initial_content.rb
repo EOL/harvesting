@@ -261,14 +261,14 @@ class InitialContent < ActiveRecord::Migration
       t.integer :object_term_id
       t.integer :object_node_id
       t.integer :units_term_id
-      t.integer :normal_units_term_id
+      t.integer :normal_units_term_id # NOTE: We are handling unit normalization at the publishing layer for now.
       t.integer :statistical_method_term_id
       t.integer :sex_term_id
       t.integer :lifestage_term_id
 
       t.string :resource_pk, null: false
       t.string :measurement
-      t.string :normal_measurement
+      t.string :normal_measurement # NOTE: We are handling unit normalization at the publishing layer for now.
       t.integer :removed_by_harvest_id
       t.text :source
       t.string :literal
@@ -281,12 +281,12 @@ class InitialContent < ActiveRecord::Migration
       t.integer :trait_id, null: false
       t.integer :object_term_id
       t.integer :units_term_id
-      t.integer :normal_units_term_id
-      t.integer :statistical_method_term_id
+      t.integer :normal_units_term_id # NOTE: We are handling unit normalization at the publishing layer for now.
+      t.integer :statistical_method_term_id # Unused at publishing layer; okay to implement post-MVP TODO
 
       t.string :resource_pk, null: false
       t.string :measurement
-      t.string :normal_measurement
+      t.string :normal_measurement # NOTE: We are handling unit normalization at the publishing layer for now.
       t.integer :removed_by_harvest_id
       t.text :source
       t.string :literal

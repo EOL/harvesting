@@ -12,7 +12,7 @@ class Format < ActiveRecord::Base
   # NOTE: we no longer support events.
   enum represents: [ :agents, :refs, :attributions, :nodes, :articles, :images,
     :js_maps, :links, :media, :maps, :sounds, :videos, :vernaculars,
-    :scientific_names, :data_occurrences, :data_measurements ]
+    :scientific_names, :occurrences, :data_measurements ]
 
   acts_as_list scope: :resource
 

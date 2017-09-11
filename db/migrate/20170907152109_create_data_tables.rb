@@ -14,7 +14,6 @@ class CreateDataTables < ActiveRecord::Migration
 
     create_table :occurrence_metadata do |t|
       t.integer :occurence_id
-      t.string :header  # This is just for debugging convenience.
       t.integer :predicate_term_id
       t.text :value
     end
@@ -31,5 +30,8 @@ class CreateDataTables < ActiveRecord::Migration
     end
 
     delete_column :formats, :position # The order needs to be fixed, not user-specified.
+
+    # NOTE this breaks if there's anything in the table, yet (there shouldn't be):
+    add_column :traits, :integer, :predicate_term_id, null: false
   end
 end
