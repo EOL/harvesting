@@ -6,12 +6,6 @@ class InitialSchema < ActiveRecord::Migration
     # about that information. It simply needs the ID.
     create_table :partners do |t|
       # The ID of the remote EOL site that created this partner:
-      t.integer :site_id, null: false, default: Rails.configuration.site_id
-      # The PK that the remote site uses for this partner. ...This allows us to
-      # use our own simple, local IDs; when we're talking to a remote site, we
-      # can use these IDs, but by and large, we don't actually need them! Null
-      # IS allowed, and implies "there is no PK, just use our local ID."
-      t.integer :site_pk
       t.string :name, null: false
       t.string :acronym, null: false, limit: 16, default: ""
       t.string :short_name, null: false, limit: 32, default: ""
@@ -29,7 +23,6 @@ class InitialSchema < ActiveRecord::Migration
     end
 
     create_table :resources do |t|
-      t.integer :site_id, null: false
       # position for sorting. Lower position means high-priority harvesting
       t.integer :position
       t.integer :min_days_between_harvests, null: false, default: 0
@@ -47,7 +40,7 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :auto_publish, null: false, default: false
       t.boolean :not_trusted, null: false, default: false
       t.boolean :hold_harvesting, null: false, default: false
-      t.boolean :has_duplicate_taxa, null: false, default: false
+      t.boolean :might_have_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
       t.timestamps null: false
       # TODO: deafult licensure
@@ -62,9 +55,6 @@ class InitialSchema < ActiveRecord::Migration
         comment: "which sheet to read, if it's in a multi-sheet file"
       t.integer :header_lines, null: false, default: 1
       t.integer :data_begins_on_line, null: false, default: 1
-      # NOTE: this is removed in a later harvest.
-      t.integer :position,
-        comment: "Because each file should be read in a specific order..."
       # NOTE: default is the first value, in this case, excel.
       t.integer :file_type, comment: "enum: excel, csv", default: 0
       # represents e.g.: :articles for http://eol.org/schema/media/Document
@@ -90,7 +80,7 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :special_handling,
         comment: "Enum: (but values TBD) these allow post-filtering specific to 'trouble' resources, after mapping is applied"
       t.string :submapping,
-        comment: "used for to_attribution and to_ancestor mappings to assign the proper association (role or rank); null by default"
+        comment: "used for to_attribution and to_ancestor mappings to assign the proper association (role or rank), and by other mappings that require a URI; null by default"
       t.string :expected_header,
         comment: "Does NOT need to literally match, but produces a warning if it doesn't (with some slop allowed)"
       t.boolean :unique_in_format, default: false, null: false

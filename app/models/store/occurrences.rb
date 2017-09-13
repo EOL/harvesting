@@ -5,7 +5,7 @@ module Store
       @models[:occurrence][:resource_pk] = val
     end
 
-    def to_occurrences_node(field, val)
+    def to_occurrences_nodes_fk(field, val)
       @models[:occurrence] ||= {}
       @models[:occurrence][:node_resource_pk] = val
     end
@@ -22,17 +22,32 @@ module Store
 
     def to_occurrences_lat(field, val)
       @models[:occurrence] ||= {}
-      @models[:occurrence][:lat] = val
+      @models[:occurrence][:meta] ||= {}
+      @models[:occurrence][:meta]["http://rs.tdwg.org/dwc/terms/decimalLatitude"] = val
     end
 
     def to_occurrences_long(field, val)
       @models[:occurrence] ||= {}
-      @models[:occurrence][:long] = val
+      @models[:occurrence][:meta] ||= {}
+      @models[:occurrence][:meta]["http://rs.tdwg.org/dwc/terms/decimalLongitude"] = val
+    end
+
+    def to_occurrences_lat_literal(field, val)
+      @models[:occurrence] ||= {}
+      @models[:occurrence][:meta] ||= {}
+      @models[:occurrence][:meta]["http://rs.tdwg.org/dwc/terms/verbatimLatitude"] = val
+    end
+
+    def to_occurrences_long_literal(field, val)
+      @models[:occurrence] ||= {}
+      @models[:occurrence][:meta] ||= {}
+      @models[:occurrence][:meta]["http://rs.tdwg.org/dwc/terms/verbatimLongitude"] = val
     end
 
     def to_occurrences_locality(field, val)
       @models[:occurrence] ||= {}
-      @models[:occurrence][:locality] = val
+      @models[:occurrence][:meta] ||= {}
+      @models[:occurrence][:meta]["http://rs.tdwg.org/dwc/terms/locality"] = val
     end
 
     def to_occurrences_meta(field, val)

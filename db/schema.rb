@@ -11,7 +11,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170901141247) do
+ActiveRecord::Schema.define(version: 20170907152109) do
+
+  create_table "agents", force: :cascade do |t|
+    t.integer "harvest_id",  limit: 4
+    t.string  "resource_pk", limit: 255,   null: false
+    t.string  "full_name",   limit: 255
+    t.string  "role",        limit: 255
+    t.string  "email",       limit: 255
+    t.string  "uri",         limit: 255
+    t.text    "other_info",  limit: 65535
+  end
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -112,7 +122,6 @@ ActiveRecord::Schema.define(version: 20170901141247) do
     t.integer "sheet",               limit: 4,   default: 1,     null: false
     t.integer "header_lines",        limit: 4,   default: 1,     null: false
     t.integer "data_begins_on_line", limit: 4,   default: 1,     null: false
-    t.integer "position",            limit: 4
     t.integer "file_type",           limit: 4,   default: 0
     t.integer "represents",          limit: 4,                   null: false
     t.string  "get_from",            limit: 255,                 null: false
@@ -244,20 +253,18 @@ ActiveRecord::Schema.define(version: 20170901141247) do
     t.integer "resource_id",                limit: 4,     null: false
     t.integer "harvest_id",                 limit: 4,     null: false
     t.integer "trait_id",                   limit: 4,     null: false
+    t.integer "predicate_term_id",          limit: 4,     null: false
     t.integer "object_term_id",             limit: 4
     t.integer "units_term_id",              limit: 4
-    t.integer "normal_units_term_id",       limit: 4
     t.integer "statistical_method_term_id", limit: 4
-    t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
-    t.string  "normal_measurement",         limit: 255
     t.integer "removed_by_harvest_id",      limit: 4
     t.text    "source",                     limit: 65535
     t.string  "literal",                    limit: 255
   end
 
   add_index "meta_traits", ["harvest_id"], name: "index_meta_traits_on_harvest_id", using: :btree
-  add_index "meta_traits", ["resource_id", "resource_pk"], name: "index_meta_traits_on_resource_id_and_resource_pk", using: :btree
+  add_index "meta_traits", ["resource_id"], name: "index_meta_traits_on_resource_id", using: :btree
 
   create_table "nodes", force: :cascade do |t|
     t.integer  "resource_id",               limit: 4,               null: false
@@ -290,13 +297,27 @@ ActiveRecord::Schema.define(version: 20170901141247) do
     t.string "canonical", limit: 255
   end
 
+  create_table "occurrence_metadata", force: :cascade do |t|
+    t.integer "occurence_id",      limit: 4
+    t.integer "predicate_term_id", limit: 4
+    t.integer "object_term_id",    limit: 4
+    t.text    "literal",           limit: 65535
+  end
+
+  create_table "occurrences", force: :cascade do |t|
+    t.integer "harvest_id",        limit: 4
+    t.string  "resource_pk",       limit: 255, null: false
+    t.integer "node_id",           limit: 4
+    t.string  "node_resource_pk",  limit: 255, null: false
+    t.string  "sex_term_id",       limit: 255
+    t.string  "lifestage_term_id", limit: 255
+  end
+
   create_table "pages", force: :cascade do |t|
     t.integer "native_node_id", limit: 4, null: false
   end
 
   create_table "partners", force: :cascade do |t|
-    t.integer  "site_id",      limit: 4,     default: 1,     null: false
-    t.integer  "site_pk",      limit: 4
     t.string   "name",         limit: 255,                   null: false
     t.string   "acronym",      limit: 16,    default: "",    null: false
     t.string   "short_name",   limit: 32,    default: "",    null: false
@@ -334,6 +355,7 @@ ActiveRecord::Schema.define(version: 20170901141247) do
     t.integer  "min_days_between_harvests", limit: 4,   default: 0,     null: false
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "nodes_count",               limit: 4
+    t.string   "site_pk",                   limit: 255
     t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
     t.string   "name",                      limit: 255,                 null: false
     t.string   "abbr",                      limit: 255,                 null: false
@@ -410,17 +432,19 @@ ActiveRecord::Schema.define(version: 20170901141247) do
   create_table "traits", force: :cascade do |t|
     t.integer "resource_id",                limit: 4,     null: false
     t.integer "harvest_id",                 limit: 4,     null: false
-    t.integer "node_id",                    limit: 4,     null: false
+    t.integer "node_id",                    limit: 4
+    t.integer "predicate_term_id",          limit: 4,     null: false
     t.integer "object_term_id",             limit: 4
     t.integer "object_node_id",             limit: 4
     t.integer "units_term_id",              limit: 4
-    t.integer "normal_units_term_id",       limit: 4
     t.integer "statistical_method_term_id", limit: 4
     t.integer "sex_term_id",                limit: 4
     t.integer "lifestage_term_id",          limit: 4
+    t.string  "node_resource_pk",           limit: 255
+    t.string  "occurrence_resource_pk",     limit: 255
+    t.boolean "of_taxon"
     t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
-    t.string  "normal_measurement",         limit: 255
     t.integer "removed_by_harvest_id",      limit: 4
     t.text    "source",                     limit: 65535
     t.string  "literal",                    limit: 255

@@ -32,21 +32,21 @@
           - Field.special_handlings.keys.sort.each do |name|
             .item{ data: { value: name }}= t("fields.create.special_handlings.#{name}")
     .five.wide.field
-      .label= t("fields.create.labels.submapping")
-      .ui.selection.dropdown
-        = f.hidden_field :submapping
-        %i.dropdown.icon
-        .default.text= t("fields.create.labels.submapping")
-        .menu
-          .item{ data: { value: "publisher" }} publisher
-          .item{ data: { value: "contributor" }} contributor
-          .item{ data: { value: "creator" }} creator
-          .item{ data: { value: "kingdom" }} kingdom
-          .item{ data: { value: "phylum" }} phylum
-          .item{ data: { value: "class" }} class
-          .item{ data: { value: "order" }} order
-          .item{ data: { value: "family" }} family
-          .item{ data: { value: "genus" }} genus
+      = f.input :submapping
+      -# .ui.selection.dropdown
+      -#   = f.hidden_field :submapping
+      -#   %i.dropdown.icon
+      -#   .default.text= t("fields.create.labels.submapping")
+      -#   .menu
+      -#     .item{ data: { value: "publisher" }} publisher
+      -#     .item{ data: { value: "contributor" }} contributor
+      -#     .item{ data: { value: "creator" }} creator
+      -#     .item{ data: { value: "kingdom" }} kingdom
+      -#     .item{ data: { value: "phylum" }} phylum
+      -#     .item{ data: { value: "class" }} class
+      -#     .item{ data: { value: "order" }} order
+      -#     .item{ data: { value: "family" }} family
+      -#     .item{ data: { value: "genus" }} genus
       .ui.pointing.label.small= t("fields.create.labels.submapping_help")
   .fields
     = f.input :unique_in_format, wrapper_html: { class: 'ui toggle checkbox four wide' }

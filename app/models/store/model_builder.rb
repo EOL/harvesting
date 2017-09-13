@@ -15,10 +15,9 @@ module Store
       build_medium(diff, keys) if @models[:medium]
       build_vernacular(diff, keys) if @models[:vernacular]
       build_occurrence(diff, keys) if @models[:occurrence]
-      build_trait(diff, keys) if @models[:data_record]
+      build_trait(diff, keys) if @models[:trait]
       # TODO: still need to build agent, ref, attribution, article, image,
       # js_map, link, map, sound, video
-
     end
 
     def build_scientific_name(diff, keys)
@@ -138,17 +137,17 @@ module Store
     end
 
     def build_occurrence(diff, keys)
-      node = find_node(@models[:occurrence])
-      @models[:occurrence][:node_id] = node.id
+      # TODO: node = find_node(@models[:occurrence])
+      # TODO: @models[:occurrence][:node_id] = node.id
       @models[:occurrence][:harvest_id] = @harvest.id
       meta = @models[:occurrence].delete(:meta) || {}
       if @models[:occurrence][:sex]
         sex = @models[:occurrence].delete(:sex)
-        @models[:occurrence][:sex_term_id] = find_or_create_term(sex)
+        @models[:occurrence][:sex_term_id] = find_or_create_term(sex).try(:id)
       end
       if @models[:occurrence][:lifestage]
         lifestage = @models[:occurrence].delete(:lifestage)
-        @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage)
+        @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage).try(:id)
       end
       # TODO: there are some other normalizations and checks we should do here,
       # I expect.
@@ -156,8 +155,8 @@ module Store
       meta.each do |key, value|
         datum = {}
         datum[:occurence_id] = occurrence.id
-        datum[:predicate_term_id] = find_or_create_term(key)
-        datum[:value] = value
+        datum[:predicate_term_id] = find_or_create_term(key).id
+        datum = convert_meta_value(datum, value)
         create_or_update(diff, keys, OccurrenceMetadata, datum)
       end
       # We need to remember these for traits:
@@ -166,31 +165,44 @@ module Store
 
     def build_trait(diff, keys)
       parent = @models[:trait][:trait_resource_pk]
-      occurrence = find_occurrence(@models[:trait])
+      # TODO: occurrence = find_occurrence(@models[:trait])
       # TODO: we need to keep a "back reference" of which traits have been hung off of occurrences, because some
       # meta-traits can affect an occurrence and we need to be sure those changes are applied to all associated traits.
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon]
         if parent
-          @format.warn("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
+          fmt = @harvest.formats.find { |fmt| fmt.data_measurements? }
+          fmt.warn("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
         else
           # This is a "normal" trait.
-          object_node = find_node(@models[:trait])
-          @models[:trait][:object_node_id] = object_node.id if object_node
+          # TODO: object_node = find_node(@models[:trait])
+          # TODO: @models[:trait][:object_node_id] = object_node.id if object_node
           predicate = @models[:trait].delete(:predicate)
           # TODO: error handling for predicate ... cannot be blank.
           predicate_term = find_or_create_term(predicate)
           @models[:trait][:predicate_term_id] = predicate_term.id
+          units = @models[:trait].delete(:units)
+          units_term = find_or_create_term(units)
+          @models[:trait][:units_term_id] = units_term.try(:id)
 
           @models[:trait] = convert_trait_value(@models[:trait])
-          # TODO:
           if @models[:trait][:statistical_method]
             stat_m = @models[:trait].delete(:statistical_method)
-            @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m)
+            @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
           end
-          # TODO: get the info from the occurrence (sex, lifestage, meta) and add it here...
+          meta = @models[:trait].delete(:meta) || {}
           trait = create_or_update(diff, keys, Trait, @models[:trait])
+          meta.each do |key, value|
+            datum = {}
+            datum[:resource_id] = @resource.id
+            datum[:harvest_id] = @harvest.id
+            datum[:trait_id] = trait.id
+            predicate_term = find_or_create_term(predicate)
+            datum[:predicate_term_id] = predicate_term.id
+            datum = convert_meta_value(datum, value)
+            create_or_update(diff, keys, MetaTrait, datum)
+          end
         end
       else # This is metadata...
         # TODO (long-term): allow meta-meta data. Right now we cannot do that.
@@ -208,7 +220,8 @@ module Store
           # and add these metadata to those traits. Tricky, tricky. :S
 
         else
-          @format.warn("IGNORING a measurement NOT of a taxon with NO parent and NO occurrence ID.")
+          fmt = @harvest.formats.find { |fmt| fmt.data_measurements? }
+          fmt.warn("IGNORING a measurement NOT of a taxon with NO parent and NO occurrence ID.")
         end
       end
       # TODO: add metadata... Sheesh.
@@ -239,6 +252,16 @@ module Store
       instance
     end
 
+    def convert_meta_value(datum, value)
+      if value =~ URI::regexp
+        object_term = find_or_create_term(value)
+        datum[:object_term_id] = object_term.id
+      else
+        datum[:literal] = value
+      end
+      datum
+    end
+
     def find_node(instance)
       node_pk = instance.delete(:node_resource_pk)
       return nil if node_pk.nil? # Nothing to look up!
@@ -262,20 +285,22 @@ module Store
     end
 
     def find_or_create_term(uri)
+      return nil if uri.blank?
       # TODO: again, this is slow to do one-at-a-time. We should get a full list
       # and query for all of them:
-      term = @terms[uri] || Term.where(uri: uri)
+      term = @terms[uri] || Term.where(uri: uri).first
       if term.nil?
         # Quick and dirty. A Human will have to do better later:
         name = uri.gsub(%r{^.*/}, '').gsub(/[^A-Za-z0-9]+/, ' ')
         term = Term.create(
-          uri: uri, name: name, definiton: '',
+          uri: uri, name: name, definition: '',
           comment: "Auto-added during harvest ##{@harvest.id}. "\
             'A human needs to edit this.',
           attribution: @resource.name, is_hidden_from_overview: true,
           is_hidden_from_glossary: true)
-        # TODO: we need some kind of warning in the log or something.
-        @format.warn("Created term for #{uri}!")
+        # TODO: This isn't necessarily a problem with the data_measurements file; it could be the occurrences. :S
+        fmt = @harvest.formats.find { |fmt| fmt.data_measurements? }
+        fmt.warn("Created term for #{uri}!")
       end
       term
     end
@@ -294,9 +319,9 @@ module Store
       node_hash[:resource_id] = @resource.id
       node_hash[:harvest_id] = @harvest.id
       node_hash[:resource_pk] ||= node_hash[:name_verbatim]
-      # Node already existed, just update it and pass that back:
       node =
         if @nodes[node_hash[:resource_pk]]
+          # Node already existed, just update it and pass that back:
           @nodes[node_hash[:resource_pk]].update_attributes(node_hash)
           @nodes[node_hash[:resource_pk]]
         else

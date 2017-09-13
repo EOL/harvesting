@@ -4,18 +4,17 @@ class CreateDataTables < ActiveRecord::Migration
     create_table :occurrences do |t|
       t.integer :harvest_id # We don't need the resource id; this is "temporary" data and won't be handled much.
       t.string :resource_pk, null: false # e.g. OccurrenceID
-      t.integer :node_id, null: false # e.g. discovered via TaxonID
-      t.string :sex
-      t.string :lifestage
-      t.string :lat
-      t.string :long
-      t.string :locality
+      t.integer :node_id # e.g. TaxonID found using node_resource_pk
+      t.string :node_resource_pk, null: false  # Temp. storage until we resolve and move to node_id.
+      t.string :sex_term_id
+      t.string :lifestage_term_id
     end
 
     create_table :occurrence_metadata do |t|
       t.integer :occurence_id
       t.integer :predicate_term_id
-      t.text :value
+      t.integer :object_term_id
+      t.text :literal
     end
 
     # Another "waystation" for data that will be used elsewhere...
@@ -28,10 +27,5 @@ class CreateDataTables < ActiveRecord::Migration
       t.string :uri
       t.text :other_info
     end
-
-    delete_column :formats, :position # The order needs to be fixed, not user-specified.
-
-    # NOTE this breaks if there's anything in the table, yet (there shouldn't be):
-    add_column :traits, :integer, :predicate_term_id, null: false
   end
 end

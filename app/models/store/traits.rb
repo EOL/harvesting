@@ -39,6 +39,11 @@ module Store
       @models[:trait][:value] = val
     end
 
+    def to_traits_units(_, val)
+      @models[:trait] ||= {}
+      @models[:trait][:units] = val
+    end
+
     def to_traits_statistical_method(_, val)
       @models[:trait] ||= {}
       @models[:trait][:statistical_method] = val
@@ -54,7 +59,7 @@ module Store
       @models[:trait][:reference_fk] = val
     end
 
-    def to_traits_meta(trait, val)
+    def to_traits_meta(field, val)
       @models[:trait] ||= {}
       @models[:trait][:meta] ||= {}
       @models[:trait][:meta][field.submapping] = val

@@ -8,5 +8,3 @@ Rails.application.initialize!
 def env(name, default)
   ENV["EOL_#{name.upcase}"] || default
 end
-
-Rails.configuration.site_id = env(:site_id, 1)

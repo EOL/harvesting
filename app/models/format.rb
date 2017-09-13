@@ -1,24 +1,26 @@
+# Each resourvce needs to have several file formats defined... e.g.: taxa, agents, refs, etc. ...This model represents
+# those file format definitions.
 class Format < ActiveRecord::Base
-  has_many :fields, -> { order(represents: :asc) }, inverse_of: :format,
-    dependent: :destroy
+  default_scope { order(represents: :asc) }
+
+  has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :destroy
   has_many :hlogs, inverse_of: :format, dependent: :destroy
 
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats
 
-  enum file_type: [ :excel, :csv ]
+  enum file_type: %i[excel csv]
   # NOTE: every "represents" needs a corresponding response in #model_fks.
   # NOTE: the order is *deterministic* and as follows:
   # NOTE: we no longer support events.
-  enum represents: [ :agents, :refs, :attributions, :nodes, :articles, :images,
-    :js_maps, :links, :media, :maps, :sounds, :videos, :vernaculars,
-    :scientific_names, :occurrences, :data_measurements ]
+  enum represents: %i[
+    agents refs attributions nodes articles images js_maps links media maps sounds videos vernaculars scientific_names
+    occurrences data_measurements
+  ]
 
-  acts_as_list scope: :resource
+  scope :abstract, -> { where('harvest_id IS NULL') }
 
-  scope :abstract, -> { where("harvest_id IS NULL") }
-
-  def model_fks
+  def model_fks # rubocop:disable Metrics/MethodLength Metrics/CyclomaticComplexity
     if articles?
       { Article => :resource_pk }
     elsif attributions?
@@ -45,17 +47,21 @@ class Format < ActiveRecord::Base
       { Vernacular => :verbatim }
     elsif scientific_names?
       { ScientificName => :verbatim }
+    elsif occurrences?
+      { Occurrence => :resource_pk }
+    elsif data_measurements?
+      { Trait => :resource_pk }
     else
       raise "Unimplemented #model_fks for type #{represents}!"
     end
   end
 
   def converted_csv_path
-    special_path("converted_csv", "csv")
+    special_path('converted_csv', 'csv')
   end
 
   def copy_to_harvest(new_harvest)
-    new_format = self.dup
+    new_format = self.dup # rubocop:disable Style/RedundantSelf
     new_harvest.formats << new_format
     fields.each do |field|
       new_field = field.dup
@@ -69,14 +75,15 @@ class Format < ActiveRecord::Base
   end
 
   def diff_path
-    special_path("diff", "diff")
+    special_path('diff', 'diff')
   end
 
   # You can pass in :cat, :e, :line as options
   def log(message, options = {})
     options[:cat] ||= :infos
     trace = options[:e] ? options[:e].backtrace.join("\n") : nil
-    hlogs << Hlog.create!(format: self,
+    hlogs << Hlog.create!(
+      format: self,
       harvest: harvest,
       category: options[:cat],
       message: message,
@@ -86,11 +93,10 @@ class Format < ActiveRecord::Base
   end
 
   def special_path(dir, ext)
-    Rails.public_path.join(dir,
-      "#{resource.name_brief}_fmt_#{file_type}_#{id}.#{ext}")
+    Rails.public_path.join(dir, "#{resource.name_brief}_fmt_#{file_type}_#{id}.#{ext}")
   end
 
-  def warn(message, line)
+  def warn(message, line = nil)
     log(message, line: line, cat: :warns)
   end
 end

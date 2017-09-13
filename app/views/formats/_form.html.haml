@@ -1,8 +1,7 @@
 = simple_form_for [@format.resource, @format] do |f|
   = f.hidden_field :resource_id, resource_id: @format.resource_id
   .fields
-    = f.input :position, wrapper_html: { class: 'two wide' }
-    .six.wide.field
+    .eight.wide.field
       .label= t("formats.create.labels.represents")
       .ui.selection.dropdown
         = f.hidden_field :represents

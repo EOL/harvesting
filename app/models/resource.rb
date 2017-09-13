@@ -11,26 +11,22 @@ class Resource < ActiveRecord::Base
   acts_as_list
 
   def self.quick_define(options)
-    next_pos = maximum(:position) + 1
     resource = where(name: options[:name]).first_or_create do |r|
       abbr = options[:name].gsub(/[^A-Z]/, "")
       abbr ||= options[:name][0..3].upcase
-      r.site_id = options[:site_id]
-      r.site_pk = abbr
-      r.position = next_pos
       r.name = options[:name]
       r.abbr = abbr
     end
     pos = 1
     options[:formats].each do |rep, f_def|
       fmt = Format.where(
+            field_sep: options[:field_sep] || ",",
             resource_id: resource.id,
             represents: rep).
           abstract.
           first_or_create do |f|
         f.resource_id = resource.id
         f.represents = rep
-        f.position = pos
         f.file_type = Format.file_types[options[:type]]
         f.get_from = "#{options[:base_dir]}/#{f_def[:loc]}"
       end

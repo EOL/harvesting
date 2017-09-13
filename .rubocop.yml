@@ -1,8 +1,27 @@
+# We'll upgrade to Ruby 3 at some point and don't need the performance gain right now:
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# No need to document controllers; it is clear what they represent.
+Style/Documentation:
+  Enabled: true
+  Exclude:
+    - app/controllers/*
+
+# I'm sick of 80, it's tyranny.
 Metrics/LineLength:
   Max: 120
 
+# Arbitrarily small methods are no easier to maintain, let's be reasonable:
 Metrics/MethodLength:
   Max: 20
 
 Metrics/AbcSize:
+  Max: 20
+
+# Maybe we're just more comfortable with higher-complexity methods, but I've not had trouble up to this size:
+Metrics/CyclomaticComplexity:
+  Max: 20
+
+Metrics/PerceivedComplexity:
   Max: 20

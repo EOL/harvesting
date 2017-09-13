@@ -1,5 +1,6 @@
 require "open3"
 
+# NOTE: you probably want to look at the .store method.
 class ResourceHarvester
   attr_accessor :resource, :harvest
 
@@ -7,6 +8,8 @@ class ResourceHarvester
   include Store::Nodes
   include Store::Media
   include Store::Vernaculars
+  include Store::Traits
+  include Store::Occurrences
   include Store::ModelBuilder
 
   def initialize(resource, harvest = nil)
@@ -33,6 +36,7 @@ class ResourceHarvester
       Dir.exist?(Rails.public_path.join("converted_csv"))
     delta
     store
+    resolve_keys
     # TODO (LOW-PRIO) queue_downloads
     # TODO parse_names
     # TODO match_nodes
@@ -75,8 +79,7 @@ class ResourceHarvester
             next unless check
             val = row[header]
             if val.blank?
-              next if check.can_be_empty?
-              fmt.warn("Illegal empty value for #{header}", line)
+              fmt.warn("Illegal empty value for #{header}", line) unless check.can_be_empty?
             end
             if check.must_be_integers?
               unless row[header] =~ /\a[\d,]+\z/m
@@ -134,7 +137,7 @@ class ResourceHarvester
   def delta
     each_format do |fmt, parser, headers|
       pn = Pathname.new(fmt.file)
-      fmt.update_attribute(:diff, fmt.diff_path) # TODO - meh. Why save this name?
+      fmt.update_attribute(:diff, fmt.diff_path)
       # YOU WERE HERE - Modify this to ensure that it's reading the
       # converted_csv and doesn't bother with a header.
       other_fmt = @previous_harvest ?
@@ -166,18 +169,20 @@ class ResourceHarvester
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
   def store
-    # Recall these are in a specific order (and need to be). The assumption here
-    # is that the file describing the nodes MUST be first. (It MUST be.)
+    # Recall these are in a specific order (and need to be). The assumption here is that files which refer to nodes are
+    # read AFTER the nodes file, etc.
     gather_nodes
     @ancestors = {}
+    @occurrences = {}
+    @terms = {}
     each_diff do |fmt, parser, headers|
       fields = build_fields(fmt, headers)
       any_diff = parser.diff_as_hashes(headers) do |row, line_number, diff|
         # Just to give access to the line number elsewhere:
         @line_number = line_number
         # We *could* skip this, but I prefer not to deal with the missing keys.
-        @models = { node: nil, parent_node: nil, scientific_name: nil,
-          ancestors: [], medium: nil, vernacular: nil }
+        @models = { node: nil, parent_node: nil, scientific_name: nil, ancestors: [], medium: nil, vernacular: nil,
+                    occurrence: nil, trait: nil }
         begin
           headers.each do |header|
             field = fields[header]
@@ -200,21 +205,43 @@ class ResourceHarvester
             build_models(diff, fmt.model_fks)
           end
         rescue => e
-          if row.values.compact.size < (row.values.size / 5)
-            fmt.warn("Empty row?", line_number)
-          else
+          # if row.values.compact.size < (row.values.size / 5)
+          #   fmt.warn("?", line_number)
+          # else
             puts "Failed to save data from row #{line_number}..."
             puts e.message
             puts e.backtrace[0..10]
             debugger
             raise e
-          end
+          # end
         end
       end
       unless any_diff
         fmt.warn("There were no differences in this file!", 0)
       end
     end
+  end
+
+  def resolve_keys
+    propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
+    # TODO: transfer the sex, lifestage, lat, long, locality, and metadata from occurrences to traits...
+  end
+
+  # I AM NOT A FAN OF SQL... but this is *way* more efficient than alternatives:
+  def propagate_id(klass, options = {})
+    fk = options[:fk]
+    set = options[:set]
+    with_field = options[:with]
+    (o_table, o_field) = options[:other].split(".")
+    sql = "UPDATE `#{klass.table_name}` t JOIN `#{o_table}` o ON (t.`#{fk}` = o.`#{o_field}` AND t.harvest_id = ?) "\
+          "SET t.`#{set}` = o.`#{with_field}`"
+    clean_execute(klass, [sql, @harvest.id])
+  end
+
+  def clean_execute(klass, args)
+    clean_sql = klass.send(:sanitize_sql, args)
+    klass.connection.execute(clean_sql)
   end
 
   # NOTE: yes, this could be *quite* large, but I believe memory is fine with a
