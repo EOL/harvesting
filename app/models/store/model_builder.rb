@@ -1,37 +1,37 @@
 module Store
   module ModelBuilder
-    def destroy_for_fmt(keys)
-      keys.each do |klass, key|
+    def destroy_for_fmt
+      @format.model_fks.each do |klass, key|
         removed_by_harvest(klass, key,
           @models[klass.name.underscore.to_sym][key])
       end
     end
 
-    def build_models(diff, keys)
-      build_scientific_name(diff, keys) if @models[:scientific_name]
-      build_parent_node(diff, keys) if @models[:parent_node]
-      build_ancestors(diff, keys) unless @models[:ancestors].empty?
-      build_node(diff, keys) if @models[:node]
-      build_medium(diff, keys) if @models[:medium]
-      build_vernacular(diff, keys) if @models[:vernacular]
-      build_occurrence(diff, keys) if @models[:occurrence]
-      build_trait(diff, keys) if @models[:trait]
+    def build_models
+      build_scientific_name if @models[:scientific_name]
+      build_parent_node if @models[:parent_node]
+      build_ancestors unless @models[:ancestors].empty?
+      build_node if @models[:node]
+      build_medium if @models[:medium]
+      build_vernacular if @models[:vernacular]
+      build_occurrence if @models[:occurrence]
+      build_trait if @models[:trait]
       # TODO: still need to build agent, ref, attribution, article, image,
       # js_map, link, map, sound, video
     end
 
-    def build_scientific_name(diff, keys)
+    def build_scientific_name
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
-      sci_name = create_or_update(diff, keys, ScientificName, @models[:scientific_name])
+      sci_name = create_or_update(ScientificName, @models[:scientific_name])
       @models[:node][:scientific_name_id] = sci_name.id if @models[:node]
     end
 
-    def build_parent_node(diff, keys)
+    def build_parent_node
       @models[:parent_node][:resource_id] = @resource.id
       @models[:parent_node][:harvest_id] = @harvest.id
       if @models[:parent_node][:scientific_name_id]
-        parent = create_or_update(diff, keys, Node, @models[:parent_node])
+        parent = create_or_update(Node, @models[:parent_node])
         @models[:node][:parent_id] = parent.id if @models[:node]
         parent
       else
@@ -49,8 +49,8 @@ module Store
       end
     end
 
-    def build_node(diff, keys)
-      node = build_any_node(@models[:node], diff, keys)
+    def build_node
+      node = build_any_node(@models[:node])
       @models[:scientific_name][:node_id] = node.id if @models[:scientific_name]
     end
 
@@ -60,7 +60,7 @@ module Store
     # it's actually used elsewhere), so it will still exist and still be
     # published and will still have children that it shouldn't. But, as
     # mentioned, this is a difficult case to detect.
-    def build_ancestors(diff, keys)
+    def build_ancestors
       parent_id = 0
       @models[:ancestors].each do |ancestor|
         parent_id =
@@ -70,7 +70,7 @@ module Store
             ancestor[:sci_name] = ScientificName.create!(ancestor[:sci_name])
             ancestor[:node][:scientific_name_id] = ancestor[:sci_name].id
             ancestor[:node][:parent_id] = parent_id
-            ancestor[:node] = build_any_node(ancestor[:node], :new, keys)
+            ancestor[:node] = build_any_node(ancestor[:node])
             ancestor[:sci_name].update_attribute(:node_id, ancestor[:node].id)
             @ancestors[ancestor[:name]] = ancestor
             ancestor[:node].id
@@ -86,7 +86,7 @@ module Store
           @models[:parent_node][:name_verbatim] = 'TODO'
           @models[:parent_node][:parent_id] = parent_id
           @models[:parent_node] =
-            build_any_node(@models[:parent_node], :new, keys)
+            build_any_node(@models[:parent_node])
           @models[:node][:parent_id] = @models[:parent_node].id
         else
           @models[:parent_node].update_attribute(:parent_id, parent_id)
@@ -98,7 +98,7 @@ module Store
 
     # NOTE: this can and should fail if there was no node PK or if it's
     # unmatched:
-    def build_medium(diff, keys)
+    def build_medium
       debugger unless @models[:medium][:resource_pk]
       node = find_node(@models[:medium])
       @models[:medium][:node_id] = node.id
@@ -118,12 +118,12 @@ module Store
       @models[:medium][:owner] = 'TODO'
 
       # TODO: there are some other normalizations and checks we should do here.
-      create_or_update(diff, keys, Medium, @models[:medium])
+      create_or_update(Medium, @models[:medium])
     end
 
     # NOTE: this is an example of how to pull the resource_pk from another table
     # and attach the model we're building to the associated instance.
-    def build_vernacular(diff, keys)
+    def build_vernacular
       lang_code = @models[:vernacular][:language_code_verbatim]
       lang = find_or_create_language(lang_code)
       node = find_node(@models[:vernacular])
@@ -133,10 +133,10 @@ module Store
       @models[:vernacular][:language_id] = lang.id
       # TODO: there are some other normalizations and checks we should do here,
       # I expect.
-      create_or_update(diff, keys, Vernacular, @models[:vernacular])
+      create_or_update(Vernacular, @models[:vernacular])
     end
 
-    def build_occurrence(diff, keys)
+    def build_occurrence
       # TODO: node = find_node(@models[:occurrence])
       # TODO: @models[:occurrence][:node_id] = node.id
       @models[:occurrence][:harvest_id] = @harvest.id
@@ -151,19 +151,19 @@ module Store
       end
       # TODO: there are some other normalizations and checks we should do here,
       # I expect.
-      occurrence = create_or_update(diff, keys, Occurrence, @models[:occurrence])
+      occurrence = create_or_update(Occurrence, @models[:occurrence])
       meta.each do |key, value|
         datum = {}
         datum[:occurence_id] = occurrence.id
         datum[:predicate_term_id] = find_or_create_term(key).id
         datum = convert_meta_value(datum, value)
-        create_or_update(diff, keys, OccurrenceMetadata, datum)
+        create_or_update(OccurrenceMetadata, datum)
       end
       # We need to remember these for traits:
       @occurrences[occurrence.resource_pk] = occurrence
     end
 
-    def build_trait(diff, keys)
+    def build_trait
       parent = @models[:trait][:trait_resource_pk]
       # TODO: occurrence = find_occurrence(@models[:trait])
       # TODO: we need to keep a "back reference" of which traits have been hung off of occurrences, because some
@@ -172,8 +172,7 @@ module Store
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon]
         if parent
-          fmt = @harvest.formats.find { |fmt| fmt.data_measurements? }
-          fmt.warn("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
+          log_warning("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
         else
           # This is a "normal" trait.
           # TODO: object_node = find_node(@models[:trait])
@@ -192,7 +191,7 @@ module Store
             @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
           end
           meta = @models[:trait].delete(:meta) || {}
-          trait = create_or_update(diff, keys, Trait, @models[:trait])
+          trait = create_or_update(Trait, @models[:trait])
           meta.each do |key, value|
             datum = {}
             datum[:resource_id] = @resource.id
@@ -201,7 +200,7 @@ module Store
             predicate_term = find_or_create_term(predicate)
             datum[:predicate_term_id] = predicate_term.id
             datum = convert_meta_value(datum, value)
-            create_or_update(diff, keys, MetaTrait, datum)
+            create_or_update(MetaTrait, datum)
           end
         end
       else # This is metadata...
@@ -220,8 +219,7 @@ module Store
           # and add these metadata to those traits. Tricky, tricky. :S
 
         else
-          fmt = @harvest.formats.find { |fmt| fmt.data_measurements? }
-          fmt.warn("IGNORING a measurement NOT of a taxon with NO parent and NO occurrence ID.")
+          log_warning("IGNORING a measurement NOT of a taxon with NO parent and NO occurrence ID.")
         end
       end
       # TODO: add metadata... Sheesh.
@@ -293,14 +291,13 @@ module Store
         # Quick and dirty. A Human will have to do better later:
         name = uri.gsub(%r{^.*/}, '').gsub(/[^A-Za-z0-9]+/, ' ')
         term = Term.create(
-          uri: uri, name: name, definition: '',
+          uri: uri, name: name, definition: t("terms.auto_created"),
           comment: "Auto-added during harvest ##{@harvest.id}. "\
             'A human needs to edit this.',
           attribution: @resource.name, is_hidden_from_overview: true,
           is_hidden_from_glossary: true)
-        # TODO: This isn't necessarily a problem with the data_measurements file; it could be the occurrences. :S
-        fmt = @harvest.formats.find { |fmt| fmt.data_measurements? }
-        fmt.warn("Created term for #{uri}!")
+        # TODO: This isn't necessarily a problem with the measurements file; it could be the occurrences. :S
+        log_warning("Created term for #{uri}!")
       end
       term
     end
@@ -315,7 +312,7 @@ module Store
       end
     end
 
-    def build_any_node(node_hash, diff, keys)
+    def build_any_node(node_hash)
       node_hash[:resource_id] = @resource.id
       node_hash[:harvest_id] = @harvest.id
       node_hash[:resource_pk] ||= node_hash[:name_verbatim]
@@ -325,7 +322,7 @@ module Store
           @nodes[node_hash[:resource_pk]].update_attributes(node_hash)
           @nodes[node_hash[:resource_pk]]
         else
-          n = create_or_update(diff, keys, Node, node_hash)
+          n = create_or_update(Node, node_hash)
           @nodes[n.resource_pk] = n
         end
 
@@ -333,9 +330,9 @@ module Store
       node
     end
 
-    def create_or_update(diff, keys, klass, model)
-      if diff == :changed
-        key = keys[klass]
+    def create_or_update(klass, model)
+      if @diff == :changed
+        key = @format.model_fks[klass]
         removed_by_harvest(klass, key, model[key])
       end
       klass.send(:create!, model)

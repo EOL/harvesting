@@ -26,7 +26,7 @@ module Store
 
     def to_traits_association_node_fk(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:node_resource_pk] = val # This is a special name that we'll use to find the node.
+      @models[:trait][:association_resource_pk] = val
     end
 
     def to_traits_predicate(_, val)

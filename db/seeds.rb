@@ -380,7 +380,7 @@ traity = Resource.quick_define(
       { 'verbatimLongitude' => 'to_occurrences_long_literal' },
       { 'verbatimElevation' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/verbatimElevation' }
     ] },
-    data_measurements: { loc: 'measurement_or_fact.tsv', fields: [
+    measurements: { loc: 'measurement_or_fact.tsv', fields: [
       { 'measurementID' => 'to_traits_pk', can_be_empty: false, is_unique: true },
       { 'occurrenceID' => 'to_traits_occurrence_fk' },
       { 'measurementOfTaxon' => 'to_traits_measurement_of_taxon' },
@@ -423,7 +423,7 @@ end
 
 if false
   resource = Resource.where(name: 'Mineralogy').first
-  fmt = Format.where(resource_id: resource.id, represents: Format.represents[:data_measurements]).last
+  fmt = Format.where(resource_id: resource.id, represents: Format.represents[:measurements]).last
   parser =
     CsvParser.new(fmt.get_from,
                   field_sep: fmt.field_sep, line_sep: fmt.line_sep, header_lines: fmt.header_lines,

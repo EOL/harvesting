@@ -2,7 +2,7 @@ require "open3"
 
 # NOTE: you probably want to look at the .store method.
 class ResourceHarvester
-  attr_accessor :resource, :harvest
+  attr_accessor :resource, :harvest, :format, :line_num, :diff, :file, :parser, :headers
 
   # NOTE: Composition pattern, here. Too much to have in one file:
   include Store::Nodes
@@ -20,6 +20,13 @@ class ResourceHarvester
     @formats = {}
     @harvest = harvest
     @converted = {}
+    # Placeholders to mark where we "currently are":
+    @diff = nil
+    @line_num = nil
+    @format = nil
+    @file = nil
+    @parser = nil
+    @headers = nil
   end
 
   def harvest
@@ -58,36 +65,38 @@ class ResourceHarvester
 
   # validate each file; stop on errors, log warnings...
   def validate
-    each_format do |fmt, parser, headers|
+    each_format do
       fields = {}
-      expected_by_file = headers.dup
-      fmt.fields.each_with_index do |field, i|
+      expected_by_file = @headers.dup
+      @format.fields.each_with_index do |field, i|
         raise Exceptions::ColumnMissing.new(field.expected_header) if
-          headers[i].nil?
-        raise Exceptions::ColumnMismatch.new("expected '#{field.expected_header}' as column #{i}, but got '#{headers[i]}'") unless
-          field.expected_header == headers[i]
-        fields[headers[i]] = field
-        expected_by_file.delete(headers[i])
+          @headers[i].nil?
+        raise Exceptions::ColumnMismatch.new("expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless
+          field.expected_header == @headers[i]
+        fields[@headers[i]] = field
+        expected_by_file.delete(@headers[i])
       end
       raise Exceptions::ColumnUnmatched.new(expected_by_file.join(",")) if
         expected_by_file.size > 0
-      CSV.open(fmt.converted_csv_path, "wb") do |csv|
-        parser.rows_as_hashes do |row, line|
+      @file = @format.converted_csv_path
+      CSV.open(@file, "wb") do |csv|
+        @parser.rows_as_hashes do |row, line|
+          @line_num = line
           csv_row = []
-          headers.each do |header|
+          @headers.each do |header|
             check = fields[header]
             next unless check
             val = row[header]
             if val.blank?
-              fmt.warn("Illegal empty value for #{header}", line) unless check.can_be_empty?
+              log_warning("Illegal empty value for #{header}") unless check.can_be_empty?
             end
             if check.must_be_integers?
               unless row[header] =~ /\a[\d,]+\z/m
-                fmt.warn("Illegal non-integer for #{header}, got #{val}", line)
+                log_warning("Illegal non-integer for #{header}, got #{val}")
               end
             elsif check.must_know_uris?
               unless uri_exists?(val)
-                fmt.warn("Illegal unknown URI <#{val}> for #{header}", line)
+                log_warning("Illegal unknown URI <#{val}> for #{header}")
               end
             end
             csv_row << val
@@ -95,29 +104,30 @@ class ResourceHarvester
           csv << csv_row
         end
       end
-      @converted[fmt.id] = true
+      @converted[@format.id] = true
       # Write each line to a CSV (no headers)
     end
   end
 
   def convert
-    each_format do |fmt, parser, headers|
-      unless @converted[fmt.id]
-        CSV.open(fmt.converted_csv_path, "wb") do |csv|
-          parser.rows_as_hashes do |row, line|
+    each_format do
+      unless @converted[@format.id]
+        @file = @format.converted_csv_path
+        CSV.open(@file, "wb") do |csv|
+          @parser.rows_as_hashes do |row, line|
             csv_row = []
-            headers.each do |header|
+            @headers.each do |header|
               csv_row << row[header]
             end
             csv << csv_row
           end
         end
-        @converted[fmt.id] = true # Shouldn't need this, but being safe
+        @converted[@format.id] = true # Shouldn't need this, but being safe
       end
-      cmd = "/usr/bin/sort #{fmt.converted_csv_path} > "\
-            "#{fmt.converted_csv_path}_sorted"
+      cmd = "/usr/bin/sort #{@format.converted_csv_path} > "\
+            "#{@format.converted_csv_path}_sorted"
       if system(cmd)
-        FileUtils.mv("#{fmt.converted_csv_path}_sorted", fmt.converted_csv_path)
+        FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
       else
         raise "Failed system call { #{cmd} } #{$?}"
       end
@@ -135,36 +145,33 @@ class ResourceHarvester
 
   # Create deltas from previous harvests (or fake one from "nothing")
   def delta
-    each_format do |fmt, parser, headers|
-      pn = Pathname.new(fmt.file)
-      fmt.update_attribute(:diff, fmt.diff_path)
-      # YOU WERE HERE - Modify this to ensure that it's reading the
-      # converted_csv and doesn't bother with a header.
-      other_fmt = @previous_harvest ?
-        @previous_harvest.formats.find { |f| f.represents == fmt.represents } :
-        nil
+    each_format do
+      pn = Pathname.new(@format.file)
+      @format.update_attribute(:diff, @format.diff_path)
+      other_fmt = @previous_harvest ? @previous_harvest.formats.find { |f| f.represents == @format.represents } : nil
+      @file = @format.diff # We're now reading from the diff...
       # There's no diff if the previous format failed!
       if other_fmt && File.exist?(other_fmt.converted_csv_path)
-        diff(other_fmt, fmt)
+        diff(other_fmt)
       else
-        fake_diff_from_nothing(fmt)
+        fake_diff_from_nothing
       end
     end
   end
 
-  def diff(old_fmt, new_fmt)
-    File.unlink(new_fmt.diff) if File.exist?(new_fmt.diff)
+  def diff(old_fmt)
+    File.unlink(@format.diff) if File.exist?(@format.diff)
     cmd = "/usr/bin/diff #{old_fmt.converted_csv_path} "\
-      "#{new_fmt.converted_csv_path} > #{new_fmt.diff}"
+      "#{@format.converted_csv_path} > #{@format.diff}"
     # TODO: We can't trust the exit code! diff exits 0 if the files are the
     # same, and 1 if not.
     system(cmd)
   end
 
-  def fake_diff_from_nothing(fmt)
-    system("echo \"0a\" > #{fmt.diff}")
-    system("cat #{fmt.file} >> #{fmt.diff}")
-    system("echo \".\" >> #{fmt.diff}")
+  def fake_diff_from_nothing
+    system("echo \"0a\" > #{@format.diff}")
+    system("cat #{@format.file} >> #{@format.diff}")
+    system("echo \".\" >> #{@format.diff}")
   end
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
@@ -175,16 +182,14 @@ class ResourceHarvester
     @ancestors = {}
     @occurrences = {}
     @terms = {}
-    each_diff do |fmt, parser, headers|
-      fields = build_fields(fmt, headers)
-      any_diff = parser.diff_as_hashes(headers) do |row, line_number, diff|
-        # Just to give access to the line number elsewhere:
-        @line_number = line_number
+    each_diff do
+      fields = build_fields
+      any_diff = @parser.diff_as_hashes(@headers) do |row|
         # We *could* skip this, but I prefer not to deal with the missing keys.
         @models = { node: nil, parent_node: nil, scientific_name: nil, ancestors: [], medium: nil, vernacular: nil,
                     occurrence: nil, trait: nil }
         begin
-          headers.each do |header|
+          @headers.each do |header|
             field = fields[header]
             next if row[header].blank?
             next if field.to_ignored?
@@ -192,23 +197,23 @@ class ResourceHarvester
             send(field.mapping, field, row[header])
           end
         rescue => e
-          puts "Failed to parse row #{line_number}..."
+          puts "Failed to parse row #{@line_num}..."
           debugger
           raise e
         end
         begin
           # NOTE: see Store::ModelBuilder mixin for the methods called here:
           # (Why? Composition.)
-          if diff == :removed
-            destroy_for_fmt(fmt.model_fks)
+          if @diff == :removed
+            destroy_for_fmt
           else # new or changed
-            build_models(diff, fmt.model_fks)
+            build_models
           end
         rescue => e
           # if row.values.compact.size < (row.values.size / 5)
-          #   fmt.warn("?", line_number)
+          #   log_warning("?")
           # else
-            puts "Failed to save data from row #{line_number}..."
+            puts "Failed to save data from row #{@line_num}..."
             puts e.message
             puts e.backtrace[0..10]
             debugger
@@ -217,7 +222,7 @@ class ResourceHarvester
         end
       end
       unless any_diff
-        fmt.warn("There were no differences in this file!", 0)
+        log_warning("There were no differences in this file!")
       end
     end
   end
@@ -226,6 +231,7 @@ class ResourceHarvester
     propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
     propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
     # TODO: transfer the sex, lifestage, lat, long, locality, and metadata from occurrences to traits...
+    # TODO: associations! Yeesh.
   end
 
   # I AM NOT A FAN OF SQL... but this is *way* more efficient than alternatives:
@@ -253,10 +259,10 @@ class ResourceHarvester
     end
   end
 
-  def build_fields(fmt, headers)
+  def build_fields
     fields = {}
-    fmt.fields.each_with_index do |field, i|
-      fields[headers[i]] = field
+    @format.fields.each_with_index do |field, i|
+      fields[@headers[i]] = field
     end
     fields
   end
@@ -295,23 +301,27 @@ class ResourceHarvester
 
   def each_format(&block)
     @harvest.formats.each do |fmt|
-      fid = fmt.id
+      @format = fmt
+      fid = @format.id
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = if fmt.excel?
-            ExcelParser.new(fmt.file, sheet: fmt.sheet,
-              header_lines: fmt.header_lines,
-              data_begins_on_line: fmt.data_begins_on_line)
-          elsif fmt.csv?
-            CsvParser.new(fmt.file, field_sep: fmt.field_sep,
-              line_sep: fmt.line_sep, header_lines: fmt.header_lines,
-              data_begins_on_line: fmt.data_begins_on_line)
+        @file = @format.file
+        @formats[fid][:parser] = if @format.excel?
+            ExcelParser.new(@file, sheet: @format.sheet,
+              header_lines: @format.header_lines,
+              data_begins_on_line: @format.data_begins_on_line)
+          elsif @format.csv?
+            CsvParser.new(@file, field_sep: @format.field_sep,
+              line_sep: @format.line_sep, header_lines: @format.header_lines,
+              data_begins_on_line: @format.data_begins_on_line)
           else
-            raise "I don't know how to read formats of #{fmt.file_type}!"
+            raise "I don't know how to read formats of #{@format.file_type}!"
           end
         @formats[fid][:headers] = @formats[fid][:parser].headers
       end
-      yield(fmt, @formats[fid][:parser], @formats[fid][:headers])
+      @parser = @formats[fid][:parser]
+      @headers = @formats[fid][:headers]
+      yield
     end
   end
 
@@ -319,13 +329,21 @@ class ResourceHarvester
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
     @harvest.formats.each do |fmt|
-      fid = "#{fmt.id}_diff".to_sym
+      @format = fmt
+      fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = CsvParser.new(fmt.converted_csv_path)
-        @formats[fid][:headers] = fmt.fields.sort_by(&:position).map(&:expected_header)
+        @formats[fid][:parser] = CsvParser.new(@format.converted_csv_path)
+        @formats[fid][:headers] = @format.fields.sort_by(&:position).map(&:expected_header)
       end
-      yield(fmt, @formats[fid][:parser], @formats[fid][:headers])
+      @parser = @formats[fid][:parser]
+      @headers = @formats[fid][:headers]
+      @file = @format.diff
+      yield
     end
+  end
+
+  def log_warning(msg)
+    @format.warn(msg, @line_num)
   end
 end

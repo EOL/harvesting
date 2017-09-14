@@ -111,3 +111,12 @@ en:
       header: "Resources"
     show:
       add_format: "Add a file format definition"
+  terms:
+    auto_created: "automatically added during harvest"
+    flash:
+      created: "Added term <a href='%{path}'>%{name}</a>"
+      edited: "Updated term <a href='%{path}'>%{name}</a>"
+      destroyed: "Destroyed term %{name}. This cannot be undone."
+    headers:
+      index: "All URI Definitions"
+    name_blank: "NAME MISSING!"

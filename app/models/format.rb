@@ -15,7 +15,7 @@ class Format < ActiveRecord::Base
   # NOTE: we no longer support events.
   enum represents: %i[
     agents refs attributions nodes articles images js_maps links media maps sounds videos vernaculars scientific_names
-    occurrences data_measurements
+    occurrences associations measurements
   ]
 
   scope :abstract, -> { where('harvest_id IS NULL') }
@@ -49,7 +49,7 @@ class Format < ActiveRecord::Base
       { ScientificName => :verbatim }
     elsif occurrences?
       { Occurrence => :resource_pk }
-    elsif data_measurements?
+    elsif measurements?
       { Trait => :resource_pk }
     else
       raise "Unimplemented #model_fks for type #{represents}!"

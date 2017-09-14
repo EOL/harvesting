@@ -22,6 +22,7 @@ Rails.application.routes.draw do
     resources :nodes, only: [:index, :show]
     resources :formats, except: [:destroy]
   end
+  resources :terms
 
   # Example resource route with options:
   #   resources :products do
