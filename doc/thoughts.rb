@@ -4,25 +4,27 @@
 repository = RepositoryApi.new
 per_page = 1000
 deltas = {}
-types = [:pages, :nodes, :scientific_names, :media, :etc]
-actions = [:new, :changed, :removed]
+tables = [:pages, :nodes, :scientific_names, :media, :traits, :etc]
+types = [:new, :changed, :removed]
 # TODO: first we need to communicate which resources are available, so we get new resources,
 resources = repository.diffs_since?(RepositorySync.last.created_at)
 sync = RepositorySync.new  # more details later
 resources.each do |resource|
   repository.resource_diffs_since?(resource, RepositorySync.last.created_at).each do |diff|
-    types.each do |type|
-      actions.each do |action|
-        next unless diff[type][action] &&
-                    diff[type][action].to_i > 0
+    tables.each do |table|
+      types.each do |type|
+        next unless diff[table][type] &&
+                    diff[table][type].to_i > 0
         page = 1
         have = 0
-        while have < diff[type][action]
+        while have < diff[table][type]
+          # TODO: this would be a different call, using a URL like
+          # repository.eol.org/resources/1/nodes.json?since=1484321785&type=new&page=1&per=1000
           response = repository.get_diff_deltas(resource_id: resource.id,
-            since: RepositorySync.last.created_at, type: type, action: action,
-            page: page, per_page: per_page)
+            since: RepositorySync.last.created_at, table: table, type: type,
+            page: page, per: per_page)
           # TODO: error-handling
-          deltas[type][action] += response[type]
+          deltas[table][type] += response[table]
           have += response.size
           page += 1
           last if response[:no_more_items]
@@ -30,22 +32,20 @@ resources.each do |resource|
       end
     end
   end
-  types.each do |type|
-    actions.each do |action|
-      # I didn't sketch out these actions. Some of them would be moderately
-      # complex, since they need to denormalize things, and the :media type
-      # would be broken up into subtypes, etc...
-      call(:"bulk_#{action}", deltas[type][action])
+  tables.each do |table|
+    types.each do |type|
+      # I didn't sketch out these types. Some of them would be moderately
+      # complex, since they need to denormalize things, and the :media table
+      # would be broken up into subtables, etc...
+      call(:"bulk_#{type}", deltas[table][type])
     end
   end
 end
 
 # This implies a response structure to "diffs_since" a bit like this:
 {
-  pages: {
-    new: 10,
-    changed: 2,
-    removed: 0 },
+  # NOTE: no pages. Just send nodes; the client will resolve the page_ids itself. This includes removed nodes; the
+  # client will look up the nodes and remove them; if the associated page is then empty, it will remove the page.
   nodes: {
     new: 27,
     changed: 0,
@@ -61,9 +61,9 @@ end
   etc: "etc"
 }
 
-# And then a response structure to get_diff_deltas something like this, assuming
-# the params were resource_id: 1, since: "2017-01-13 10:36:25", type: "nodes",
-# action: "new" page: 1, per_page: 1000
+# And then a response structure to get_diff_deltas something like this, assuming the params were resource_id: 1, since:
+# "2017-01-13 10:36:25", table: "nodes", type: "new" page: 1, per: 1000 e.g.:
+# repository.eol.org/resources/1/nodes.json?since=1484321785&type=new&page=1&per=1000
 {
   nodes: [
     { "repository_id"=>603,
@@ -78,14 +78,14 @@ end
   ],
   no_more_items: "true"
 }
-# And for action: "removed"
+# And for type: "removed"
 {
   nodes: [
     { "resource_pk"=>"9786302" }
   ],
   no_more_items: "true"
 }
-# And for action "changed" ... note that this allows the SITE to do
+# And for type "changed" ... note that this allows the SITE to do
 # reconciliation with curations (which occurred on that site)
 {
   nodes: [
@@ -154,12 +154,12 @@ root_nodes = "all of the nodes from the resource; stored as a nested "\
   # TODO: we might want to add an initial check to see if there are lots of
   # ancestors / children, since in those cases, they might provide a better
   # match.
-  { attribute: :scientific_name, index: :scientific_name, type: :eq },
-  { attribute: :scientific_name, index: :synonyms, type: :in },
-  { attribute: :scientific_name, index: :other_synonyms, type: :in },
-  { attribute: :canonical_name, index: :canonical_name, type: :eq },
-  { attribute: :canonical_name, index: :canonical_synonyms, type: :in },
-  { attribute: :canonical_name, index: :other_canonical_synonyms, type: :in }
+  { attribute: :scientific_name, index: :scientific_name, table: :eq },
+  { attribute: :scientific_name, index: :synonyms, table: :in },
+  { attribute: :scientific_name, index: :other_synonyms, table: :in },
+  { attribute: :canonical_name, index: :canonical_name, table: :eq },
+  { attribute: :canonical_name, index: :canonical_synonyms, table: :in },
+  { attribute: :canonical_name, index: :other_canonical_synonyms, table: :in }
 ]
 
 # We want the search to be as fast as possible
@@ -364,7 +364,7 @@ def build_search_query(node, ancestor, opts)
   strategy = @strategies[opts[:strategy]]
   q = strategy[:index].to_s
   # TODO: in Solr I think this really just becomes ":" in BOTH cases...
-  q += strategy[:type] == :in ? " INCLUDES " : " = "
+  q += strategy[:table] == :in ? " INCLUDES " : " = "
   q += "'#{node.send(strategy[:attribute])}'" # TODO: proper quoting, of course.
   # NOTE: we do NOT check ancestry for scientific names! We assume these will
   # match across all of life, with few exceptions.

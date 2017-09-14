@@ -1,45 +1,45 @@
 %h1= @node.name_verbatim
 %ul
   %li
-    %strong= t(:node_resource_field)
+    %strong= t("nodes.fields.resource")
     = link_to(@node.resource.name, @node.resource)
   %li
-    %strong= t(:node_resource_pk_field)
+    %strong= t("nodes.fields.resource_pk")
     = @node.resource_pk
   %li
-    %strong= t(:node_created_field)
+    %strong= t("nodes.fields.created")
     = l(@node.created_at, format: :short)
     = t(:node_created_by_harvest,
       date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
   %li
     - if @node.parent
-      %strong= t(:node_parent_field)
+      %strong= t("nodes.fields.parent")
       = link_to(@node.parent.name_verbatim, @node.parent)
     - else
       %strong= t(:node_root_node_notice)
   %li
-    %strong= t(:node_name_field)
+    %strong= t("nodes.fields.name")
     %ul
       %li
-        %strong= t(:node_name_verbatim_field)
+        %strong= t("nodes.fields.name_verbatim")
         = @node.name_verbatim
       - if @node.scientific_name
         %li
-          %strong= t(:node_name_scientific_field)
+          %strong= t("nodes.fields.name_scientific")
           TODO
           -# = @node.scientific_name.normalized_name.string
         %li
-          %strong= t(:node_name_canonical_field)
+          %strong= t("nodes.fields.name_canonical")
           TODO
           -# = @node.scientific_name.normalized_name.canonical
         %li
-          %strong= t(:node_name_parse_quality_field)
+          %strong= t("nodes.fields.name_parse_quality")
           = @node.scientific_name.parse_quality
         %li
-          %strong= t(:node_name_taxonomic_status_verbatim_field)
+          %strong= t("nodes.fields.name_taxonomic_status_verbatim")
           = @node.scientific_name.taxonomic_status_verbatim
         %li
-          %strong= t(:node_name_taxonomic_status_field)
+          %strong= t("nodes.fields.name_taxonomic_status")
           = @node.scientific_name.taxonomic_status
       - else
         %li
@@ -49,7 +49,7 @@
           %strong= t(:node_vernaculars_empty_notice)
       - else
         %li
-          = t(:node_vernaculars_field)
+          = t("nodes.fields.vernaculars")
           %ul
             - @node.vernaculars.published.each do |vern|
               %li
@@ -57,22 +57,20 @@
                 = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
       %li TODO: ...blah blah blah, lots more fields here, later.
     %li
-      %strong= t(:node_name_rank_verbatim_field)
+      %strong= t("nodes.fields.name_rank_verbatim")
       = @node.rank_verbatim
 
-
-
-%h2= t(:node_children_header)
+%h2= t("nodes.headers.children")
 - if @node.children.published.empty?
-  = t(:node_children_empty)
+  = t("nodes.empty_fields.children")
 - else
   %ul
     - @node.children.order(:name_verbatim).published.each do |child|
       %li= link_to(child.name_verbatim, child)
 
-%h2= t(:node_media_header)
+%h2= t("nodes.headers.media")
 - if @node.media.published.empty?
-  = t(:node_media_empty)
+  = t("nodes.empty_fields.media")
 - else
   %ul
     - @node.media.published.each do |medium|
@@ -80,4 +78,27 @@
         = link_to(medium.name_verbatim || truncate(medium.description_verbatim, 20), medium)
         = "(#{medium.format})"
 
-%h2 TODO: articles, traits, etc...
+%h2= t("nodes.headers.traits")
+- if @node.traits.published.empty?
+  = t("nodes.empty_fields.traits")
+- else
+  .ui.list
+    - @node.traits.published.each do |trait|
+      .item
+        = trait.predicate_term.name
+        = "(#{trait.predicate_term.uri})"
+        &rarr;
+        - if trait.object_node
+          = link_to(trait.name_verbatim, trait.object_node)
+        - elsif trait.object_term
+          = trait.object_term.name
+          = "(#{trait.object_term.uri})"
+        - elsif trait.units_term
+          = trait.measurement
+          = trait.units_term.name
+          = "(#{trait.units_term.uri})"
+        - else
+          = trait.literal
+          (literal value)
+
+%h2 TODO: articles, etc...

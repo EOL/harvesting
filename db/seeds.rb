@@ -328,6 +328,7 @@ simple_resource = Resource.quick_define(
 
 traity = Resource.quick_define(
   name: 'Mineralogy',
+  abbr: 'Mineralogy',
   type: :csv,
   field_sep: "\t",
   base_dir: Rails.root.join('spec', 'files', 'mineralogy'),
