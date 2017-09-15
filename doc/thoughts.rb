@@ -63,7 +63,7 @@ end
 
 # And then a response structure to get_diff_deltas something like this, assuming the params were resource_id: 1, since:
 # "2017-01-13 10:36:25", table: "nodes", type: "new" page: 1, per: 1000 e.g.:
-# repository.eol.org/resources/1/nodes.json?since=1484321785&type=new&page=1&per=1000
+# repository.eol.org/resources/1/nodes.json?since=1484321785&type=new      optionally: &page=1&per=1000
 {
   nodes: [
     { "repository_id"=>603,

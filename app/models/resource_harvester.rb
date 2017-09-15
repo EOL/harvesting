@@ -45,8 +45,8 @@ class ResourceHarvester
     store
     resolve_keys
     # TODO (LOW-PRIO) queue_downloads
-    # TODO parse_names
-    # TODO match_nodes
+    parse_names
+    match_nodes
     # TODO build_ancestry
     # TODO normalize_units
     # TODO (LOW-PRIO) link
@@ -277,6 +277,8 @@ class ResourceHarvester
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
+    # TODO - for now we're faking it entirely with no matching:
+    @harvest.nodes.update_all("page_id = id")
   end
 
   # store ancestry for objects (so we know which pages are affected)
