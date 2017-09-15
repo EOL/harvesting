@@ -331,6 +331,7 @@ traity = Resource.quick_define(
   abbr: 'Mineralogy',
   type: :csv,
   field_sep: "\t",
+  pk_url: 'http://some.cool.url/with/a/path/to_$PK.html',
   base_dir: Rails.root.join('spec', 'files', 'mineralogy'),
   formats: {
     nodes: { loc: 'taxon.tsv', fields: [
@@ -433,7 +434,7 @@ end
 
 if false
   resource = Resource.where(name: 'Mineralogy').first
-  Harvest.where(resource_id: resource.id).destroy_all
+  # Harvest.where(resource_id: resource.id).destroy_all
   # reload!
   harvester = ResourceHarvester.new(resource)
   harvester.harvest

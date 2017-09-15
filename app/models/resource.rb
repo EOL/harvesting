@@ -15,6 +15,7 @@ class Resource < ActiveRecord::Base
       abbr = options[:name].gsub(/[^A-Z]/, "")
       abbr ||= options[:name][0..3].upcase
       r.name = options[:name]
+      r.pk_url = options[:pk_url] || "$PK"
       r.abbr = abbr
     end
     pos = 1

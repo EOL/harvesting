@@ -1,5 +1,3 @@
-require "open3"
-
 # NOTE: you probably want to look at the .store method.
 class ResourceHarvester
   attr_accessor :resource, :harvest, :format, :line_num, :diff, :file, :parser, :headers
@@ -46,6 +44,7 @@ class ResourceHarvester
     resolve_keys
     # TODO (LOW-PRIO) queue_downloads
     parse_names
+    normalize_names
     match_nodes
     # TODO build_ancestry
     # TODO normalize_units
@@ -271,7 +270,14 @@ class ResourceHarvester
   end
 
   def parse_names
-    NameParser.for_resrouce(@resource)
+    NameParser.for_resource(@resource)
+  end
+
+  def normalize_names
+    @harvest.scientific_names.find_each do |name|
+      normal = NormalizedName.first_or_create(string: name.normalized, canonical: name.canonical)
+      name.update_attribute(:normalized_name_id, normal.id)
+    end
   end
 
   # match node names against the DWH, store "hints", report on unmatched

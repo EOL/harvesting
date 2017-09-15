@@ -270,7 +270,6 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.integer  "resource_id",               limit: 4,               null: false
     t.integer  "harvest_id",                limit: 4,               null: false
     t.integer  "page_id",                   limit: 4
-    t.integer  "site_pk",                   limit: 4
     t.integer  "parent_id",                 limit: 4,   default: 0, null: false
     t.integer  "scientific_name_id",        limit: 4,               null: false
     t.string   "name_verbatim",             limit: 255,             null: false
@@ -355,7 +354,6 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.integer  "min_days_between_harvests", limit: 4,   default: 0,     null: false
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "nodes_count",               limit: 4
-    t.string   "site_pk",                   limit: 255
     t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
     t.string   "name",                      limit: 255,                 null: false
     t.string   "abbr",                      limit: 255,                 null: false
@@ -391,6 +389,10 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.string  "warnings",                  limit: 255
     t.string  "genus",                     limit: 255
     t.string  "specific_epithet",          limit: 255
+    t.string  "infraspecific_epithet",     limit: 255
+    t.string  "normalized",                limit: 255
+    t.string  "canonical",                 limit: 255
+    t.string  "uninomial",                 limit: 255
     t.string  "authorship",                limit: 255
     t.text    "remarks",                   limit: 65535
     t.integer "year",                      limit: 4

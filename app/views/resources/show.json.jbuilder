@@ -1,4 +1,3 @@
-json.site_pk @resource.site_pk
 json.name @resource.name
 json.abbr @resource.abbr
 json.pk_url @resource.pk_url

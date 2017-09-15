@@ -3,6 +3,7 @@ class Harvest < ActiveRecord::Base
   has_many :formats, inverse_of: :harvest, dependent: :destroy
   has_many :hlogs, inverse_of: :harvest, dependent: :destroy
   has_many :nodes, inverse_of: :harvest, dependent: :destroy
+  has_many :scientific_names, through: :nodes
   has_many :occurrences, inverse_of: :harvest, dependent: :destroy
   has_many :traits, inverse_of: :harvest, dependent: :destroy
   has_many :meta_traits, inverse_of: :harvest, dependent: :destroy

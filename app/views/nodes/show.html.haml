@@ -26,12 +26,10 @@
       - if @node.scientific_name
         %li
           %strong= t("nodes.fields.name_scientific")
-          TODO
-          -# = @node.scientific_name.normalized_name.string
+          = @node.scientific_name.normalized_name.string
         %li
           %strong= t("nodes.fields.name_canonical")
-          TODO
-          -# = @node.scientific_name.normalized_name.canonical
+          = @node.scientific_name.normalized_name.canonical
         %li
           %strong= t("nodes.fields.name_parse_quality")
           = @node.scientific_name.parse_quality

@@ -175,8 +175,8 @@ module Store
           log_warning("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
         else
           # This is a "normal" trait.
-          # TODO: object_node = find_node(@models[:trait])
-          # TODO: @models[:trait][:object_node_id] = object_node.id if object_node
+          debugger
+          # TODO: associations
           predicate = @models[:trait].delete(:predicate)
           # TODO: error handling for predicate ... cannot be blank.
           predicate_term = find_or_create_term(predicate)
@@ -291,7 +291,7 @@ module Store
         # Quick and dirty. A Human will have to do better later:
         name = uri.gsub(%r{^.*/}, '').gsub(/[^A-Za-z0-9]+/, ' ')
         term = Term.create(
-          uri: uri, name: name, definition: t("terms.auto_created"),
+          uri: uri, name: name, definition: I18n.t("terms.auto_created"),
           comment: "Auto-added during harvest ##{@harvest.id}. "\
             'A human needs to edit this.',
           attribution: @resource.name, is_hidden_from_overview: true,

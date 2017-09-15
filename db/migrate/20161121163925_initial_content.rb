@@ -5,7 +5,6 @@ class InitialContent < ActiveRecord::Migration
       t.integer :resource_id, null: false, index: true
       t.integer :harvest_id, null: false, index: true
       t.integer :page_id, comment: 'null means unassigned, of course'
-      t.integer :site_pk
       t.integer :parent_id, null: false, default: 0, index: true
       t.integer :scientific_name_id, null: false
 
@@ -35,10 +34,10 @@ class InitialContent < ActiveRecord::Migration
       # not work for all):
       # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
       t.integer :taxonomic_status,
-        comment: 'Enum: preferred, provisionally_accepted, acronym, synonym, unusable'
+                comment: 'Enum: preferred, provisionally_accepted, acronym, synonym, unusable'
 
       t.string :verbatim, null: false, index: true,
-        comment: 'indexed because this is effectively the "resource_pk"'
+                          comment: 'indexed because this is effectively the "resource_pk"'
       t.string :taxonomic_status_verbatim
       t.string :publication
       t.string :source_reference
@@ -46,6 +45,10 @@ class InitialContent < ActiveRecord::Migration
       t.string :warnings
       t.string :genus
       t.string :specific_epithet
+      t.string :infraspecific_epithet
+      t.string :normalized
+      t.string :canonical
+      t.string :uninomial
       t.string :authorship
 
       t.text :remarks

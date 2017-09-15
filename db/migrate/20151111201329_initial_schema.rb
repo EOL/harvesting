@@ -29,7 +29,6 @@ class InitialSchema < ActiveRecord::Migration
       # If harvest_day_of_month is null, use min_days_between_harvests
       t.integer :harvest_day_of_month
       t.integer :nodes_count
-      t.string :site_pk
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
