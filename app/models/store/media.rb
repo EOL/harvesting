@@ -26,7 +26,7 @@ module Store
       else
         debugger
         field.format.warn("Could not find a media subtype of \"#{val.downcase}\"",
-          @line_number)
+          @line_num)
         :image
       end
       @models[:medium][:subclass] = Medium.subclasses[type]

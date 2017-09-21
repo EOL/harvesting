@@ -135,6 +135,6 @@
   %h3= t(:resource_nodes_root_head_count, count: @resource.nodes.root.count)
   %ul
   - @root_nodes.each do |root_node|
-    .item= link_to(root_node.name_verbatim, root_node)
+    .item= link_to(root_node.canonical, root_node)
   - if @root_nodes.total_count > @root_nodes.size
     = link_to(t(:link_simple_see_all), resource_nodes_path(@resource))

@@ -57,7 +57,7 @@ RSpec.describe ResourceHarvester do
   describe "#create_harvest_instance" do
     before { harvester.create_harvest_instance }
 
-    it { expect(harvester.harvest).not_to be_nil }
+    it { expect(harvester.start).not_to be_nil }
   end
 
   context "with a valid format" do

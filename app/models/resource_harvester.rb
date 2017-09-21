@@ -20,28 +20,42 @@ class ResourceHarvester
     @converted = {}
     # Placeholders to mark where we "currently are":
     @diff = nil
-    @line_num = nil
-    @format = nil
-    @file = nil
+    @line_num = 0
+    @format = 'none'
+    @file = '/dev/null'
     @parser = nil
-    @headers = nil
+    @headers = []
   end
 
-  def harvest
+  def resume
+    @harvest = @resource.harvests.last
+    @previous_harvest = @resource.harvests.completed[-2] if @harvest == @previous_harvest
+  end
+
+  def inspect
+    "<Harvester @resource=#{@resource.id}"\
+      " @harvest=#{@harvest.try(:id) || 'nil'}"\
+      " @uris.count=#{@uris.keys.count}"\
+      " READING: +#{@line_num} #{@file} (#{@format.try(:represents) || 'no format'}) @headers=#{@headers.join(',')}"\
+      '>'
+  end
+
+  def start
     create_harvest_instance
     fetch
     # TODO: CLEARLY the mkdirs do not belong here. I wasn't sure where would be
     # best. TODO: really this (and the one in format.rb) should be configurable
-    Dir.mkdir(Rails.public_path.join("converted_csv")) unless
-      Dir.exist?(Rails.public_path.join("converted_csv"))
+    Dir.mkdir(Rails.public_path.join('converted_csv')) unless
+      Dir.exist?(Rails.public_path.join('converted_csv'))
     validate # TODO: this should include a call to check_consistency
     convert
     # TODO: really this (and the one in format.rb) should be configurable
-    Dir.mkdir(Rails.public_path.join("diff")) unless
-      Dir.exist?(Rails.public_path.join("converted_csv"))
+    Dir.mkdir(Rails.public_path.join('diff')) unless
+      Dir.exist?(Rails.public_path.join('converted_csv'))
     delta
     store
     resolve_keys
+    resolve_missing_parents
     # TODO (LOW-PRIO) queue_downloads
     parse_names
     normalize_names
@@ -178,9 +192,7 @@ class ResourceHarvester
     # Recall these are in a specific order (and need to be). The assumption here is that files which refer to nodes are
     # read AFTER the nodes file, etc.
     gather_nodes
-    @ancestors = {}
-    @occurrences = {}
-    @terms = {}
+    clear_storage_vars
     each_diff do
       fields = build_fields
       any_diff = @parser.diff_as_hashes(@headers) do |row|
@@ -224,13 +236,62 @@ class ResourceHarvester
         log_warning("There were no differences in this file!")
       end
     end
+    store_new
+    mark_old
+    clear_storage_vars
+  end
+
+  def clear_storage_vars
+    @ancestors = {}
+    @occurrences = {}
+    @terms = {}
+    @models = {}
+    @nodes = {}
+    @new = {}
+    @old = {}
+  end
+
+  # TODO - extract to Store::Storage
+  def store_new
+    @new.each do |klass, models|
+      begin
+        klass.import! models
+      rescue => e
+        debugger
+        puts "ruh-roh"
+      end
+    end
+  end
+
+  # TODO - extract to Store::Storage
+  def mark_old
+    @old.each do |klass, by_keys|
+      by_keys.each do |key, pks|
+        pks.in_groups_of(1000, false) do |group|
+          begin
+            klass.send(:where, { key => group, :resource_id => @resource.id }).
+              update_all(removed_by_harvest_id: @harvest.id)
+          rescue => e
+            debugger
+            puts "oh dear!"
+          end
+        end
+      end
+    end
   end
 
   def resolve_keys
     propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
     propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
+    propagate_id(ScientificName, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk", set: "scientific_name_id", with: "id")
+
     # TODO: transfer the sex, lifestage, lat, long, locality, and metadata from occurrences to traits...
     # TODO: associations! Yeesh.
+  end
+
+  def resolve_missing_parents
+    propagate_id(Nodes, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
   end
 
   # I AM NOT A FAN OF SQL... but this is *way* more efficient than alternatives:
@@ -252,7 +313,6 @@ class ResourceHarvester
   # NOTE: yes, this could be *quite* large, but I believe memory is fine with a
   # hash of two million (smallish) members, so I'm doing it.
   def gather_nodes
-    @nodes = {}
     @resource.nodes.published.find_each do |node|
       @nodes[node.resource_pk] = node
     end
@@ -270,14 +330,16 @@ class ResourceHarvester
   end
 
   def parse_names
-    NameParser.for_resource(@resource)
+    NameParser.for_harvest(@harvest)
   end
 
+  # You can do this with a join YOU WERE HERE
   def normalize_names
     @harvest.scientific_names.find_each do |name|
-      normal = NormalizedName.first_or_create(string: name.normalized, canonical: name.canonical)
+      normal = NormalizedName.where(string: name.normalized, canonical: name.canonical).first_or_create
       name.update_attribute(:normalized_name_id, normal.id)
     end
+    propagate_id(Node, fk: 'scientific_name_id', other: 'scientific_names.id', set: 'canonical', with: 'canonical')
   end
 
   # match node names against the DWH, store "hints", report on unmatched

@@ -7,7 +7,7 @@ class ResourcesController < ApplicationController
   def show
     @resource = Resource.find(params[:id])
     @formats = Format.where(resource_id: @resource.id).abstract
-    @root_nodes = @resource.nodes.published.root.order(:name_verbatim).page(1).per(10)
+    @root_nodes = @resource.nodes.published.root.page(1).per(10)
     respond_to do |fmt|
       fmt.html { }
       fmt.json { }

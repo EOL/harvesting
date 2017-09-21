@@ -267,25 +267,25 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   add_index "meta_traits", ["resource_id"], name: "index_meta_traits_on_resource_id", using: :btree
 
   create_table "nodes", force: :cascade do |t|
-    t.integer  "resource_id",               limit: 4,               null: false
-    t.integer  "harvest_id",                limit: 4,               null: false
+    t.integer  "resource_id",               limit: 4,                 null: false
+    t.integer  "harvest_id",                limit: 4,                 null: false
     t.integer  "page_id",                   limit: 4
-    t.integer  "parent_id",                 limit: 4,   default: 0, null: false
-    t.integer  "scientific_name_id",        limit: 4,               null: false
-    t.string   "name_verbatim",             limit: 255,             null: false
+    t.integer  "parent_id",                 limit: 4,     default: 0, null: false
+    t.integer  "scientific_name_id",        limit: 4,                 null: false
+    t.string   "canonical",                 limit: 255
     t.string   "taxonomic_status_verbatim", limit: 255
     t.string   "resource_pk",               limit: 255
     t.string   "further_information_url",   limit: 255
     t.string   "rank",                      limit: 255
     t.string   "rank_verbatim",             limit: 255
-    t.string   "remarks",                   limit: 255
+    t.text     "remarks",                   limit: 65535
     t.integer  "removed_by_harvest_id",     limit: 4
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
+  add_index "nodes", ["canonical"], name: "index_nodes_on_canonical", using: :btree
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
-  add_index "nodes", ["name_verbatim"], name: "index_nodes_on_name_verbatim", using: :btree
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
   add_index "nodes", ["resource_id", "resource_pk"], name: "by_resource_and_pk", using: :btree
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
@@ -382,18 +382,20 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.integer "normalized_name_id",        limit: 4
     t.integer "parse_quality",             limit: 4
     t.integer "taxonomic_status",          limit: 4
-    t.string  "verbatim",                  limit: 255,                  null: false
+    t.string  "node_resource_pk",          limit: 255
     t.string  "taxonomic_status_verbatim", limit: 255
-    t.string  "publication",               limit: 255
     t.string  "source_reference",          limit: 255
     t.string  "warnings",                  limit: 255
     t.string  "genus",                     limit: 255
     t.string  "specific_epithet",          limit: 255
     t.string  "infraspecific_epithet",     limit: 255
+    t.string  "infrageneric_epithet",      limit: 255
     t.string  "normalized",                limit: 255
     t.string  "canonical",                 limit: 255
     t.string  "uninomial",                 limit: 255
-    t.string  "authorship",                limit: 255
+    t.text    "verbatim",                  limit: 65535,                null: false
+    t.text    "authorship",                limit: 65535
+    t.text    "publication",               limit: 65535
     t.text    "remarks",                   limit: 65535
     t.integer "year",                      limit: 4
     t.boolean "is_preferred"
@@ -406,9 +408,10 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   end
 
   add_index "scientific_names", ["harvest_id"], name: "index_scientific_names_on_harvest_id", using: :btree
+  add_index "scientific_names", ["node_id"], name: "index_scientific_names_on_node_id", using: :btree
+  add_index "scientific_names", ["node_resource_pk"], name: "index_scientific_names_on_node_resource_pk", using: :btree
+  add_index "scientific_names", ["normalized"], name: "index_scientific_names_on_normalized", using: :btree
   add_index "scientific_names", ["normalized_name_id"], name: "index_scientific_names_on_normalized_name_id", using: :btree
-  add_index "scientific_names", ["resource_id", "verbatim"], name: "index_scientific_names_on_resource_id_and_verbatim", using: :btree
-  add_index "scientific_names", ["verbatim"], name: "index_scientific_names_on_verbatim", using: :btree
 
   create_table "section", force: :cascade do |t|
     t.string "name", limit: 255

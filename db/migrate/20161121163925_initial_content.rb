@@ -8,16 +8,17 @@ class InitialContent < ActiveRecord::Migration
       t.integer :parent_id, null: false, default: 0, index: true
       t.integer :scientific_name_id, null: false
 
-      t.string :name_verbatim, null: false, index: true,
-        comment: 'indexed to facilitate sorting'
+      t.string :canonical, index: true, comment: 'indexed to facilitate sorting'
       t.string :taxonomic_status_verbatim
       t.string :resource_pk, index: true
+      t.string :parent_resource_pk, comment: 'to be resolved as needed'
       t.string :further_information_url
       # rank is a _normalized_ rank string... really an enumeration, but not
       # stored that way. TODO: why not? We should.
       t.string :rank
       t.string :rank_verbatim
-      t.string :remarks
+
+      t.text :remarks
 
       t.integer :removed_by_harvest_id
       t.timestamps
@@ -27,7 +28,7 @@ class InitialContent < ActiveRecord::Migration
     create_table :scientific_names do |t|
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true
-      t.integer :node_id, comment: 'SHOULD be required, but that\'s a catch-22.'
+      t.integer :node_id, index: true, comment: "will be populated from node_resource_pk; shouldn't be nil after that."
       t.integer :normalized_name_id, index: true
       t.integer :parse_quality
       # This list was captured from the document Katja produced (this link may
@@ -36,21 +37,22 @@ class InitialContent < ActiveRecord::Migration
       t.integer :taxonomic_status,
                 comment: 'Enum: preferred, provisionally_accepted, acronym, synonym, unusable'
 
-      t.string :verbatim, null: false, index: true,
-                          comment: 'indexed because this is effectively the "resource_pk"'
+      t.string :node_resource_pk, index: true, comment: "once the node_id is populated, you shouldn't need this."
       t.string :taxonomic_status_verbatim
-      t.string :publication
       t.string :source_reference
       # The following are strings from GNA:
       t.string :warnings
       t.string :genus
       t.string :specific_epithet
       t.string :infraspecific_epithet
-      t.string :normalized
+      t.string :infrageneric_epithet
+      t.string :normalized, index: true, comment: "indexed to improve names-matching, but nill until GNA runs!"
       t.string :canonical
       t.string :uninomial
-      t.string :authorship
 
+      t.text :verbatim, null: false
+      t.text :authorship
+      t.text :publication
       t.text :remarks
 
       # The year is from GNA:
@@ -65,7 +67,6 @@ class InitialContent < ActiveRecord::Migration
       t.boolean :virus
       t.integer :removed_by_harvest_id
     end
-    add_index :scientific_names, [:resource_id, :verbatim]
 
     create_table :vernaculars do |t|
       t.integer :resource_id, null: false

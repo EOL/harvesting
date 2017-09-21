@@ -2,48 +2,60 @@ require 'open3'
 
 # Parses names using the GNA system, via open3 system call.
 class NameParser
-  def self.for_resource(resource)
-    parser = NameParser.new(resource)
+  def self.for_harvest(harvest)
+    parser = NameParser.new(harvest)
     parser.parse
   end
 
-  def initialize(resource)
-    @resource = resource
+  def initialize(harvest)
+    @harvest = harvest
+    @resource = harvest.resource
     @verbatims = []
+    @names_file = Rails.root.join('tmp', "names_from_harvest_#{@harvest.id}.txt")
   end
 
   def parse
-    # NOTE: we may change the way we do this, from using a file of names to
-    # calling a service, but for now, this will work fine and should be pretty
-    # scalable. THAT said, TODO is that we don't want all of the names from the
-    # resource, we only want the "new" ones (that is, new or modified). Perhaps
-    # we can achieve that with a timestamp. but for now, I'm ignoring it, since
-    # we don't have delta-detection, yet.
-    names = ScientificName.where(resource_id: @resource.id)
-    filename = write_names_to_file(names)
-    json = parse_names_in_file(filename)
-    JSON.parse(json).each do |result|
-      # NOTE: interestingly, this skips running a SQL update if nothing changed,
-      # and, when only some fields change, it only updates those fields (not the
-      # ones that stay the same). Thanks, Rails. ...That said, it's damn slow:
-      names.find { |n| n.verbatim == result["verbatim"] }.
-        update_attributes(parse_result(result))
+    loop_over_names_in_batches do |names|
+      @names = {}
+      write_names_to_file(names)
+      learn_names(names)
+      JSON.parse(parse_names_in_file).each_with_index do |result, i|
+        # NOTE: interestingly, this skips running a SQL update if nothing changed, and, when only some fields change, it
+        # only updates those fields (not the ones that stay the same). Thanks, Rails. ...That said, it's damn slow.
+        # ...And aside from re-inserting them with an "on existing update" thingie, I'm not sure how to speed this up.
+        # Sigh.
+        debugger unless @names.key?(result['verbatim'])
+        begin
+          @names[result['verbatim']].update_attributes(parse_result(result))
+        rescue => e
+          puts "error reading line #{i}"
+          debugger
+          puts 'shoot.'
+        end
+      end
     end
-    json
+  end
+
+  def loop_over_names_in_batches
+    ScientificName.where(harvest_id: @harvest.id).select('id, verbatim').find_in_batches(batch_size: 10_000) do |names|
+      yield(names)
+    end
   end
 
   def write_names_to_file(names)
-    @verbatims = names.pluck(:verbatim).join("\n")
-    filename = Rails.root.join("tmp", "names-#{@resource.id}.txt")
-    File.unlink(filename) if File.exist?(filename)
-    File.open(filename, "w") { |file| file.write(@verbatims) }
-    filename
+    @verbatims = names.map(&:verbatim).join("\n") + "\n"
+    File.unlink(@names_file) if File.exist?(@names_file)
+    File.open(@names_file, 'a') { |file| file.write(@verbatims) }
   end
 
-  def parse_names_in_file(filename)
-    outfile = Rails.root.join("tmp", "names-parsed-#{@resource.id}.json")
+  def learn_names(names)
+    names.each { |name| @names[name.verbatim] = name }
+  end
+
+  def parse_names_in_file
+    outfile = Rails.root.join('tmp', "names-parsed-#{@resource.id}.json")
     File.unlink(outfile) if File.exist?(outfile)
-    stdin, stdout, stderr, wait_thread = Open3.popen3("gnparse file --input #{filename} "\
+    stdin, stdout, stderr, wait_thread = Open3.popen3("gnparse file --input #{@names_file} "\
       "--output #{outfile}")
     stdin.close
     stdout.close
@@ -55,67 +67,91 @@ class NameParser
     json = "[" + File.read(outfile).gsub("\n", ",").chop + "]"
   end
 
-  # Examples of the types of results you will get may be found here:
-  # https://github.com/GlobalNamesArchitecture/gnparser/blob/master/parser/src/test/resources/test_data.txt
+  # Examples of the types of results you will get may be found by doing:
+  # js = JSON.parse(File.read(Rails.root + "doc/names_parser_test_data.json"))
+
   def parse_result(result)
     genus = nil
     spec = nil
-    infra = nil
-    authors = []
+    infra_sp = nil
+    infra_g = nil
+    authorships = []
     uni = nil
-    if result.has_key?("details")
-      result["details"].each do |hash|
+    attributes = {}
+    warns = nil
+    quality = 0
+    norm = nil
+    if result.key?('details')
+      result['details'].each do |hash|
         hash.each do |k, v|
-          case k
-          when 'genus'
-            genus = v['value']
-          when 'specific_epithet'
-            spec = v['value']
-            spec = v['value']
-            if v.has_key?('authorship')
-              authors << v['authorship']['value']
+          next if k == 'annotation_identification'
+          next if k == 'ignored'
+          if k == 'infraspecific_epithets'
+            attributes['infraspecific_epithet'] = v.map { |i| i['value'] }.join(' ; ')
+            v.each do |i|
+              debugger unless i.is_a?(Hash)
+              add_authorship(authorships, i)
             end
-          when 'infraspecific_epithets'
-            infra = v['value']
-            if v.has_key?('authorship')
-              authors << v['authorship']['value']
-            end
-          when 'uninomial'
-            if v.has_key?('value')
-              uni = v['value']
-            end
-            if v.has_key?('authorship')
-              authors << v['authorship']['value']
-            end
+          else
+            debugger unless v.is_a?(Hash)
+            attributes[k] = v['value']
+            add_authorship(authorships, v)
           end
         end
       end
     end
-    if result.has_key?('canonical_name')
+    if result.key?('canonical_name')
       canonical = result['canonical_name']
-      if canonical.is_a?(String)
-        canon = canonical
-      elsif canonical.is_a?(Hash)
-        canon = if canonical.has_key?('value')
-          canonical['value']
-        elsif canonical.has_key?('extended')
-          canonical['extended']
+      canon =
+        if canonical.is_a?(String)
+          canonical
+        elsif canonical.is_a?(Hash)
+          if canonical.key?('value')
+            canonical['value']
+          elsif canonical.key?('extended')
+            canonical['extended']
+          end
         end
-      end
     end
-    warns = result.has_key?('quality_warnings') ? result['quality_warnings'].map { |a| a[1] }.join("; ") : nil
-    quality = result['quality'] ? result['quality'].to_i : 0
-    norm = result['normalized'] ? result['normalized'] : nil
-    return {
-      uninomial: uni,
+    if result['parsed']
+      warns = result.key?('quality_warnings') ? result['quality_warnings'].map { |a| a[1] }.join('; ') : nil
+      quality = result['quality'] ? result['quality'].to_i : 0
+      norm = result['normalized'] ? result['normalized'] : nil
+    else
+      warns = "UNPARSED"
+      quality = 0
+      canon = result['verbatim']
+    end
+    norm = result['verbatim'] if norm.blank?
+    if norm.size > 250
+      norm = canon
+      authorships.each do |authorship|
+        norm += " #{authorship[:first]}, et. al"
+        norm += " #{authorship[:year]}" if authorship[:year]
+      end
+      norm = norm[0..249] if norm.size > 250 # Forced to simply truncate it if we couldn't parse it.
+    end
+
+    return attributes.merge(
       normalized: norm,
       canonical: canon,
-      genus: genus,
-      specific_epithet: spec,
-      infraspecific_epithet: infra,
-      authorship: authors.join(" ; "),
+      authorship: authorships.join(' ; '),
       warnings: warns,
-      parse_quality: quality
-    }
+      parse_quality: quality,
+      year: authorships.map { |a| a[:year] }.compact.sort.first # Yeeesh! We take the earliest year (we only get one!)
+    )
+  end
+
+  def add_authorship(authorships, hash)
+    hash ||= {}
+    if hash.key?('authorship')
+      value = hash['authorship']['value']
+      if hash['authorship'].key?('basionym_authorship')
+        first = hash['authorship']['basionym_authorship']['authors'].first # We only need one for et. al
+        year = hash['authorship']['basionym_authorship']['year']['value'] if
+          hash['authorship']['basionym_authorship'].key?('year')
+      end
+    end
+    authorships << { value: value, first_author: first, year: year }
   end
 end

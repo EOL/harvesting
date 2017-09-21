@@ -23,8 +23,8 @@ module Store
     def build_scientific_name
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
-      sci_name = create_or_update(ScientificName, @models[:scientific_name])
-      @models[:node][:scientific_name_id] = sci_name.id if @models[:node]
+      @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
+      create_or_update(ScientificName, @models[:scientific_name])
     end
 
     def build_parent_node
@@ -42,8 +42,11 @@ module Store
           @models[:node][:parent_id] = parent.id if @models[:node]
           parent
         else
-          # TODO: move this to a warning.
-          puts "I cannot build a parent without a (clear) name or prior ref."
+          # TODO: this is really not right. What we want to do is "know" whether we have parent_fks specified or whether
+          # the resource builds parents using the ancestor columns. In the latter case, turn this into a warning; in the
+          # former case this is NORMAL and doesn't hurt anything at all:
+          puts "Attempt to link node `#{@models[:node][:resource_pk]}` to parent `#{parent_fk}` before it is defined."
+          @models[:node][:parent_resource_pk] = parent_fk
           nil
         end
       end
@@ -51,7 +54,6 @@ module Store
 
     def build_node
       node = build_any_node(@models[:node])
-      @models[:scientific_name][:node_id] = node.id if @models[:scientific_name]
     end
 
     # TODO: an update of this type might be trickier to handle than I have here.
@@ -83,7 +85,6 @@ module Store
           # Placeholder--we don't know the Genus name, yet... TODO: we'll have
           # to go back and fill these in once we've parsed these out!
           @models[:parent_node][:scientific_name_id] = 0
-          @models[:parent_node][:name_verbatim] = 'TODO'
           @models[:parent_node][:parent_id] = parent_id
           @models[:parent_node] =
             build_any_node(@models[:parent_node])
@@ -175,7 +176,6 @@ module Store
           log_warning("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
         else
           # This is a "normal" trait.
-          debugger
           # TODO: associations
           predicate = @models[:trait].delete(:predicate)
           # TODO: error handling for predicate ... cannot be blank.
@@ -315,7 +315,7 @@ module Store
     def build_any_node(node_hash)
       node_hash[:resource_id] = @resource.id
       node_hash[:harvest_id] = @harvest.id
-      node_hash[:resource_pk] ||= node_hash[:name_verbatim]
+      debugger if node_hash[:resource_pk].nil?
       node =
         if @nodes[node_hash[:resource_pk]]
           # Node already existed, just update it and pass that back:
@@ -330,17 +330,21 @@ module Store
       node
     end
 
+    # TODO - extract to Store::Storage
     def create_or_update(klass, model)
       if @diff == :changed
         key = @format.model_fks[klass]
         removed_by_harvest(klass, key, model[key])
       end
-      klass.send(:create!, model)
+      @new[klass] ||= []
+      @new[klass] << klass.send(:new, model)
     end
 
+    # TODO - extract to Store::Storage
     def removed_by_harvest(klass, key, pk)
-      klass.send(:where, { key => pk, :resource_id => @resource.id }).
-        update_all(removed_by_harvest_id: @harvest.id)
+      @old[klass] ||= {}
+      @old[klass][key] ||= []
+      @old[klass][key] << pk
     end
   end
 end

@@ -1,4 +1,4 @@
-%h1= @node.name_verbatim
+%h1= @node.canonical
 %ul
   %li
     %strong= t("nodes.fields.resource")
@@ -14,7 +14,7 @@
   %li
     - if @node.parent
       %strong= t("nodes.fields.parent")
-      = link_to(@node.parent.name_verbatim, @node.parent)
+      = link_to(@node.parent.canonical, @node.parent)
     - else
       %strong= t(:node_root_node_notice)
   %li
@@ -22,7 +22,7 @@
     %ul
       %li
         %strong= t("nodes.fields.name_verbatim")
-        = @node.name_verbatim
+        = @node.scientific_name.verbatim
       - if @node.scientific_name
         %li
           %strong= t("nodes.fields.name_scientific")
@@ -63,8 +63,8 @@
   = t("nodes.empty_fields.children")
 - else
   %ul
-    - @node.children.order(:name_verbatim).published.each do |child|
-      %li= link_to(child.name_verbatim, child)
+    - @node.children.published.each do |child|
+      %li= link_to(child.canonical, child)
 
 %h2= t("nodes.headers.media")
 - if @node.media.published.empty?

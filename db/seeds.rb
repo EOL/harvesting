@@ -1,3 +1,38 @@
+tmp_path = Rails.root.join('tmp')
+diff_path = Rails.root.join('public', 'diff')
+Dir.glob("#{tmp_path}/names*").each { |file| File.unlink(file) }
+Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
+
+# Dynamic Hierarchy should be first:
+dwh = Resource.quick_define(
+  name: 'EOL Dynamic Hierarchy',
+  abbr: 'DWH',
+  type: :csv,
+  field_sep: "\t",
+  pk_url: 'http://eol.org/$PK&but=not_really',
+  base_dir: '/Users/jrice/Downloads/dwh',
+  formats: {
+    nodes: { loc: 'taxa_1000000.tsv', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'acceptedNameUsageID' => 'to_nodes_accepted_name_fk' },
+      { 'parentNameUsageID' => 'to_nodes_parent_fk' },
+      { 'scientificName' => 'to_nodes_scientific' },
+      { 'taxonRank' => 'to_nodes_rank' },
+      { 'source' => 'to_nodes_source_reference' },
+      { 'taxonomicStatus' => 'to_taxonomic_status' },
+      { 'canonicalName' => 'to_ignored' }, # TODO: see note in your to do list. ;)
+      { 'scientificNameAuthorship' => 'to_ignored' },
+      { 'scientificNameID' => 'to_ignored' },
+      { 'taxonRemarks' => 'to_nodes_remarks' },
+      { 'namePublishedIn' => 'to_nodes_publication' },
+      { 'furtherInformationURL' => 'to_nodes_further_information_url' },
+      { 'datasetID' => 'to_ignored' },
+      { 'EOLid' => 'to_nodes_page_id' },
+      { 'EOLidAnnotations' => 'to_ignored' }
+    ] }
+  }
+)
+
 resource = Resource.where(name: 'Test CSV').first_or_create do |r|
   r.position = 1
   r.name = 'Test CSV'
@@ -289,7 +324,7 @@ if(false)
   #   excel_resource.start_harvest
   # else
   harvester = ResourceHarvester.new(excel_resource)
-  harvester.harvest
+  harvester.start
 end
 
 # Okay, I want to be able to create these things (much) faster:
@@ -411,15 +446,15 @@ if(false)
   resource.formats.each do |f|
     f.update_attribute(:get_from, f.get_from.sub(/_v2/, ''))
   end
-  resource.harvests.each { |h| h.destroy }
+  resource.starts.each { |h| h.destroy }
   harvester = ResourceHarvester.new(resource)
-  harvester.harvest
+  harvester.start
   # Deltas:
   resource.formats.each do |f|
     f.update_attribute(:get_from, f.get_from.sub(/\./, '_v2.'))
   end
   harvester = ResourceHarvester.new(resource)
-  harvester.harvest
+  harvester.start
 end
 
 if false
@@ -433,9 +468,15 @@ if false
 end
 
 if false
-  resource = Resource.where(name: 'Mineralogy').first
+  # Move these lines down below resource def'n if you want them:
   # Harvest.where(resource_id: resource.id).destroy_all
   # reload!
+  resource = Resource.where(name: 'Mineralogy').first
   harvester = ResourceHarvester.new(resource)
-  harvester.harvest
+  harvester.start
+end
+
+if false
+  harvester = ResourceHarvester.new(Resource.first)
+  harvester.start
 end
