@@ -18,28 +18,12 @@ module Store
 
     def to_nodes_parent_fk(field, val)
       @models[:node] ||= {}
-      @models[:parent_node] ||= {}
-      @models[:parent_node][:resource_pk] = val
+      @models[:node][:parent_resource_pk] = val
     end
 
     def to_nodes_ancestor(field, val)
-      if @ancestors[val]
-        @models[:ancestors] << {
-          name: val,
-          node: @ancestors[val][:node]
-        }
-      elsif @nodes[val]
-        @models[:ancestors] << {
-          name: val,
-          node: @nodes[val]
-        }
-      else
-        @models[:ancestors] << {
-          name: val,
-          sci_name: { verbatim: val, resource_id: @resource.id, harvest_id: @harvest.id },
-          node: { rank_verbatim: field.submapping, resource_id: @resource.id, harvest_id: @harvest.id }
-        }
-      end
+      @models[:ancestors] ||= {}
+      @models[:ancestors][field.submapping] = val
     end
 
     def to_nodes_rank(field, val)

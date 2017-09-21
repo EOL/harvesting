@@ -10,6 +10,7 @@ class Trait < ActiveRecord::Base
   belongs_to :statistical_method_term, class_name: "Term"
   belongs_to :sex_term, class_name: "Term"
   belongs_to :lifestage_term, class_name: "Term"
+  belongs_to :occurrence, foreign_key: 'occurrence_resource_pk', primary_key: 'resource_pk', inverse_of: 'traits'
 
   has_many :meta_traits, inverse_of: :trait
 

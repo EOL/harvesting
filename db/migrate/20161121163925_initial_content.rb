@@ -6,7 +6,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :harvest_id, null: false, index: true
       t.integer :page_id, comment: 'null means unassigned, of course'
       t.integer :parent_id, null: false, default: 0, index: true
-      t.integer :scientific_name_id, null: false
+      t.integer :scientific_name_id, comment: "null should only be temporary. Should be populated after propagation."
 
       t.string :canonical, index: true, comment: 'indexed to facilitate sorting'
       t.string :taxonomic_status_verbatim
@@ -271,7 +271,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :lifestage_term_id
 
       t.string :node_resource_pk, comment: 'temporary; will be replaced by object_node_id once IDs are resolved.'
-      t.string :occurrence_resource_pk, comment: 'temporary; will be replaced by occurrence metadata once IDs are resolved.'
+      t.string :occurrence_resource_pk, index: true, comment: 'used to add occurrence metadata.'
       t.string :association_resource_pk, comment: 'temporary; will be used to find object_node_id'
       t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
       t.string :resource_pk, null: false

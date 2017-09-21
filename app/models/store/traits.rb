@@ -61,7 +61,7 @@ module Store
 
     def to_traits_meta(field, val)
       @models[:trait] ||= {}
-      @models[:trait][:meta] ||= {}
+      @models[:trait][:meta] ||= { harvest_id: @harvest.id }
       @models[:trait][:meta][field.submapping] = val
     end
   end

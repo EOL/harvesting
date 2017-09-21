@@ -10,7 +10,7 @@ dwh = Resource.quick_define(
   type: :csv,
   field_sep: "\t",
   pk_url: 'http://eol.org/$PK&but=not_really',
-  base_dir: '/Users/jrice/Downloads/dwh',
+  base_dir: '/Users/jrice/Downloads/dwh', # NOTE: sorry, yes, I've got this personalized. TODO: config.
   formats: {
     nodes: { loc: 'taxa_1000000.tsv', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },

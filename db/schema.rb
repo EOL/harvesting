@@ -271,10 +271,11 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.integer  "harvest_id",                limit: 4,                 null: false
     t.integer  "page_id",                   limit: 4
     t.integer  "parent_id",                 limit: 4,     default: 0, null: false
-    t.integer  "scientific_name_id",        limit: 4,                 null: false
+    t.integer  "scientific_name_id",        limit: 4
     t.string   "canonical",                 limit: 255
     t.string   "taxonomic_status_verbatim", limit: 255
     t.string   "resource_pk",               limit: 255
+    t.string   "parent_resource_pk",        limit: 255
     t.string   "further_information_url",   limit: 255
     t.string   "rank",                      limit: 255
     t.string   "rank_verbatim",             limit: 255
@@ -297,6 +298,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   end
 
   create_table "occurrence_metadata", force: :cascade do |t|
+    t.integer "harvest_id",        limit: 4
     t.integer "occurence_id",      limit: 4
     t.integer "predicate_term_id", limit: 4
     t.integer "object_term_id",    limit: 4
@@ -311,6 +313,8 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.string  "sex_term_id",       limit: 255
     t.string  "lifestage_term_id", limit: 255
   end
+
+  add_index "occurrences", ["resource_pk"], name: "index_occurrences_on_resource_pk", using: :btree
 
   create_table "pages", force: :cascade do |t|
     t.integer "native_node_id", limit: 4, null: false
@@ -457,6 +461,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   end
 
   add_index "traits", ["harvest_id"], name: "index_traits_on_harvest_id", using: :btree
+  add_index "traits", ["occurrence_resource_pk"], name: "index_traits_on_occurrence_resource_pk", using: :btree
   add_index "traits", ["resource_id", "resource_pk"], name: "index_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "unit_conversion", force: :cascade do |t|

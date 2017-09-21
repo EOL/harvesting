@@ -197,8 +197,8 @@ class ResourceHarvester
       fields = build_fields
       any_diff = @parser.diff_as_hashes(@headers) do |row|
         # We *could* skip this, but I prefer not to deal with the missing keys.
-        @models = { node: nil, parent_node: nil, scientific_name: nil, ancestors: [], medium: nil, vernacular: nil,
-                    occurrence: nil, trait: nil }
+        @models = { node: nil, scientific_name: nil, ancestors: [], medium: nil, vernacular: nil, occurrence: nil,
+                    trait: nil }
         begin
           @headers.each do |header|
             field = fields[header]
@@ -221,9 +221,6 @@ class ResourceHarvester
             build_models
           end
         rescue => e
-          # if row.values.compact.size < (row.values.size / 5)
-          #   log_warning("?")
-          # else
             puts "Failed to save data from row #{@line_num}..."
             puts e.message
             puts e.backtrace[0..10]
@@ -236,19 +233,29 @@ class ResourceHarvester
         log_warning("There were no differences in this file!")
       end
     end
+    find_orphan_parent_nodes
+    find_duplicate_nodes
     store_new
     mark_old
     clear_storage_vars
   end
 
   def clear_storage_vars
-    @ancestors = {}
+    @nodes_by_ancestry = {}
     @occurrences = {}
     @terms = {}
     @models = {}
     @nodes = {}
     @new = {}
     @old = {}
+  end
+
+  def find_orphan_parent_nodes
+    # TODO - if the resource gave us parent IDs, we *could* have unresolved ids that we need to flag.
+  end
+
+  def find_duplicate_nodes
+    # TODO - look for shared parents and primary keys.
   end
 
   # TODO - extract to Store::Storage
@@ -281,13 +288,34 @@ class ResourceHarvester
   end
 
   def resolve_keys
+    propagate_id(Node, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
+    propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk",
+                       set: "scientific_name_id", with: "id")
     propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
     propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
     propagate_id(ScientificName, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
-    propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk", set: "scientific_name_id", with: "id")
+    propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk",
+                       set: "scientific_name_id", with: "id")
+    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
+                        set: "sex_term_id", with: "sex_term_id")
+    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
+                        set: "lifestage_term_id", with: "lifestage_term_id")
 
-    # TODO: transfer the sex, lifestage, lat, long, locality, and metadata from occurrences to traits...
+    # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
     # TODO: associations! Yeesh.
+  end
+
+  def add_occurrence_metadata_to_traits
+    meta_traits = []
+    OccurrenceMetadata.includes(:occurrence).where(harvest_id: @harvest.id).find_each do |meta|
+      # NOTE: this is probably not very efficient. :S
+      meta.occurrence.traits.each do |trait|
+        meta_traits <<
+          MetaTrait.new(predicate_term_id: meta.predicate_term_id, object_term_id: meta.object_term_id,
+                        harvest_id: @harvest.id, resource_id: @resource.id, trait_id: trait.id)
+      end
+    end
+    MetaTrait.import!(meta_traits) unless meta_traits.empty?
   end
 
   def resolve_missing_parents
@@ -333,13 +361,20 @@ class ResourceHarvester
     NameParser.for_harvest(@harvest)
   end
 
-  # You can do this with a join YOU WERE HERE
   def normalize_names
-    @harvest.scientific_names.find_each do |name|
-      normal = NormalizedName.where(string: name.normalized, canonical: name.canonical).first_or_create
-      name.update_attribute(:normalized_name_id, normal.id)
+    new_names = []
+    propagate_normalized_ids_to_scientific
+    @harvest.scientific_names.where("normalized_name_id is NULL").find_each do |name|
+      new_names << NormalizedName.new(string: name.normalized, canonical: name.canonical)
     end
+    NormalizedName.import!(new_names)
+    propagate_normalized_ids_to_scientific
     propagate_id(Node, fk: 'scientific_name_id', other: 'scientific_names.id', set: 'canonical', with: 'canonical')
+  end
+
+  def propagate_normalized_ids_to_scientific
+    propagate_id(ScientificName, fk: "normalized", other: "normalized_names.string",
+                                 set: "normalized_name_id", with: "id")
   end
 
   # match node names against the DWH, store "hints", report on unmatched

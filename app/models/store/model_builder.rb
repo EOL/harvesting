@@ -9,7 +9,6 @@ module Store
 
     def build_models
       build_scientific_name if @models[:scientific_name]
-      build_parent_node if @models[:parent_node]
       build_ancestors unless @models[:ancestors].empty?
       build_node if @models[:node]
       build_medium if @models[:medium]
@@ -24,36 +23,11 @@ module Store
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
       @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
-      create_or_update(ScientificName, @models[:scientific_name])
-    end
-
-    def build_parent_node
-      @models[:parent_node][:resource_id] = @resource.id
-      @models[:parent_node][:harvest_id] = @harvest.id
-      if @models[:parent_node][:scientific_name_id]
-        parent = create_or_update(Node, @models[:parent_node])
-        @models[:node][:parent_id] = parent.id if @models[:node]
-        parent
-      else
-        parent_fk = @models[:parent_node].is_a?(Hash) ?
-          @models[:parent_node][:resource_pk] :
-          @models[:parent_node].resource_pk
-        if parent = @nodes[parent_fk]
-          @models[:node][:parent_id] = parent.id if @models[:node]
-          parent
-        else
-          # TODO: this is really not right. What we want to do is "know" whether we have parent_fks specified or whether
-          # the resource builds parents using the ancestor columns. In the latter case, turn this into a warning; in the
-          # former case this is NORMAL and doesn't hurt anything at all:
-          puts "Attempt to link node `#{@models[:node][:resource_pk]}` to parent `#{parent_fk}` before it is defined."
-          @models[:node][:parent_resource_pk] = parent_fk
-          nil
-        end
-      end
+      prepare_model_for_store(ScientificName, @models[:scientific_name])
     end
 
     def build_node
-      node = build_any_node(@models[:node])
+      prepare_model_for_store(Medium, @models[:node])
     end
 
     # TODO: an update of this type might be trickier to handle than I have here.
@@ -63,37 +37,31 @@ module Store
     # published and will still have children that it shouldn't. But, as
     # mentioned, this is a difficult case to detect.
     def build_ancestors
-      parent_id = 0
-      @models[:ancestors].each do |ancestor|
-        parent_id =
-          if ancestor[:node].is_a?(Hash)
-            # This is definitely a NEW name/node, otherwise we would have found
-            # it, earlier:
-            ancestor[:sci_name] = ScientificName.create!(ancestor[:sci_name])
-            ancestor[:node][:scientific_name_id] = ancestor[:sci_name].id
-            ancestor[:node][:parent_id] = parent_id
-            ancestor[:node] = build_any_node(ancestor[:node])
-            ancestor[:sci_name].update_attribute(:node_id, ancestor[:node].id)
-            @ancestors[ancestor[:name]] = ancestor
-            ancestor[:node].id
-          else
-            ancestor[:node].id
-          end
-      end
-      if @models[:parent_node]
-        if @models[:parent_node].is_a?(Hash)
-          # Placeholder--we don't know the Genus name, yet... TODO: we'll have
-          # to go back and fill these in once we've parsed these out!
-          @models[:parent_node][:scientific_name_id] = 0
-          @models[:parent_node][:parent_id] = parent_id
-          @models[:parent_node] =
-            build_any_node(@models[:parent_node])
-          @models[:node][:parent_id] = @models[:parent_node].id
+      ancestry = []
+      prev = nil
+      Rank.sort(@models[:ancestors].keys).each do |rank|
+        ancestor_pk = @models[:ancestors][rank]
+        ancestry << ancestor_pk
+        # NOTE: @nodes_by_ancestry is just a cache, to make sure we don't redefine things. The value is never used.
+        if @nodes_by_ancestry.key?(ancestry)
+          # Do nothing; it is already prepared.
         else
-          @models[:parent_node].update_attribute(:parent_id, parent_id)
+          model = if @diff == :new
+                    model =
+                      { harvest_id: @harvest.id, resource_id: @resouce.id, rank_verbatim: rank,
+                              verbatim: ancestor_pk, parent_resource_pk: prev, resource_pk: ancestor_pk }
+                      prepare_model_for_store(Node, model)
+                      prepare_model_for_store(ScientificName,
+                        { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
+                          verbatim: ancestor_pk, taxonomic_status_verbatim: "HARVEST ANCESTOR" })
+                  else
+                    # NOTE: This will happen less often, so I'm allowing DB call; if this becomes problematic, we can
+                    # (of course) cache these...
+                    Node.find_by_resource_pk(ancestor_pk)
+                  end
+          @nodes_by_ancestry[ancestry] = true # Remember that we don't need to do this again.
         end
-      else
-        @models[:node][:parent_id] = parent_id
+        prev = ancestor_pk
       end
     end
 
@@ -119,7 +87,7 @@ module Store
       @models[:medium][:owner] = 'TODO'
 
       # TODO: there are some other normalizations and checks we should do here.
-      create_or_update(Medium, @models[:medium])
+      prepare_model_for_store(Medium, @models[:medium])
     end
 
     # NOTE: this is an example of how to pull the resource_pk from another table
@@ -134,7 +102,7 @@ module Store
       @models[:vernacular][:language_id] = lang.id
       # TODO: there are some other normalizations and checks we should do here,
       # I expect.
-      create_or_update(Vernacular, @models[:vernacular])
+      prepare_model_for_store(Vernacular, @models[:vernacular])
     end
 
     def build_occurrence
@@ -152,13 +120,13 @@ module Store
       end
       # TODO: there are some other normalizations and checks we should do here,
       # I expect.
-      occurrence = create_or_update(Occurrence, @models[:occurrence])
+      occurrence = prepare_model_for_store(Occurrence, @models[:occurrence])
       meta.each do |key, value|
         datum = {}
         datum[:occurence_id] = occurrence.id
         datum[:predicate_term_id] = find_or_create_term(key).id
         datum = convert_meta_value(datum, value)
-        create_or_update(OccurrenceMetadata, datum)
+        prepare_model_for_store(OccurrenceMetadata, datum)
       end
       # We need to remember these for traits:
       @occurrences[occurrence.resource_pk] = occurrence
@@ -191,7 +159,7 @@ module Store
             @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
           end
           meta = @models[:trait].delete(:meta) || {}
-          trait = create_or_update(Trait, @models[:trait])
+          trait = prepare_model_for_store(Trait, @models[:trait])
           meta.each do |key, value|
             datum = {}
             datum[:resource_id] = @resource.id
@@ -200,7 +168,7 @@ module Store
             predicate_term = find_or_create_term(predicate)
             datum[:predicate_term_id] = predicate_term.id
             datum = convert_meta_value(datum, value)
-            create_or_update(MetaTrait, datum)
+            prepare_model_for_store(MetaTrait, datum)
           end
         end
       else # This is metadata...
@@ -312,26 +280,8 @@ module Store
       end
     end
 
-    def build_any_node(node_hash)
-      node_hash[:resource_id] = @resource.id
-      node_hash[:harvest_id] = @harvest.id
-      debugger if node_hash[:resource_pk].nil?
-      node =
-        if @nodes[node_hash[:resource_pk]]
-          # Node already existed, just update it and pass that back:
-          @nodes[node_hash[:resource_pk]].update_attributes(node_hash)
-          @nodes[node_hash[:resource_pk]]
-        else
-          n = create_or_update(Node, node_hash)
-          @nodes[n.resource_pk] = n
-        end
-
-      debugger if node.resource_pk.blank? # Shouldn't happen! :S
-      node
-    end
-
     # TODO - extract to Store::Storage
-    def create_or_update(klass, model)
+    def prepare_model_for_store(klass, model)
       if @diff == :changed
         key = @format.model_fks[klass]
         removed_by_harvest(klass, key, model[key])
