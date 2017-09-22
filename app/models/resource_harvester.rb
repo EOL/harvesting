@@ -262,7 +262,10 @@ class ResourceHarvester
   def store_new
     @new.each do |klass, models|
       begin
-        klass.import! models
+        # Grouping them might not be necssary, but it sure makes debugging easier...
+        models.in_groups_of(1000, false) do |group|
+          klass.import! group
+        end
       rescue => e
         debugger
         puts "ruh-roh"
@@ -319,10 +322,10 @@ class ResourceHarvester
   end
 
   def resolve_missing_parents
-    propagate_id(Nodes, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
+    propagate_id(Node, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
   end
 
-  # I AM NOT A FAN OF SQL... but this is *way* more efficient than alternatives:
+  # I AM NOT A FAN OF SQL... but this is **way** more efficient than alternatives:
   def propagate_id(klass, options = {})
     fk = options[:fk]
     set = options[:set]

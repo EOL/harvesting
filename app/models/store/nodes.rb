@@ -50,8 +50,8 @@ module Store
     end
 
     def to_nodes_remarks(field, val)
-      @models[:node] ||= {}
-      @models[:node][:remarks] = val
+      @models[:scientific_name] ||= {}
+      @models[:scientific_name][:remarks] = val
     end
 
     def to_nodes_publication(field, val)

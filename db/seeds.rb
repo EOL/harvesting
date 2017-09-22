@@ -12,7 +12,7 @@ dwh = Resource.quick_define(
   pk_url: 'http://eol.org/$PK&but=not_really',
   base_dir: '/Users/jrice/Downloads/dwh', # NOTE: sorry, yes, I've got this personalized. TODO: config.
   formats: {
-    nodes: { loc: 'taxa_1000000.tsv', fields: [
+    nodes: { loc: 'taxa.txt', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
       { 'acceptedNameUsageID' => 'to_nodes_accepted_name_fk' },
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },
@@ -477,6 +477,5 @@ if false
 end
 
 if false
-  harvester = ResourceHarvester.new(Resource.first)
-  harvester.start
+  harvester = ResourceHarvester.new(Resource.first) ; harvester.start
 end

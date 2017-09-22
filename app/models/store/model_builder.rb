@@ -27,7 +27,9 @@ module Store
     end
 
     def build_node
-      prepare_model_for_store(Medium, @models[:node])
+      @models[:node][:resource_id] ||= @resource.id
+      @models[:node][:harvest_id] ||= @harvest.id
+      prepare_model_for_store(Node, @models[:node])
     end
 
     # TODO: an update of this type might be trickier to handle than I have here.
@@ -287,7 +289,12 @@ module Store
         removed_by_harvest(klass, key, model[key])
       end
       @new[klass] ||= []
-      @new[klass] << klass.send(:new, model)
+      begin
+        @new[klass] << klass.send(:new, model)
+      rescue => e
+        debugger
+        puts "oopsie."
+      end
     end
 
     # TODO - extract to Store::Storage

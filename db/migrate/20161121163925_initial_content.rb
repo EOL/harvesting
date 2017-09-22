@@ -18,8 +18,6 @@ class InitialContent < ActiveRecord::Migration
       t.string :rank
       t.string :rank_verbatim
 
-      t.text :remarks
-
       t.integer :removed_by_harvest_id
       t.timestamps
     end
