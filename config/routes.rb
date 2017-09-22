@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   resources :resources do
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]
+    resources :scientific_names, only: [:index]
     resources :formats, except: [:destroy]
     resources :traits, only: [:index]
   end
