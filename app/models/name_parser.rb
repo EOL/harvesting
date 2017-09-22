@@ -11,7 +11,6 @@ class NameParser
     @harvest = harvest
     @resource = harvest.resource
     @verbatims = []
-    @names_file = Rails.root.join('tmp', "names_from_harvest_#{@harvest.id}.txt")
   end
 
   def parse
@@ -19,7 +18,8 @@ class NameParser
       @names = {}
       write_names_to_file(names)
       learn_names(names)
-      JSON.parse(parse_names_in_file).each_with_index do |result, i|
+      json = parse_names_in_file
+      JSON.parse(json).each_with_index do |result, i|
         # NOTE: interestingly, this skips running a SQL update if nothing changed, and, when only some fields change, it
         # only updates those fields (not the ones that stay the same). Thanks, Rails. ...That said, it's damn slow.
         # ...And aside from re-inserting them with an "on existing update" thingie, I'm not sure how to speed this up.
@@ -44,8 +44,6 @@ class NameParser
 
   def write_names_to_file(names)
     @verbatims = names.map(&:verbatim).join("\n") + "\n"
-    File.unlink(@names_file) if File.exist?(@names_file)
-    File.open(@names_file, 'a') { |file| file.write(@verbatims) }
   end
 
   def learn_names(names)
@@ -53,18 +51,21 @@ class NameParser
   end
 
   def parse_names_in_file
-    outfile = Rails.root.join('tmp', "names-parsed-#{@resource.id}.json")
-    File.unlink(outfile) if File.exist?(outfile)
-    stdin, stdout, stderr, wait_thread = Open3.popen3("gnparse file --input #{@names_file} "\
-      "--output #{outfile}")
-    stdin.close
-    stdout.close
-    stderr.close
-    status = wait_thread.value
-    # TODO something with status TODO: DO SOMETHING WITH stdout/stderr ... expect err to be nil, expect out to be
-    # something like "running with parallelism: 12\n" NOTE: it's a little awkward in that the output is one-per-line,
-    # rather than the whole file actually being json. We force it into an array syntax:
-    json = "[" + File.read(outfile).gsub("\n", ",").chop + "]"
+    # TODO: the command should be config'd, so we can move it around as needed. Eventually we'll use a service.
+    cmd = 'gnparser'
+    json = []
+    Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thread|
+      stdin.write(@verbatims)
+      stdin.close_write
+      while line = stdout.gets
+        json << line.chomp if line =~ /^{/
+      end
+      exit_status = wait_thread.value
+      unless exit_status.success?
+        abort "!! FAILED #{cmd}"
+      end
+    end
+    "[#{json.join(",")}]"
   end
 
   # Examples of the types of results you will get may be found by doing:

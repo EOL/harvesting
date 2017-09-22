@@ -3,6 +3,7 @@ diff_path = Rails.root.join('public', 'diff')
 Dir.glob("#{tmp_path}/names*").each { |file| File.unlink(file) }
 Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 
+# rake db:reset ; rails runner "harvester = ResourceHarvester.new(Resource.first) ; harvester.start"
 # Dynamic Hierarchy should be first:
 dwh = Resource.quick_define(
   name: 'EOL Dynamic Hierarchy',
@@ -12,7 +13,7 @@ dwh = Resource.quick_define(
   pk_url: 'http://eol.org/$PK&but=not_really',
   base_dir: '/Users/jrice/Downloads/dwh', # NOTE: sorry, yes, I've got this personalized. TODO: config.
   formats: {
-    nodes: { loc: 'taxa.txt', fields: [
+    nodes: { loc: 'taxa_10000.tsv', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
       { 'acceptedNameUsageID' => 'to_nodes_accepted_name_fk' },
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },
@@ -474,8 +475,4 @@ if false
   resource = Resource.where(name: 'Mineralogy').first
   harvester = ResourceHarvester.new(resource)
   harvester.start
-end
-
-if false
-  harvester = ResourceHarvester.new(Resource.first) ; harvester.start
 end

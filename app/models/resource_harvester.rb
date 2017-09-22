@@ -51,7 +51,7 @@ class ResourceHarvester
     convert
     # TODO: really this (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join('diff')) unless
-      Dir.exist?(Rails.public_path.join('converted_csv'))
+      Dir.exist?(Rails.public_path.join('diff'))
     delta
     store
     resolve_keys
@@ -139,6 +139,7 @@ class ResourceHarvester
       end
       cmd = "/usr/bin/sort #{@format.converted_csv_path} > "\
             "#{@format.converted_csv_path}_sorted"
+      puts ">> #{cmd}"
       if system(cmd)
         FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
       else
@@ -178,10 +179,12 @@ class ResourceHarvester
       "#{@format.converted_csv_path} > #{@format.diff}"
     # TODO: We can't trust the exit code! diff exits 0 if the files are the
     # same, and 1 if not.
+    puts ">> #{cmd}"
     system(cmd)
   end
 
   def fake_diff_from_nothing
+    puts ">> fake_diff_from_nothing"
     system("echo \"0a\" > #{@format.diff}")
     system("cat #{@format.file} >> #{@format.diff}")
     system("echo \".\" >> #{@format.diff}")
