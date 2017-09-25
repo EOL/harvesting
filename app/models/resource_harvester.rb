@@ -387,8 +387,7 @@ class ResourceHarvester
   # nodes, consider the effects of curation
   def match_nodes
     if @resource.id == 1
-      # TODO - for now we're faking it entirely with no matching; this assumes we ALWAYS start it with a '-', sloppy:
-      @harvest.nodes.update_all("page_id = CONVERT(SUBSTRING_INDEX(resource_pk, '-', -1), UNSIGNED INTEGER)")
+      # Do nothing ... should have been handled by the field.
     else
       puts "GAH! No matching nodes yet."
     end

@@ -28,6 +28,18 @@ class Rank
     subclass
     infraclass
 
+    megacohort
+    supercohort
+    cohort
+    subcohort
+    infracohort
+
+    megasection
+    supersection
+    section
+    subsection
+    infrasection
+
     superorder
     order
     suborder
