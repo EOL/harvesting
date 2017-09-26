@@ -9,6 +9,9 @@ gem 'acts_as_list', '~> 0.7.6'
 # Parse Excel files:
 gem "creek", "~> 1.1"
 
+# ElasticSearch:
+gem 'searchkick'
+
 # Because ERB is just plain silly compared to Haml:
 gem 'haml-rails'
 

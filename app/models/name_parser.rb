@@ -136,7 +136,7 @@ class NameParser
     return attributes.merge(
       normalized: norm,
       canonical: canon,
-      authorship: authorships.join(' ; '),
+      authorship: authorships.flat_map { |a| a[:authors].map { |n| n.tr(';', '|') } }.join('; '),
       warnings: warns,
       parse_quality: quality,
       year: authorships.map { |a| a[:year] }.compact.sort.first # Yeeesh! We take the earliest year (we only get one!)
@@ -144,15 +144,20 @@ class NameParser
   end
 
   def add_authorship(authorships, hash)
+    value = nil
+    first = nil
+    year = nil
+    authors = nil
     hash ||= {}
     if hash.key?('authorship')
       value = hash['authorship']['value']
       if hash['authorship'].key?('basionym_authorship')
-        first = hash['authorship']['basionym_authorship']['authors'].first # We only need one for et. al
+        authors = hash['authorship']['basionym_authorship']['authors']
+        first = authors.first # We only need one for et. al
         year = hash['authorship']['basionym_authorship']['year']['value'] if
           hash['authorship']['basionym_authorship'].key?('year')
       end
     end
-    authorships << { value: value, first_author: first, year: year }
+    authorships << { value: value, first_author: first, year: year, authors: authors }
   end
 end

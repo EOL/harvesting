@@ -6,7 +6,8 @@ class InitialContent < ActiveRecord::Migration
       t.integer :harvest_id, null: false, index: true
       t.integer :page_id, comment: 'null means unassigned, of course'
       t.integer :parent_id, null: false, default: 0, index: true
-      t.integer :scientific_name_id, comment: "null should only be temporary. Should be populated after propagation."
+      t.integer :scientific_name_id, comment: 'null should only be temporary. Should be populated after propagation.'
+      t.integer :removed_by_harvest_id
 
       t.string :canonical, index: true, comment: 'indexed to facilitate sorting'
       t.string :taxonomic_status_verbatim
@@ -18,7 +19,8 @@ class InitialContent < ActiveRecord::Migration
       t.string :rank
       t.string :rank_verbatim
 
-      t.integer :removed_by_harvest_id
+      t.boolean :in_unmapped_area, default: false, comment: 'True if the native_node_id is NOT in the EOL hierarchy.'
+
       t.timestamps
     end
     add_index :nodes, [:resource_id, :resource_pk], name: 'by_resource_and_pk'
@@ -44,7 +46,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :specific_epithet
       t.string :infraspecific_epithet
       t.string :infrageneric_epithet
-      t.string :normalized, index: true, comment: "indexed to improve names-matching, but nill until GNA runs!"
+      t.string :normalized, index: true, comment: 'indexed to improve names-matching, but nill until GNA runs!'
       t.string :canonical
       t.string :uninomial
 
@@ -71,8 +73,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :harvest_id, null: false, index: true
       t.integer :node_id, null: false
       t.integer :language_id, null: false
-      t.string :verbatim, index: true,
-        comment: 'indexed because this is effectively the "resource_pk"'
+      t.string :verbatim, index: true, comment: 'indexed because this is effectively the "resource_pk"'
       t.string :language_code_verbatim
       t.string :locality
       t.string :source_reference
@@ -295,7 +296,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :trait_resource_pk, null: false
       t.string :measurement
       t.string :literal
-      
+
       t.text :source
     end
 
