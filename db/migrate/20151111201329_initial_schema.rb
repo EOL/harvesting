@@ -108,9 +108,8 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :hlogs do |t|
       t.integer :harvest_id, null: false
-      t.integer :format_id, null: false
-      t.integer :category,
-        comment: "Enum: errors, warns, infos, progs, loops, starts, ends, counts, queries"
+      t.integer :format_id, comment: 'if empty, the log is not file-specific.'
+      t.integer :category, comment: 'Enum: errors, warns, infos, progs, loops, starts, ends, counts, queries'
       t.string :message
       t.text :backtrace
       t.integer :line
@@ -118,8 +117,8 @@ class InitialSchema < ActiveRecord::Migration
     end
 
     create_table :languages do |t|
-      t.string :code, comment: "iso_639_3"
-      t.string :group_code, comment: "iso_639_2"
+      t.string :code, comment: 'iso_639_3'
+      t.string :group_code, comment: 'iso_639_2'
     end
 
     create_table :pages do |t|

@@ -14,4 +14,16 @@ class Harvest < ActiveRecord::Base
     update_attribute(:completed_at, Time.now)
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
   end
+
+  def log(message, options = {})
+    options[:cat] ||= :infos
+    trace = options[:e] ? options[:e].backtrace.join("\n") : nil
+    hlogs << Hlog.create!(
+      harvest: self,
+      category: options[:cat],
+      message: message,
+      backtrace: trace,
+      format_id: 0 # TODO: remove this. I was getting past a bogus migration.
+    )
+  end
 end

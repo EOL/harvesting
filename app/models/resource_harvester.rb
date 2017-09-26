@@ -393,8 +393,7 @@ class ResourceHarvester
     if @resource.id != 1
       # Do nothing ... should have been handled by the field.
     else
-      # YOU WERE HERE - Eeep!
-      NamesMatcher.for_resource(@resource)
+      NamesMatcher.for_harvest(@harvest)
     end
   end
 

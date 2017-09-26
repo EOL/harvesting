@@ -1,4 +1,6 @@
 class Node < ActiveRecord::Base
+  searchkick
+
   belongs_to :resource, inverse_of: :nodes
   belongs_to :harvest, inverse_of: :nodes
   # TODO belongs_to :page, inverse_of: :nodes
@@ -23,7 +25,7 @@ class Node < ActiveRecord::Base
   scope :search_import, -> { includes(:parent, :scientific_name, :scientific_names, :children) }
 
   # NOTE: special method used by Searchkick
-  def search_data
+  def self.search_data
     # TODO: all of the maps for scientific_names should ONLY use names that are "is_used_for_merges"
     {
       id: id,
@@ -34,11 +36,15 @@ class Node < ActiveRecord::Base
       synonym_authors: scientific_names.flat_map { |sn| sn.authors },
       canonical: canonical,
       ancestor_ids: ancestors.map(&:id),
-      children: children.map(&:canonical),
+      children: child_names,
       is_hybrid: scientific_name.hybrid?,
       is_virus: scientific_name.virus?,
       is_surrogate: scientific_name.surrogate?
     }
+  end
+
+  def self.native_virus
+    @native_virus ||= where(resource_id: 1, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
   end
 
   def needs_to_be_mapped?
@@ -49,13 +55,17 @@ class Node < ActiveRecord::Base
     return true if scientific_name.changed?
   end
 
-  def matched_ancestor(depth)
-    i = 0
-    ancestors.each do |ancestor|
-      unless ancestor.page_id.nil?
-        return ancestor if i >= depth
-        i += 1
-      end
-    end
+  def child_names
+    children.map(&:canonical)
+  end
+
+  def map_to_page(page_id)
+    puts "@@ Yay! we matched node #{id} to page #{page_id}."
+    update_attribute(:page_id, page_id)
+  end
+
+  def create_new_page(page_id)
+    puts "VV BOO! We couldn't match node #{id}, so we're making a new page #{page_id}"
+    update_attributes(page_id: page_id, in_unmapped_area: true)
   end
 end
