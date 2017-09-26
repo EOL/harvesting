@@ -14,6 +14,7 @@ class CsvParser
   def line_at_a_time
     i = 0
     return false unless File.exist?(@path_to_file)
+    @file = @path_to_file
     quote = '"'
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
     CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote) do |row|
@@ -63,7 +64,8 @@ class CsvParser
     @line_num = 0
     @diff = nil
     any_diff = line_at_a_time do |row, line|
-      @line_num = line # NOTE that this is a diff... so ... not great...
+      # NOTE that this is a diff... so ... not great... but it IS the line of the file we're reading!
+      @line_num = line + 1
       if row.size == 1 && row.first =~ /^\d+(\D)(\d+)?$/
         @diff = diff_type(Regexp.last_match(1))
         next

@@ -9,7 +9,7 @@ module Store
 
     def build_models
       build_scientific_name if @models[:scientific_name]
-      build_ancestors unless @models[:ancestors].empty?
+      build_ancestors if @models[:ancestors]
       build_node if @models[:node]
       build_medium if @models[:medium]
       build_vernacular if @models[:vernacular]
@@ -45,9 +45,7 @@ module Store
         ancestor_pk = @models[:ancestors][rank]
         ancestry << ancestor_pk
         # NOTE: @nodes_by_ancestry is just a cache, to make sure we don't redefine things. The value is never used.
-        if @nodes_by_ancestry.key?(ancestry)
-          # Do nothing; it is already prepared.
-        else
+        unless @nodes_by_ancestry.key?(ancestry)
           model = if @diff == :new
                     model =
                       { harvest_id: @harvest.id, resource_id: @resouce.id, rank_verbatim: rank,
@@ -166,7 +164,7 @@ module Store
             datum = {}
             datum[:resource_id] = @resource.id
             datum[:harvest_id] = @harvest.id
-            datum[:trait_id] = trait.id
+            datum[:trait_resource_pk] = trait.resource_pk
             predicate_term = find_or_create_term(predicate)
             datum[:predicate_term_id] = predicate_term.id
             datum = convert_meta_value(datum, value)
@@ -290,7 +288,9 @@ module Store
       end
       @new[klass] ||= []
       begin
-        @new[klass] << klass.send(:new, model)
+        new_model = klass.send(:new, model)
+        @new[klass] << new_model
+        new_model
       rescue => e
         debugger
         puts "oopsie."

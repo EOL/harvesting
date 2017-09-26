@@ -252,15 +252,16 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   create_table "meta_traits", force: :cascade do |t|
     t.integer "resource_id",                limit: 4,     null: false
     t.integer "harvest_id",                 limit: 4,     null: false
-    t.integer "trait_id",                   limit: 4,     null: false
+    t.integer "trait_id",                   limit: 4
     t.integer "predicate_term_id",          limit: 4,     null: false
     t.integer "object_term_id",             limit: 4
     t.integer "units_term_id",              limit: 4
     t.integer "statistical_method_term_id", limit: 4
-    t.string  "measurement",                limit: 255
     t.integer "removed_by_harvest_id",      limit: 4
-    t.text    "source",                     limit: 65535
+    t.string  "trait_resource_pk",          limit: 255,   null: false
+    t.string  "measurement",                limit: 255
     t.string  "literal",                    limit: 255
+    t.text    "source",                     limit: 65535
   end
 
   add_index "meta_traits", ["harvest_id"], name: "index_meta_traits_on_harvest_id", using: :btree
@@ -448,15 +449,15 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.integer "statistical_method_term_id", limit: 4
     t.integer "sex_term_id",                limit: 4
     t.integer "lifestage_term_id",          limit: 4
+    t.integer "removed_by_harvest_id",      limit: 4
+    t.boolean "of_taxon"
     t.string  "node_resource_pk",           limit: 255
     t.string  "occurrence_resource_pk",     limit: 255
     t.string  "association_resource_pk",    limit: 255
-    t.boolean "of_taxon"
     t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
-    t.integer "removed_by_harvest_id",      limit: 4
-    t.text    "source",                     limit: 65535
     t.string  "literal",                    limit: 255
+    t.text    "source",                     limit: 65535
   end
 
   add_index "traits", ["harvest_id"], name: "index_traits_on_harvest_id", using: :btree

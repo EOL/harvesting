@@ -7,6 +7,9 @@
     %strong= t("nodes.fields.resource_pk")
     = @node.resource_pk
   %li
+    %strong= t("nodes.fields.page_id")
+    = @node.page_id
+  %li
     %strong= t("nodes.fields.created")
     = l(@node.created_at, format: :short)
     = t(:node_created_by_harvest,

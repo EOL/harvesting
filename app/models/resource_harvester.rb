@@ -186,7 +186,7 @@ class ResourceHarvester
   def fake_diff_from_nothing
     puts ">> fake_diff_from_nothing"
     system("echo \"0a\" > #{@format.diff}")
-    system("cat #{@format.file} >> #{@format.diff}")
+    system("tail -n +#{@format.header_lines + 1} #{@format.converted_csv_path} >> #{@format.diff}")
     system("echo \".\" >> #{@format.diff}")
   end
 
@@ -200,7 +200,7 @@ class ResourceHarvester
       fields = build_fields
       any_diff = @parser.diff_as_hashes(@headers) do |row|
         # We *could* skip this, but I prefer not to deal with the missing keys.
-        @models = { node: nil, scientific_name: nil, ancestors: [], medium: nil, vernacular: nil, occurrence: nil,
+        @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
                     trait: nil }
         begin
           @headers.each do |header|
@@ -306,6 +306,8 @@ class ResourceHarvester
                         set: "sex_term_id", with: "sex_term_id")
     propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
                         set: "lifestage_term_id", with: "lifestage_term_id")
+    propagate_id(MetaTrait, fk: "trait_resource_pk", other: "traits.resource_pk",
+                        set: "trait_id", with: "id")
 
     # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
     # TODO: associations! Yeesh.
@@ -447,7 +449,7 @@ class ResourceHarvester
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = CsvParser.new(@format.converted_csv_path)
+        @formats[fid][:parser] = CsvParser.new(@format.diff)
         @formats[fid][:headers] = @format.fields.sort_by(&:position).map(&:expected_header)
       end
       @parser = @formats[fid][:parser]

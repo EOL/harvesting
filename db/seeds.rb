@@ -362,6 +362,22 @@ simple_resource = Resource.quick_define(
   }
 )
 
+if(false)
+  resource = Resource.where(name: 'Simple Deltas').first
+  resource.formats.each do |f|
+    f.update_attribute(:get_from, f.get_from.sub(/_v2/, ''))
+  end
+  resource.starts.each { |h| h.destroy }
+  harvester = ResourceHarvester.new(resource)
+  harvester.start
+  # Deltas:
+  resource.formats.each do |f|
+    f.update_attribute(:get_from, f.get_from.sub(/\./, '_v2.'))
+  end
+  harvester = ResourceHarvester.new(resource)
+  harvester.start
+end
+
 traity = Resource.quick_define(
   name: 'Mineralogy',
   abbr: 'Mineralogy',
@@ -442,33 +458,11 @@ traity = Resource.quick_define(
   }
 )
 
-if(false)
-  resource = Resource.where(name: 'Simple Deltas').first
-  resource.formats.each do |f|
-    f.update_attribute(:get_from, f.get_from.sub(/_v2/, ''))
-  end
-  resource.starts.each { |h| h.destroy }
-  harvester = ResourceHarvester.new(resource)
-  harvester.start
-  # Deltas:
-  resource.formats.each do |f|
-    f.update_attribute(:get_from, f.get_from.sub(/\./, '_v2.'))
-  end
-  harvester = ResourceHarvester.new(resource)
-  harvester.start
-end
-
 if false
-  resource = Resource.where(name: 'Mineralogy').first
-  fmt = Format.where(resource_id: resource.id, represents: Format.represents[:measurements]).last
-  parser =
-    CsvParser.new(fmt.get_from,
-                  field_sep: fmt.field_sep, line_sep: fmt.line_sep, header_lines: fmt.header_lines,
-                  data_begins_on_line: fmt.data_begins_on_line)
+  # rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start"
+  # rake db:reset ; rails runner "ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
+  # rails runner "Harvest.last.destroy ; ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
 
-end
-
-if false
   # Move these lines down below resource def'n if you want them:
   # Harvest.where(resource_id: resource.id).destroy_all
   # reload!

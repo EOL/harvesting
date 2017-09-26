@@ -267,32 +267,36 @@ class InitialContent < ActiveRecord::Migration
       t.integer :statistical_method_term_id
       t.integer :sex_term_id
       t.integer :lifestage_term_id
+      t.integer :removed_by_harvest_id
+
+      t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
 
       t.string :node_resource_pk, comment: 'temporary; will be replaced by object_node_id once IDs are resolved.'
       t.string :occurrence_resource_pk, index: true, comment: 'used to add occurrence metadata.'
       t.string :association_resource_pk, comment: 'temporary; will be used to find object_node_id'
-      t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
       t.string :resource_pk, null: false
       t.string :measurement
-      t.integer :removed_by_harvest_id
-      t.text :source
       t.string :literal
+
+      t.text :source
     end
     add_index :traits, [:resource_id, :resource_pk]
 
     create_table :meta_traits do |t|
       t.integer :resource_id, null: false, comment: 'Supplier', index: true
       t.integer :harvest_id, null: false, index: true
-      t.integer :trait_id, null: false
+      t.integer :trait_id, comment: 'temporarily null, added during ID resolution'
       t.integer :predicate_term_id, null: false
       t.integer :object_term_id
       t.integer :units_term_id
       t.integer :statistical_method_term_id # Unused at publishing layer; okay to implement post-MVP TODO
-
-      t.string :measurement
       t.integer :removed_by_harvest_id
-      t.text :source
+
+      t.string :trait_resource_pk, null: false
+      t.string :measurement
       t.string :literal
+      
+      t.text :source
     end
 
     create_table :associations do |t|

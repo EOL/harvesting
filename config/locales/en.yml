@@ -66,6 +66,7 @@ en:
       media: "This node has no associated traits."
     fields:
       created: "Created:"
+      page_id: "EOL Website Page ID:"
       parent: "Parent Node:"
       resource: "From resource:"
       resource_pk: "ID Used by Resource:"
