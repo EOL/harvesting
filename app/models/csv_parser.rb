@@ -2,6 +2,9 @@ require 'csv'
 # Generalized access to character-separated files. Handles more than just commas; the name is based on the CSV class it
 # is derived from.
 class CsvParser
+
+  attr_accessor :diff, :path_to_file
+
   def initialize(path_to_file, options = {})
     @header_lines = options[:header_lines] || 1
     @data_begins_on_line = options[:data_begins_on_line] || 1
@@ -14,7 +17,6 @@ class CsvParser
   def line_at_a_time
     i = 0
     return false unless File.exist?(@path_to_file)
-    @file = @path_to_file
     quote = '"'
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
     CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote) do |row|

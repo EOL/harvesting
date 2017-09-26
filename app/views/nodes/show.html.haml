@@ -15,11 +15,14 @@
     = t(:node_created_by_harvest,
       date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
   %li
-    - if @node.parent
-      %strong= t("nodes.fields.parent")
-      = link_to(@node.parent.canonical, @node.parent)
+    - if pk = @node.parent_resource_pk
+      - if @node.parent
+        %strong= t("nodes.fields.parent")
+        = link_to(@node.parent.canonical, @node.parent)
+      - else
+        %strong= t("nodes.fields.parent_missing", pk: pk)
     - else
-      %strong= t(:node_root_node_notice)
+      %strong= t("nodes.fields.parent_nil")
   %li
     %strong= t("nodes.fields.name")
     %ul
@@ -29,10 +32,10 @@
       - if @node.scientific_name
         %li
           %strong= t("nodes.fields.name_scientific")
-          = @node.scientific_name.normalized_name.string
+          = @node.scientific_name.normalized_name.try(:string)
         %li
           %strong= t("nodes.fields.name_canonical")
-          = @node.scientific_name.normalized_name.canonical
+          = @node.scientific_name.normalized_name.try(:canonical)
         %li
           %strong= t("nodes.fields.name_parse_quality")
           = @node.scientific_name.parse_quality

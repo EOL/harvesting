@@ -45,24 +45,30 @@ module Store
         ancestor_pk = @models[:ancestors][rank]
         ancestry << ancestor_pk
         # NOTE: @nodes_by_ancestry is just a cache, to make sure we don't redefine things. The value is never used.
-        unless @nodes_by_ancestry.key?(ancestry)
-          model = if @diff == :new
-                    model =
-                      { harvest_id: @harvest.id, resource_id: @resouce.id, rank_verbatim: rank,
-                              verbatim: ancestor_pk, parent_resource_pk: prev, resource_pk: ancestor_pk }
-                      prepare_model_for_store(Node, model)
-                      prepare_model_for_store(ScientificName,
-                        { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
-                          verbatim: ancestor_pk, taxonomic_status_verbatim: "HARVEST ANCESTOR" })
-                  else
-                    # NOTE: This will happen less often, so I'm allowing DB call; if this becomes problematic, we can
-                    # (of course) cache these...
-                    Node.find_by_resource_pk(ancestor_pk)
-                  end
-          @nodes_by_ancestry[ancestry] = true # Remember that we don't need to do this again.
+        unless @nodes_by_ancestry.key?(ancestry.join('->'))
+          begin
+            model =
+              if @diff == :new
+                model = { harvest_id: @harvest.id, resource_id: @resource.id, rank_verbatim: rank,
+                          parent_resource_pk: prev, resource_pk: ancestor_pk }
+                prepare_model_for_store(Node, model)
+                name = { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
+                         verbatim: ancestor_pk, taxonomic_status_verbatim: 'HARVEST ANCESTOR' }
+                prepare_model_for_store(ScientificName, name)
+              else
+                # NOTE: This will happen less often, so I'm allowing DB call; if this becomes problematic, we can
+                # (of course) cache these...
+                Node.find_by_resource_pk(ancestor_pk)
+              end
+          rescue => e
+            debugger
+            puts "phoey!"
+          end
+          @nodes_by_ancestry[ancestry.join('->')] = true # Remember that we don't need to do this again.
         end
         prev = ancestor_pk
       end
+      @models[:node][:parent_resource_pk] = prev
     end
 
     # NOTE: this can and should fail if there was no node PK or if it's

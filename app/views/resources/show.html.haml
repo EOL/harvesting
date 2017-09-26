@@ -136,4 +136,4 @@
   = paginate(@root_nodes)
   .ui.list
     - @root_nodes.each do |root_node|
-      .item= link_to(root_node.canonical, root_node)
+      .item= link_to(root_node.canonical || root_node.resource_pk, root_node)

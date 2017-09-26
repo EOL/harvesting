@@ -460,7 +460,7 @@ traity = Resource.quick_define(
 
 if false
   # rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start"
-  # rake db:reset ; rails runner "ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
+  # rails runner "ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
   # rails runner "Harvest.last.destroy ; ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
 
   # Move these lines down below resource def'n if you want them:

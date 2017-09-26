@@ -56,14 +56,14 @@ class ResourceHarvester
     store
     resolve_keys
     resolve_missing_parents
-    # TODO (LOW-PRIO) queue_downloads
+    # TODO: (LOW-PRIO) queue_downloads
     parse_names
     normalize_names
     match_nodes
-    # TODO build_ancestry
-    # TODO normalize_units
-    # TODO (LOW-PRIO) link
-    # TODO (LOW-PRIO) calculate_statistics
+    # TODO: build_ancestry
+    # TODO: normalize_units
+    # TODO: (LOW-PRIO) link
+    # TODO: (LOW-PRIO) calculate_statistics
     complete_harvest_instance
   end
 
@@ -82,17 +82,17 @@ class ResourceHarvester
       fields = {}
       expected_by_file = @headers.dup
       @format.fields.each_with_index do |field, i|
-        raise Exceptions::ColumnMissing.new(field.expected_header) if
+        raise(Exceptions::ColumnMissing, field.expected_header) if
           @headers[i].nil?
-        raise Exceptions::ColumnMismatch.new("expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless
+        raise(Exceptions::ColumnMismatch,
+              "expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless
           field.expected_header == @headers[i]
         fields[@headers[i]] = field
         expected_by_file.delete(@headers[i])
       end
-      raise Exceptions::ColumnUnmatched.new(expected_by_file.join(",")) if
-        expected_by_file.size > 0
+      raise(Exceptions::ColumnUnmatched, expected_by_file.join(',')) if expected_by_file.size.positive?
       @file = @format.converted_csv_path
-      CSV.open(@file, "wb") do |csv|
+      CSV.open(@file, 'wb') do |csv|
         @parser.rows_as_hashes do |row, line|
           @line_num = line
           csv_row = []
@@ -126,7 +126,7 @@ class ResourceHarvester
     each_format do
       unless @converted[@format.id]
         @file = @format.converted_csv_path
-        CSV.open(@file, "wb") do |csv|
+        CSV.open(@file, 'wb') do |csv|
           @parser.rows_as_hashes do |row, line|
             csv_row = []
             @headers.each do |header|
@@ -143,13 +143,13 @@ class ResourceHarvester
       if system(cmd)
         FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
       else
-        raise "Failed system call { #{cmd} } #{$?}"
+        raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
       end
     end
   end
 
   def uri_exists?(uri)
-    return true if @uris.has_key?(uri)
+    return true if @uris.key?(uri)
     if Term.where(uri: uri).exists?
       @uris[uri] = true
     else
@@ -160,7 +160,6 @@ class ResourceHarvester
   # Create deltas from previous harvests (or fake one from "nothing")
   def delta
     each_format do
-      pn = Pathname.new(@format.file)
       @format.update_attribute(:diff, @format.diff_path)
       other_fmt = @previous_harvest ? @previous_harvest.formats.find { |f| f.represents == @format.represents } : nil
       @file = @format.diff # We're now reading from the diff...
@@ -184,7 +183,7 @@ class ResourceHarvester
   end
 
   def fake_diff_from_nothing
-    puts ">> fake_diff_from_nothing"
+    puts '>> fake_diff_from_nothing'
     system("echo \"0a\" > #{@format.diff}")
     system("tail -n +#{@format.header_lines + 1} #{@format.converted_csv_path} >> #{@format.diff}")
     system("echo \".\" >> #{@format.diff}")
@@ -199,6 +198,8 @@ class ResourceHarvester
     each_diff do
       fields = build_fields
       any_diff = @parser.diff_as_hashes(@headers) do |row|
+        @file = @parser.path_to_file
+        @diff = @parser.diff
         # We *could* skip this, but I prefer not to deal with the missing keys.
         @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
                     trait: nil }
@@ -224,17 +225,15 @@ class ResourceHarvester
             build_models
           end
         rescue => e
-            puts "Failed to save data from row #{@line_num}..."
-            puts e.message
-            puts e.backtrace[0..10]
-            debugger
-            raise e
+          puts "Failed to save data from row #{@line_num}..."
+          puts e.message
+          puts e.backtrace[0..10]
+          debugger
+          raise e
           # end
         end
       end
-      unless any_diff
-        log_warning("There were no differences in this file!")
-      end
+      log_warning('There were no differences in this file!') unless any_diff
     end
     find_orphan_parent_nodes
     find_duplicate_nodes
@@ -346,9 +345,10 @@ class ResourceHarvester
     klass.connection.execute(clean_sql)
   end
 
-  # NOTE: yes, this could be *quite* large, but I believe memory is fine with a
-  # hash of two million (smallish) members, so I'm doing it.
+  # NOTE: yes, this could be *quite* large, but I believe memory is fine with a hash of two million (smallish) members,
+  # so I'm doing it.
   def gather_nodes
+    @nodes ||= {}
     @resource.nodes.published.find_each do |node|
       @nodes[node.resource_pk] = node
     end
@@ -388,10 +388,13 @@ class ResourceHarvester
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
-    if @resource.id == 1
+    # Resource 1 is the DWH and there is no names-matching for it. TODO: other resources will "skip" matching, and issue
+    # warnings instead...
+    if @resource.id != 1
       # Do nothing ... should have been handled by the field.
     else
-      puts "GAH! No matching nodes yet."
+      # YOU WERE HERE - Eeep!
+      NamesMatcher.for_resource(@resource)
     end
   end
 
