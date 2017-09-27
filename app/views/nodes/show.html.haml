@@ -8,7 +8,7 @@
     = @node.resource_pk
   %li
     %strong= t("nodes.fields.page_id")
-    = @node.page_id
+    = link_to(@node.page_id, "http://eol.org/pages/#{@node.page_id}")
   %li
     %strong= t("nodes.fields.created")
     = l(@node.created_at, format: :short)
@@ -37,6 +37,12 @@
           %strong= t("nodes.fields.name_canonical")
           = @node.scientific_name.normalized_name.try(:canonical)
         %li
+          %strong= t("nodes.fields.authors")
+          = @node.scientific_name.authors.join('; ')
+        %li
+          %strong= t("nodes.fields.year")
+          = @node.scientific_name.year
+        %li
           %strong= t("nodes.fields.name_parse_quality")
           = @node.scientific_name.parse_quality
         %li
@@ -59,7 +65,6 @@
               %li
                 = vern.verbatim
                 = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
-      %li TODO: ...blah blah blah, lots more fields here, later.
     %li
       %strong= t("nodes.fields.name_rank_verbatim")
       = @node.rank_verbatim

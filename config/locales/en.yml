@@ -65,6 +65,7 @@ en:
       media: "This node has no associated media."
       media: "This node has no associated traits."
     fields:
+      authors: "Authors (semi-colon delimited):"
       created: "Created:"
       page_id: "EOL Website Page ID:"
       parent: "Parent Node:"
@@ -81,6 +82,7 @@ en:
       name_taxonomic_status_verbatim: "Taxonomic Status (verbatim from resource):"
       name_verbatim: "Verbatim from resource:"
       vernaculars: "Vernacular Names:"
+      year: "Year of authority (first, if several found):"
     headers:
       children: "Children:"
       media: "Media:"

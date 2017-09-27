@@ -470,3 +470,5 @@ if false
   harvester = ResourceHarvester.new(resource)
   harvester.start
 end
+
+Node.reindex # This empties all of the stuff from ElasticSearch.

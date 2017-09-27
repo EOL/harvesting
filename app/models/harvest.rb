@@ -18,12 +18,12 @@ class Harvest < ActiveRecord::Base
   def log(message, options = {})
     options[:cat] ||= :infos
     trace = options[:e] ? options[:e].backtrace.join("\n") : nil
-    hlogs << Hlog.create!(
+    hash = {
       harvest: self,
       category: options[:cat],
-      message: message,
-      backtrace: trace,
-      format_id: 0 # TODO: remove this. I was getting past a bogus migration.
-    )
+      message: message[0..65_534], # Truncates really long messages, alas...
+      backtrace: trace
+    }
+    hlogs << Hlog.create!(hash.merge(format: options[:format]))
   end
 end

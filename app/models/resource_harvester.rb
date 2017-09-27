@@ -56,11 +56,12 @@ class ResourceHarvester
     store
     resolve_keys
     resolve_missing_parents
+    rebuild_nodes
     # TODO: (LOW-PRIO) queue_downloads
     parse_names
     normalize_names
     match_nodes
-    # TODO: build_ancestry
+    reindex_search
     # TODO: normalize_units
     # TODO: (LOW-PRIO) link
     # TODO: (LOW-PRIO) calculate_statistics
@@ -185,7 +186,7 @@ class ResourceHarvester
   def fake_diff_from_nothing
     puts '>> fake_diff_from_nothing'
     system("echo \"0a\" > #{@format.diff}")
-    system("tail -n +#{@format.header_lines + 1} #{@format.converted_csv_path} >> #{@format.diff}")
+    system("tail -n +#{@format.data_begins_on_line} #{@format.converted_csv_path} >> #{@format.diff}")
     system("echo \".\" >> #{@format.diff}")
   end
 
@@ -292,6 +293,10 @@ class ResourceHarvester
     end
   end
 
+  def rebuild_nodes
+    Node.where(harvest_id: @harvest.id).rebuild!(false)
+  end
+
   def resolve_keys
     propagate_id(Node, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
     propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk",
@@ -388,17 +393,11 @@ class ResourceHarvester
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
-    # Resource 1 is the DWH and there is no names-matching for it. TODO: other resources will "skip" matching, and issue
-    # warnings instead...
-    if @resource.id != 1
-      # Do nothing ... should have been handled by the field.
-    else
-      NamesMatcher.for_harvest(@harvest)
-    end
+    NamesMatcher.for_harvest(@harvest)
   end
 
-  # store ancestry for objects (so we know which pages are affected)
-  def build_ancestry
+  def reindex_search
+    Node.where(harvest_id: @harvest.id).reindex
   end
 
   def normalize_units

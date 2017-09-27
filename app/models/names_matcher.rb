@@ -5,7 +5,7 @@ class NamesMatcher
 
   def initialize(harvest)
     @harvest = harvest
-    @resource = harvest.resource
+    @resource = @harvest.resource
     @root_nodes = @resource.nodes.published.root
     @strategies = [
       :match_canonical_and_authors_in_eol,
@@ -23,47 +23,63 @@ class NamesMatcher
     @max_ancestor_depth = 2
     # If fewer (or equal to) this many ancestors match, then we assume this is just a bad match (and we never allow it),
     # regardless of how much "better" it might look than others due to sheer numbers.
-    @minimum_ancestry_match_pct = 0.2
+    @minimum_ancestry_match = {
+      0 => 0,
+      1 => 1,
+      2 => 1,
+      3 => 1,
+      4 => 1,
+      5 => 2,
+      6 => 2,
+      7 => 2,
+      8 => 3,
+      9 => 3
+    }
+    (10..250).each { |n| @minimum_ancestry_match[n] = (n * 0.3).ceil }
     @ancestors = []
     @new_page_id = nil
   end
 
   def match(name, how)
     how[:where] ||= {}
-    how[:where].merge(ancestor_ids: @ancestor.id) if @ancestor
-    how[:where].merge(is_hybrid: true) if name.hybrid?
+    how[:where].merge!(canonical: name.canonical)
+    how[:where].merge!(ancestor_page_ids: @ancestor.page_id) if @ancestor
+    how[:where].merge!(is_hybrid: true) if name.hybrid?
     how.delete(:where) if how[:where].empty?
-    Node.search(name.canonical, how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
+    Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
   end
 
   def match_canonical_and_authors_in_eol(name)
     puts "## match_canonical_and_authors_in_eol"
-    match(name, fields: { canonical: :exact }, where: { resource_id: 1, authors: name.authors })
+    debugger if name.canonical == "Astrangia poculata"
+    match(name, fields: [:canonical], where: { resource_id: 1, authors: name.authors })
   end
 
   def match_synonyms_and_authors_in_eol(name)
     puts "## match_synonyms_and_authors_in_eol"
-    match(name, fields: { synonyms: :exact }, where: { resource_id: 1, synonym_authors: name.authors })
+    match(name, fields: [:synonyms], where: { resource_id: 1, synonym_authors: name.authors })
   end
 
+  # TODO: some resources CAN match themselves...
   def match_synonyms_and_authors_from_partners(name)
     puts "## match_synonyms_and_authors_from_partners"
-    match(name, fields: { synonyms: :exact }, where: { synonym_authors: name.authors })
+    match(name, fields: [:synonyms], where: { synonym_authors: name.authors, resource_id: { not: @resource.id } })
   end
 
   def match_canonical_in_eol(name)
     puts "## match_canonical_in_eol"
-    match(name, fields: { canonical: :exact }, where: { resource_id: 1 })
+    match(name, fields: [:canonical], where: { resource_id: 1 })
   end
 
   def match_synonyms_in_eol(name)
     puts "## match_synonyms_in_eol"
-    match(name, fields: { synonyms: :exact }, where: { resource_id: 1 })
+    match(name, fields: [:synonyms], where: { resource_id: 1 })
   end
 
+  # TODO: some resources CAN match themselves...
   def match_canonical_from_partners(name)
     puts "## match_canonical_from_partners"
-    match(name, fields: { canonical: :exact })
+    match(name, fields: [:canonical], where: { resource_id: { not: @resource.id } })
   end
 
   def start
@@ -72,11 +88,11 @@ class NamesMatcher
 
   # The algorithm, as pseudo-code (Ruby, for brevity):
   def map_all_nodes_to_pages(root_nodes)
-    @harvest.log("NamesMatcher completed", cat: :starts)
+    @harvest.log("NamesMatcher", cat: :starts)
     puts "(( map_all_nodes_to_pages.start"
     map_nodes(root_nodes)
     puts ")) map_all_nodes_to_pages.end"
-    @harvest.log("NamesMatcher completed", cat: :ends)
+    @harvest.log("NamesMatcher", cat: :ends)
   end
 
   def map_nodes(nodes)
@@ -97,7 +113,6 @@ class NamesMatcher
       puts "-- Skipping node #{node.id} (#{node.canonical})"
     end
     return unless node.children.any?
-    puts ".. CHILDREN!!!"
     @ancestors.push(node)
     map_nodes(node.children)
     @ancestors.pop
@@ -118,7 +133,7 @@ class NamesMatcher
   def matched_ancestor(node, depth)
     i = 0
     @ancestors.reverse.each do |ancestor|
-      unless ancestor.page_id.nil?
+      unless ancestor.page_id.nil? || ancestor.in_unmapped_area?
         return ancestor if i >= depth
         i += 1
       end
@@ -156,14 +171,15 @@ class NamesMatcher
   end
 
   def more_than_one_match(node, matching_nodes)
-    puts ".. Oh fun! More than one match: ##{matching_nodes.total_count}"
+    puts ".. Oh fun! #{matching_nodes.total_count} matches for \"#{node.canonical}\""
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
       scores[matching_node][:matching_children] = count_matches(matching_node.child_names, node.child_names)
       scores[matching_node][:matching_ancestors] = count_ancestors_with_page_ids_assigned
+      scores[matching_node][:score] = 0
       # NOTE: we are unsure of how effective this is; we really need to pay # attention to how this performs.
-      if scores[matching_node][:matching_ancestors] <= (@ancestors.size * @minimum_ancestry_match_pct)
+      if scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
         puts ".. IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}"
         scores[matching_node][:matching_ancestors] = 0
         # This is just a warning, since it won't match, but might be worth investigating, since it's *possible* we're
@@ -185,23 +201,32 @@ class NamesMatcher
         best_score = details[:score]
         tie = false
       elsif details[:score] == best_score
-        tie = true
+        tie = page
       end
     end
+    simple_scores = {}
+    if top_scores = scores.sort_by { |k,v| 0 - v[:score] }
+      top_scores[0..4].reverse.each { |k, v| simple_scores[k.id] = v }
+    end
     if best_score.zero?
-      unmapped(node, "best score was 0: #{scores.inspect}", opts)
+      unmapped(node, "best score was 0: #{simple_scores.inspect}")
     elsif tie
-      @harvest.log("Node #{node.id} had a TIE for best matching name: #{scores.inspect}", cat: :warns)
-      unmapped(node, "best score tied: #{scores.inspect}", opts)
+      message = "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
+        "#{best_match.canonical} = #{scores[best_match].inspect} "\
+        "VS #{tie.canonical} = #{scores[tie].inspect}"
+      unmapped(node, message, cat: :warns)
     else
-      @harvest.log("Node #{node.id} matched page #{best_match['page_id']}: #{scores.inspect}")
+      @harvest.log("Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
+        "#{simple_scores.inspect}")
       node.map_to_page(best_match['page_id'])
     end
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
   end
 
   def unmapped(node, message, opts = {})
-    @harvest.log("Node #{node.id} could NOT be matched: #{message} ; OPTS: #{opts.inspect}")
+    puts "UNMATCHED: #{node.canonical}"
+    log_msg = "Node #{node.id} (#{node.canonical}) could NOT be matched: #{message}"
+    @harvest.log(log_msg, opts)
     node.create_new_page(new_page_id)
   end
 

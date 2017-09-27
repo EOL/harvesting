@@ -80,16 +80,7 @@ class Format < ActiveRecord::Base
 
   # You can pass in :cat, :e, :line as options
   def log(message, options = {})
-    options[:cat] ||= :infos
-    trace = options[:e] ? options[:e].backtrace.join("\n") : nil
-    hlogs << Hlog.create!(
-      format: self,
-      harvest: harvest,
-      category: options[:cat],
-      message: message,
-      backtrace: trace,
-      line: options[:line]
-    )
+    harvest.log(message, options.merge(format: self))
   end
 
   def special_path(dir, ext)

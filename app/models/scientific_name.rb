@@ -12,8 +12,9 @@ class ScientificName < ActiveRecord::Base
     :synonym, :unusable ]
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :used_for_merges, -> { where(is_used_for_merges: true) }
 
   def authors
-    authorship.split('; ')
+    authorship.try(:split, '; ')
   end
 end

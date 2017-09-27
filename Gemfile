@@ -2,15 +2,13 @@ source "https://rubygems.org"
 
 # Because we are going to create many, many records!
 gem 'activerecord-import'
-
+# Nested set for Node:
+gem 'awesome_nested_set'
 # Acts As List simplifies ordered lists of models:
 gem 'acts_as_list', '~> 0.7.6'
 
 # Parse Excel files:
 gem "creek", "~> 1.1"
-
-# ElasticSearch:
-gem 'searchkick'
 
 # Because ERB is just plain silly compared to Haml:
 gem 'haml-rails'
@@ -31,6 +29,8 @@ gem "rails", "4.2.4"
 
 # Use SCSS for stylesheets
 gem "sass-rails", "~> 5.0"
+# ElasticSearch:
+gem 'searchkick'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem "sdoc", "~> 0.4.0", group: :doc
 

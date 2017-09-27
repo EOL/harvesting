@@ -5,9 +5,12 @@ class InitialContent < ActiveRecord::Migration
       t.integer :resource_id, null: false, index: true
       t.integer :harvest_id, null: false, index: true
       t.integer :page_id, comment: 'null means unassigned, of course'
-      t.integer :parent_id, null: false, default: 0, index: true
-      t.integer :scientific_name_id, comment: 'null should only be temporary. Should be populated after propagation.'
+      t.integer :parent_id, index: true, comment: 'null should only be temporary; populated after propagation.'
+      t.integer :scientific_name_id, comment: 'null should only be temporary; populated after propagation.'
       t.integer :removed_by_harvest_id
+      t.integer :lft, index: true
+      t.integer :rgt, index: true
+      t.integer :depth, index: true, comment: 'This may not require an index, but awesome_nested_set suggests one.'
 
       t.string :canonical, index: true, comment: 'indexed to facilitate sorting'
       t.string :taxonomic_status_verbatim

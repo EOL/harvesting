@@ -110,7 +110,7 @@ class InitialSchema < ActiveRecord::Migration
       t.integer :harvest_id, null: false
       t.integer :format_id, comment: 'if empty, the log is not file-specific.'
       t.integer :category, comment: 'Enum: errors, warns, infos, progs, loops, starts, ends, counts, queries'
-      t.string :message
+      t.text :message
       t.text :backtrace
       t.integer :line
       t.datetime :created_at
