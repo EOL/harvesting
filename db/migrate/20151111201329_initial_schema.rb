@@ -9,7 +9,7 @@ class InitialSchema < ActiveRecord::Migration
       t.string :name, null: false
       t.string :abbr, limit: 16
       t.string :short_name, null: false, limit: 32, default: ""
-      t.string :url, null: false, default: ""
+      t.string :homepage_url, null: false, default: ""
       t.text :description, null: false
       # links_json used for creating arbitrary pairs of link names/urls:
       t.string :links_json, null: false, default: "{}"

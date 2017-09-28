@@ -6,7 +6,7 @@ json.resources @resources do |resource|
   json.has_duplicate_nodes !resource.might_have_duplicate_taxa?
   if partner = resource.partner
     json.partner do |json|
-      json.extract! partner, *%i(id name abbr short_name url description links_json)
+      json.extract! partner, *%i(id name abbr short_name homepage_url description links_json)
     end
   end
 end

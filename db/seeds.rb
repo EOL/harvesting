@@ -13,7 +13,7 @@ dwh = Resource.quick_define(
     name: "Encyclopedia of Life",
     abbr: "EOL",
     short_name: "EOL",
-    url: "http://eol.org",
+    homepage_url: "http://eol.org",
     description: "A webpage for every species. Or something like that.",
     auto_publish: true
   },

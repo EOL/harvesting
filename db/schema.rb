@@ -331,7 +331,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.string   "name",         limit: 255,                   null: false
     t.string   "abbr",         limit: 16
     t.string   "short_name",   limit: 32,    default: "",    null: false
-    t.string   "url",          limit: 255,   default: "",    null: false
+    t.string   "homepage_url", limit: 255,   default: "",    null: false
     t.text     "description",  limit: 65535,                 null: false
     t.string   "links_json",   limit: 255,   default: "{}",  null: false
     t.boolean  "auto_publish",               default: false, null: false
