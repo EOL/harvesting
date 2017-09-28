@@ -362,20 +362,31 @@ ActiveRecord::Schema.define(version: 20170907152109) do
 
   create_table "resources", force: :cascade do |t|
     t.integer  "position",                  limit: 4
-    t.integer  "min_days_between_harvests", limit: 4,   default: 0,     null: false
+    t.integer  "min_days_between_harvests", limit: 4,     default: 0,     null: false
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "nodes_count",               limit: 4
-    t.string   "harvest_months_json",       limit: 255, default: "[]",  null: false
-    t.string   "name",                      limit: 255,                 null: false
-    t.string   "abbr",                      limit: 255,                 null: false
-    t.string   "pk_url",                    limit: 255, default: "$PK", null: false
-    t.boolean  "auto_publish",                          default: false, null: false
-    t.boolean  "not_trusted",                           default: false, null: false
-    t.boolean  "hold_harvesting",                       default: false, null: false
-    t.boolean  "might_have_duplicate_taxa",             default: false, null: false
-    t.boolean  "force_harvest",                         default: false, null: false
-    t.datetime "created_at",                                            null: false
-    t.datetime "updated_at",                                            null: false
+    t.string   "harvest_months_json",       limit: 255,   default: "[]",  null: false
+    t.string   "name",                      limit: 255,                   null: false
+    t.string   "abbr",                      limit: 255,                   null: false
+    t.string   "pk_url",                    limit: 255,   default: "$PK", null: false
+    t.boolean  "auto_publish",                            default: false, null: false
+    t.boolean  "not_trusted",                             default: false, null: false
+    t.boolean  "hold_harvesting",                         default: false, null: false
+    t.boolean  "might_have_duplicate_taxa",               default: false, null: false
+    t.boolean  "force_harvest",                           default: false, null: false
+    t.datetime "created_at",                                              null: false
+    t.datetime "updated_at",                                              null: false
+    t.text     "description",               limit: 65535
+    t.text     "notes",                     limit: 65535
+    t.boolean  "is_browsable",                            default: false, null: false
+    t.integer  "default_language_id",       limit: 4
+    t.integer  "default_license_id",        limit: 4
+    t.string   "default_rights_statement",  limit: 300
+    t.text     "default_rights_holder",     limit: 65535
+    t.integer  "publish_status",            limit: 4
+    t.integer  "dataset_license_id",        limit: 4
+    t.string   "dataset_rights_holder",     limit: 255
+    t.string   "dataset_rights_statement",  limit: 255
   end
 
   add_index "resources", ["name"], name: "index_resources_on_name", using: :btree

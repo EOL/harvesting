@@ -1,4 +1,6 @@
 class Resource < ActiveRecord::Base
+  belongs_to :partner, inverse_of: :resources
+
   has_many :formats, inverse_of: :resource
   has_many :harvests, inverse_of: :resource
   has_many :scientific_names, inverse_of: :resource
@@ -7,6 +9,8 @@ class Resource < ActiveRecord::Base
   has_many :media, inverse_of: :resource
   has_many :traits, inverse_of: :resource
   has_many :meta_traits, inverse_of: :resource
+
+  enum publish_status: %i(unpublished publishing published deprecated)
 
   acts_as_list
 

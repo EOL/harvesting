@@ -32,8 +32,7 @@ class InitialSchema < ActiveRecord::Migration
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
-      t.string :name, null: false, index: true,
-        comment: "indexed to facilitate sorting by name"
+      t.string :name, null: false, index: true, comment: "indexed to facilitate sorting by name"
       t.string :abbr, null: false
       t.string :pk_url, null: false, default: "$PK"
       t.boolean :auto_publish, null: false, default: false
@@ -42,8 +41,21 @@ class InitialSchema < ActiveRecord::Migration
       t.boolean :might_have_duplicate_taxa, null: false, default: false
       t.boolean :force_harvest, null: false, default: false
       t.timestamps null: false
-      # TODO: deafult licensure
-      # TODO: deafult values
+      t.text :description
+      t.text :notes
+      t.boolean :is_browsable, null: false, default: false
+
+      # NOTE: these were removed in a later migration:
+      t.integer :default_language_id
+      t.integer :default_license_id, comment: "was: license_id"
+      t.string :default_rights_statement, limit: 300, comment: "was: rights_statement"
+      t.text :default_rights_holder, comment: "was: rights_holder"
+
+      t.integer :publish_status, comment: "enum: unpublished, publishing, published, deprecated"
+
+      t.integer :dataset_license_id, comment: "applies to the set of data itself (not its individual members)"
+      t.string :dataset_rights_holder, comment: "applies to the set of data itself (not its individual members)"
+      t.string :dataset_rights_statement, comment: "applies to the set of data itself (not its individual members)"
     end
 
     create_table :formats do |t|
