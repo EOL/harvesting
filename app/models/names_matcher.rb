@@ -51,7 +51,6 @@ class NamesMatcher
 
   def match_canonical_and_authors_in_eol(name)
     puts "## match_canonical_and_authors_in_eol"
-    debugger if name.canonical == "Astrangia poculata"
     match(name, fields: [:canonical], where: { resource_id: 1, authors: name.authors })
   end
 
