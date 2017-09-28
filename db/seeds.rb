@@ -5,22 +5,21 @@ Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 
 # rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start"
 # Dynamic Hierarchy should be first:
-partner = Partner.create(
-  name: "Encyclopedia of Life",
-  acronym: "EOL",
-  short_name: "EOL",
-  url: "http://eol.org",
-  description: "A webpage for every species. Or something like that.",
-  auto_publish: true
-)
 dwh = Resource.quick_define(
   name: 'EOL Dynamic Hierarchy',
   abbr: 'DWH',
   type: :csv,
-  partner_id: partner.id,
+  partner: {
+    name: "Encyclopedia of Life",
+    abbr: "EOL",
+    short_name: "EOL",
+    url: "http://eol.org",
+    description: "A webpage for every species. Or something like that.",
+    auto_publish: true
+  },
   field_sep: "\t",
   pk_url: 'http://eol.org/$PK&but=not_really',
-  base_dir: '/Users/jrice/Downloads/dwh', # NOTE: sorry, yes, I've got this personalized. TODO: config.
+  base_dir: Rails.root.join('spec', 'files'),
   formats: {
     nodes: { loc: 'taxa_c.tsv', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },

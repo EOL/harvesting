@@ -329,7 +329,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
 
   create_table "partners", force: :cascade do |t|
     t.string   "name",         limit: 255,                   null: false
-    t.string   "acronym",      limit: 16,    default: "",    null: false
+    t.string   "abbr",      limit: 16,    default: "",    null: false
     t.string   "short_name",   limit: 32,    default: "",    null: false
     t.string   "url",          limit: 255,   default: "",    null: false
     t.text     "description",  limit: 65535,                 null: false
@@ -365,6 +365,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.integer  "min_days_between_harvests", limit: 4,     default: 0,     null: false
     t.integer  "harvest_day_of_month",      limit: 4
     t.integer  "nodes_count",               limit: 4
+    t.integer  "partner_id",                limit: 4
     t.string   "harvest_months_json",       limit: 255,   default: "[]",  null: false
     t.string   "name",                      limit: 255,                   null: false
     t.string   "abbr",                      limit: 255,                   null: false

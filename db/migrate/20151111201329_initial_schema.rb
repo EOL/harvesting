@@ -7,7 +7,7 @@ class InitialSchema < ActiveRecord::Migration
     create_table :partners do |t|
       # The ID of the remote EOL site that created this partner:
       t.string :name, null: false
-      t.string :acronym, null: false, limit: 16, default: ""
+      t.string :abbr, limit: 16
       t.string :short_name, null: false, limit: 32, default: ""
       t.string :url, null: false, default: ""
       t.text :description, null: false
@@ -29,11 +29,12 @@ class InitialSchema < ActiveRecord::Migration
       # If harvest_day_of_month is null, use min_days_between_harvests
       t.integer :harvest_day_of_month
       t.integer :nodes_count
+      t.integer :partner_id
       # harvest_months_json is an array of month numbers (1 is January) to run
       # harvests; empty means "any month is okay"
       t.string :harvest_months_json, null: false, default: "[]"
       t.string :name, null: false, index: true, comment: "indexed to facilitate sorting by name"
-      t.string :abbr, null: false
+      t.string :abbr, limit: 16
       t.string :pk_url, null: false, default: "$PK"
       t.boolean :auto_publish, null: false, default: false
       t.boolean :not_trusted, null: false, default: false

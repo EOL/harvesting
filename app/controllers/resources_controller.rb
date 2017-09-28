@@ -1,15 +1,19 @@
 class ResourcesController < ApplicationController
   def index
-    @resources = Resource.order(:name).page(params[:page]).
-      per(params[:per_page] || 50)
+    @resources = Resource.order(:name).includes([:partner])
+    @resources = @resources.where(["updated_at > ?", Time.at(params[:since].to_i)]) if params[:since]
+    @resources = @resources.page(params[:page]).per(params[:per_page] || 50)
   end
 
   def show
     @resource = Resource.find(params[:id])
     @formats = Format.where(resource_id: @resource.id).abstract
-    @root_nodes = @resource.nodes.published.root.order("canonical, resource_pk").page(params[:page] || 1).per(params[:per] || 10)
     respond_to do |fmt|
-      fmt.html { }
+      fmt.html do
+        @root_nodes = @resource.nodes.published.root.order("canonical, resource_pk").page(params[:page] || 1)
+                               .per(params[:per] || 10)
+      end
+      # TODO: add the "since" param...
       fmt.json { }
     end
   end

@@ -15,12 +15,18 @@ class Resource < ActiveRecord::Base
   acts_as_list
 
   def self.quick_define(options)
+    partner = if p_opts = options[:partner]
+                Partner.where(p_opts).first_or_create
+              else
+                Partner.first
+              end
     resource = where(name: options[:name]).first_or_create do |r|
       abbr = options[:name].gsub(/[^A-Z]/, "")
       abbr ||= options[:name][0..3].upcase
       r.name = options[:name]
       r.pk_url = options[:pk_url] || "$PK"
       r.abbr = abbr
+      r.partner_id = partner.id
     end
     pos = 1
     options[:formats].each do |rep, f_def|
