@@ -24,4 +24,16 @@ json.traits @traits do |trait|
     json.value_literal meta.literal
     json.source meta.source
   end
+
+  json.children trait.children do |child|
+    json.predicate child.predicate_term.uri
+    json.value_uri child.object_term.try(:uri)
+    json.value_num child.measurement
+    json.value_literal child.literal
+    json.units child.units_term.try(:uri)
+    json.statistical_method child.statistical_method_term.try(:uri)
+    json.sex child.sex_term.try(:uri)
+    json.lifestage child.lifestage_term.try(:uri)
+    json.source child.source
+  end
 end

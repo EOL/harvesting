@@ -139,64 +139,48 @@ module Store
     end
 
     def build_trait
-      parent = @models[:trait][:trait_resource_pk]
-      # TODO: occurrence = find_occurrence(@models[:trait])
+      parent = @models[:trait][:parent_pk]
+      occurrence = @models[:trait][:occurrence_resource_pk]
       # TODO: we need to keep a "back reference" of which traits have been hung off of occurrences, because some
       # meta-traits can affect an occurrence and we need to be sure those changes are applied to all associated traits.
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
-      if @models[:trait][:of_taxon]
-        if parent
-          log_warning("IGNORING a measurement of a taxon WITH a parentMeasurementID #{parent}")
-        else
-          # This is a "normal" trait.
-          # TODO: associations
-          predicate = @models[:trait].delete(:predicate)
-          # TODO: error handling for predicate ... cannot be blank.
-          predicate_term = find_or_create_term(predicate)
-          @models[:trait][:predicate_term_id] = predicate_term.id
-          units = @models[:trait].delete(:units)
-          units_term = find_or_create_term(units)
-          @models[:trait][:units_term_id] = units_term.try(:id)
+      if @models[:trait][:of_taxon] && parent
+        return log_warning("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a parentMeasurementID #{parent}")
 
-          @models[:trait] = convert_trait_value(@models[:trait])
-          if @models[:trait][:statistical_method]
-            stat_m = @models[:trait].delete(:statistical_method)
-            @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
-          end
-          meta = @models[:trait].delete(:meta) || {}
-          trait = prepare_model_for_store(Trait, @models[:trait])
-          meta.each do |key, value|
-            datum = {}
-            datum[:resource_id] = @resource.id
-            datum[:harvest_id] = @harvest.id
-            datum[:trait_resource_pk] = trait.resource_pk
-            predicate_term = find_or_create_term(predicate)
-            datum[:predicate_term_id] = predicate_term.id
-            datum = convert_meta_value(datum, value)
-            prepare_model_for_store(MetaTrait, datum)
-          end
-        end
-      else # This is metadata...
-        # TODO (long-term): allow meta-meta data. Right now we cannot do that.
-        @models[:trait] = convert_trait_value(@models[:trait])
-        if parent
-          # Metadata of a "normal" trait...
-          # Grab the predicate
-          # grab the value (various types)
-          # grab the units (if there are any)
-          # Add it to the metadata of the trait
-        elsif occurrence
-          # This is metadata of an occurrence (e.g.: saying that it was down by trawl)
-
-          # TODO: shoot. We're going to have to be careful here and look for occurrances which have "already been used,"
-          # and add these metadata to those traits. Tricky, tricky. :S
-
-        else
-          log_warning("IGNORING a measurement NOT of a taxon with NO parent and NO occurrence ID.")
-        end
       end
-      # TODO: add metadata... Sheesh.
+      if !@models[:trait][:of_taxon] && parent.blank? && occurrence.blank?
+        puts @models[:trait].inspect
+        debugger
+        return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent and NO occurrence ID.")
+      end
+      # TODO: associations
+      predicate = @models[:trait].delete(:predicate)
+      # TODO: error handling for predicate ... cannot be blank.
+      predicate_term = find_or_create_term(predicate)
+      @models[:trait][:predicate_term_id] = predicate_term.id
+      units = @models[:trait].delete(:units)
+      units_term = find_or_create_term(units)
+      @models[:trait][:units_term_id] = units_term.try(:id)
+
+      @models[:trait] = convert_trait_value(@models[:trait])
+
+      if @models[:trait][:statistical_method]
+        stat_m = @models[:trait].delete(:statistical_method)
+        @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
+      end
+      meta = @models[:trait].delete(:meta) || {}
+      trait = prepare_model_for_store(Trait, @models[:trait])
+      meta.each do |key, value|
+        datum = {}
+        datum[:resource_id] = @resource.id
+        datum[:harvest_id] = @harvest.id
+        datum[:trait_resource_pk] = trait.resource_pk
+        predicate_term = find_or_create_term(predicate)
+        datum[:predicate_term_id] = predicate_term.id
+        datum = convert_meta_value(datum, value)
+        prepare_model_for_store(MetaTrait, datum)
+      end
     end
 
     def convert_trait_value(instance)
@@ -224,6 +208,7 @@ module Store
       instance
     end
 
+    # Simpler:
     def convert_meta_value(datum, value)
       if value =~ URI::regexp
         object_term = find_or_create_term(value)

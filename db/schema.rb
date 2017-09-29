@@ -459,6 +459,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
 
   create_table "traits", force: :cascade do |t|
     t.integer "resource_id",                limit: 4,     null: false
+    t.integer "parent_id",                  limit: 4
     t.integer "harvest_id",                 limit: 4,     null: false
     t.integer "node_id",                    limit: 4
     t.integer "predicate_term_id",          limit: 4,     null: false
@@ -473,6 +474,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.string  "node_resource_pk",           limit: 255
     t.string  "occurrence_resource_pk",     limit: 255
     t.string  "association_resource_pk",    limit: 255
+    t.string  "parent_pk",                  limit: 255
     t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
     t.string  "literal",                    limit: 255
@@ -481,6 +483,7 @@ ActiveRecord::Schema.define(version: 20170907152109) do
 
   add_index "traits", ["harvest_id"], name: "index_traits_on_harvest_id", using: :btree
   add_index "traits", ["occurrence_resource_pk"], name: "index_traits_on_occurrence_resource_pk", using: :btree
+  add_index "traits", ["parent_id"], name: "index_traits_on_parent_id", using: :btree
   add_index "traits", ["resource_id", "resource_pk"], name: "index_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "unit_conversion", force: :cascade do |t|

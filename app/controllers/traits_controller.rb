@@ -1,7 +1,7 @@
 class TraitsController < ApplicationController
   def index
     @resource = Resource.find(params[:resource_id])
-    @traits = @resource.traits
+    @traits = @resource.traits.no_parent
                        .includes(:predicate_term, :object_term, :units_term, :statistical_method_term, :sex_term,
                                  :lifestage_term, :node, meta_traits: %i(predicate_term object_term units_term
                                                                          statistical_method_term))

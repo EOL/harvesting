@@ -54,7 +54,8 @@ class ResourceHarvester
       Dir.exist?(Rails.public_path.join('diff'))
     delta
     store
-    resolve_keys
+    resolve_node_keys
+    resolve_trait_keys
     resolve_missing_parents
     rebuild_nodes
     # TODO: (LOW-PRIO) queue_downloads
@@ -297,24 +298,34 @@ class ResourceHarvester
     Node.where(harvest_id: @harvest.id).rebuild!(false)
   end
 
-  def resolve_keys
+  def resolve_node_keys
+    # Node ancestry:
     propagate_id(Node, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
+    # Node scientific names:
     propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk",
                        set: "scientific_name_id", with: "id")
-    propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
-    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
+    # Scientific names to nodes:
     propagate_id(ScientificName, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
-    propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk",
-                       set: "scientific_name_id", with: "id")
+  end
+
+  def resolve_trait_keys
+    # Occurrences to nodes:
+    propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    # Traits to nodes (through occurrences)
+    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
+    # Traits to sex term:
     propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
                         set: "sex_term_id", with: "sex_term_id")
+    # Traits to lifestage term:
     propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
                         set: "lifestage_term_id", with: "lifestage_term_id")
-    propagate_id(MetaTrait, fk: "trait_resource_pk", other: "traits.resource_pk",
-                        set: "trait_id", with: "id")
+    # MetaTraits to traits:
+    propagate_id(MetaTrait, fk: "trait_resource_pk", other: "traits.resource_pk", set: "trait_id", with: "id")
+    # MetaTraits (simple, measurement row refers to parent) to traits:
+    propagate_id(Trait, fk: "parent_pk", other: "traits.resource_pk", set: "parent_id", with: "id")
 
     # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
-    # TODO: associations! Yeesh.
+    # TODO: traits that are associations! Yeesh.
   end
 
   def add_occurrence_metadata_to_traits

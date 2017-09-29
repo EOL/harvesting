@@ -262,6 +262,7 @@ class InitialContent < ActiveRecord::Migration
 
     create_table :traits do |t|
       t.integer :resource_id, null: false, comment: 'Supplier'
+      t.integer :parent_id, index: true, comment: 'Allows metadata in the form of primary traits'
       t.integer :harvest_id, null: false, index: true
       t.integer :node_id, comment: 'cannot be null AFTER ID reconciliation; will be before'
       t.integer :predicate_term_id, null: false
@@ -278,6 +279,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :node_resource_pk, comment: 'temporary; will be replaced by object_node_id once IDs are resolved.'
       t.string :occurrence_resource_pk, index: true, comment: 'used to add occurrence metadata.'
       t.string :association_resource_pk, comment: 'temporary; will be used to find object_node_id'
+      t.string :parent_pk, comment: 'temporary; will be used to move this to meta_traits'
       t.string :resource_pk, null: false
       t.string :measurement
       t.string :literal
