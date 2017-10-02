@@ -22,5 +22,3 @@ spec/files/*diff
 # Created when processing resources:
 public/diff/*
 public/converted_csv/*
-
-.byebug_history
