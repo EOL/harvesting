@@ -1,82 +1,48 @@
 class Rank
   class << self
-    attr_accessor :strings
+    attr_accessor :ordered, :unordered
+
+    def add_prefixes(basenames)
+      basenames.flat_map { |b| @prefixes.map { |p| p == '-' ? b : "#{p}#{b}" } }
+    end
+
+    def sort(array)
+      scores = {}
+      array.each do |el|
+        scores[el] = ordered.index(el.downcase.gsub(/\s/, ''))
+      end
+      array.sort do |a,b|
+        if scores[a].nil? || scores[b].nil?
+          0
+        else
+          scores[a] <=> scores[b]
+        end
+      end
+    end
   end
 
-  @strings = %w[
+  # These were provided by Katja and are in order:
+  @base_names = %w[
     domain
-    subdomain
-    infradomain
-
-    superkingdom
     kingdom
-    subkingdom
-    infrakingdom
-
-    superphylum
     phylum
-    subphylum
-    infraphylum
-
-    superdivision
-    division
-    subdivision
-    infradivision
-
-    superclass
     class
-    subclass
-    infraclass
-
-    megacohort
-    supercohort
     cohort
-    subcohort
-    infracohort
-
-    megasection
-    supersection
-    section
-    subsection
-    infrasection
-
-    superorder
+    division
     order
-    suborder
-    infraorder
-
-    superfamily
     family
-    subfamily
-    infrafamily
-
     tribe
-
-    supergenus
-    genus
-    subgenus
-    infragenus
-
-    superspecies
+    genus] + ["species group"] + %w[
     species
-    subspecies
-    infraspecies
     variety
     form
   ]
 
-  def self.sort(array)
-    scores = {}
-    array.each do |el|
-      scores[el] = strings.index(el.downcase.gsub(/\s/, ''))
-      puts "NOPE: #{el}" if scores[el].nil?
-    end
-    array.sort do |a,b|
-      if scores[a].nil? || scores[b].nil?
-        0
-      else
-        scores[a] <=> scores[b]
-      end
-    end
-  end
+  @groups = 'paraphyletic group' + 'polyphyletic group'
+
+  @prefixes = %w[mega super epi - sub infra subter]
+  @ordered = Rank.add_prefixes(@base_names)
+  @unordered_base_names = %w[section series clade]
+  @unordered = Rank.add_prefixes(@unordered_base_names)
+
 end

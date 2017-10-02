@@ -5,7 +5,7 @@ common: &common
   wait_timeout: 300
   pool: 5
 
-default:
+default: &default
   <<: *common
   username: root
   password:

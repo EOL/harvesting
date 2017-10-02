@@ -44,8 +44,15 @@ module Store
       Rank.sort(@models[:ancestors].keys).each do |rank|
         ancestor_pk = @models[:ancestors][rank]
         ancestry << ancestor_pk
+        ancestry_joined = ancestry.join('->')
+        sci_name = @models[:scientific_name][:verbatim]
         # NOTE: @nodes_by_ancestry is just a cache, to make sure we don't redefine things. The value is never used.
-        unless @nodes_by_ancestry.key?(ancestry.join('->'))
+        if @nodes_by_ancestry.key?(ancestry_joined)
+          if @nodes_by_ancestry[ancestry_joined].include?(sci_name)
+            # TODO: catch errors at the harvesting level; we want to log and somehow stop the process, not exit.
+            raise "ILLEGAL DUPLICATE: #{ancestry_joined} -> #{sci_name}"
+          end
+        else # New ancestry...
           begin
             model =
               if @diff == :new
@@ -64,7 +71,7 @@ module Store
             debugger
             puts "phoey!"
           end
-          @nodes_by_ancestry[ancestry.join('->')] = true # Remember that we don't need to do this again.
+          @nodes_by_ancestry[ancestry_joined] = [sci_name] # Remember that we don't need to do this again.
         end
         prev = ancestor_pk
       end
