@@ -176,7 +176,7 @@ module Store
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum[:trait_resource_pk] = trait.resource_pk
-        predicate_term = find_or_create_term(predicate)
+        predicate_term = find_or_create_term(key)
         datum[:predicate_term_id] = predicate_term.id
         datum = convert_meta_value(datum, value)
         prepare_model_for_store(MetaTrait, datum)

@@ -15,7 +15,7 @@ module Store
       # TODO: generalize EOL's "truthiness"
       val = val =~ /^[ty1+]/i ||   # Trying to capture "true", "yes", "1", and "+", here.
             val =~ /(true|yes)$/i  # ...and this is meant for "URIs" that end in these terms.
-      @models[:trait][:of_taxon] = val
+      @models[:trait][:of_taxon] = val ? true : false
     end
 
     def to_traits_parent_pk(_, val)
@@ -61,7 +61,7 @@ module Store
 
     def to_traits_meta(field, val)
       @models[:trait] ||= {}
-      @models[:trait][:meta] ||= { harvest_id: @harvest.id }
+      @models[:trait][:meta] ||= {}
       @models[:trait][:meta][field.submapping] = val
     end
   end

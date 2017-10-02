@@ -17,5 +17,5 @@ class Trait < ActiveRecord::Base
   has_many :children, class_name: 'Trait', inverse_of: :parent, foreign_key: 'parent_id'
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
-  scope :no_parent, -> { where(of_taxon: false) }
+  scope :primary, -> { where(of_taxon: true) }
 end
