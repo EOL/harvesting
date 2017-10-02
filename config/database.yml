@@ -1,18 +1,12 @@
-# MySQL.  Versions 5.0+ are recommended.
-#
-# Install the MYSQL driver
-#   gem install mysql2
-#
-# Ensure the MySQL gem is defined in your Gemfile
-#   gem 'mysql2'
-#
-# And be sure to use new-style password hashing:
-#   http://dev.mysql.com/doc/refman/5.0/en/old-client.html
-#
-default: &default
+common: &common
   adapter: mysql2
   encoding: utf8
+  reconnect: true
+  wait_timeout: 300
   pool: 5
+
+default:
+  <<: *common
   username: root
   password:
   socket: /tmp/mysql.sock
@@ -27,6 +21,14 @@ development:
 test:
   <<: *default
   database: harvester_test
+
+staging:
+  <<: *common
+  host: <%= ENV['EOL_REPO_DB_HOST'] %>
+  port: <%= ENV['EOL_REPO_DB_PORT'] %>
+  database: <%= ENV['EOL_REPO_DB_STAGING_NAME'] %>
+  username: <%= ENV['EOL_REPO_DB_STAGING_USERNAME'] %>
+  password: <%= ENV['EOL_REPO_DB_STAGING_PASSWORD'] %>
 
 # As with config/secrets.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
