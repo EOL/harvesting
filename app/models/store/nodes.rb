@@ -44,9 +44,19 @@ module Store
     def to_nodes_accepted_name_fk(field, val)
       # TODO: What we really want to do here is, if there is a value here, move all of the fields from the node to the
       # scientific name, but that's hairy and I don't want to do it right now. Soon.
-      @models[:node] ||= {}
-      debugger unless val.blank? || val == @models[:node][:resource_pk]
-      1
+      @models[:scientific_name] ||= {}
+      if accepted_name_is_synonym?(val)
+        # NOTE: no, we cannot create a synonym object here, because there may be other methods invoked that will add to
+        # the scientific name, and I don't want to write branching code in every one of them. This will be handled by
+        # the model builder:
+        @models[:scientific_name][:synonym_of] = val
+      else
+        # Really, nothing to do. It's a normal row, treat it normally.
+      end
+    end
+
+    def accepted_name_is_synonym?(val)
+      @models[:node] && @models[:node][:resource_pk] && @models[:node][:resource_pk] != val
     end
 
     def to_nodes_remarks(field, val)

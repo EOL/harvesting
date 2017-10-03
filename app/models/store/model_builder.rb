@@ -8,6 +8,7 @@ module Store
     end
 
     def build_models
+      @synonym = is_synonym?
       build_scientific_name if @models[:scientific_name]
       build_ancestors if @models[:ancestors]
       build_node if @models[:node]
@@ -19,14 +20,27 @@ module Store
       # js_map, link, map, sound, video
     end
 
+    def is_synonym?
+      @models[:scientific_name] && @models[:scientific_name][:synonym_of]
+    end
+
     def build_scientific_name
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
-      @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
+      if @synonym
+        syn_of = @models[:scientific_name].delete(:synonym_of)
+        @models[:scientific_name][:node_resource_pk] = syn_of
+      else
+        @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
+      end
+      @models[:scientific_name][:taxonomic_status] =
+        TaxonomicStatus.parse(@models[:scientific_name][:taxonomic_status_verbatim])
+
       prepare_model_for_store(ScientificName, @models[:scientific_name])
     end
 
     def build_node
+      return if @synonym # Don't build a node for synonyms.
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
       prepare_model_for_store(Node, @models[:node])

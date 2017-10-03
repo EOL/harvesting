@@ -37,8 +37,7 @@ class InitialContent < ActiveRecord::Migration
       # This list was captured from the document Katja produced (this link may
       # not work for all):
       # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
-      t.integer :taxonomic_status,
-                comment: 'Enum: preferred, provisionally_accepted, acronym, synonym, unusable'
+      t.integer :taxonomic_status, comment: 'Enum: preferred, provisionally_accepted, synonym, alternative, unusable'
 
       t.string :node_resource_pk, index: true, comment: "once the node_id is populated, you shouldn't need this."
       t.string :taxonomic_status_verbatim
