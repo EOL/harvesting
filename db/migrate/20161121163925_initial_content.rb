@@ -28,6 +28,14 @@ class InitialContent < ActiveRecord::Migration
     end
     add_index :nodes, [:resource_id, :resource_pk], name: 'by_resource_and_pk'
 
+    create_table :identifiers do |t|
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false, index: true
+      t.integer :node_id, index: true, comment: "will be populated from node_resource_pk; shouldn't be nil after that."
+      t.string :identifier, index: true, comment: "Indexed to assist in names-matching, if possible."
+      t.string :node_resource_pk, index: true, comment: "once the node_id is populated, you shouldn't need this."
+    end
+
     create_table :scientific_names do |t|
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true

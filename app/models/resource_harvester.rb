@@ -60,7 +60,7 @@ class ResourceHarvester
     rebuild_nodes
     # TODO: (LOW-PRIO) queue_downloads
     parse_names
-    normalize_names
+    denormalize_canonical_names_to_nodes
     match_nodes
     reindex_search
     # TODO: normalize_units
@@ -204,7 +204,7 @@ class ResourceHarvester
         @diff = @parser.diff
         # We *could* skip this, but I prefer not to deal with the missing keys.
         @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
-                    trait: nil }
+                    trait: nil, identifiers: nil }
         begin
           @headers.each do |header|
             field = fields[header]
@@ -306,6 +306,8 @@ class ResourceHarvester
                        set: "scientific_name_id", with: "id")
     # Scientific names to nodes:
     propagate_id(ScientificName, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    # And identifiers to nodes:
+    propagate_id(Identifier, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
   end
 
   def resolve_trait_keys
@@ -385,20 +387,8 @@ class ResourceHarvester
     NameParser.for_harvest(@harvest)
   end
 
-  def normalize_names
-    new_names = []
-    propagate_normalized_ids_to_scientific
-    @harvest.scientific_names.where("normalized_name_id is NULL").find_each do |name|
-      new_names << NormalizedName.new(string: name.normalized, canonical: name.canonical)
-    end
-    NormalizedName.import!(new_names)
-    propagate_normalized_ids_to_scientific
+  def denormalize_canonical_names_to_nodes
     propagate_id(Node, fk: 'scientific_name_id', other: 'scientific_names.id', set: 'canonical', with: 'canonical')
-  end
-
-  def propagate_normalized_ids_to_scientific
-    propagate_id(ScientificName, fk: "normalized", other: "normalized_names.string",
-                                 set: "normalized_name_id", with: "id")
   end
 
   # match node names against the DWH, store "hints", report on unmatched

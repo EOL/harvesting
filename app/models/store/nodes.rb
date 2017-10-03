@@ -8,6 +8,7 @@ module Store
     def to_nodes_page_id(field, val)
       @models[:node] ||= {}
       @models[:node][:page_id] = val
+      # TODO: we shouldn't trust this unless it came from Resource #1; add some code in the names-matcher to check.
     end
 
     def to_nodes_scientific(field, val)
@@ -72,6 +73,11 @@ module Store
     def to_nodes_source_reference(field, val)
       @models[:scientific_name] ||= {}
       @models[:scientific_name][:source_reference] = val
+    end
+
+    def to_nodes_identifiers(field, val)
+      @models[:identifiers] ||= []
+      @models[:identifiers] += val.split(/,\s*/)
     end
   end
 end

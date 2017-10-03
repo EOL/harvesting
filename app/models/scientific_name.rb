@@ -1,7 +1,6 @@
 class ScientificName < ActiveRecord::Base
   belongs_to :resource, inverse_of: :scientific_names
   belongs_to :node, inverse_of: :scientific_names
-  belongs_to :normalized_name
 
   has_many :nodes, inverse_of: :scientific_name
 

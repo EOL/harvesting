@@ -163,6 +163,19 @@ ActiveRecord::Schema.define(version: 20170907152109) do
     t.datetime "created_at"
   end
 
+  create_table "identifiers", force: :cascade do |t|
+    t.integer "resource_id",      limit: 4,   null: false
+    t.integer "harvest_id",       limit: 4,   null: false
+    t.integer "node_id",          limit: 4
+    t.string  "identifier",       limit: 255
+    t.string  "node_resource_pk", limit: 255
+  end
+
+  add_index "identifiers", ["harvest_id"], name: "index_identifiers_on_harvest_id", using: :btree
+  add_index "identifiers", ["identifier"], name: "index_identifiers_on_identifier", using: :btree
+  add_index "identifiers", ["node_id"], name: "index_identifiers_on_node_id", using: :btree
+  add_index "identifiers", ["node_resource_pk"], name: "index_identifiers_on_node_resource_pk", using: :btree
+
   create_table "languages", force: :cascade do |t|
     t.string "code",       limit: 255
     t.string "group_code", limit: 255
@@ -298,11 +311,6 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
   add_index "nodes", ["resource_pk"], name: "index_nodes_on_resource_pk", using: :btree
   add_index "nodes", ["rgt"], name: "index_nodes_on_rgt", using: :btree
-
-  create_table "normalized_names", force: :cascade do |t|
-    t.string "string",    limit: 255
-    t.string "canonical", limit: 255
-  end
 
   create_table "occurrence_metadata", force: :cascade do |t|
     t.integer "harvest_id",        limit: 4

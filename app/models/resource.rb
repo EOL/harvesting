@@ -9,6 +9,7 @@ class Resource < ActiveRecord::Base
   has_many :media, inverse_of: :resource
   has_many :traits, inverse_of: :resource
   has_many :meta_traits, inverse_of: :resource
+  has_many :identifiers, inverse_of: :resource
 
   enum publish_status: %i(unpublished publishing published deprecated)
 

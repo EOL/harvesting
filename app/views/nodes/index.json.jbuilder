@@ -6,4 +6,7 @@ json.nodes @nodes do |node|
   json.scientific_name node.scientific_name.normalized
   json.canonical_form node.scientific_name.canonical
   json.source_url URI.escape(@resource.pk_url.gsub('$PK', node.resource_pk))
+  json.identifiers node.identifiers do |ider|
+    json.extract! ider, :identifier
+  end
 end
