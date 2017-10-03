@@ -142,12 +142,6 @@ class InitialSchema < ActiveRecord::Migration
       t.string :name
     end
 
-    # This gives us a way to say "these names are considered 'the same'."
-    create_table :normalized_names do |t|
-      t.string :string
-      t.string :canonical
-    end
-
     create_table :media_download_error do |t|
       t.integer :content_id, null: false, index: true
       t.text :message

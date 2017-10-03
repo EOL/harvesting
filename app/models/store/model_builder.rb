@@ -8,8 +8,10 @@ module Store
     end
 
     def build_models
+      @synonym = is_synonym?
       build_scientific_name if @models[:scientific_name]
       build_ancestors if @models[:ancestors]
+      build_identifiers if @models[:identifiers]
       build_node if @models[:node]
       build_medium if @models[:medium]
       build_vernacular if @models[:vernacular]
@@ -19,14 +21,29 @@ module Store
       # js_map, link, map, sound, video
     end
 
+    def is_synonym?
+      @models[:scientific_name] && @models[:scientific_name][:synonym_of]
+    end
+
     def build_scientific_name
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
-      @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
+      if @synonym
+        syn_of = @models[:scientific_name].delete(:synonym_of)
+        @models[:scientific_name][:node_resource_pk] = syn_of
+        @models[:scientific_name][:is_preferred] = false
+      else
+        @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
+        @models[:scientific_name][:is_preferred] = true
+      end
+      @models[:scientific_name][:taxonomic_status] =
+        TaxonomicStatus.parse(@models[:scientific_name][:taxonomic_status_verbatim])
+
       prepare_model_for_store(ScientificName, @models[:scientific_name])
     end
 
     def build_node
+      return if @synonym # Don't build a node for synonyms.
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
       prepare_model_for_store(Node, @models[:node])
@@ -76,6 +93,17 @@ module Store
         prev = ancestor_pk
       end
       @models[:node][:parent_resource_pk] = prev
+    end
+
+    def build_identifiers
+      @models[:identifiers].each do |identifier|
+        ider = {}
+        ider[:node_resource_pk] = @models[:node][:resource_pk]
+        ider[:identifier] = identifier
+        ider[:resource_id] = @resource.id
+        ider[:harvest_id] = @harvest.id
+        prepare_model_for_store(Identifier, ider)
+      end
     end
 
     # NOTE: this can and should fail if there was no node PK or if it's

@@ -66,6 +66,7 @@ en:
       media: "This node has no associated traits."
     fields:
       authors: "Authors (semi-colon delimited):"
+      canonical: "Canonical:"
       created: "Created:"
       page_id: "EOL Website Page ID:"
       parent: "Parent Node:"
@@ -74,13 +75,12 @@ en:
       resource: "From resource:"
       resource_pk: "ID Used by Resource:"
       name: "Names:"
-      name_canonical: "Canonical:"
       name_parse_quality: "Parse quality:"
       name_rank_verbatim: "Rank (verbatim from resource):"
-      name_scientific: "Scientific:"
       name_taxonomic_status: "Taxonomic Status:"
       name_taxonomic_status_verbatim: "Taxonomic Status (verbatim from resource):"
       name_verbatim: "Verbatim from resource:"
+      normalized: "Normalized:"
       vernaculars: "Vernacular Names:"
       year: "Year of authority (first, if several found):"
     headers:

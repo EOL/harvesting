@@ -7,6 +7,7 @@ class Harvest < ActiveRecord::Base
   has_many :occurrences, inverse_of: :harvest, dependent: :destroy
   has_many :traits, inverse_of: :harvest, dependent: :destroy
   has_many :meta_traits, inverse_of: :harvest, dependent: :destroy
+  has_many :identifiers, inverse_of: :harvest, dependent: :destroy
 
   scope :completed, -> { where("completed_at IS NOT NULL") }
 

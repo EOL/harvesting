@@ -31,11 +31,11 @@
         = @node.scientific_name.verbatim
       - if @node.scientific_name
         %li
-          %strong= t("nodes.fields.name_scientific")
-          = @node.scientific_name.normalized_name.try(:string)
+          %strong= t("nodes.fields.normalized")
+          = @node.scientific_name.try(:normalized)
         %li
-          %strong= t("nodes.fields.name_canonical")
-          = @node.scientific_name.normalized_name.try(:canonical)
+          %strong= t("nodes.fields.canonical")
+          = @node.try(:canonical)
         %li
           %strong= t("nodes.fields.authors")
           = @node.scientific_name.authors.join('; ')
