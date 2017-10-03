@@ -21,6 +21,9 @@ gem "jquery-rails"
 # Pagination!
 gem 'kaminari'
 
+# JS runtime
+gem 'therubyracer'
+
 # Use mysql as the database for Active Record
 gem "mysql2", "~> 0.3.18"
 

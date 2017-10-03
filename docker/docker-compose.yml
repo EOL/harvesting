@@ -1,0 +1,38 @@
+version: '2'
+services:
+  eol-repo-memcached:
+    image: memcached
+    container_name: eol-repo-memcached
+    restart: always
+    environment:
+      - TZ=America/New_York
+    command: memcached -m 4096m
+    network_mode: "bridge"
+  eol-repo-mysql:
+    image: mysql
+    container_name: eol-repo-mysql
+    restart: always
+    env_file:
+      - resources/staging.env
+    volumes:
+       - /u/data/eol-repo-mysql:/var/lib/mysql
+    network_mode: "bridge"
+  eol-repo-app:
+    image: encoflife/eol-repo-app
+    container_name: eol-repo-app
+    restart: always
+    volumes:
+      - /u/data/eol-repo-app:/u/apps/harvester/public/data
+    depends_on:
+      - eol-repo-mysql
+      - eol-repo-memcached
+    links:
+      - eol-repo-memcached:memcached
+      - eol-repo-mysql:mysql
+    env_file:
+      - resources/staging.env
+    ports:
+       - 3000:3000
+    network_mode: "bridge"
+
+
