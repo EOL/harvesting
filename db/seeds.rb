@@ -466,9 +466,49 @@ traity = Resource.quick_define(
   }
 )
 
+freshwater = Resource.quick_define(
+  name: 'CalPhotos in DwC-A',
+  abbr: 'CalPhotos',
+  type: :csv,
+  partner: {
+    name: 'CalPhotos',
+    abbr: 'CalPhotos',
+    short_name: 'CalPhotos',
+    homepage_url: 'http://calphotos.berkeley.edu/',
+    description: 'CalPhotos is a collection of photos of plants, animals, fossils, people, and landscapes from around '\
+      'the world. A variety of organizations and individuals have contributed photographs to...',
+    auto_publish: true
+  },
+  field_sep: "\t",
+  pk_url: '',
+  base_dir: '/Users/jrice/Downloads/calphotos',
+  formats: {
+    nodes: { loc: 'taxa.tsv', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'furtherInformationURL' => 'to_nodes_further_information_url' },
+      { 'scientificName' => 'to_nodes_scientific' }
+    ] },
+    media: { loc: 'media.tsv', fields: [
+      { 'identifier' => 'to_media_pk', is_unique: true, can_be_empty: false },
+      { 'taxonID' => 'to_media_nodes_fk', can_be_empty: false },
+      { 'type' => 'to_media_type', can_be_empty: false },
+      { 'format' => 'to_media_subtype' },
+      { 'description' => 'to_media_description' },
+      { 'accessURI' => 'to_media_source_url' },
+      { 'furtherInformationURL' => 'to_media_source_page_url' },
+      { 'CreateDate' => 'to_ignored' },
+      { 'UsageTerms' => 'to_media_rights_statement' },
+      { 'Owner' => 'to_media_owner' },
+      { 'LocationCreated' => 'to_media_locality' },
+      { 'rights' => 'to_media_rights_statement' }
+    ] }
+  }
+)
+
 if false
   # rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start"
   # rails runner "ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
+  # rails runner "ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start"
   # rails runner "Harvest.last.destroy ; ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
 
   # Move these lines down below resource def'n if you want them:

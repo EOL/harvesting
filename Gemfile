@@ -10,6 +10,9 @@ gem 'acts_as_list', '~> 0.7.6'
 # Parse Excel files:
 gem "creek", "~> 1.1"
 
+# Background jobs:
+gem 'delayed_job_active_record'
+
 # Because ERB is just plain silly compared to Haml:
 gem 'haml-rails'
 
@@ -29,6 +32,8 @@ gem "mysql2", "~> 0.3.18"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
 gem "rails", "4.2.4"
+# Image resizing and manipulation:
+gem 'rmagick'
 
 # Use SCSS for stylesheets
 gem "sass-rails", "~> 5.0"

@@ -81,8 +81,9 @@ class InitialContent < ActiveRecord::Migration
     create_table :vernaculars do |t|
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true
-      t.integer :node_id, null: false
+      t.integer :node_id, comment: 'only temporarily nil'
       t.integer :language_id, null: false
+      t.string :node_resource_pk
       t.string :verbatim, index: true, comment: 'indexed because this is effectively the "resource_pk"'
       t.string :language_code_verbatim
       t.string :locality
@@ -117,33 +118,38 @@ class InitialContent < ActiveRecord::Migration
     create_table :media do |t|
       t.string :guid, null: false, index: true
       t.string :resource_pk, null: false, comment: 'was: identifier'
-      t.string :unmodified_url,
-        comment: 'This is the unmodified, original image that we store locally; includes extension (unlike base_url)'
+      t.string :node_resource_pk, null: false, comment: 'null only temporarily'
+      t.string :unmodified_url, comment: 'This is the unmodified, original image that we store locally; includes '\
+        'extension (unlike base_url)'
       t.string :name_verbatim, comment: 'was: title'
       t.string :name, comment: 'was: title, we will sanitize and restrict HTML and normalize this'
-      t.string :source_page_url,
-        comment: 'This is where the "view original" link takes you (could be an remote image or a webpage)'
-      t.string :source_url
-      t.string :base_url, null: false,
-        comment: 'for images, you will add size info to this; was: object_url'
-      t.string :rights_statement
+      t.string :source_page_url, comment: 'This is where the "view original" link takes you (could be an remote image '\
+        'or a webpage)'
+      t.string :source_url, comment: 'This is the URL where fetch the image from.'
+      t.string :base_url, comment: 'for images, you will add size info to this; was: object_url'
+      t.string :rights_statement, comment: 'will be displayed before the usage_statement'
+      t.string :usage_statement, comment: 'will be displayed after the rights_statement'
+      t.string :sizes, comment: 'a JSON hash of available sizes, e.g.: { "80x80": "80x71" }'
 
-      t.integer :subclass, null: false, default: 0, index: true,
-        comment: 'enum: image, video, sound, map_image, map_js'
-      t.integer :format, null: false, default: 0,
-        comment: 'enum: jpg, youtube, flash, vimeo, mp3, ogg, wav'
+      t.integer :subclass, null: false, default: 0, index: true, comment: 'enum: image, video, sound, map_image, map_js'
+      t.integer :format, null: false, default: 0, comment: 'enum: jpg, youtube, flash, vimeo, mp3, ogg, wav'
 
       t.integer :resource_id, null: false, index: true
       t.integer :harvest_id, null: false, index: true
       t.integer :node_id, index: true
-      t.integer :license_id, null: false
+      t.integer :license_id
       t.integer :language_id
       t.integer :location_id
+      t.integer :w
+      t.integer :h
+      t.integer :crop_x_pct, comment: 'stored as a percentage of the width'
+      t.integer :crop_y_pct, comment: 'stored as a percentage of the width'
+      t.integer :crop_w_pct, comment: 'stored as a percentage of the width'
+      t.integer :crop_h_pct, comment: 'stored as a percentage of the width'
       t.integer :bibliographic_citation_id
 
-      t.text :owner, null: false,
-        comment: 'html; was rights_holder; current longest is 493; if missing, *must* be populated '\
-          'with another attribution agent or the resource name: we MUST show an owner'
+      t.text :owner, comment: 'html; was rights_holder; current longest is 493; if missing, *must* be '\
+        'populated with another attribution agent or the resource name: we MUST show an owner'
       t.text :description_verbatim, comment: 'assumed to be dirty html'
       t.text :description, comment: 'sanitized html; run through namelinks'
 
@@ -169,14 +175,12 @@ class InitialContent < ActiveRecord::Migration
       t.integer :javascript_id
       t.integer :bibliographic_citation_id
 
-      t.text :owner, null: false,
-        comment: 'html; was rights_holder; current longest is 493; if missing, *must* be populated '\
-          'with another attribution agent or the resource name: we MUST show an owner'
+      t.text :owner, null: false, comment: 'html; was rights_holder; current longest is 493; if missing, *must* be '\
+          'populated with another attribution agent or the resource name: we MUST show an owner'
 
       t.string :name, comment: 'was: title'
       t.string :source_url
-      t.text :body, null: false,
-        comment: 'html; run through namelinks; was description_linked'
+      t.text :body, null: false, comment: 'html; run through namelinks; was description_linked'
 
       t.integer :removed_by_harvest_id
       t.timestamps null: false
@@ -248,7 +252,10 @@ class InitialContent < ActiveRecord::Migration
     add_index :attributions, [:resource_id, :resource_pk]
 
     create_table :locations do |t|
-      t.string :verbatim
+      t.string :lat_literal
+      t.string :long_literal
+      t.string :alt_literal
+      t.string :locality
       t.string :created
       t.decimal :lat, precision: 64, scale: 12
       t.decimal :long, precision: 64, scale: 12

@@ -13,6 +13,7 @@ module Store
       build_ancestors if @models[:ancestors]
       build_identifiers if @models[:identifiers]
       build_node if @models[:node]
+      build_location if @models[:location]
       build_medium if @models[:medium]
       build_vernacular if @models[:vernacular]
       build_occurrence if @models[:occurrence]
@@ -106,26 +107,33 @@ module Store
       end
     end
 
-    # NOTE: this can and should fail if there was no node PK or if it's
-    # unmatched:
+    def build_location
+      @locations ||= {}
+      loc_key = @models[:location].to_s
+      location = if @locations.key?(loc_key)
+        @locations[loc_key]
+      else
+        # NOTE: this is NOT delayed; it is instantly created (unless it exists). ...This is slow. :S ...the
+        # alternative isn't much faster, though, since we'll have to do as many updates (of media). Sigh.
+        Location.where(@models[:location]).first_or_create
+      end
+      # TODO: this can also be associated with other classes, I think. But, for now, only media are req'd:
+      @models[:medium][:location_id] = location.id
+    end
+
+    # NOTE: this can and should fail if there was no node PK or if it's unmatched:
     def build_medium
       debugger unless @models[:medium][:resource_pk]
-      node = find_node(@models[:medium])
-      @models[:medium][:node_id] = node.id
+      debugger unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
       @models[:medium][:harvest_id] = @harvest.id
-      # TODO: errr... yeah:
-      @models[:medium][:guid] = "TODO/#{@resource.id}/#{node_pk}"
-      # TODO: Yeah. This too:
-      @models[:medium][:base_url] = 'PENDING/TODO'
-      # TODO: And licenses:
-      @models[:medium][:license_id] = 1
-      # TODO: And subclasses:
-      @models[:medium][:subclass] = Medium.subclasses[:image] # TODO
-      # TODO: And format:
-      @models[:medium][:format] = Medium.formats[:jpg]
-      # TODO: And owners:
-      @models[:medium][:owner] = 'TODO'
+      @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
+      # TODO: Default license values from resources (and partners)
+      @models[:medium][:license_id] ||= 1
+      # TODO: would be nice to have the format-definition (not the resource—might have multiple files for each) include
+      # default values for these.
+      @models[:medium][:subclass] ||= :image
+      @models[:medium][:format] ||= :jpg
 
       # TODO: there are some other normalizations and checks we should do here.
       prepare_model_for_store(Medium, @models[:medium])
@@ -134,10 +142,8 @@ module Store
     # NOTE: this is an example of how to pull the resource_pk from another table
     # and attach the model we're building to the associated instance.
     def build_vernacular
-      lang_code = @models[:vernacular][:language_code_verbatim]
+      lang_code = @models[:vernacular][:language_code_verbatim] || 'en'
       lang = find_or_create_language(lang_code)
-      node = find_node(@models[:vernacular])
-      @models[:vernacular][:node_id] = node.id
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
       @models[:vernacular][:language_id] = lang.id

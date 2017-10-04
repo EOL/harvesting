@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170907152109) do
+ActiveRecord::Schema.define(version: 20171004200142) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -103,6 +103,22 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   end
 
   add_index "data_references", ["data_type", "data_id"], name: "index_data_references_on_data_type_and_data_id", using: :btree
+
+  create_table "delayed_jobs", force: :cascade do |t|
+    t.integer  "priority",   limit: 4,     default: 0, null: false
+    t.integer  "attempts",   limit: 4,     default: 0, null: false
+    t.text     "handler",    limit: 65535,             null: false
+    t.text     "last_error", limit: 65535
+    t.datetime "run_at"
+    t.datetime "locked_at"
+    t.datetime "failed_at"
+    t.string   "locked_by",  limit: 255
+    t.string   "queue",      limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority", using: :btree
 
   create_table "fields", force: :cascade do |t|
     t.integer "format_id",        limit: 4,                   null: false
@@ -206,33 +222,38 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   end
 
   create_table "locations", force: :cascade do |t|
-    t.string  "verbatim", limit: 255
-    t.string  "created",  limit: 255
-    t.decimal "lat",                  precision: 64, scale: 12
-    t.decimal "long",                 precision: 64, scale: 12
-    t.decimal "alt",                  precision: 64, scale: 12
+    t.string  "lat_literal",  limit: 255
+    t.string  "long_literal", limit: 255
+    t.string  "alt_literal",  limit: 255
+    t.string  "locality",     limit: 255
+    t.string  "created",      limit: 255
+    t.decimal "lat",                      precision: 64, scale: 12
+    t.decimal "long",                     precision: 64, scale: 12
+    t.decimal "alt",                      precision: 64, scale: 12
   end
 
   create_table "media", force: :cascade do |t|
     t.string   "guid",                      limit: 255,               null: false
     t.string   "resource_pk",               limit: 255,               null: false
+    t.string   "node_resource_pk",          limit: 255,               null: false
     t.string   "unmodified_url",            limit: 255
     t.string   "name_verbatim",             limit: 255
     t.string   "name",                      limit: 255
     t.string   "source_page_url",           limit: 255
     t.string   "source_url",                limit: 255
-    t.string   "base_url",                  limit: 255,               null: false
+    t.string   "base_url",                  limit: 255
     t.string   "rights_statement",          limit: 255
+    t.string   "usage_statement",           limit: 255
     t.integer  "subclass",                  limit: 4,     default: 0, null: false
     t.integer  "format",                    limit: 4,     default: 0, null: false
     t.integer  "resource_id",               limit: 4,                 null: false
     t.integer  "harvest_id",                limit: 4,                 null: false
     t.integer  "node_id",                   limit: 4
-    t.integer  "license_id",                limit: 4,                 null: false
+    t.integer  "license_id",                limit: 4
     t.integer  "language_id",               limit: 4
     t.integer  "location_id",               limit: 4
     t.integer  "bibliographic_citation_id", limit: 4
-    t.text     "owner",                     limit: 65535,             null: false
+    t.text     "owner",                     limit: 65535
     t.text     "description_verbatim",      limit: 65535
     t.text     "description",               limit: 65535
     t.integer  "removed_by_harvest_id",     limit: 4
@@ -508,8 +529,9 @@ ActiveRecord::Schema.define(version: 20170907152109) do
   create_table "vernaculars", force: :cascade do |t|
     t.integer "resource_id",            limit: 4,     null: false
     t.integer "harvest_id",             limit: 4,     null: false
-    t.integer "node_id",                limit: 4,     null: false
+    t.integer "node_id",                limit: 4
     t.integer "language_id",            limit: 4,     null: false
+    t.string  "node_resource_pk",       limit: 255
     t.string  "verbatim",               limit: 255
     t.string  "language_code_verbatim", limit: 255
     t.string  "locality",               limit: 255

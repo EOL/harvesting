@@ -55,16 +55,17 @@ class ResourceHarvester
     delta
     store
     resolve_node_keys
+    resolve_media_keys
     resolve_trait_keys
     resolve_missing_parents
     rebuild_nodes
-    # TODO: (LOW-PRIO) queue_downloads
+    # TODO: resolve_missing_media_owners (requires agents are done)
+    queue_downloads
     parse_names
     denormalize_canonical_names_to_nodes
     match_nodes
     reindex_search
     # TODO: normalize_units
-    # TODO: (LOW-PRIO) link
     # TODO: (LOW-PRIO) calculate_statistics
     complete_harvest_instance
   end
@@ -204,7 +205,7 @@ class ResourceHarvester
         @diff = @parser.diff
         # We *could* skip this, but I prefer not to deal with the missing keys.
         @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
-                    trait: nil, identifiers: nil }
+                    trait: nil, identifiers: nil, location: nil }
         begin
           @headers.each do |header|
             field = fields[header]
@@ -300,31 +301,36 @@ class ResourceHarvester
 
   def resolve_node_keys
     # Node ancestry:
-    propagate_id(Node, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
+    propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
     # Node scientific names:
-    propagate_id(Node, fk: "resource_pk", other: "scientific_names.node_resource_pk",
-                       set: "scientific_name_id", with: "id")
+    propagate_id(Node, fk: 'resource_pk', other: 'scientific_names.node_resource_pk',
+                       set: 'scientific_name_id', with: 'id')
     # Scientific names to nodes:
-    propagate_id(ScientificName, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    propagate_id(ScientificName, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # And identifiers to nodes:
-    propagate_id(Identifier, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    propagate_id(Identifier, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+  end
+
+  def resolve_media_keys
+    # Media to nodes:
+    propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
   end
 
   def resolve_trait_keys
     # Occurrences to nodes:
-    propagate_id(Occurrence, fk: "node_resource_pk", other: "nodes.resource_pk", set: "node_id", with: "id")
+    propagate_id(Occurrence, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Traits to nodes (through occurrences)
-    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk", set: "node_id", with: "node_id")
+    propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk', set: 'node_id', with: 'node_id')
     # Traits to sex term:
-    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
-                        set: "sex_term_id", with: "sex_term_id")
+    propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+                        set: 'sex_term_id', with: 'sex_term_id')
     # Traits to lifestage term:
-    propagate_id(Trait, fk: "occurrence_resource_pk", other: "occurrences.resource_pk",
-                        set: "lifestage_term_id", with: "lifestage_term_id")
+    propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+                        set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaTraits to traits:
-    propagate_id(MetaTrait, fk: "trait_resource_pk", other: "traits.resource_pk", set: "trait_id", with: "id")
+    propagate_id(MetaTrait, fk: 'trait_resource_pk', other: 'traits.resource_pk', set: 'trait_id', with: 'id')
     # MetaTraits (simple, measurement row refers to parent) to traits:
-    propagate_id(Trait, fk: "parent_pk", other: "traits.resource_pk", set: "parent_id", with: "id")
+    propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
 
     # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
     # TODO: traits that are associations! Yeesh.
@@ -344,7 +350,7 @@ class ResourceHarvester
   end
 
   def resolve_missing_parents
-    propagate_id(Node, fk: "parent_resource_pk", other: "nodes.resource_pk", set: "parent_id", with: "id")
+    propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
   end
 
   # I AM NOT A FAN OF SQL... but this is **way** more efficient than alternatives:
@@ -352,7 +358,7 @@ class ResourceHarvester
     fk = options[:fk]
     set = options[:set]
     with_field = options[:with]
-    (o_table, o_field) = options[:other].split(".")
+    (o_table, o_field) = options[:other].split('.')
     sql = "UPDATE `#{klass.table_name}` t JOIN `#{o_table}` o ON (t.`#{fk}` = o.`#{o_field}` AND t.harvest_id = ?) "\
           "SET t.`#{set}` = o.`#{with_field}`"
     clean_execute(klass, [sql, @harvest.id])
@@ -381,6 +387,7 @@ class ResourceHarvester
   end
 
   def queue_downloads
+    @harvest.media.find_each { |med| med.delay.download_and_resize }
   end
 
   def parse_names

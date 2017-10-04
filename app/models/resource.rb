@@ -22,7 +22,8 @@ class Resource < ActiveRecord::Base
                 Partner.first
               end
     resource = where(name: options[:name]).first_or_create do |r|
-      abbr = options[:name].gsub(/[^A-Z]/, "")
+      abbr = options[:abbr]
+      abbr ||= options[:name].gsub(/[^A-Z]/, "")
       abbr ||= options[:name][0..3].upcase
       r.name = options[:name]
       r.pk_url = options[:pk_url] || "$PK"
