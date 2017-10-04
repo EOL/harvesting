@@ -5,6 +5,6 @@ require File.expand_path('../application', __FILE__)
 Rails.application.initialize!
 
 # Cleaner (and less shout-y) reading from the environment variables:
-#def env(name, default)
-#  ENV["EOL_#{name.upcase}"] || default
-#end
+def env(name, default)
+  ENV["EOL_#{name.upcase}"] || default
+end

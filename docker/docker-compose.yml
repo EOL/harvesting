@@ -32,7 +32,7 @@ services:
     env_file:
       - resources/staging.env
     ports:
-       - 3000:3000
+       - 3001:3000
     network_mode: "bridge"
 
 
