@@ -1,5 +1,5 @@
 NAME = encoflife/eol-repo-app
-VERSION = 0.1.1
+VERSION = 0.1.2
 C_NAME = eol_repo_app
 
 .PHONY: all build test tag_latest release install clean

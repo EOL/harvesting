@@ -9,6 +9,7 @@ RUN clean_install.sh --no-install-recommends \
     g++ libmysqlclient-dev default-jre
 
 RUN cd /u/apps/ && git clone https://github.com/EOL/harvester.git
+RUN cd /u/apps/harvester && git pull
 
 # Configuration 
 RUN /bin/bash -l -c 'cd /u/apps/harvester/ && bundle' 
