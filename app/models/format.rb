@@ -90,4 +90,8 @@ class Format < ActiveRecord::Base
   def warn(message, line = nil)
     log(message, line: line, cat: :warns)
   end
+
+  def name
+    "#{represents} for #{resource.name}"
+  end
 end

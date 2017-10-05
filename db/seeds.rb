@@ -481,7 +481,7 @@ freshwater = Resource.quick_define(
   },
   field_sep: "\t",
   pk_url: '',
-  base_dir: '/Users/jrice/Downloads/calphotos',
+  base_dir: Rails.root.join('spec', 'files', 'calphotos'),
   formats: {
     nodes: { loc: 'taxa.tsv', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },

@@ -60,6 +60,7 @@ class ResourceHarvester
     resolve_missing_parents
     rebuild_nodes
     # TODO: resolve_missing_media_owners (requires agents are done)
+    # TODO: sanitize media names and descriptions...
     queue_downloads
     parse_names
     denormalize_canonical_names_to_nodes

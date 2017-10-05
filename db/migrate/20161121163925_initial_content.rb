@@ -161,6 +161,15 @@ class InitialContent < ActiveRecord::Migration
 
     create_join_table :media, :sections
 
+    create_table :licenses do |t|
+      t.string :name, null: false, comment: "was: title; either for Globalize or I18n key"
+      t.string :source_url
+      t.string :icon_url
+      t.boolean :can_be_chosen_by_partners, null: false, default: false
+
+      t.timestamps null: false
+    end
+
     # TODO: do we DOWNLOAD articles? I don't think so...
     create_table :articles do |t|
       t.string :guid, null: false, index: true

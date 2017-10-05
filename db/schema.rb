@@ -197,6 +197,15 @@ ActiveRecord::Schema.define(version: 20171004200142) do
     t.string "group_code", limit: 255
   end
 
+  create_table "licenses", force: :cascade do |t|
+    t.string   "name",                      limit: 255,                 null: false
+    t.string   "source_url",                limit: 255
+    t.string   "icon_url",                  limit: 255
+    t.boolean  "can_be_chosen_by_partners",             default: false, null: false
+    t.datetime "created_at",                                            null: false
+    t.datetime "updated_at",                                            null: false
+  end
+
   create_table "links", force: :cascade do |t|
     t.string   "guid",                  limit: 255,   null: false
     t.string   "resource_pk",           limit: 255,   null: false

@@ -71,4 +71,8 @@ class Node < ActiveRecord::Base
     puts "VV BOO! We couldn't match node #{id}, so we're making a new page #{page_id}"
     update_attributes(page_id: page_id, in_unmapped_area: true)
   end
+
+  def name # NOTE: just shorthand for common way of representing objects. Like #to_s...
+    canonical
+  end
 end

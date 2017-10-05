@@ -10,6 +10,8 @@ gem 'acts_as_list', '~> 0.7.6'
 # Parse Excel files:
 gem "creek", "~> 1.1"
 
+# Required to run bin/delayed_job:
+gem 'daemons'
 # Background jobs:
 gem 'delayed_job_active_record'
 

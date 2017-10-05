@@ -1,3 +1,7 @@
 class Language < ActiveRecord::Base
-  # Nothing yet!
+  has_many :media, inverse_of: :language
+
+  def name
+    code
+  end
 end
