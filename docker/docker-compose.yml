@@ -1,5 +1,15 @@
 version: '2'
 services:
+  eol-repo-elasticsearch:
+    image: elasticsearch
+    container_name: eol-repo-elasticsearch
+    restart: always
+    environment:
+      - TZ=America/New_York
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - /u/data/eol-repo-elasticsearch/data:/usr/share/elasticsearch/data
+    network_mode: "bridge"
   eol-repo-memcached:
     image: memcached
     container_name: eol-repo-memcached
@@ -24,9 +34,11 @@ services:
     volumes:
       - /u/data/eol-repo-app:/u/apps/harvester/public/data
     depends_on:
+      - eol-repo-elasticsearch
       - eol-repo-mysql
       - eol-repo-memcached
     links:
+      - eol-repo-elasticsearch:elasticsearch
       - eol-repo-memcached:memcached
       - eol-repo-mysql:mysql
     env_file:
@@ -34,5 +46,4 @@ services:
     ports:
        - 3001:3000
     network_mode: "bridge"
-
 
