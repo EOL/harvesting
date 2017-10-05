@@ -20,7 +20,7 @@
 spec/files/*diff
 
 # Created when processing resources:
-public/media
-public/media/*
+public/content
+public/content/*
 public/diff/*
 public/converted_csv/*
