@@ -244,6 +244,7 @@ ActiveRecord::Schema.define(version: 20171004200142) do
     t.string   "base_url",                  limit: 255
     t.string   "rights_statement",          limit: 255
     t.string   "usage_statement",           limit: 255
+    t.string   "sizes",                     limit: 255
     t.integer  "subclass",                  limit: 4,     default: 0, null: false
     t.integer  "format",                    limit: 4,     default: 0, null: false
     t.integer  "resource_id",               limit: 4,                 null: false
@@ -252,6 +253,12 @@ ActiveRecord::Schema.define(version: 20171004200142) do
     t.integer  "license_id",                limit: 4
     t.integer  "language_id",               limit: 4
     t.integer  "location_id",               limit: 4
+    t.integer  "w",                         limit: 4
+    t.integer  "h",                         limit: 4
+    t.integer  "crop_x_pct",                limit: 4
+    t.integer  "crop_y_pct",                limit: 4
+    t.integer  "crop_w_pct",                limit: 4
+    t.integer  "crop_h_pct",                limit: 4
     t.integer  "bibliographic_citation_id", limit: 4
     t.text     "owner",                     limit: 65535
     t.text     "description_verbatim",      limit: 65535

@@ -2,6 +2,7 @@ class Medium < ActiveRecord::Base
   include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
 
   belongs_to :resource, inverse_of: :media
+  belongs_to :harvest, inverse_of: :media
   belongs_to :node, inverse_of: :media
   # belongs_to :license
   belongs_to :language
