@@ -14,6 +14,8 @@ gem "creek", "~> 1.1"
 gem 'daemons'
 # Background jobs:
 gem 'delayed_job_active_record'
+# Dalli store:
+gem 'dalli'
 
 # Because ERB is just plain silly compared to Haml:
 gem 'haml-rails'
