@@ -1,5 +1,5 @@
 tmp_path = Rails.root.join('tmp')
-diff_path = Rails.root.join('public', 'diff')
+diff_path = Rails.public_path.join('diff')
 Dir.glob("#{tmp_path}/names*").each { |file| File.unlink(file) }
 Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 

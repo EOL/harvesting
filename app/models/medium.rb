@@ -27,7 +27,7 @@ class Medium < ActiveRecord::Base
     m_dir = dir_from_mod(m_num)
     l_num = m_num / Medium.bucket_size
     l_dir = dir_from_mod(l_num)
-    Rails.public_path.join('content', 'media', l_dir, m_dir, s_dir)
+    Rails.public_path.join('data', 'media', l_dir, m_dir, s_dir)
   end
 
   def dir_from_mod(mod)

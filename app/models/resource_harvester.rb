@@ -187,7 +187,7 @@ class ResourceHarvester
   end
 
   def fake_diff_from_nothing
-    puts '>> fake_diff_from_nothing'
+    puts ">> fake_diff_from_nothing (#{@format.diff})"
     system("echo \"0a\" > #{@format.diff}")
     system("tail -n +#{@format.data_begins_on_line} #{@format.converted_csv_path} >> #{@format.diff}")
     system("echo \".\" >> #{@format.diff}")
@@ -200,8 +200,12 @@ class ResourceHarvester
     gather_nodes
     clear_storage_vars
     each_diff do
+      puts ".. Storing diff"
       fields = build_fields
+      i = 0
       any_diff = @parser.diff_as_hashes(@headers) do |row|
+        i += 1
+        puts ".. row #{i}" if (i % 100_000).zero?
         @file = @parser.path_to_file
         @diff = @parser.diff
         # We *could* skip this, but I prefer not to deal with the missing keys.
@@ -247,6 +251,7 @@ class ResourceHarvester
   end
 
   def clear_storage_vars
+    puts "## clear_storage_vars"
     @nodes_by_ancestry = {}
     @occurrences = {}
     @terms = {}
@@ -267,6 +272,7 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def store_new
     @new.each do |klass, models|
+      puts ".. Storing #{klass.name}"
       begin
         # Grouping them might not be necssary, but it sure makes debugging easier...
         models.in_groups_of(1000, false) do |group|
@@ -282,6 +288,7 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def mark_old
     @old.each do |klass, by_keys|
+      puts ".. Marking old #{klass.name}" unless by_keys.empty?
       by_keys.each do |key, pks|
         pks.in_groups_of(1000, false) do |group|
           begin
@@ -297,10 +304,12 @@ class ResourceHarvester
   end
 
   def rebuild_nodes
+    puts "## rebuild_nodes"
     Node.where(harvest_id: @harvest.id).rebuild!(false)
   end
 
   def resolve_node_keys
+    puts "## resolve_node_keys"
     # Node ancestry:
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
     # Node scientific names:
@@ -313,11 +322,13 @@ class ResourceHarvester
   end
 
   def resolve_media_keys
+    puts "## resolve_media_keys"
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
   end
 
   def resolve_trait_keys
+    puts "## resolve_media_keys"
     # Occurrences to nodes:
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Traits to nodes (through occurrences)
@@ -338,6 +349,7 @@ class ResourceHarvester
   end
 
   def add_occurrence_metadata_to_traits
+    puts "## add_occurrence_metadata_to_traits"
     meta_traits = []
     OccurrenceMetadata.includes(:occurrence).where(harvest_id: @harvest.id).find_each do |meta|
       # NOTE: this is probably not very efficient. :S
@@ -351,6 +363,7 @@ class ResourceHarvester
   end
 
   def resolve_missing_parents
+    puts "## resolve_missing_parents"
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
   end
 
@@ -373,9 +386,13 @@ class ResourceHarvester
   # NOTE: yes, this could be *quite* large, but I believe memory is fine with a hash of two million (smallish) members,
   # so I'm doing it.
   def gather_nodes
+    puts "## gather_nodes"
     @nodes ||= {}
+    i = 0
     @resource.nodes.published.find_each do |node|
       @nodes[node.resource_pk] = node
+      i += 1
+      puts ".. #{i}" if (i % 100_000).zero?
     end
   end
 
@@ -402,10 +419,12 @@ class ResourceHarvester
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
+    puts "## match_nodes"
     NamesMatcher.for_harvest(@harvest)
   end
 
   def reindex_search
+    puts "## reindex_search"
     Node.where(harvest_id: @harvest.id).reindex
   end
 
