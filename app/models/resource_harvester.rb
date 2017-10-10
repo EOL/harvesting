@@ -82,6 +82,7 @@ class ResourceHarvester
 
   # validate each file; stop on errors, log warnings...
   def validate
+    @harvest.log_call
     each_format do
       fields = {}
       expected_by_file = @headers.dup
@@ -122,11 +123,11 @@ class ResourceHarvester
         end
       end
       @converted[@format.id] = true
-      # Write each line to a CSV (no headers)
     end
   end
 
   def convert
+    @harvest.log_call
     each_format do
       unless @converted[@format.id]
         @file = @format.converted_csv_path
@@ -143,7 +144,7 @@ class ResourceHarvester
       end
       cmd = "/usr/bin/sort #{@format.converted_csv_path} > "\
             "#{@format.converted_csv_path}_sorted"
-      puts ">> #{cmd}"
+      log_cmd(cmd)
       if system(cmd)
         FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
       else
@@ -182,30 +183,30 @@ class ResourceHarvester
       "#{@format.converted_csv_path} > #{@format.diff}"
     # TODO: We can't trust the exit code! diff exits 0 if the files are the
     # same, and 1 if not.
-    puts ">> #{cmd}"
-    system(cmd)
+    run_cmd(cmd)
   end
 
   def fake_diff_from_nothing
-    puts ">> fake_diff_from_nothing (#{@format.diff})"
-    system("echo \"0a\" > #{@format.diff}")
-    system("tail -n +#{@format.data_begins_on_line} #{@format.converted_csv_path} >> #{@format.diff}")
-    system("echo \".\" >> #{@format.diff}")
+    run_cmd("echo \"0a\" > #{@format.diff}")
+    run_cmd("tail -n +#{@format.data_begins_on_line} #{@format.converted_csv_path} >> #{@format.diff}")
+    run_cmd("echo \".\" >> #{@format.diff}")
+  end
+
+  def run_cmd(cmd)
+    log_cmd(cmd)
+    system(cmd)
   end
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
   def store
-    # Recall these are in a specific order (and need to be). The assumption here is that files which refer to nodes are
-    # read AFTER the nodes file, etc.
-    gather_nodes
     clear_storage_vars
     each_diff do
-      puts ".. Storing diff"
+      log_info "Storing diff"
       fields = build_fields
       i = 0
       any_diff = @parser.diff_as_hashes(@headers) do |row|
         i += 1
-        puts ".. row #{i}" if (i % 100_000).zero?
+        log_info("row #{i}") if (i % 100_000).zero?
         @file = @parser.path_to_file
         @diff = @parser.diff
         # We *could* skip this, but I prefer not to deal with the missing keys.
@@ -220,7 +221,7 @@ class ResourceHarvester
             send(field.mapping, field, row[header])
           end
         rescue => e
-          puts "Failed to parse row #{@line_num}..."
+          log_info "Failed to parse row #{@line_num}..."
           debugger
           raise e
         end
@@ -233,9 +234,7 @@ class ResourceHarvester
             build_models
           end
         rescue => e
-          puts "Failed to save data from row #{@line_num}..."
-          puts e.message
-          puts e.backtrace[0..10]
+          log_err(e, "Failed to save data from row #{@line_num}...")
           debugger
           raise e
           # end
@@ -247,16 +246,14 @@ class ResourceHarvester
     find_duplicate_nodes
     store_new
     mark_old
-    clear_storage_vars
+    clear_storage_vars # Allow GC to clean up!
   end
 
   def clear_storage_vars
-    puts "## clear_storage_vars"
+    @harvest.log_call
     @nodes_by_ancestry = {}
-    @occurrences = {}
     @terms = {}
     @models = {}
-    @nodes = {}
     @new = {}
     @old = {}
   end
@@ -272,7 +269,7 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def store_new
     @new.each do |klass, models|
-      puts ".. Storing #{klass.name}"
+      log_info "Storing #{klass.name}"
       begin
         # Grouping them might not be necssary, but it sure makes debugging easier...
         models.in_groups_of(1000, false) do |group|
@@ -280,7 +277,7 @@ class ResourceHarvester
         end
       rescue => e
         debugger
-        puts "ruh-roh"
+        1
       end
     end
   end
@@ -288,7 +285,7 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def mark_old
     @old.each do |klass, by_keys|
-      puts ".. Marking old #{klass.name}" unless by_keys.empty?
+      log_info("Marking old #{klass.name}") unless by_keys.empty?
       by_keys.each do |key, pks|
         pks.in_groups_of(1000, false) do |group|
           begin
@@ -296,7 +293,7 @@ class ResourceHarvester
               update_all(removed_by_harvest_id: @harvest.id)
           rescue => e
             debugger
-            puts "oh dear!"
+            2
           end
         end
       end
@@ -304,12 +301,12 @@ class ResourceHarvester
   end
 
   def rebuild_nodes
-    puts "## rebuild_nodes"
+    @harvest.log_call
     Node.where(harvest_id: @harvest.id).rebuild!(false)
   end
 
   def resolve_node_keys
-    puts "## resolve_node_keys"
+    @harvest.log_call
     # Node ancestry:
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
     # Node scientific names:
@@ -322,13 +319,13 @@ class ResourceHarvester
   end
 
   def resolve_media_keys
-    puts "## resolve_media_keys"
+    @harvest.log_call
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
   end
 
   def resolve_trait_keys
-    puts "## resolve_media_keys"
+    @harvest.log_call
     # Occurrences to nodes:
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Traits to nodes (through occurrences)
@@ -349,7 +346,7 @@ class ResourceHarvester
   end
 
   def add_occurrence_metadata_to_traits
-    puts "## add_occurrence_metadata_to_traits"
+    @harvest.log_call
     meta_traits = []
     OccurrenceMetadata.includes(:occurrence).where(harvest_id: @harvest.id).find_each do |meta|
       # NOTE: this is probably not very efficient. :S
@@ -363,7 +360,7 @@ class ResourceHarvester
   end
 
   def resolve_missing_parents
-    puts "## resolve_missing_parents"
+    @harvest.log_call
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
   end
 
@@ -383,17 +380,17 @@ class ResourceHarvester
     klass.connection.execute(clean_sql)
   end
 
-  # NOTE: yes, this could be *quite* large, but I believe memory is fine with a hash of two million (smallish) members,
-  # so I'm doing it.
-  def gather_nodes
-    puts "## gather_nodes"
-    @nodes ||= {}
-    i = 0
-    @resource.nodes.published.find_each do |node|
-      @nodes[node.resource_pk] = node
-      i += 1
-      puts ".. #{i}" if (i % 100_000).zero?
-    end
+  def log_info(what)
+    @harvest.log(what, cat: :infos)
+  end
+
+  def log_cmd(what)
+    @harvest.log(what, cat: :commands)
+  end
+
+  def log_err(e, msg)
+    @harvest.log("#{msg}: #{e.message}", e: e, cat: :commands)
+    @harvest.update_attribute(:failed_at, Time.now)
   end
 
   def build_fields
@@ -419,12 +416,12 @@ class ResourceHarvester
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
-    puts "## match_nodes"
+    @harvest.log_call
     NamesMatcher.for_harvest(@harvest)
   end
 
   def reindex_search
-    puts "## reindex_search"
+    @harvest.log_call
     Node.where(harvest_id: @harvest.id).reindex
   end
 

@@ -17,6 +17,14 @@ class Harvest < ActiveRecord::Base
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
   end
 
+  def log_call
+    i = caller.index { |c| c =~ /harvester/ } # TODO: really, we don't KNOW that's the name. :S
+    (file, method) = caller(i+1..i+1).first.split
+    log("#{file.split('/').last.split(':')[0..1].join(':')}##{method[1..-2]}", cat: :starts)
+  rescue
+    log("Starting method #{caller(0..0)}")
+  end
+
   def log(message, options = {})
     options[:cat] ||= :infos
     trace = options[:e] ? options[:e].backtrace.join("\n") : nil
@@ -26,6 +34,9 @@ class Harvest < ActiveRecord::Base
       message: message[0..65_534], # Truncates really long messages, alas...
       backtrace: trace
     }
+    # TODO: we should be able to configure whether this outputs to STDOUT:
+    puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
+    STDOUT.flush
     hlogs << Hlog.create!(hash.merge(format: options[:format]))
   end
 end

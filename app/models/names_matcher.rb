@@ -50,34 +50,28 @@ class NamesMatcher
   end
 
   def match_canonical_and_authors_in_eol(name)
-    puts "## match_canonical_and_authors_in_eol"
     match(name, fields: [:canonical], where: { resource_id: 1, authors: name.authors })
   end
 
   def match_synonyms_and_authors_in_eol(name)
-    puts "## match_synonyms_and_authors_in_eol"
     match(name, fields: [:synonyms], where: { resource_id: 1, synonym_authors: name.authors })
   end
 
   # TODO: some resources CAN match themselves...
   def match_synonyms_and_authors_from_partners(name)
-    puts "## match_synonyms_and_authors_from_partners"
     match(name, fields: [:synonyms], where: { synonym_authors: name.authors, resource_id: { not: @resource.id } })
   end
 
   def match_canonical_in_eol(name)
-    puts "## match_canonical_in_eol"
     match(name, fields: [:canonical], where: { resource_id: 1 })
   end
 
   def match_synonyms_in_eol(name)
-    puts "## match_synonyms_in_eol"
     match(name, fields: [:synonyms], where: { resource_id: 1 })
   end
 
   # TODO: some resources CAN match themselves...
   def match_canonical_from_partners(name)
-    puts "## match_canonical_from_partners"
     match(name, fields: [:canonical], where: { resource_id: { not: @resource.id } })
   end
 
@@ -87,11 +81,8 @@ class NamesMatcher
 
   # The algorithm, as pseudo-code (Ruby, for brevity):
   def map_all_nodes_to_pages(root_nodes)
-    @harvest.log("NamesMatcher", cat: :starts)
-    puts "(( map_all_nodes_to_pages.start"
+    @harvest.log_call
     map_nodes(root_nodes)
-    puts ")) map_all_nodes_to_pages.end"
-    @harvest.log("NamesMatcher", cat: :ends)
   end
 
   def map_nodes(nodes)
@@ -108,8 +99,6 @@ class NamesMatcher
       # Skip scientific name searches if all we have is a canonical (really)
       strategy = @first_non_author_strategy_index if node.scientific_name.authors.blank?
       map_node(node, ancestor_depth: 0, strategy: strategy)
-    else
-      puts "-- Skipping node #{node.id} (#{node.canonical})"
     end
     return unless node.children.any?
     @ancestors.push(node)
@@ -223,7 +212,6 @@ class NamesMatcher
   end
 
   def unmapped(node, message, opts = {})
-    puts "UNMATCHED: #{node.canonical}"
     log_msg = "Node #{node.id} (#{node.canonical}) could NOT be matched: #{message}"
     @harvest.log(log_msg, opts)
     node.create_new_page(new_page_id)

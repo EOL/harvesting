@@ -153,8 +153,6 @@ module Store
     end
 
     def build_occurrence
-      # TODO: node = find_node(@models[:occurrence])
-      # TODO: @models[:occurrence][:node_id] = node.id
       @models[:occurrence][:harvest_id] = @harvest.id
       meta = @models[:occurrence].delete(:meta) || {}
       if @models[:occurrence][:sex]
@@ -175,8 +173,6 @@ module Store
         datum = convert_meta_value(datum, value)
         prepare_model_for_store(OccurrenceMetadata, datum)
       end
-      # We need to remember these for traits:
-      @occurrences[occurrence.resource_pk] = occurrence
     end
 
     def build_trait
@@ -258,28 +254,6 @@ module Store
         datum[:literal] = value
       end
       datum
-    end
-
-    def find_node(instance)
-      node_pk = instance.delete(:node_resource_pk)
-      return nil if node_pk.nil? # Nothing to look up!
-      # TODO: of course, this is slow... we should queue these up and find them
-      # all in one batch. For now, though, this is adequate:
-      node = @nodes[node_pk] ||
-             Node.where(resource_id: @resource.id, resource_pk: node_pk).first
-      debugger if node.nil? # Means that we don't know what this is associated to...
-      node
-    end
-
-    def find_occurrence(instance)
-      pk = instance.delete(:occurrence_resource_pk)
-      return nil if pk.nil?
-      # TODO: of course, this is slow... we should queue these up and find them
-      # all in one batch. For now, though, this is adequate:
-      ocrc = @occurrences[pk] ||
-             Occurrence.where(resource_id: @resource.id, resource_pk: pk).first
-      debugger if ocrc.nil? # Means that we don't know what this is associated to...
-      ocrc
     end
 
     def find_or_create_term(uri)
