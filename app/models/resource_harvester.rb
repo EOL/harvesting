@@ -275,7 +275,7 @@ class ResourceHarvester
         group_size = 1000
         g_count = 1
         models.in_groups_of(group_size, false) do |group|
-          log_info "... #{g_count * group_size}" if g_count > 1
+          log_info "... #{g_count * group_size}" if (g_count % 10).zero?
           g_count += 1
           klass.import! group
         end
