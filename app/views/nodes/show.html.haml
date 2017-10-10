@@ -38,7 +38,10 @@
           = @node.try(:canonical)
         %li
           %strong= t("nodes.fields.authors")
-          = @node.scientific_name.authors.join('; ')
+          - if @node.scientific_name.authors
+            = @node.scientific_name.authors.join('; ')
+          - else
+            = t("nodes.empty_fields.authors")
         %li
           %strong= t("nodes.fields.year")
           = @node.scientific_name.year

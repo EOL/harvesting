@@ -114,9 +114,10 @@ en:
       updated_at: "Updated:"
   nodes:
     empty_fields:
+      authors: "(none)"
       children: "This node has no children."
       media: "This node has no associated media."
-      media: "This node has no associated traits."
+      traits: "This node has no associated traits."
     fields:
       authors: "Authors (semi-colon delimited):"
       canonical: "Canonical:"

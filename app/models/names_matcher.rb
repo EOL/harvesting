@@ -7,13 +7,13 @@ class NamesMatcher
     @harvest = harvest
     @resource = @harvest.resource
     @root_nodes = @resource.nodes.published.root
-    @strategies = [
-      :match_canonical_and_authors_in_eol,
-      :match_synonyms_and_authors_in_eol,
-      :match_synonyms_and_authors_from_partners,
-      :match_canonical_in_eol,
-      :match_synonyms_in_eol,
-      :match_canonical_from_partners
+    @strategies = %i[
+      match_canonical_and_authors_in_eol
+      match_synonyms_and_authors_in_eol
+      match_synonyms_and_authors_from_partners
+      match_canonical_in_eol
+      match_synonyms_in_eol
+      match_canonical_from_partners
     ]
     @first_non_author_strategy_index = @strategies.index { |a| a !~ /authors/ }
     # variables like these really should be CONFIGURABLE, not hard-coded, so we can change a text file on the server and
@@ -25,15 +25,9 @@ class NamesMatcher
     # regardless of how much "better" it might look than others due to sheer numbers.
     @minimum_ancestry_match = {
       0 => 0,
-      1 => 1,
-      2 => 1,
-      3 => 1,
-      4 => 1,
-      5 => 2,
-      6 => 2,
-      7 => 2,
-      8 => 3,
-      9 => 3
+      1 => 1, 2 => 1, 3 => 1, 4 => 1,
+      5 => 2, 6 => 2, 7 => 2,
+      8 => 3, 9 => 3
     }
     (10..250).each { |n| @minimum_ancestry_match[n] = (n * 0.3).ceil }
     @ancestors = []
@@ -42,9 +36,9 @@ class NamesMatcher
 
   def match(name, how)
     how[:where] ||= {}
-    how[:where].merge!(canonical: name.canonical)
-    how[:where].merge!(ancestor_page_ids: @ancestor.page_id) if @ancestor
-    how[:where].merge!(is_hybrid: true) if name.hybrid?
+    how[:where][:canonical] = name.canonical
+    how[:where][:ancestor_page_ids] = @ancestor.page_id if @ancestor
+    how[:where][:is_hybrid] = true if name.hybrid?
     how.delete(:where) if how[:where].empty?
     Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
   end
