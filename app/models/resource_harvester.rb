@@ -269,10 +269,14 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def store_new
     @new.each do |klass, models|
-      log_info "Storing #{klass.name}"
+      log_info "Storing #{models.size} #{klass.name.pluralize}"
       begin
         # Grouping them might not be necssary, but it sure makes debugging easier...
-        models.in_groups_of(1000, false) do |group|
+        group_size = 1000
+        g_count = 1
+        models.in_groups_of(group_size, false) do |group|
+          log_info "... #{g_count * group_size}" if g_count > 1
+          g_count += 1
           klass.import! group
         end
       rescue => e
