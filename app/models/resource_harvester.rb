@@ -41,30 +41,35 @@ class ResourceHarvester
   end
 
   def start
-    create_harvest_instance
-    fetch
-    # TODO: CLEARLY the mkdirs do not belong here. I wasn't sure where would be
-    # best. TODO: really this (and the one in format.rb) should be configurable
-    Dir.mkdir(Rails.public_path.join('converted_csv')) unless
-      Dir.exist?(Rails.public_path.join('converted_csv'))
-    validate # TODO: this should include a call to check_consistency
-    convert
-    # TODO: really this (and the one in format.rb) should be configurable
-    Dir.mkdir(Rails.public_path.join('diff')) unless
-      Dir.exist?(Rails.public_path.join('diff'))
-    delta
-    store
-    resolve_node_keys
-    resolve_media_keys
-    resolve_trait_keys
-    resolve_missing_parents
-    rebuild_nodes
-    # TODO: resolve_missing_media_owners (requires agents are done)
-    # TODO: sanitize media names and descriptions...
-    queue_downloads
-    parse_names
-    denormalize_canonical_names_to_nodes
-    match_nodes
+    Searchkick.disable_callbacks
+    begin
+      create_harvest_instance
+      fetch
+      # TODO: CLEARLY the mkdirs do not belong here. I wasn't sure where would be
+      # best. TODO: really this (and the one in format.rb) should be configurable
+      Dir.mkdir(Rails.public_path.join('converted_csv')) unless
+        Dir.exist?(Rails.public_path.join('converted_csv'))
+      validate # TODO: this should include a call to check_consistency
+      convert
+      # TODO: really this (and the one in format.rb) should be configurable
+      Dir.mkdir(Rails.public_path.join('diff')) unless
+        Dir.exist?(Rails.public_path.join('diff'))
+      delta
+      store
+      resolve_node_keys
+      resolve_media_keys
+      resolve_trait_keys
+      resolve_missing_parents
+      rebuild_nodes
+      # TODO: resolve_missing_media_owners (requires agents are done)
+      # TODO: sanitize media names and descriptions...
+      queue_downloads
+      parse_names
+      denormalize_canonical_names_to_nodes
+      match_nodes
+    ensure
+      Searchkick.enable_callbacks
+    end
     reindex_search
     # TODO: normalize_units
     # TODO: (LOW-PRIO) calculate_statistics
@@ -406,6 +411,7 @@ class ResourceHarvester
   end
 
   def queue_downloads
+    @harvest.log_call
     @harvest.media.find_each { |med| med.delay.download_and_resize }
   end
 

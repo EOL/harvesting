@@ -14,17 +14,15 @@ You also need to install `gnparser` [from here](https://github.com/GlobalNamesAr
 # First Time
 
 ```
-rake db:drop ; rake db:create ; rake db:migrate ; rake db:seed
+rake reset:full_with_all_harvests
 ```
-...Then run the "Be Sure Everything Is Running" command, without the `rake db:reset`.
 
-## Be Sure Everything Is Running
+## Resetting
 
-Note that the `rake db:reset` is first, below, only if you want to re-run the following commands later. You don't need
-it the first time.
+If the migrations haven't changed, you can save a second or two and run:
 
 ```
-rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start ; ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start ; ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start"
+rake reset:all_harvests
 ```
 
 ## Background services

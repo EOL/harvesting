@@ -35,7 +35,7 @@ class Medium < ActiveRecord::Base
   end
 
   def download_and_resize
-    puts "## download_and_resize (#{id}) "
+    harvest.log("download_and_resize (#{id})")
     available_sizes = {}
     d_time = nil
     unless Dir.exist?(dir)

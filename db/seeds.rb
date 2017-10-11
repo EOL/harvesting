@@ -3,7 +3,9 @@ diff_path = Rails.public_path.join('diff')
 Dir.glob("#{tmp_path}/names*").each { |file| File.unlink(file) }
 Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 
-# rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start"
+# rake reset:full_with_harvest
+# OR:
+# rake reset:first_harvest
 # Dynamic Hierarchy should be first:
 dwh = Resource.quick_define(
   name: 'EOL Dynamic Hierarchy',
@@ -506,14 +508,9 @@ freshwater = Resource.quick_define(
 )
 
 if false
-  # rake db:reset ; rails runner "ResourceHarvester.new(Resource.first).start"
+  # rake reset:first_harvest
   # rails runner "ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
   # rails runner "ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start"
-  # rails runner "Harvest.last.destroy ; ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
-
-  # Move these lines down below resource def'n if you want them:
-  # Harvest.where(resource_id: resource.id).destroy_all
-  # reload!
   resource = Resource.where(name: 'Mineralogy').first
   harvester = ResourceHarvester.new(resource)
   harvester.start

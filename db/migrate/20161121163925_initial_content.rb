@@ -10,16 +10,14 @@ class InitialContent < ActiveRecord::Migration
       t.integer :removed_by_harvest_id
       t.integer :lft, index: true
       t.integer :rgt, index: true
-      t.integer :depth, index: true, comment: 'This may not require an index, but awesome_nested_set suggests one.'
+      t.integer :depth
 
-      t.string :canonical, index: true, comment: 'indexed to facilitate sorting'
+      t.string :canonical # NOTE: I removed an index here to try and speed up writes.
       t.string :taxonomic_status_verbatim
       t.string :resource_pk, index: true
       t.string :parent_resource_pk, comment: 'to be resolved as needed'
       t.string :further_information_url
-      # rank is a _normalized_ rank string... really an enumeration, but not
-      # stored that way. TODO: why not? We should.
-      t.string :rank
+      t.string :rank, comment: 'like an enumeration, but requires more flexibility than one would allow'
       t.string :rank_verbatim
 
       t.boolean :in_unmapped_area, default: false, comment: 'True if the native_node_id is NOT in the EOL hierarchy.'

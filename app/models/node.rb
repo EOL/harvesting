@@ -18,7 +18,7 @@ class Node < ActiveRecord::Base
   # NOTE: special scope used by Searchkick
   scope :search_import, -> { where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children) }
 
-  acts_as_nested_set scope: :resource_id
+  acts_as_nested_set scope: :resource_id, dependent: :nullify
 
   # NOTE: special method used by Searchkick
   def search_data

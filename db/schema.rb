@@ -339,8 +339,6 @@ ActiveRecord::Schema.define(version: 20171004200142) do
     t.datetime "updated_at"
   end
 
-  add_index "nodes", ["canonical"], name: "index_nodes_on_canonical", using: :btree
-  add_index "nodes", ["depth"], name: "index_nodes_on_depth", using: :btree
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
   add_index "nodes", ["lft"], name: "index_nodes_on_lft", using: :btree
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
