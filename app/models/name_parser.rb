@@ -19,21 +19,32 @@ class NameParser
       write_names_to_file(names)
       learn_names(names)
       json = parse_names_in_file
+      updates = []
       JSON.parse(json).each_with_index do |result, i|
-        # NOTE: interestingly, this skips running a SQL update if nothing changed, and, when only some fields change, it
-        # only updates those fields (not the ones that stay the same). Thanks, Rails. ...That said, it's damn slow.
-        # ...And aside from re-inserting them with an "on existing update" thingie, I'm not sure how to speed this up.
-        # Sigh.
         debugger unless @names.key?(result['verbatim'])
         begin
-          @names[result['verbatim']].update_attributes(parse_result(result))
+          @names[result['verbatim']].assign_attributes(parse_result(result))
+          updates << @names[result['verbatim']]
         rescue => e
           puts "error reading line #{i}"
           debugger
           puts 'shoot.'
         end
+        if ((i+1) % 10_000).zero?
+          update_names(updates)
+          updates = []
+        end
       end
+      update_names(updates) unless updates.empty?
     end
+  end
+
+  def update_names(updates)
+    ScientificName.import(updates,
+      on_duplicate_key_update: %i[authorship canonical genus harvest_id hybrid infrageneric_epithet
+      infraspecific_epithet is_preferred is_publishable is_used_for_merges node_id node_resource_pk normalized
+      normalized_name_id parse_quality publication remarks removed_by_harvest_id resource_id source_reference
+      specific_epithet surrogate taxonomic_status taxonomic_status_verbatim uninomial verbatim virus warnings year])
   end
 
   def loop_over_names_in_batches
