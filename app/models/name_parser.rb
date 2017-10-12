@@ -44,7 +44,7 @@ class NameParser
       ScientificName.import(updates,
         on_duplicate_key_update: %i[authorship canonical genus hybrid infrageneric_epithet infraspecific_epithet
         parse_quality source_reference specific_epithet surrogate uninomial verbatim virus warnings year])
-    rescue
+    rescue => e
       debugger
       3
     end
