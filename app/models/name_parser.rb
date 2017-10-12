@@ -41,10 +41,8 @@ class NameParser
 
   def update_names(updates)
     ScientificName.import(updates,
-      on_duplicate_key_update: %i[authorship canonical genus harvest_id hybrid infrageneric_epithet
-      infraspecific_epithet is_preferred is_publishable is_used_for_merges node_id node_resource_pk normalized
-      normalized_name_id parse_quality publication remarks removed_by_harvest_id resource_id source_reference
-      specific_epithet surrogate taxonomic_status taxonomic_status_verbatim uninomial verbatim virus warnings year])
+      on_duplicate_key_update: %i[authorship canonical genus hybrid infrageneric_epithet infraspecific_epithet
+      parse_quality source_reference specific_epithet surrogate uninomial verbatim virus warnings year])
   end
 
   def loop_over_names_in_batches
