@@ -206,7 +206,7 @@ class ResourceHarvester
   def store
     clear_storage_vars
     each_diff do
-      log_info "Storing diff"
+      log_info "Loading diff file into memory..."
       fields = build_fields
       i = 0
       any_diff = @parser.diff_as_hashes(@headers) do |row|
