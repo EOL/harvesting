@@ -30,7 +30,10 @@ class NameParser
           debugger
           puts 'shoot.'
         end
-        if ((i+1) % 1000).zero?
+        # NOTE: I tried 1000 each batch, here, and it was TOTALLY fine. ...attempting an increase. ...would be nice to
+        # remove the "buffer" entirely and let it do 10K at a time (the size of #loop_over_names_in_batches), but I'd
+        # like to get there cautiously.
+        if ((i+1) % 2500).zero?
           update_names(updates)
           updates = []
         end

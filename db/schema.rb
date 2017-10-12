@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171004200142) do
+ActiveRecord::Schema.define(version: 20171012152024) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -167,6 +167,7 @@ ActiveRecord::Schema.define(version: 20171004200142) do
     t.datetime "completed_at"
     t.datetime "created_at",                                       null: false
     t.datetime "updated_at",                                       null: false
+    t.integer  "stage",                  limit: 4
   end
 
   create_table "hlogs", force: :cascade do |t|

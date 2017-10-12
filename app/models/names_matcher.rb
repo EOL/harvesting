@@ -126,6 +126,7 @@ class NamesMatcher
   def map_unflagged_node(node, opts)
     opts[:strategy] ||= 0
     results = send(@strategies[opts[:strategy]], node.scientific_name)
+    # TODO: map_to_page should be delayed and done in batch...
     return node.map_to_page(results.first[:page_id]) if results.total_count == 1
     return more_than_one_match(node, results) if results.total_count > 1
     return unmapped(node, 'virus', opts) if node.scientific_name.virus?
@@ -200,6 +201,7 @@ class NamesMatcher
     else
       @harvest.log("Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
         "#{simple_scores.inspect}")
+      # TODO: map_to_page should be delayed and done in batch.
       node.map_to_page(best_match['page_id'])
     end
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!

@@ -11,6 +11,8 @@ class Resource < ActiveRecord::Base
   has_many :meta_traits, inverse_of: :resource
   has_many :identifiers, inverse_of: :resource
 
+  # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
+  # it. Also translations in en.yml
   enum publish_status: %i(unpublished publishing published deprecated)
 
   acts_as_list

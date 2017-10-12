@@ -25,14 +25,18 @@
       %strong= "Harvests on Months:"
       - months = JSON.parse(@resource.harvest_months_json)
       = months.join(", ")
-  - else
-    .item= "This resource has not had a successful harvest."
+  .item
+    %strong= "Harvesting Status:"
+    - if @resource.publish_status.nil?
+      = t("resources.publish_status.nil")
+    - else
+      = t("resources.publish_status.#{@resource.publish_status}")
   - if @resource.nodes_count
     .item
       %strong= "Nodes:"
       = @resource.nodes_count
   - else
-    .item= "No nodes have been created for this resource."
+    .item= "Nodes count is blank (this is not a problem, but is inconvenient)."
   .item
     %strong= "URLs for node IDs will direct the client to:"
     - if @resource.pk_url == "$PK"

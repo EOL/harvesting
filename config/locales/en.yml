@@ -54,6 +54,8 @@ en:
     file_types:
       excel: "MS Excel (with sheets)"
       csv: "Delimited Text (csv, tsv, tab, etc)"
+  harvests:
+    later: "TODO"
   layout:
     title: "EOL Resource Harvester"
   location:
@@ -167,6 +169,12 @@ en:
       destroyed: "Deleted %{name} forever. You cannot get it back."
     index:
       header: "Resources"
+    publish_status:
+      deprecated: "Deprecated (will never harvest)"
+      nil: "Never harvested"
+      published: "Harvested"
+      publishing: "Harvesting (incomplete)"
+      unpublished: "Unharvested"
     show:
       add_format: "Add a file format definition"
   terms:

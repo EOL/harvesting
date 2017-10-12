@@ -29,7 +29,9 @@ class ResourceHarvester
 
   def resume
     @harvest = @resource.harvests.last
+    raise "Previous harvest completed!" if @harvest.completed?
     @previous_harvest = @resource.harvests.completed[-2] if @harvest == @previous_harvest
+    start
   end
 
   def inspect
@@ -41,52 +43,44 @@ class ResourceHarvester
   end
 
   def start
+    @start_time = Time.now
     Searchkick.disable_callbacks
     begin
-      create_harvest_instance
-      fetch
-      # TODO: CLEARLY the mkdirs do not belong here. I wasn't sure where would be
-      # best. TODO: really this (and the one in format.rb) should be configurable
-      Dir.mkdir(Rails.public_path.join('converted_csv')) unless
-        Dir.exist?(Rails.public_path.join('converted_csv'))
-      validate # TODO: this should include a call to check_consistency
-      convert
-      # TODO: really this (and the one in format.rb) should be configurable
-      Dir.mkdir(Rails.public_path.join('diff')) unless
-        Dir.exist?(Rails.public_path.join('diff'))
-      delta
-      store
-      resolve_node_keys
-      resolve_media_keys
-      resolve_trait_keys
-      resolve_missing_parents
-      rebuild_nodes
-      # TODO: resolve_missing_media_owners (requires agents are done)
-      # TODO: sanitize media names and descriptions...
-      queue_downloads
-      parse_names
-      denormalize_canonical_names_to_nodes
-      match_nodes
+      fast_forward = @harvest && !@harvest.stage.nil?
+      steps = Harvest.stages.keys.each do |stage|
+        if fast_forward && harvest.stage != stage
+          @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
+          next
+        end
+        fast_forward = false
+        @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
+        self.send(stage)
+      end
+    rescue
+      @harvest.update_attribute(:failed_at, Time.now) if @harvest
     ensure
       Searchkick.enable_callbacks
     end
-    reindex_search
-    # TODO: normalize_units
-    # TODO: (LOW-PRIO) calculate_statistics
-    complete_harvest_instance
   end
 
   def create_harvest_instance
     @harvest = @resource.create_harvest_instance
+    @harvest.create_harvest_instance!
   end
 
   # grab the file from each format
-  def fetch
+  def fetch_files
     Harvest::Fetcher.fetch_format_files(@harvest)
+    @harvest.update_attribute(:fetched_at, Time.now)
   end
 
-  # validate each file; stop on errors, log warnings...
-  def validate
+  def validate_each_file
+    # TODO ... this should check ID consistentcy too...
+    # @harvest.update_attribute(:consistency_checked_at, Time.now)
+    # TODO: I don't think the mkdirs do not belong here. I wasn't sure where would be best. TODO: really the dir names
+    # here (and the one in format.rb) should be configurable
+    Dir.mkdir(Rails.public_path.join('converted_csv')) unless
+      Dir.exist?(Rails.public_path.join('converted_csv'))
     @harvest.log_call
     each_format do
       fields = {}
@@ -129,9 +123,10 @@ class ResourceHarvester
       end
       @converted[@format.id] = true
     end
+    @harvest.update_attribute(:validated_at, Time.now)
   end
 
-  def convert
+  def convert_to_csv
     @harvest.log_call
     each_format do
       unless @converted[@format.id]
@@ -167,8 +162,10 @@ class ResourceHarvester
     end
   end
 
-  # Create deltas from previous harvests (or fake one from "nothing")
-  def delta
+  def calculate_delta
+    # TODO: really this dir name (and the one in format.rb) should be configurable
+    Dir.mkdir(Rails.public_path.join('diff')) unless
+      Dir.exist?(Rails.public_path.join('diff'))
     each_format do
       @format.update_attribute(:diff, @format.diff_path)
       other_fmt = @previous_harvest ? @previous_harvest.formats.find { |f| f.represents == @format.represents } : nil
@@ -180,6 +177,7 @@ class ResourceHarvester
         fake_diff_from_nothing
       end
     end
+    @harvest.update_attribute(:deltas_created_at, Time.now)
   end
 
   def diff(old_fmt)
@@ -203,7 +201,7 @@ class ResourceHarvester
   end
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
-  def store
+  def parse_diff_and_store
     clear_storage_vars
     each_diff do
       log_info "Loading diff file into memory..."
@@ -289,6 +287,7 @@ class ResourceHarvester
         1
       end
     end
+    @harvest.update_attribute(:stored_at, Time.now)
   end
 
   # TODO - extract to Store::Storage
@@ -309,9 +308,14 @@ class ResourceHarvester
     end
   end
 
+  def resolve_missing_media_owners
+    # TODO
+  end
+
   def rebuild_nodes
     @harvest.log_call
     Node.where(harvest_id: @harvest.id).rebuild!(false)
+    @harvest.update_attribute(:ancestry_built_at, Time.now)
   end
 
   def resolve_node_keys
@@ -410,6 +414,10 @@ class ResourceHarvester
     fields
   end
 
+  def sanitize_media_verbatims
+    # TODO
+  end
+
   def queue_downloads
     @harvest.log_call
     @harvest.media.find_each { |med| med.delay.download_and_resize }
@@ -417,6 +425,7 @@ class ResourceHarvester
 
   def parse_names
     NameParser.for_harvest(@harvest)
+    @harvest.update_attribute(:names_parsed_at, Time.now)
   end
 
   def denormalize_canonical_names_to_nodes
@@ -428,22 +437,31 @@ class ResourceHarvester
   def match_nodes
     @harvest.log_call
     NamesMatcher.for_harvest(@harvest)
+    @harvest.update_attribute(:nodes_matched_at, Time.now)
   end
 
   def reindex_search
     @harvest.log_call
+    # TODO: I don't think we *need* to enable/disable, here... but I'm being safe:
+    Searchkick.enable_callbacks
     Node.where(harvest_id: @harvest.id).reindex
+    Searchkick.disable_callbacks
+    @harvest.update_attribute(:indexed_at, Time.now)
   end
 
   def normalize_units
+    # TODO: later...
+    @harvest.update_attribute(:units_normalized_at, Time.now)
   end
 
   # add links and build links to DOI and the like (and find missing DOIs)
   def link
+    # TODO: later...
+    @harvest.update_attribute(:linked_at, Time.now)
   end
 
-  # update statistics
   def calculate_statistics
+    # TODO: (LOW-PRIO)...
   end
 
   # send notifications and finish up the instance:
@@ -497,5 +515,10 @@ class ResourceHarvester
 
   def log_warning(msg)
     @format.warn(msg, @line_num)
+  end
+
+  def completed
+    @harvest.update_attribute(:completed_at, Time.now)
+    @harvest.update_attribute(:time_in_minutes, ((Time.now - @start_time).to_i / 60.0).ceil)
   end
 end
