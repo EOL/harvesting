@@ -19,5 +19,5 @@ json.scientific_names @names do |name|
   json.canonical_form canon
   json.is_preferred name.node.scientific_name_id == name.id # TODO: make primary field? Note sure.
   json.taxonomic_status name.taxonomic_status.try(:downcase)
-  json.extract! name, *%i(source_reference genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim authorship publication remarks year hybrid surrogate virus parse_quality)
+  json.extract! name, *%i(ref_fk genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim authorship publication remarks year hybrid surrogate virus parse_quality)
 end

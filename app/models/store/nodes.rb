@@ -70,9 +70,9 @@ module Store
       @models[:scientific_name][:publication] = val
     end
 
-    def to_nodes_source_reference(field, val)
+    def to_nodes_source_ref_fk(field, val)
       @models[:scientific_name] ||= {}
-      @models[:scientific_name][:source_reference] = val
+      @models[:scientific_name][:ref_fk] = val
     end
 
     def to_nodes_identifiers(field, val)

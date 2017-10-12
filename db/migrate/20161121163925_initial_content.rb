@@ -47,7 +47,7 @@ class InitialContent < ActiveRecord::Migration
 
       t.string :node_resource_pk, index: true, comment: "once the node_id is populated, you shouldn't need this."
       t.string :taxonomic_status_verbatim
-      t.string :source_reference
+      t.string :ref_fk
       # The following are strings from GNA:
       t.string :warnings
       t.string :genus
@@ -85,7 +85,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :verbatim, index: true, comment: 'indexed because this is effectively the "resource_pk"'
       t.string :language_code_verbatim
       t.string :locality
-      t.string :source_reference
+      t.string :ref_fk
       t.text :remarks
       t.boolean :is_preferred
       t.integer :removed_by_harvest_id
@@ -128,6 +128,8 @@ class InitialContent < ActiveRecord::Migration
       t.string :rights_statement, comment: 'will be displayed before the usage_statement'
       t.string :usage_statement, comment: 'will be displayed after the rights_statement'
       t.string :sizes, comment: 'a JSON hash of available sizes, e.g.: { "80x80": "80x71" }'
+      t.string :bibliographic_citation_fk, comment: 'will be populated during normalization'
+      t.string :ref_fk, comment: 'will be populated during normalization'
 
       t.integer :subclass, null: false, default: 0, index: true, comment: 'enum: image, video, sound, map_image, map_js'
       t.integer :format, null: false, default: 0, comment: 'enum: jpg, youtube, flash, vimeo, mp3, ogg, wav'
@@ -145,6 +147,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :crop_w_pct, comment: 'stored as a percentage of the width'
       t.integer :crop_h_pct, comment: 'stored as a percentage of the width'
       t.integer :bibliographic_citation_id
+      t.integer :ref_id, comment: 'media are only allowed one ref, unlike articles (q.v.)'
 
       t.text :owner, comment: 'html; was rights_holder; current longest is 493; if missing, *must* be '\
         'populated with another attribution agent or the resource name: we MUST show an owner'

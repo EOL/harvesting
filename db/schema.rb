@@ -451,7 +451,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer "taxonomic_status",          limit: 4
     t.string  "node_resource_pk",          limit: 255
     t.string  "taxonomic_status_verbatim", limit: 255
-    t.string  "source_reference",          limit: 255
+    t.string  "ref_fk",          limit: 255
     t.string  "warnings",                  limit: 255
     t.string  "genus",                     limit: 255
     t.string  "specific_epithet",          limit: 255
@@ -550,7 +550,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string  "verbatim",               limit: 255
     t.string  "language_code_verbatim", limit: 255
     t.string  "locality",               limit: 255
-    t.string  "source_reference",       limit: 255
+    t.string  "ref_fk",       limit: 255
     t.text    "remarks",                limit: 65535
     t.boolean "is_preferred"
     t.integer "removed_by_harvest_id",  limit: 4

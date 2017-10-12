@@ -18,8 +18,8 @@ module Store
       build_vernacular if @models[:vernacular]
       build_occurrence if @models[:occurrence]
       build_trait if @models[:trait]
-      # TODO: still need to build agent, ref, attribution, article, image,
-      # js_map, link, map, sound, video
+      build_ref if @models[:ref]
+      # TODO: still need to build agent, attribution, article, js_map, link, map, sound, video
     end
 
     def is_synonym?
@@ -218,6 +218,14 @@ module Store
         datum = convert_meta_value(datum, value)
         prepare_model_for_store(MetaTrait, datum)
       end
+    end
+
+    def build_ref
+      @models[:ref][:resource_id] ||= @resource.id
+      @models[:ref][:harvest_id] ||= @harvest.id
+      @models[:ref][:body] = @models[:ref][:parts].join(' ') if @models[:ref][:body].blank?
+      @models[:ref].delete(:parts)
+      prepare_model_for_store(Ref, @models[:ref])
     end
 
     def convert_trait_value(instance)

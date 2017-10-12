@@ -114,6 +114,11 @@ module Store
       @models[:location][:long_literal] = val
     end
 
+    def to_media_ref_fk(field, val)
+      @models[:location] ||= {}
+      @models[:location][:ref_fk] = val
+    end
+
     def to_media_locality(field, val)
       @models[:location] ||= {}
       @models[:location][:locality] = val

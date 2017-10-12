@@ -29,7 +29,7 @@ dwh = Resource.quick_define(
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },
       { 'scientificName' => 'to_nodes_scientific' },
       { 'taxonRank' => 'to_nodes_rank' },
-      { 'source' => 'to_nodes_source_reference' },
+      { 'source' => 'to_nodes_source_ref_fk' },
       { 'taxonomicStatus' => 'to_taxonomic_status' },
       { 'canonicalName' => 'to_ignored' }, # TODO: see note in your to do list. ;)
       { 'scientificNameAuthorship' => 'to_ignored' },
@@ -140,12 +140,12 @@ sheet2_nodes: [
   'TaxonomicStatus http://rs.tdwg.org/dwc/terms/taxonomicStatus', # to_taxonomic_status
   'TaxonRemarks http://rs.tdwg.org/dwc/terms/taxonRemarks', # to_nodes_remarks
   'NamePublishedIn http://rs.tdwg.org/dwc/terms/namePublishedIn', # to_nodes_publication
-  'ReferenceID http://eol.org/schema/reference/referenceID' #to_nodes_source_reference
+  'ReferenceID http://eol.org/schema/reference/referenceID' #to_nodes_ref_fk
 ],
 sheet3_names: [
   'TaxonID http://rs.tdwg.org/dwc/terms/taxonID', # to_media_nodes_fk
   'Name http://rs.tdwg.org/dwc/terms/vernacularName', # to_vernaculars_verbatim
-  'Source Reference http://purl.org/dc/terms/source', # to_vernaculars_source_reference
+  'Source Reference http://purl.org/dc/terms/source', # to_vernaculars_source_ref_fk
   'Language http://purl.org/dc/terms/language', # to_language_639_1
   'Locality http://rs.tdwg.org/dwc/terms/locality', # to_vernaculars_locality
   'CountryCode http://rs.tdwg.org/dwc/terms/countryCode', # to_vernaculars_locality
@@ -323,7 +323,7 @@ Field.where(format_id: fmt.id, position: 15).first_or_create do |f|
   f.format_id = fmt.id
   f.position = 15
   f.expected_header = 'ReferenceID'
-  f.mapping = 'to_nodes_source_reference'
+  f.mapping = 'to_nodes_ref_fk'
 end
 
 # You don't want this code to run with db:seed, but you DO want to copy/paste
@@ -502,8 +502,27 @@ freshwater = Resource.quick_define(
       { 'UsageTerms' => 'to_media_rights_statement' },
       { 'Owner' => 'to_media_owner' },
       { 'LocationCreated' => 'to_media_locality' },
-      { 'rights' => 'to_media_rights_statement' }
-    ] }
+      { 'rights' => 'to_media_rights_statement' },
+      { 'ReferenceID' => 'to_media_ref_fk' }
+    ] },
+    refs: { 'ReferenceID' => 'to_refs_pk',
+      'PublicationType' => 'to_ignored',
+      'Full Reference' => 'to_refs_body',
+      'PrimaryTitle' => 'to_refs_part',
+      'SecondaryTitle' => 'to_refs_part',
+      'Pages' => 'to_refs_part',
+      'PageStart' => 'to_ignored',
+      'PageEnd' => 'to_ignored',
+      'VolumeEdition' => 'to_refs_part',
+      'Publisher' => 'to_refs_part',
+      'AuthorList' => 'to_refs_part',
+      'EditorList' => 'to_refs_part',
+      'DateCreated' => 'to_refs_part',
+      'Language' => 'to_ignored', # TODO?
+      'URL' => 'to_refs_url',
+      'DOI' => 'to_refs_doi',
+      'LocalityOfPublisher' => 'to_refs_part'
+    }
   }
 )
 

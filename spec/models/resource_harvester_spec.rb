@@ -39,7 +39,7 @@ RSpec.describe ResourceHarvester do
        position: 3,
        expected_header: "value",
        map_to_table: :vernaculars,
-       map_to_field: :source_reference),
+       map_to_field: :ref_fk),
      create(:field,
        format: fmt,
        position: 4,

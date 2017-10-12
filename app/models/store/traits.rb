@@ -54,9 +54,9 @@ module Store
       @models[:trait][:source] = val
     end
 
-    def to_traits_reference_fk(_, val)
+    def to_traits_ref_fk(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:reference_fk] = val
+      @models[:trait][:ref_fk] = val
     end
 
     def to_traits_meta(field, val)
