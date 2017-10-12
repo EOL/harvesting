@@ -1,0 +1,4 @@
+ReferenceID PublicationType Full Reference  PrimaryTitle  SecondaryTitle  Pages PageStart PageEnd VolumeEdition Publisher AuthorList  EditorList  DateCreated Language  URL DOI LocalityOfPublisher
+r1	Journal	This is some full reference	Title A	SecondaryTitle	1-100	1	100	III√  Toub Publishing	Author A, B, et al.	Editor A, B	2012-09-12	en	http://some.cool/place/on/the_web	doi:10.1037/rmh0000008	USA
+r2	Journal	This is the second reference											http://some.cool/place/on/the_web	doi:10.1037/rmh0000008	USA
+r3	Journal		LastTitle A	SecondaryTitle	1-100	1	100	III√  Toub Publishing	Author A, B, et al.	Editor A, B	2012-09-12	en	http://some.cool/place/on/the_web	doi:10.1037/rmh0000008	USA
