@@ -30,7 +30,7 @@ class NameParser
           debugger
           puts 'shoot.'
         end
-        if ((i+1) % 10_000).zero?
+        if ((i+1) % 1000).zero?
           update_names(updates)
           updates = []
         end
@@ -51,7 +51,7 @@ class NameParser
   end
 
   def loop_over_names_in_batches
-    ScientificName.where(harvest_id: @harvest.id).select('id, verbatim').find_in_batches(batch_size: 10_000) do |names|
+    ScientificName.where(harvest_id: @harvest.id).find_in_batches(batch_size: 10_000) do |names|
       yield(names)
     end
   end
