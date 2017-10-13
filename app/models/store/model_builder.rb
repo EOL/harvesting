@@ -134,8 +134,10 @@ module Store
       # default values for these.
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
+      sep = @models[:medium].delete(:ref_sep)
       unless @models[:medium][:ref_fks].blank?
-        @models[:medium][:ref_fks].split(/#{@models[:medium][:ref_sep]}\s+/).each do |ref_fk|
+        fks = @models[:medium].delete(:ref_fks)
+        fks.split(/#{sep}\s+/).each do |ref_fk|
           prepare_model_for_store(MediaReference, medium_resource_fk: @models[:medium][:resource_pk], ref_resource_fk: ref_fk)
         end
       end

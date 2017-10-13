@@ -503,7 +503,7 @@ freshwater = Resource.quick_define(
       { 'Owner' => 'to_media_owner' },
       { 'LocationCreated' => 'to_media_locality' },
       { 'rights' => 'to_media_rights_statement' },
-      { 'ReferenceID' => 'to_media_ref_fks' }
+      { 'ReferenceID' => 'to_media_ref_fks', submapping: ',' }
     ] },
     refs: { loc: 'references.tsv', fields: [
       { 'ReferenceID' => 'to_refs_pk' },

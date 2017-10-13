@@ -230,38 +230,46 @@ class InitialContent < ActiveRecord::Migration
       t.timestamps null: false
     end
 
-    create_join_table(:articles, :references) do |t|
-      t.index :article_id
+    # NOTE that we cannot use "regular" join tables because the IDs will be null on first run; we populate them based on
+    # the fks, later.
+    create_table :articles_references do |t|
+      t.integer :article_id, index: true
+      t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
       t.string :article_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_join_table(:media, :references) do |t|
-      t.index :medium_id
+    create_table :media_references do |t|
+      t.integer :medium_id, index: true
+      t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
       t.string :medium_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_join_table(:nodes, :references) do |t|
-      t.index :node_id
+    create_table :nodes_references do |t|
+      t.integer :node_id, index: true
+      t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
       t.string :node_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_join_table(:scientific_names, :references) do |t|
-      t.index :scientific_name_id
+    create_table :scientific_names_references do |t|
+      t.integer :scientific_name_id, index: true
+      t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
       t.string :name_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_join_table(:traits, :references) do |t|
-      t.index :trait_id
+    create_table :traits_references do |t|
+      t.integer :trait_id, index: true
+      t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
       t.string :trait_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_join_table(:associations, :references) do |t|
-      t.index :association_id
+    create_table :associations_references do |t|
+      t.integer :association_id, index: true
+      t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
       t.string :association_resource_fk, null: false, comment: 'to be replaced during normalization'
     end

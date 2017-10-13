@@ -1,29 +1,33 @@
 namespace :reset do
-  desc 'reset the database ENTIRELY. Your gun, your foot: use caution.'
-  task full: :environment do
-    Rake::Task['db:drop'].invoke
-    Rake::Task['db:create'].invoke
-    Rake::Task['db:migrate'].invoke
-    Rake::Task['db:seed'].invoke
+  namespace :full do
+    desc 'rebuild the database, re-running migrations. Your gun, your foot: use caution. No harvests are performed.'
+    task empty: :environment do
+      Rake::Task['db:drop'].invoke
+      Rake::Task['db:create'].invoke
+      Rake::Task['db:migrate'].invoke
+      Rake::Task['db:seed'].invoke
+    end
+
+    desc 'rebuild the database, re-running migrations. Only the DWH harvest is performed.'
+    task first: :empty do
+      ResourceHarvester.new(Resource.first).start
+    end
+
+    desc 'rebuild the database, re-running migrations. All seed harvests are performed.'
+    task all: :first do
+      ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start
+      ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start
+    end
   end
 
-  task full_with_harvest: :full do
-    ResourceHarvester.new(Resource.first).start
-  end
-
-  task first_harvest: :environment do
+  desc 'reset the database, using the schema instead of migrations. Only the DWH harvest is performed.'
+  task first: :environment do
     Rake::Task['db:reset'].invoke
     ResourceHarvester.new(Resource.first).start
   end
 
-  task full_with_all_harvests: :full_with_harvest do
-    ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start
-    ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start
-  end
-
-  task all_harvests: :environment do
-    Rake::Task['db:reset'].invoke
-    ResourceHarvester.new(Resource.first).start
+  desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'
+  task all: :first do
     ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start
     ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start
   end
