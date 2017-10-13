@@ -94,6 +94,12 @@ module Store
       @models[:medium][:usage_statement] = val
     end
 
+    def to_media_ref_fks(field, val)
+      @models[:medium] ||= {}
+      @models[:medium][:ref_sep] ||= field.submapping
+      @models[:medium][:ref_fks] = val
+    end
+
     def to_media_lat(field, val)
       @models[:location] ||= {}
       @models[:location][:lat] = val
@@ -112,11 +118,6 @@ module Store
     def to_media_long_literal(field, val)
       @models[:location] ||= {}
       @models[:location][:long_literal] = val
-    end
-
-    def to_media_ref_fk(field, val)
-      @models[:location] ||= {}
-      @models[:location][:ref_fk] = val
     end
 
     def to_media_locality(field, val)

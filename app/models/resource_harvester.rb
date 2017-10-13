@@ -8,7 +8,7 @@ class ResourceHarvester
   include Store::Vernaculars
   include Store::Traits
   include Store::Occurrences
-  include Store::Refs
+  include Store::References
   include Store::ModelBuilder
 
   def initialize(resource, harvest = nil)
@@ -57,8 +57,13 @@ class ResourceHarvester
         @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
         self.send(stage)
       end
-    rescue
-      @harvest.update_attribute(:failed_at, Time.now) if @harvest
+    rescue => e
+      if @harvest
+        @harvest.update_attribute(:failed_at, Time.now)
+        log_err(e, "!! FAILED")
+      end
+      debugger
+      4
     ensure
       Searchkick.enable_callbacks
     end
@@ -89,6 +94,7 @@ class ResourceHarvester
       @format.fields.each_with_index do |field, i|
         raise(Exceptions::ColumnMissing, field.expected_header) if
           @headers[i].nil?
+        debugger unless field.expected_header == @headers[i]
         raise(Exceptions::ColumnMismatch,
               "expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless
           field.expected_header == @headers[i]
@@ -408,6 +414,10 @@ class ResourceHarvester
     @harvest.update_attribute(:failed_at, Time.now)
   end
 
+  def log_warning(msg)
+    @format.warn(msg, @line_num)
+  end
+
   def build_fields
     fields = {}
     @format.fields.each_with_index do |field, i|
@@ -513,10 +523,6 @@ class ResourceHarvester
       @file = @format.diff
       yield
     end
-  end
-
-  def log_warning(msg)
-    @format.warn(msg, @line_num)
   end
 
   def completed

@@ -23,6 +23,7 @@ namespace :reset do
 
   task all_harvests: :environment do
     Rake::Task['db:reset'].invoke
+    ResourceHarvester.new(Resource.first).start
     ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start
     ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start
   end

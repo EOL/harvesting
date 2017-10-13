@@ -48,12 +48,14 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "articles", ["resource_id", "resource_pk"], name: "index_articles_on_resource_id_and_resource_pk", using: :btree
   add_index "articles", ["resource_id"], name: "index_articles_on_resource_id", using: :btree
 
-  create_table "articles_refs", id: false, force: :cascade do |t|
-    t.integer "article_id", limit: 4, null: false
-    t.integer "ref_id",     limit: 4, null: false
+  create_table "articles_references", id: false, force: :cascade do |t|
+    t.integer "article_id",          limit: 4,   null: false
+    t.integer "reference_id",        limit: 4,   null: false
+    t.string  "ref_resource_fk",     limit: 255, null: false
+    t.string  "article_resource_fk", limit: 255, null: false
   end
 
-  add_index "articles_refs", ["article_id"], name: "index_articles_refs_on_article_id", using: :btree
+  add_index "articles_references", ["article_id"], name: "index_articles_references_on_article_id", using: :btree
 
   create_table "articles_sections", id: false, force: :cascade do |t|
     t.integer "article_id", limit: 4, null: false
@@ -63,6 +65,15 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   create_table "associations", force: :cascade do |t|
     t.integer "trait_id", limit: 4, null: false
   end
+
+  create_table "associations_references", id: false, force: :cascade do |t|
+    t.integer "association_id",          limit: 4,   null: false
+    t.integer "reference_id",            limit: 4,   null: false
+    t.string  "ref_resource_fk",         limit: 255, null: false
+    t.string  "association_resource_fk", limit: 255, null: false
+  end
+
+  add_index "associations_references", ["association_id"], name: "index_associations_references_on_association_id", using: :btree
 
   create_table "attributions", force: :cascade do |t|
     t.integer  "resource_id",           limit: 4,     null: false
@@ -255,6 +266,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string   "rights_statement",          limit: 255
     t.string   "usage_statement",           limit: 255
     t.string   "sizes",                     limit: 255
+    t.string   "bibliographic_citation_fk", limit: 255
     t.integer  "subclass",                  limit: 4,     default: 0, null: false
     t.integer  "format",                    limit: 4,     default: 0, null: false
     t.integer  "resource_id",               limit: 4,                 null: false
@@ -273,6 +285,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.text     "owner",                     limit: 65535
     t.text     "description_verbatim",      limit: 65535
     t.text     "description",               limit: 65535
+    t.text     "derived_from",              limit: 65535
     t.integer  "removed_by_harvest_id",     limit: 4
     t.datetime "downloaded_at"
     t.datetime "created_at",                                          null: false
@@ -294,6 +307,15 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   add_index "media_download_error", ["content_id"], name: "index_media_download_error_on_content_id", using: :btree
+
+  create_table "media_references", id: false, force: :cascade do |t|
+    t.integer "medium_id",          limit: 4,   null: false
+    t.integer "reference_id",       limit: 4,   null: false
+    t.string  "ref_resource_fk",    limit: 255, null: false
+    t.string  "medium_resource_fk", limit: 255, null: false
+  end
+
+  add_index "media_references", ["medium_id"], name: "index_media_references_on_medium_id", using: :btree
 
   create_table "media_sections", id: false, force: :cascade do |t|
     t.integer "medium_id",  limit: 4, null: false
@@ -348,6 +370,15 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "nodes", ["resource_pk"], name: "index_nodes_on_resource_pk", using: :btree
   add_index "nodes", ["rgt"], name: "index_nodes_on_rgt", using: :btree
 
+  create_table "nodes_references", id: false, force: :cascade do |t|
+    t.integer "node_id",          limit: 4,   null: false
+    t.integer "reference_id",     limit: 4,   null: false
+    t.string  "ref_resource_fk",  limit: 255, null: false
+    t.string  "node_resource_fk", limit: 255, null: false
+  end
+
+  add_index "nodes_references", ["node_id"], name: "index_nodes_references_on_node_id", using: :btree
+
   create_table "occurrence_metadata", force: :cascade do |t|
     t.integer "harvest_id",        limit: 4
     t.integer "occurence_id",      limit: 4
@@ -389,7 +420,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer "partner_id", limit: 4, null: false
   end
 
-  create_table "refs", force: :cascade do |t|
+  create_table "references", force: :cascade do |t|
     t.text     "body",                  limit: 65535
     t.integer  "resource_id",           limit: 4,     null: false
     t.integer  "harvest_id",            limit: 4,     null: false
@@ -401,8 +432,26 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.datetime "updated_at",                          null: false
   end
 
-  add_index "refs", ["harvest_id"], name: "index_refs_on_harvest_id", using: :btree
-  add_index "refs", ["resource_id", "resource_pk"], name: "index_refs_on_resource_id_and_resource_pk", using: :btree
+  add_index "references", ["harvest_id"], name: "index_references_on_harvest_id", using: :btree
+  add_index "references", ["resource_id", "resource_pk"], name: "index_references_on_resource_id_and_resource_pk", using: :btree
+
+  create_table "references_scientific_names", id: false, force: :cascade do |t|
+    t.integer "scientific_name_id", limit: 4,   null: false
+    t.integer "reference_id",       limit: 4,   null: false
+    t.string  "ref_resource_fk",    limit: 255, null: false
+    t.string  "name_resource_fk",   limit: 255, null: false
+  end
+
+  add_index "references_scientific_names", ["scientific_name_id"], name: "index_references_scientific_names_on_scientific_name_id", using: :btree
+
+  create_table "references_traits", id: false, force: :cascade do |t|
+    t.integer "trait_id",          limit: 4,   null: false
+    t.integer "reference_id",      limit: 4,   null: false
+    t.string  "ref_resource_fk",   limit: 255, null: false
+    t.string  "trait_resource_fk", limit: 255, null: false
+  end
+
+  add_index "references_traits", ["trait_id"], name: "index_references_traits_on_trait_id", using: :btree
 
   create_table "resources", force: :cascade do |t|
     t.integer  "position",                  limit: 4
@@ -451,7 +500,6 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer "taxonomic_status",          limit: 4
     t.string  "node_resource_pk",          limit: 255
     t.string  "taxonomic_status_verbatim", limit: 255
-    t.string  "ref_fk",          limit: 255
     t.string  "warnings",                  limit: 255
     t.string  "genus",                     limit: 255
     t.string  "specific_epithet",          limit: 255
@@ -550,8 +598,8 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string  "verbatim",               limit: 255
     t.string  "language_code_verbatim", limit: 255
     t.string  "locality",               limit: 255
-    t.string  "ref_fk",       limit: 255
     t.text    "remarks",                limit: 65535
+    t.text    "source",                 limit: 65535
     t.boolean "is_preferred"
     t.integer "removed_by_harvest_id",  limit: 4
   end

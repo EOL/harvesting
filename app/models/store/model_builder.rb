@@ -18,7 +18,7 @@ module Store
       build_vernacular if @models[:vernacular]
       build_occurrence if @models[:occurrence]
       build_trait if @models[:trait]
-      build_ref if @models[:ref]
+      build_ref if @models[:reference]
       # TODO: still need to build agent, attribution, article, js_map, link, map, sound, video
     end
 
@@ -134,6 +134,11 @@ module Store
       # default values for these.
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
+      unless @models[:medium][:ref_fks].blank?
+        @models[:medium][:ref_fks].split(/#{@models[:medium][:ref_sep]}\s+/).each do |ref_fk|
+          prepare_model_for_store(MediaReference, medium_resource_fk: @models[:medium][:resource_pk], ref_resource_fk: ref_fk)
+        end
+      end
 
       # TODO: there are some other normalizations and checks we should do here.
       prepare_model_for_store(Medium, @models[:medium])
@@ -221,11 +226,11 @@ module Store
     end
 
     def build_ref
-      @models[:ref][:resource_id] ||= @resource.id
-      @models[:ref][:harvest_id] ||= @harvest.id
-      @models[:ref][:body] = @models[:ref][:parts].join(' ') if @models[:ref][:body].blank?
-      @models[:ref].delete(:parts)
-      prepare_model_for_store(Ref, @models[:ref])
+      @models[:reference][:resource_id] ||= @resource.id
+      @models[:reference][:harvest_id] ||= @harvest.id
+      @models[:reference][:body] = @models[:reference][:parts].join(' ') if @models[:reference][:body].blank?
+      @models[:reference].delete(:parts)
+      prepare_model_for_store(Reference, @models[:reference])
     end
 
     def convert_trait_value(instance)

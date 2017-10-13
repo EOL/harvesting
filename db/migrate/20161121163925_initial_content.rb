@@ -47,7 +47,6 @@ class InitialContent < ActiveRecord::Migration
 
       t.string :node_resource_pk, index: true, comment: "once the node_id is populated, you shouldn't need this."
       t.string :taxonomic_status_verbatim
-      t.string :ref_fk
       # The following are strings from GNA:
       t.string :warnings
       t.string :genus
@@ -85,8 +84,8 @@ class InitialContent < ActiveRecord::Migration
       t.string :verbatim, index: true, comment: 'indexed because this is effectively the "resource_pk"'
       t.string :language_code_verbatim
       t.string :locality
-      t.string :ref_fk
       t.text :remarks
+      t.text :source
       t.boolean :is_preferred
       t.integer :removed_by_harvest_id
     end
@@ -95,7 +94,7 @@ class InitialContent < ActiveRecord::Migration
     # These are citations made by the partner, citing sources used to synthesize
     # that content. These show up below the content (only applies to articles);
     # this is effectively a 'section' of the content; it's part of the object.
-    create_table :refs do |t|
+    create_table :references do |t|
       t.text :body, comment: 'html; can be *quite* large (over 10K chrs)'
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true
@@ -105,7 +104,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :removed_by_harvest_id
       t.timestamps null: false
     end
-    add_index :refs, [:resource_id, :resource_pk]
+    add_index :references, [:resource_id, :resource_pk]
 
     create_table :data_references do |t|
       t.integer :reference_id, null: false
@@ -129,7 +128,6 @@ class InitialContent < ActiveRecord::Migration
       t.string :usage_statement, comment: 'will be displayed after the rights_statement'
       t.string :sizes, comment: 'a JSON hash of available sizes, e.g.: { "80x80": "80x71" }'
       t.string :bibliographic_citation_fk, comment: 'will be populated during normalization'
-      t.string :ref_fk, comment: 'will be populated during normalization'
 
       t.integer :subclass, null: false, default: 0, index: true, comment: 'enum: image, video, sound, map_image, map_js'
       t.integer :format, null: false, default: 0, comment: 'enum: jpg, youtube, flash, vimeo, mp3, ogg, wav'
@@ -147,12 +145,12 @@ class InitialContent < ActiveRecord::Migration
       t.integer :crop_w_pct, comment: 'stored as a percentage of the width'
       t.integer :crop_h_pct, comment: 'stored as a percentage of the width'
       t.integer :bibliographic_citation_id
-      t.integer :ref_id, comment: 'media are only allowed one ref, unlike articles (q.v.)'
 
       t.text :owner, comment: 'html; was rights_holder; current longest is 493; if missing, *must* be '\
         'populated with another attribution agent or the resource name: we MUST show an owner'
       t.text :description_verbatim, comment: 'assumed to be dirty html'
       t.text :description, comment: 'sanitized html; run through namelinks'
+      t.text :derived_from
 
       t.integer :removed_by_harvest_id
       t.datetime :downloaded_at
@@ -232,8 +230,40 @@ class InitialContent < ActiveRecord::Migration
       t.timestamps null: false
     end
 
-    create_join_table(:articles, :refs) do |t|
+    create_join_table(:articles, :references) do |t|
       t.index :article_id
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :article_resource_fk, null: false, comment: 'to be replaced during normalization'
+    end
+
+    create_join_table(:media, :references) do |t|
+      t.index :medium_id
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :medium_resource_fk, null: false, comment: 'to be replaced during normalization'
+    end
+
+    create_join_table(:nodes, :references) do |t|
+      t.index :node_id
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :node_resource_fk, null: false, comment: 'to be replaced during normalization'
+    end
+
+    create_join_table(:scientific_names, :references) do |t|
+      t.index :scientific_name_id
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :name_resource_fk, null: false, comment: 'to be replaced during normalization'
+    end
+
+    create_join_table(:traits, :references) do |t|
+      t.index :trait_id
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :trait_resource_fk, null: false, comment: 'to be replaced during normalization'
+    end
+
+    create_join_table(:associations, :references) do |t|
+      t.index :association_id
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :association_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
     create_table :roles do |t|

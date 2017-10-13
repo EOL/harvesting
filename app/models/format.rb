@@ -36,7 +36,7 @@ class Format < ActiveRecord::Base
     elsif maps?
       { Medium => :resource_pk }
     elsif refs?
-      { Ref => :resource_pk }
+      { Reference => :resource_pk }
     elsif sounds?
       { Medium => :resource_pk }
     elsif videos?
