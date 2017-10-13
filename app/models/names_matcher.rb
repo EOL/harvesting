@@ -91,8 +91,10 @@ class NamesMatcher
   end
 
   def map_if_needed(node)
-    debugger if node.canonical.blank?
-    if node.needs_to_be_mapped?
+    if node.canonical.blank?
+      puts
+      @harvest.log("cannot match node with blank canonical: Node##{node.id}", cat: :warns)
+    elsif node.needs_to_be_mapped?
       strategy = 0
       # Skip scientific name searches if all we have is a canonical (really)
       strategy = @first_non_author_strategy_index if node.scientific_name.authors.blank?

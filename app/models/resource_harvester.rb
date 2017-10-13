@@ -59,9 +59,8 @@ class ResourceHarvester
       end
     rescue => e
       if @harvest
-        @harvest.log(e.message, e: e)
+        log_err(e, 'harvest failed')
         @harvest.update_attribute(:failed_at, Time.now)
-        log_err(e, "!! FAILED")
       end
       debugger
       4
@@ -421,7 +420,7 @@ class ResourceHarvester
   end
 
   def log_err(e, msg)
-    @harvest.log("#{msg}: #{e.message}", e: e, cat: :commands)
+    @harvest.log("#{msg}: #{e.message}", e: e, cat: :errors)
     @harvest.update_attribute(:failed_at, Time.now)
   end
 
