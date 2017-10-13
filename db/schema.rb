@@ -65,21 +65,21 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer "section_id", limit: 4, null: false
   end
 
-  create_table "associations", force: :cascade do |t|
+  create_table "assocs", force: :cascade do |t|
     t.integer "trait_id", limit: 4, null: false
   end
 
-  create_table "associations_references", force: :cascade do |t|
-    t.integer "harvest_id",              limit: 4
-    t.integer "association_id",          limit: 4
-    t.integer "reference_id",            limit: 4
-    t.string  "ref_resource_fk",         limit: 255, null: false
-    t.string  "association_resource_fk", limit: 255, null: false
+  create_table "assocs_references", force: :cascade do |t|
+    t.integer "harvest_id",        limit: 4
+    t.integer "assoc_id",          limit: 4
+    t.integer "reference_id",      limit: 4
+    t.string  "ref_resource_fk",   limit: 255, null: false
+    t.string  "assoc_resource_fk", limit: 255, null: false
   end
 
-  add_index "associations_references", ["association_id"], name: "index_associations_references_on_association_id", using: :btree
-  add_index "associations_references", ["harvest_id"], name: "index_associations_references_on_harvest_id", using: :btree
-  add_index "associations_references", ["reference_id"], name: "index_associations_references_on_reference_id", using: :btree
+  add_index "assocs_references", ["assoc_id"], name: "index_assocs_references_on_assoc_id", using: :btree
+  add_index "assocs_references", ["harvest_id"], name: "index_assocs_references_on_harvest_id", using: :btree
+  add_index "assocs_references", ["reference_id"], name: "index_assocs_references_on_reference_id", using: :btree
 
   create_table "attributions", force: :cascade do |t|
     t.integer  "resource_id",           limit: 4,     null: false
@@ -581,7 +581,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.boolean "of_taxon"
     t.string  "node_resource_pk",           limit: 255
     t.string  "occurrence_resource_pk",     limit: 255
-    t.string  "association_resource_pk",    limit: 255
+    t.string  "assoc_resource_pk",          limit: 255
     t.string  "parent_pk",                  limit: 255
     t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
