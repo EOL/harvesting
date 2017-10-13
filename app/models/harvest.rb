@@ -30,7 +30,7 @@ class Harvest < ActiveRecord::Base
     update_attribute(:completed_at, Time.now)
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
     resource.published!
-    resource.update_attribute(:nodes_count, Nodes.where(resource_id: id).count)
+    resource.update_attribute(:nodes_count, Node.where(resource_id: id).count)
   end
 
   def log_call
