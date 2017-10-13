@@ -24,9 +24,9 @@ module Store
       @models[:trait][:parent_pk] = val
     end
 
-    def to_traits_association_node_fk(_, val)
+    def to_traits_assoc_node_fk(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:association_resource_pk] = val
+      @models[:trait][:assoc_resource_pk] = val
     end
 
     def to_traits_predicate(_, val)

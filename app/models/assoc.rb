@@ -1,5 +1,6 @@
 # A fact formed by combining one 'occurrence' with another 'occurrence'.
-class Association < ActiveRecord::Base
+# NOTE: The name "assoc" is reserved in Rails.
+class Assoc < ActiveRecord::Base
   belongs_to :resource, inverse_of: :traits
   belongs_to :harvest, inverse_of: :traits
   belongs_to :node, inverse_of: :traits
@@ -11,8 +12,8 @@ class Association < ActiveRecord::Base
 
   has_many :meta_traits, inverse_of: :trait
   has_many :children, class_name: 'Trait', inverse_of: :parent, foreign_key: 'parent_id'
-  has_many :associations_references, inverse_of: :association
-  has_many :references, through: :associations_references
+  has_many :assocs_references, inverse_of: :assoc
+  has_many :references, through: :assocs_references
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :primary, -> { where(of_taxon: true) }

@@ -32,6 +32,17 @@ class InitialContent < ActiveRecord::Migration
       t.integer :ancestor_id, null: false, index: true
     end
 
+    # Another "waystation" for data that will be used elsewhere...
+    create_table :agents do |t|
+      t.integer :harvest_id # We don't need the resource id; this is "temporary" data and won't be handled much.
+      t.string :resource_pk, null: false
+      t.string :full_name
+      t.string :role
+      t.string :email
+      t.string :uri
+      t.text :other_info
+    end
+
     create_table :identifiers do |t|
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true
@@ -278,12 +289,12 @@ class InitialContent < ActiveRecord::Migration
       t.string :trait_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_table :associations_references do |t|
+    create_table :assocs_references do |t|
       t.integer :harvest_id, index: true
-      t.integer :association_id, index: true
+      t.integer :assoc_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
-      t.string :association_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :assoc_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
     create_table :roles do |t|
@@ -352,7 +363,7 @@ class InitialContent < ActiveRecord::Migration
 
       t.string :node_resource_pk, comment: 'temporary; will be replaced by object_node_id once IDs are resolved.'
       t.string :occurrence_resource_pk, index: true, comment: 'used to add occurrence metadata.'
-      t.string :association_resource_pk, comment: 'temporary; will be used to find object_node_id'
+      t.string :assoc_resource_pk, comment: 'temporary; will be used to find object_node_id'
       t.string :parent_pk, comment: 'temporary; will be used to move this to meta_traits'
       t.string :resource_pk, null: false
       t.string :measurement
@@ -379,7 +390,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :source
     end
 
-    create_table :associations do |t|
+    create_table :assocs do |t|
       t.integer :trait_id, null: false
     end
   end

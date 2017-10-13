@@ -15,7 +15,7 @@ class Format < ActiveRecord::Base
   # NOTE: we no longer support events.
   enum represents: %i[
     agents refs attributions nodes articles images js_maps links media maps sounds videos vernaculars scientific_names
-    occurrences associations measurements
+    occurrences assocs measurements
   ]
 
   scope :abstract, -> { where('harvest_id IS NULL') }

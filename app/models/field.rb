@@ -13,7 +13,7 @@ class Field < ActiveRecord::Base
     # should probably find some way to handle that. I feel these belong here, since it's DB-specific... but it requires
     # some duplication.
     #
-    # NOTE: things that can have references: taxa, media, measurements, associations. Each of them can have *multiple*
+    # NOTE: things that can have references: taxa, media, measurements, assocs. Each of them can have *multiple*
     # refs, separated by "some safe char," which we will store in the submapping.
     %i[ to_ignored
 
@@ -39,11 +39,11 @@ class Field < ActiveRecord::Base
         to_occurrences_long_literal to_occurrences_locality to_occurrences_meta
 
         to_traits_pk to_traits_occurrence_fk
-        to_traits_measurement_of_taxon to_traits_parent_pk to_traits_association_node_fk to_traits_predicate
+        to_traits_measurement_of_taxon to_traits_parent_pk to_traits_assoc_node_fk to_traits_predicate
         to_traits_value to_traits_units to_traits_statistical_method to_traits_source to_traits_ref_fks
         to_traits_meta ]
 
-        # TODO: associations
+        # TODO: assocs
 
   enum special_handling: %i[iso_639_1 iso_639_3]
 end

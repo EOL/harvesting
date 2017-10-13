@@ -365,7 +365,7 @@ class ResourceHarvester
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
 
     # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
-    # TODO: traits that are associations! Yeesh.
+    # TODO: traits that are assocs! Yeesh.
   end
 
   def resolve_references(klass, singular)

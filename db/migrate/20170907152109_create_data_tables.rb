@@ -17,16 +17,5 @@ class CreateDataTables < ActiveRecord::Migration
       t.integer :object_term_id
       t.text :literal
     end
-
-    # Another "waystation" for data that will be used elsewhere...
-    create_table :agents do |t|
-      t.integer :harvest_id # We don't need the resource id; this is "temporary" data and won't be handled much.
-      t.string :resource_pk, null: false
-      t.string :full_name
-      t.string :role
-      t.string :email
-      t.string :uri
-      t.text :other_info
-    end
   end
 end

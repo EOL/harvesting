@@ -203,7 +203,7 @@ module Store
         debugger
         return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent and NO occurrence ID.")
       end
-      # TODO: associations
+      # TODO: assocs
       predicate = @models[:trait].delete(:predicate)
       # TODO: error handling for predicate ... cannot be blank.
       predicate_term = find_or_create_term(predicate)
