@@ -2,8 +2,6 @@ source "https://rubygems.org"
 
 # Because we are going to create many, many records!
 gem 'activerecord-import'
-# Nested set for Node:
-gem 'awesome_nested_set'
 # Acts As List simplifies ordered lists of models:
 gem 'acts_as_list', '~> 0.7.6'
 

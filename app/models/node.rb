@@ -1,6 +1,7 @@
 class Node < ActiveRecord::Base
   searchkick
 
+  belongs_to :parent, class_name: 'Node', inverse_of: :children
   belongs_to :resource, inverse_of: :nodes
   belongs_to :harvest, inverse_of: :nodes
   belongs_to :scientific_name, inverse_of: :nodes
@@ -13,14 +14,16 @@ class Node < ActiveRecord::Base
   has_many :identifiers, inverse_of: :node
   has_many :nodes_references, inverse_of: :node
   has_many :references, through: :nodes_references
+  has_many :node_ancestors, inverse_of: :node
+  has_many :descendants, class_name: 'NodeAncestor', inverse_of: :ancestor, foreign_key: :ancestor_id
+  has_many :ancestors, through: :node_ancestors
+  has_many :children, class_name: 'Node', foreign_key: :parent_id, inverse_of: :parent
 
   scope :root, -> { where('parent_id IS NULL') }
   scope :published, -> { where(removed_by_harvest_id: nil) }
 
   # NOTE: special scope used by Searchkick
   scope :search_import, -> { where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children) }
-
-  acts_as_nested_set scope: :resource_id, dependent: :nullify
 
   # NOTE: special method used by Searchkick
   def search_data

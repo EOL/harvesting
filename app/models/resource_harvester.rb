@@ -322,7 +322,7 @@ class ResourceHarvester
 
   def rebuild_nodes
     @harvest.log_call
-    Node.where(harvest_id: @harvest.id).rebuild!(false)
+    Flattener.flatten(@resource)
     @harvest.update_attribute(:ancestry_built_at, Time.now)
   end
 

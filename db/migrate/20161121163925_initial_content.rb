@@ -26,6 +26,12 @@ class InitialContent < ActiveRecord::Migration
     end
     add_index :nodes, [:resource_id, :resource_pk], name: 'by_resource_and_pk'
 
+    create_table :node_ancestors do |t|
+      t.integer :resource_id, null: false, index: true
+      t.integer :node_id, null: false, index: true
+      t.integer :ancestor_id, null: false, index: true
+    end
+
     create_table :identifiers do |t|
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true
