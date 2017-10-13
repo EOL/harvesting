@@ -446,11 +446,13 @@ class ResourceHarvester
   end
 
   def parse_names
+    @harvest.log_call
     NameParser.for_harvest(@harvest)
     @harvest.update_attribute(:names_parsed_at, Time.now)
   end
 
   def denormalize_canonical_names_to_nodes
+    @harvest.log_call
     propagate_id(Node, fk: 'scientific_name_id', other: 'scientific_names.id', set: 'canonical', with: 'canonical')
   end
 
