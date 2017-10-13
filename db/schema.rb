@@ -49,6 +49,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "articles", ["resource_id"], name: "index_articles_on_resource_id", using: :btree
 
   create_table "articles_references", force: :cascade do |t|
+    t.integer "harvest_id",          limit: 4
     t.integer "article_id",          limit: 4
     t.integer "reference_id",        limit: 4
     t.string  "ref_resource_fk",     limit: 255, null: false
@@ -56,6 +57,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   add_index "articles_references", ["article_id"], name: "index_articles_references_on_article_id", using: :btree
+  add_index "articles_references", ["harvest_id"], name: "index_articles_references_on_harvest_id", using: :btree
   add_index "articles_references", ["reference_id"], name: "index_articles_references_on_reference_id", using: :btree
 
   create_table "articles_sections", id: false, force: :cascade do |t|
@@ -68,6 +70,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   create_table "associations_references", force: :cascade do |t|
+    t.integer "harvest_id",              limit: 4
     t.integer "association_id",          limit: 4
     t.integer "reference_id",            limit: 4
     t.string  "ref_resource_fk",         limit: 255, null: false
@@ -75,6 +78,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   add_index "associations_references", ["association_id"], name: "index_associations_references_on_association_id", using: :btree
+  add_index "associations_references", ["harvest_id"], name: "index_associations_references_on_harvest_id", using: :btree
   add_index "associations_references", ["reference_id"], name: "index_associations_references_on_reference_id", using: :btree
 
   create_table "attributions", force: :cascade do |t|
@@ -311,12 +315,14 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "media_download_error", ["content_id"], name: "index_media_download_error_on_content_id", using: :btree
 
   create_table "media_references", force: :cascade do |t|
+    t.integer "harvest_id",         limit: 4
     t.integer "medium_id",          limit: 4
     t.integer "reference_id",       limit: 4
     t.string  "ref_resource_fk",    limit: 255, null: false
     t.string  "medium_resource_fk", limit: 255, null: false
   end
 
+  add_index "media_references", ["harvest_id"], name: "index_media_references_on_harvest_id", using: :btree
   add_index "media_references", ["medium_id"], name: "index_media_references_on_medium_id", using: :btree
   add_index "media_references", ["reference_id"], name: "index_media_references_on_reference_id", using: :btree
 
@@ -374,12 +380,14 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "nodes", ["rgt"], name: "index_nodes_on_rgt", using: :btree
 
   create_table "nodes_references", force: :cascade do |t|
+    t.integer "harvest_id",       limit: 4
     t.integer "node_id",          limit: 4
     t.integer "reference_id",     limit: 4
     t.string  "ref_resource_fk",  limit: 255, null: false
     t.string  "node_resource_fk", limit: 255, null: false
   end
 
+  add_index "nodes_references", ["harvest_id"], name: "index_nodes_references_on_harvest_id", using: :btree
   add_index "nodes_references", ["node_id"], name: "index_nodes_references_on_node_id", using: :btree
   add_index "nodes_references", ["reference_id"], name: "index_nodes_references_on_reference_id", using: :btree
 
@@ -515,12 +523,14 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "scientific_names", ["normalized_name_id"], name: "index_scientific_names_on_normalized_name_id", using: :btree
 
   create_table "scientific_names_references", force: :cascade do |t|
+    t.integer "harvest_id",         limit: 4
     t.integer "scientific_name_id", limit: 4
     t.integer "reference_id",       limit: 4
     t.string  "ref_resource_fk",    limit: 255, null: false
     t.string  "name_resource_fk",   limit: 255, null: false
   end
 
+  add_index "scientific_names_references", ["harvest_id"], name: "index_scientific_names_references_on_harvest_id", using: :btree
   add_index "scientific_names_references", ["reference_id"], name: "index_scientific_names_references_on_reference_id", using: :btree
   add_index "scientific_names_references", ["scientific_name_id"], name: "index_scientific_names_references_on_scientific_name_id", using: :btree
 
@@ -575,12 +585,14 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   add_index "traits", ["resource_id", "resource_pk"], name: "index_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "traits_references", force: :cascade do |t|
+    t.integer "harvest_id",        limit: 4
     t.integer "trait_id",          limit: 4
     t.integer "reference_id",      limit: 4
     t.string  "ref_resource_fk",   limit: 255, null: false
     t.string  "trait_resource_fk", limit: 255, null: false
   end
 
+  add_index "traits_references", ["harvest_id"], name: "index_traits_references_on_harvest_id", using: :btree
   add_index "traits_references", ["reference_id"], name: "index_traits_references_on_reference_id", using: :btree
   add_index "traits_references", ["trait_id"], name: "index_traits_references_on_trait_id", using: :btree
 

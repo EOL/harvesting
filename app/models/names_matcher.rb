@@ -7,6 +7,7 @@ class NamesMatcher
     @harvest = harvest
     @resource = @harvest.resource
     @root_nodes = @resource.nodes.published.root
+    @matches = []
     @strategies = %i[
       match_canonical_and_authors_in_eol
       match_synonyms_and_authors_in_eol
@@ -70,7 +71,11 @@ class NamesMatcher
   end
 
   def start
-    map_all_nodes_to_pages(@root_nodes)
+    begin
+      map_all_nodes_to_pages(@root_nodes)
+    ensure
+      save_all_matches
+    end
   end
 
   # The algorithm, as pseudo-code (Ruby, for brevity):
@@ -88,7 +93,6 @@ class NamesMatcher
   def map_if_needed(node)
     debugger if node.canonical.blank?
     if node.needs_to_be_mapped?
-      puts "++ Mapping node #{node.id} (#{node.canonical})"
       strategy = 0
       # Skip scientific name searches if all we have is a canonical (really)
       strategy = @first_non_author_strategy_index if node.scientific_name.authors.blank?
@@ -123,11 +127,24 @@ class NamesMatcher
     nil
   end
 
+  def save_match(node, page_id)
+    node.assign_attributes(page_id: page_id)
+    @matches << node
+  end
+
+  def save_all_matches
+    return if @matches.empty?
+    Node.import!(@matches, on_duplicate_key_update: [:page_id])
+    puts "@@ Yay! we found matches:"
+    @matches.each do |node|
+      puts "  #{node.canonical} (#{node.id}) -> #{node.page_id}"
+    end
+  end
+
   def map_unflagged_node(node, opts)
     opts[:strategy] ||= 0
     results = send(@strategies[opts[:strategy]], node.scientific_name)
-    # TODO: map_to_page should be delayed and done in batch...
-    return node.map_to_page(results.first[:page_id]) if results.total_count == 1
+    return save_match(node, results.first[:page_id]) if results.total_count == 1
     return more_than_one_match(node, results) if results.total_count > 1
     return unmapped(node, 'virus', opts) if node.scientific_name.virus?
     opts[:strategy] += 1
@@ -201,8 +218,7 @@ class NamesMatcher
     else
       @harvest.log("Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
         "#{simple_scores.inspect}")
-      # TODO: map_to_page should be delayed and done in batch.
-      node.map_to_page(best_match['page_id'])
+      save_match(node, best_match['page_id'])
     end
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
   end

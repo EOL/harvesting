@@ -233,6 +233,7 @@ class InitialContent < ActiveRecord::Migration
     # NOTE that we cannot use "regular" join tables because the IDs will be null on first run; we populate them based on
     # the fks, later.
     create_table :articles_references do |t|
+      t.integer :harvest_id, index: true
       t.integer :article_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
@@ -240,6 +241,7 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :media_references do |t|
+      t.integer :harvest_id, index: true
       t.integer :medium_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
@@ -247,6 +249,7 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :nodes_references do |t|
+      t.integer :harvest_id, index: true
       t.integer :node_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
@@ -254,6 +257,7 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :scientific_names_references do |t|
+      t.integer :harvest_id, index: true
       t.integer :scientific_name_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
@@ -261,6 +265,7 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :traits_references do |t|
+      t.integer :harvest_id, index: true
       t.integer :trait_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
@@ -268,6 +273,7 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :associations_references do |t|
+      t.integer :harvest_id, index: true
       t.integer :association_id, index: true
       t.integer :reference_id, index: true
       t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'

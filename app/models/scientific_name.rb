@@ -3,6 +3,8 @@ class ScientificName < ActiveRecord::Base
   belongs_to :node, inverse_of: :scientific_names
 
   has_many :nodes, inverse_of: :scientific_name
+  has_many :scientific_names_references, inverse_of: :scientific_name
+  has_many :references, through: :scientific_names_references
 
   # This list was captured from the document Katja produced (this link may
   # not work for all):

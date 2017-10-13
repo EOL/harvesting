@@ -8,7 +8,9 @@ class Medium < ActiveRecord::Base
   belongs_to :language
   belongs_to :location, inverse_of: :media
   belongs_to :bibliographic_citation
-  belongs_to :reference
+
+  has_many :media_references, inverse_of: :medium
+  has_many :references, through: :media_references
 
   enum subclass: [:image, :video, :sound, :map_image ]
   enum format: [:jpg, :youtube, :flash, :vimeo, :mp3, :ogg, :wav]

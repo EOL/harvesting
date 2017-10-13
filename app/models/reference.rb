@@ -1,4 +1,5 @@
 class Reference < ActiveRecord::Base
-  has_many :media
-  has_and_belongs_to_many :articles
+  # has_many :article_references, inverse_of: :reference
+  has_many :media_references, inverse_of: :reference
+  has_many :media, through: :media_references
 end

@@ -11,6 +11,8 @@ class Node < ActiveRecord::Base
   has_many :occurrences, inverse_of: :node
   has_many :traits, inverse_of: :node
   has_many :identifiers, inverse_of: :node
+  has_many :nodes_references, inverse_of: :node
+  has_many :references, through: :nodes_references
 
   scope :root, -> { where('parent_id IS NULL') }
   scope :published, -> { where(removed_by_harvest_id: nil) }
@@ -62,13 +64,7 @@ class Node < ActiveRecord::Base
     children.map(&:canonical)
   end
 
-  def map_to_page(page_id)
-    puts "@@ Yay! we matched node #{id} to page #{page_id}."
-    update_attribute(:page_id, page_id)
-  end
-
   def create_new_page(page_id)
-    puts "VV BOO! We couldn't match node #{id}, so we're making a new page #{page_id}"
     update_attributes(page_id: page_id, in_unmapped_area: true)
   end
 

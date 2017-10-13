@@ -134,16 +134,21 @@ module Store
       # default values for these.
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
-      sep = @models[:medium].delete(:ref_sep)
-      unless @models[:medium][:ref_fks].blank?
-        fks = @models[:medium].delete(:ref_fks)
-        fks.split(/#{sep}\s+/).each do |ref_fk|
-          prepare_model_for_store(MediaReference, medium_resource_fk: @models[:medium][:resource_pk], ref_resource_fk: ref_fk)
-        end
-      end
+      build_references(:medium, MediaReference)
 
       # TODO: there are some other normalizations and checks we should do here.
       prepare_model_for_store(Medium, @models[:medium])
+    end
+
+    def build_references(key, klass)
+      sep = @models[key].delete(:ref_sep)
+      unless @models[key][:ref_fks].blank?
+        fks = @models[key].delete(:ref_fks)
+        fks.split(/#{sep}\s*/).each do |ref_fk|
+          prepare_model_for_store(klass, "#{key}_resource_fk": @models[key][:resource_pk],
+                                         ref_resource_fk: ref_fk, harvest_id: @harvest.id)
+        end
+      end
     end
 
     # NOTE: this is an example of how to pull the resource_pk from another table

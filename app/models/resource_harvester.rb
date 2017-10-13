@@ -343,6 +343,7 @@ class ResourceHarvester
     @harvest.log_call
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    resolve_references(MediaReference, 'medium')
   end
 
   def resolve_trait_keys
@@ -364,6 +365,15 @@ class ResourceHarvester
 
     # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
     # TODO: traits that are associations! Yeesh.
+  end
+
+  def resolve_references(klass, singular)
+    # TODO: this ALSO belongs in the other two keys blocks:
+    # Media to references, and back:
+    propagate_id(klass, fk: "#{singular}_resource_fk", other: "#{singular.pluralize}.resource_pk",
+                        set: "#{singular}_id", with: 'id')
+    propagate_id(klass, fk: 'ref_resource_fk', other: 'references.resource_pk',
+                        set: 'reference_id', with: 'id')
   end
 
   def add_occurrence_metadata_to_traits
