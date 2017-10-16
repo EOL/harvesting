@@ -540,5 +540,6 @@ class ResourceHarvester
   def completed
     @harvest.update_attribute(:completed_at, Time.now)
     @harvest.update_attribute(:time_in_minutes, ((Time.now - @start_time).to_i / 60.0).ceil)
+    @harvest.log("Harvest of #{@harvest.resource.name} completed.", cat: :ends)
   end
 end

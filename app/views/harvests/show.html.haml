@@ -87,6 +87,9 @@
     - @harvest.hlogs.order(:created_at).each do |log|
       %li
         %strong= log.category
+        (
+        = log.created_at.strftime('%H:%M:%S')
+        )
         = log.message
         - if log.line?
           = "(on line #{log.line})"
