@@ -15,7 +15,7 @@ module Store
       build_node if @models[:node]
       build_location if @models[:location]
       build_medium if @models[:medium]
-      build_vernacular if @models[:vernacular]
+      build_vernacular if @models[:vernacular] # TODO: this one is not very robust
       build_occurrence if @models[:occurrence]
       build_trait if @models[:trait]
       build_ref if @models[:reference]
@@ -151,16 +151,13 @@ module Store
       end
     end
 
-    # NOTE: this is an example of how to pull the resource_pk from another table
-    # and attach the model we're building to the associated instance.
     def build_vernacular
       lang_code = @models[:vernacular][:language_code_verbatim] || 'en'
       lang = find_or_create_language(lang_code)
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
       @models[:vernacular][:language_id] = lang.id
-      # TODO: there are some other normalizations and checks we should do here,
-      # I expect.
+      # TODO: there are some other normalizations and checks we should do here, I expect.
       prepare_model_for_store(Vernacular, @models[:vernacular])
     end
 

@@ -7,7 +7,7 @@ class NamesMatcher
     @harvest = harvest
     @resource = @harvest.resource
     @root_nodes = @resource.nodes.published.root
-    @matches = []
+    @node_updates = []
     @strategies = %i[
       match_canonical_and_authors_in_eol
       match_synonyms_and_authors_in_eol
@@ -74,7 +74,7 @@ class NamesMatcher
     begin
       map_all_nodes_to_pages(@root_nodes)
     ensure
-      save_all_matches
+      update_nodes
     end
   end
 
@@ -108,7 +108,7 @@ class NamesMatcher
 
   def map_node(node, opts = {})
     # NOTE: Surrogates never get matched in this version of the algorithm.
-    return unmapped(node, 'surrogate') if node.scientific_name.surrogate?
+    return pped(node, 'surrogate') if node.scientific_name.surrogate?
     @ancestor = if node.scientific_name.virus?
                   # NOTE: If the node has been flagged (by gnparser) as a virus, then it may ONLY match other viruses.
                   Node.native_virus
@@ -127,20 +127,6 @@ class NamesMatcher
       end
     end
     nil
-  end
-
-  def save_match(node, page_id)
-    node.assign_attributes(page_id: page_id)
-    @matches << node
-  end
-
-  def save_all_matches
-    return if @matches.empty?
-    Node.import!(@matches, on_duplicate_key_update: [:page_id])
-    puts "@@ Yay! we found matches:"
-    @matches.each do |node|
-      puts "  #{node.canonical} (#{node.id}) -> #{node.page_id}"
-    end
   end
 
   def map_unflagged_node(node, opts)
@@ -225,10 +211,24 @@ class NamesMatcher
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
   end
 
+  def save_match(node, page_id)
+    node.assign_attributes(page_id: page_id)
+    @node_updates << node
+    true # Just avoiding a large return value.
+  end
+
   def unmapped(node, message, opts = {})
-    log_msg = "Node #{node.id} (#{node.canonical}) could NOT be matched: #{message}"
-    @harvest.log(log_msg, opts)
-    node.create_new_page(new_page_id)
+    @harvest.log("Node #{node.id} (#{node.canonical}) could NOT be matched: #{message}", opts)
+    node.assign_attributes(page_id: new_page_id)
+    @node_updates << node
+    true # Just avoiding a large return value.
+  end
+
+  def update_nodes
+    @harvest.log_call
+    return if @node_updates.empty?
+    Node.import!(@node_updates, on_duplicate_key_update: [:page_id])
+    true # Just avoiding a large return value.
   end
 
   def new_page_id

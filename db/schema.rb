@@ -26,6 +26,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
     t.string   "resource_pk",               limit: 255,   null: false
+    t.string   "language_code_verbatim",    limit: 255
     t.integer  "resource_id",               limit: 4,     null: false
     t.integer  "harvest_id",                limit: 4,     null: false
     t.integer  "license_id",                limit: 4,     null: false
@@ -225,17 +226,18 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   create_table "links", force: :cascade do |t|
-    t.string   "guid",                  limit: 255,   null: false
-    t.string   "resource_pk",           limit: 255,   null: false
-    t.integer  "resource_id",           limit: 4,     null: false
-    t.integer  "harvest_id",            limit: 4,     null: false
-    t.integer  "language_id",           limit: 4
-    t.string   "name",                  limit: 255
-    t.string   "source_url",            limit: 255
-    t.text     "description",           limit: 65535, null: false
-    t.integer  "removed_by_harvest_id", limit: 4
-    t.datetime "created_at",                          null: false
-    t.datetime "updated_at",                          null: false
+    t.string   "guid",                   limit: 255,   null: false
+    t.string   "resource_pk",            limit: 255,   null: false
+    t.string   "language_code_verbatim", limit: 255
+    t.integer  "resource_id",            limit: 4,     null: false
+    t.integer  "harvest_id",             limit: 4,     null: false
+    t.integer  "language_id",            limit: 4
+    t.string   "name",                   limit: 255
+    t.string   "source_url",             limit: 255
+    t.text     "description",            limit: 65535, null: false
+    t.integer  "removed_by_harvest_id",  limit: 4
+    t.datetime "created_at",                           null: false
+    t.datetime "updated_at",                           null: false
   end
 
   add_index "links", ["guid"], name: "index_links_on_guid", using: :btree
@@ -273,6 +275,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string   "usage_statement",           limit: 255
     t.string   "sizes",                     limit: 255
     t.string   "bibliographic_citation_fk", limit: 255
+    t.string   "language_code_verbatim",    limit: 255
     t.integer  "subclass",                  limit: 4,     default: 0, null: false
     t.integer  "format",                    limit: 4,     default: 0, null: false
     t.integer  "resource_id",               limit: 4,                 null: false
@@ -621,7 +624,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer "resource_id",            limit: 4,     null: false
     t.integer "harvest_id",             limit: 4,     null: false
     t.integer "node_id",                limit: 4
-    t.integer "language_id",            limit: 4,     null: false
+    t.integer "language_id",            limit: 4
     t.string  "node_resource_pk",       limit: 255
     t.string  "verbatim",               limit: 255
     t.string  "language_code_verbatim", limit: 255

@@ -366,7 +366,7 @@ simple_resource = Resource.quick_define(
     vernaculars: { loc: 't_d_names.csv', fields: [
       { 'TID' => 'to_vernacular_nodes_fk', can_be_empty: false },
       { 'name' => 'to_vernaculars_verbatim' },
-      { 'language' => 'to_language_639_1' },
+      { 'language' => 'to_vernaculars_language' },
       { 'preferred' => 'to_vernaculars_preferred' }
     ] }
   }
@@ -527,13 +527,53 @@ freshwater = Resource.quick_define(
   }
 )
 
-if false
-  # rake reset:first_harvest
-  # rails runner "ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start"
-  # rails runner "ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start"
-  resource = Resource.where(name: 'Mineralogy').first
-  harvester = ResourceHarvester.new(resource)
-  harvester.start
-end
+flickr = Resource.quick_define(
+  name: 'Flickr BHL',
+  abbr: 'flickr BHL',
+  type: :csv,
+  partner: {
+    name: 'Flickr',
+    abbr: 'flickr',
+    short_name: 'Flickr',
+    homepage_url: 'http://flickr.com/',
+    description: 'Flickr - almost certainly the best online photo management and sharing application in the world',
+    auto_publish: true
+  },
+  field_sep: "\t",
+  pk_url: '',
+  base_dir: Rails.public_path.join('flickr'),
+  formats: {
+    nodes: { loc: 'taxon.tab', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'scientificName' => 'to_nodes_scientific' },
+      { 'genus' => 'to_nodes_ancestor', submapping: 'genus' },
+      { 'order' => 'to_nodes_ancestor', submapping: 'order' },
+      { 'family' => 'to_nodes_ancestor', submapping: 'family' },
+      { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
+      { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
+      { 'class' => 'to_nodes_ancestor', submapping: 'class' }
+    ] },
+    media: { loc: 'media_resource.tab', fields: [
+      { 'identifier' => 'to_media_pk', is_unique: true, can_be_empty: false },
+      { 'taxonID' => 'to_media_nodes_fk', can_be_empty: false },
+      { 'type' => 'to_media_type', can_be_empty: false },
+      { 'format' => 'to_media_subtype' },
+      { 'title' => 'to_media_name' },
+      { 'accessURI' => 'to_media_source_url' },
+      { 'furtherInformationURL' => 'to_media_source_page_url' },
+      { 'CreateDate' => 'to_ignored' },
+      { 'language' => 'to_media_language' },
+      { 'UsageTerms' => 'to_media_rights_statement' },
+      { 'Owner' => 'to_media_owner' },
+      { 'description' => 'to_media_description' },
+      { 'additionalInformation' => 'to_ignored' } # NOTE: I *think* this is reasonable (we can't show it!)...
+    ] },
+    vernaculars: { loc: 'vernacular_name.tab', fields: [
+      { 'vernacularName' => 'to_vernaculars_verbatim' },
+      { 'language' => 'to_ignored' },
+      { 'taxonID' => 'to_vernacular_nodes_fk' }
+    ] }
+  }
+)
 
 Node.reindex # This empties all of the stuff from ElasticSearch.

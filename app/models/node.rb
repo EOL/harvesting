@@ -68,10 +68,6 @@ class Node < ActiveRecord::Base
     children.map(&:canonical)
   end
 
-  def create_new_page(page_id)
-    update_attributes(page_id: page_id, in_unmapped_area: true)
-  end
-
   def name # NOTE: just shorthand for common way of representing objects. Like #to_s...
     canonical
   end

@@ -10,6 +10,11 @@ module Store
       @models[:medium][:node_resource_pk] = val # we will 'find' it later.
     end
 
+    def to_media_language(field, val)
+      @models[:medium] ||= {}
+      @models[:medium][:language_code_verbatim] = val # we will 'find' it later.
+    end
+
     def to_media_type(field, val)
       @models[:medium] ||= {}
       # TODO: lots more to these mappings, especially the URIs that commonly get used.

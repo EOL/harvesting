@@ -21,18 +21,17 @@ class Field < ActiveRecord::Base
         to_nodes_further_information_url to_taxonomic_status to_nodes_accepted_name_fk to_nodes_remarks
         to_nodes_publication to_nodes_page_id to_nodes_identifiers to_nodes_ref_fks
 
-        to_vernaculars_verbatim to_vernaculars_source to_vernaculars_locality to_vernaculars_preferred
-        to_vernacular_nodes_fk
+        to_vernaculars_verbatim to_vernaculars_source to_vernaculars_language to_vernaculars_locality
+        to_vernaculars_preferred to_vernacular_nodes_fk
 
         to_refs_pk to_refs_body to_refs_part to_refs_url to_refs_doi
 
         to_attributions_pk to_attributions_name to_attributions_role to_attributions_email to_attributions_url
 
-        to_media_pk to_media_nodes_fk to_section to_media_type to_media_subtype to_license to_language_639_1
-        to_language_639_2 to_language_639_3 to_format to_derived_from to_bibliographic_citation to_attribution
-        to_attributions_fk to_media_name to_media_description to_media_source_url to_media_source_page_url
-        to_media_rights_statement to_media_usage_statement to_media_owner to_media_lat to_media_long
-        to_media_lat_literal to_media_long_literal to_media_locality to_media_ref_fks
+        to_media_pk to_media_nodes_fk to_section to_media_type to_media_subtype to_license to_media_language to_format
+        to_derived_from to_bibliographic_citation to_attributions_fk to_media_name to_media_description
+        to_media_source_url to_media_source_page_url to_media_rights_statement to_media_usage_statement to_media_owner
+        to_media_lat to_media_long to_media_lat_literal to_media_long_literal to_media_locality to_media_ref_fks
 
         to_occurrences_pk to_occurrences_nodes_fk to_occurrences_sex
         to_occurrences_lifestage to_occurrences_lat to_occurrences_long to_occurrences_lat_literal

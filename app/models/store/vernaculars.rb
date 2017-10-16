@@ -10,7 +10,7 @@ module Store
       @models[:vernacular][:verbatim] = val
     end
 
-    def to_language_639_1(field, val)
+    def to_vernaculars_language(field, val)
       @models[:vernacular] ||= {}
       # TODO: we will have more to do, since we "know" this is ISO 639.1, but
       # right now we just store it and that's fine:

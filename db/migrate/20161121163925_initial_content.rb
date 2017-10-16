@@ -96,7 +96,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :resource_id, null: false
       t.integer :harvest_id, null: false, index: true
       t.integer :node_id, comment: 'only temporarily nil'
-      t.integer :language_id, null: false
+      t.integer :language_id
       t.string :node_resource_pk
       t.string :verbatim, index: true, comment: 'indexed because this is effectively the "resource_pk"'
       t.string :language_code_verbatim
@@ -145,6 +145,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :usage_statement, comment: 'will be displayed after the rights_statement'
       t.string :sizes, comment: 'a JSON hash of available sizes, e.g.: { "80x80": "80x71" }'
       t.string :bibliographic_citation_fk, comment: 'will be populated during normalization'
+      t.string :language_code_verbatim
 
       t.integer :subclass, null: false, default: 0, index: true, comment: 'enum: image, video, sound, map_image, map_js'
       t.integer :format, null: false, default: 0, comment: 'enum: jpg, youtube, flash, vimeo, mp3, ogg, wav'
@@ -190,6 +191,7 @@ class InitialContent < ActiveRecord::Migration
     create_table :articles do |t|
       t.string :guid, null: false, index: true
       t.string :resource_pk, null: false, comment: 'was: identifier'
+      t.string :language_code_verbatim
 
       t.integer :resource_id, null: false, index: true
       t.integer :harvest_id, null: false, index: true
@@ -218,6 +220,7 @@ class InitialContent < ActiveRecord::Migration
     create_table :links do |t|
       t.string :guid, null: false, index: true
       t.string :resource_pk, null: false, comment: 'was: identifier'
+      t.string :language_code_verbatim
 
       t.integer :resource_id, null: false, index: true
       t.integer :harvest_id, null: false, index: true
