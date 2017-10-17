@@ -1,3 +1,5 @@
+@all = %w[Mineralogy CalPhotos flickrBHL]
+
 namespace :reset do
   namespace :full do
     desc 'rebuild the database, re-running migrations. Your gun, your foot: use caution. No harvests are performed.'
@@ -15,8 +17,7 @@ namespace :reset do
 
     desc 'rebuild the database, re-running migrations. All seed harvests are performed.'
     task all: :first do
-      ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start
-      ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start
+      @all.each { |abbr| ResourceHarvester.new(Resource.where(abbr: abbr).first).start }
     end
   end
 
@@ -28,7 +29,6 @@ namespace :reset do
 
   desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'
   task all: :first do
-    ResourceHarvester.new(Resource.where(name: 'Mineralogy').first).start
-    ResourceHarvester.new(Resource.where(abbr: 'CalPhotos').first).start
+    @all.each { |abbr| ResourceHarvester.new(Resource.where(abbr: abbr).first).start }
   end
 end

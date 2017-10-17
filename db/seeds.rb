@@ -529,7 +529,7 @@ freshwater = Resource.quick_define(
 
 flickr = Resource.quick_define(
   name: 'Flickr BHL',
-  abbr: 'flickr BHL',
+  abbr: 'flickrBHL',
   type: :csv,
   partner: {
     name: 'Flickr',
@@ -541,7 +541,7 @@ flickr = Resource.quick_define(
   },
   field_sep: "\t",
   pk_url: '',
-  base_dir: Rails.public_path.join('flickr'),
+  base_dir: Rails.public_path.join('data', 'flickr'),
   formats: {
     nodes: { loc: 'taxon.tab', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
@@ -570,7 +570,7 @@ flickr = Resource.quick_define(
     ] },
     vernaculars: { loc: 'vernacular_name.tab', fields: [
       { 'vernacularName' => 'to_vernaculars_verbatim' },
-      { 'language' => 'to_ignored' },
+      { 'language' => 'to_vernaculars_language' },
       { 'taxonID' => 'to_vernacular_nodes_fk' }
     ] }
   }
