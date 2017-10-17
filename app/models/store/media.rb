@@ -1,5 +1,6 @@
 module Store
   module Media
+    include ActionView::Helpers::SanitizeHelper
     def to_media_pk(field, val)
       @models[:medium] ||= {}
       @models[:medium][:resource_pk] = val
@@ -61,12 +62,14 @@ module Store
 
     def to_media_name(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:name] = val
+      @models[:medium][:name_verbatim] = val
+      @models[:medium][:name] = sanitize(val)
     end
 
     def to_media_description(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:description] = val
+      @models[:medium][:description_verbatim] = val
+      @models[:medium][:description] = sanitize(val)
     end
 
     def to_media_source_url(field, val)
