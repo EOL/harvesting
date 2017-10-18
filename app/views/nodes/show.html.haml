@@ -1,58 +1,61 @@
 %h1= @node.canonical
 %ul
   %li
-    %strong= t("nodes.fields.resource")
+    %strong= t('nodes.fields.resource')
     = link_to(@node.resource.name, @node.resource)
   %li
-    %strong= t("nodes.fields.resource_pk")
+    %strong= t('nodes.fields.resource_pk')
     = @node.resource_pk
   %li
-    %strong= t("nodes.fields.page_id")
+    %strong= t('nodes.fields.page_id')
     = link_to(@node.page_id, "http://eol.org/pages/#{@node.page_id}")
   %li
-    %strong= t("nodes.fields.created")
+    %strong= t('nodes.fields.in_unmapped_area')
+    = @node.in_unmapped_area? ? t('boolean.true') : t('boolean.false')
+  %li
+    %strong= t('nodes.fields.created')
     = l(@node.created_at, format: :short)
     = t(:node_created_by_harvest,
       date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
   %li
     - if pk = @node.parent_resource_pk
       - if @node.parent
-        %strong= t("nodes.fields.parent")
+        %strong= t('nodes.fields.parent')
         = link_to(@node.parent.canonical, @node.parent)
       - else
-        %strong= t("nodes.fields.parent_missing", pk: pk)
+        %strong= t('nodes.fields.parent_missing', pk: pk)
     - else
-      %strong= t("nodes.fields.parent_nil")
+      %strong= t('nodes.fields.parent_nil')
   %li
-    %strong= t("nodes.fields.name")
+    %strong= t('nodes.fields.name')
     %ul
       %li
-        %strong= t("nodes.fields.name_verbatim")
+        %strong= t('nodes.fields.name_verbatim')
         = @node.scientific_name.verbatim
       - if @node.scientific_name
         %li
-          %strong= t("nodes.fields.normalized")
+          %strong= t('nodes.fields.normalized')
           = @node.scientific_name.try(:normalized)
         %li
-          %strong= t("nodes.fields.canonical")
+          %strong= t('nodes.fields.canonical')
           = @node.try(:canonical)
         %li
-          %strong= t("nodes.fields.authors")
+          %strong= t('nodes.fields.authors')
           - if @node.scientific_name.authors
             = @node.scientific_name.authors.join('; ')
           - else
-            = t("nodes.empty_fields.authors")
+            = t('nodes.empty_fields.authors')
         %li
-          %strong= t("nodes.fields.year")
+          %strong= t('nodes.fields.year')
           = @node.scientific_name.year
         %li
-          %strong= t("nodes.fields.name_parse_quality")
+          %strong= t('nodes.fields.name_parse_quality')
           = @node.scientific_name.parse_quality
         %li
-          %strong= t("nodes.fields.name_taxonomic_status_verbatim")
+          %strong= t('nodes.fields.name_taxonomic_status_verbatim')
           = @node.scientific_name.taxonomic_status_verbatim
         %li
-          %strong= t("nodes.fields.name_taxonomic_status")
+          %strong= t('nodes.fields.name_taxonomic_status')
           = @node.scientific_name.taxonomic_status
       - else
         %li
@@ -62,27 +65,27 @@
           %strong= t(:node_vernaculars_empty_notice)
       - else
         %li
-          = t("nodes.fields.vernaculars")
+          = t('nodes.fields.vernaculars')
           %ul
             - @node.vernaculars.published.each do |vern|
               %li
                 = vern.verbatim
                 = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
     %li
-      %strong= t("nodes.fields.name_rank_verbatim")
+      %strong= t('nodes.fields.name_rank_verbatim')
       = @node.rank_verbatim
 
-%h2= t("nodes.headers.children")
+%h2= t('nodes.headers.children')
 - if @node.children.published.empty?
-  = t("nodes.empty_fields.children")
+  = t('nodes.empty_fields.children')
 - else
   %ul
     - @node.children.published.each do |child|
       %li= link_to(child.canonical, child)
 
-%h2= t("nodes.headers.media")
+%h2= t('nodes.headers.media')
 - if @node.media.published.empty?
-  = t("nodes.empty_fields.media")
+  = t('nodes.empty_fields.media')
 - else
   %ul
     - @node.media.published.each do |medium|
@@ -90,9 +93,9 @@
         = link_to(medium.name_verbatim || truncate(medium.description_verbatim, 20), medium)
         = "(#{medium.format})"
 
-%h2= t("nodes.headers.traits")
+%h2= t('nodes.headers.traits')
 - if @node.traits.published.empty?
-  = t("nodes.empty_fields.traits")
+  = t('nodes.empty_fields.traits')
 - else
   .ui.list
     - @node.traits.published.each do |trait|

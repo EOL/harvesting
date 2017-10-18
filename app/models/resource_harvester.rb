@@ -335,6 +335,8 @@ class ResourceHarvester
                        set: 'scientific_name_id', with: 'id')
     # Scientific names to nodes:
     propagate_id(ScientificName, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    # Vernaculars to nodes:
+    propagate_id(Vernacular, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # And identifiers to nodes:
     propagate_id(Identifier, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
   end

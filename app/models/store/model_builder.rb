@@ -68,7 +68,7 @@ module Store
         if @nodes_by_ancestry.key?(ancestry_joined)
           if @nodes_by_ancestry[ancestry_joined].include?(sci_name)
             # TODO: catch errors at the harvesting level; we want to log and somehow stop the process, not exit.
-            raise "ILLEGAL DUPLICATE: #{ancestry_joined} -> #{sci_name}"
+            raise "ILLEGAL DUPLICATE: #{ancestry_joined}->#{sci_name}"
           end
         else # New ancestry...
           begin

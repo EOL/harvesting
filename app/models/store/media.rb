@@ -1,6 +1,8 @@
 module Store
   module Media
+    extend ActiveSupport::Concern
     include ActionView::Helpers::SanitizeHelper
+
     def to_media_pk(field, val)
       @models[:medium] ||= {}
       @models[:medium][:resource_pk] = val

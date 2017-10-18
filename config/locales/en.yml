@@ -1,6 +1,9 @@
 # Keep this alphabetical.
 en:
   are_you_sure: "Are you sure? This action cannot be undone."
+  boolean:
+    true: "True"
+    false: "Fakse"
   cancel: "cancel"
   edit: "edit"
   delete: "delete"
@@ -124,6 +127,7 @@ en:
       authors: "Authors (semi-colon delimited):"
       canonical: "Canonical:"
       created: "Created:"
+      in_unmapped_area: "OUTSIDE of DWH-mapped area:"
       page_id: "EOL Website Page ID:"
       parent: "Parent Node:"
       parent_nil: "This is a root node. It has no parent node."

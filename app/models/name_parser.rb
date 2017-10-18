@@ -83,6 +83,7 @@ class NameParser
         abort "!! FAILED #{cmd}"
       end
     end
+    debugger if @names.keys.size != json.size
     "[#{json.join(",")}]"
   end
 
