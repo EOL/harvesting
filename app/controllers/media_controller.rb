@@ -1,9 +1,9 @@
 class MediaController < ApplicationController
   def index
     @resource = Resource.find(params[:resource_id])
-    @media = @resource.media.includes(:node).published.page(params[:page] || 1).per(params[:per] || 10)
+    @media = @resource.media.includes(:node).published.page(params[:page] || 1).per(params[:per] || 1000)
     respond_to do |fmt|
-      fmt.json { }
+      fmt.json {}
     end
   end
 

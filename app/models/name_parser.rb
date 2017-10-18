@@ -30,10 +30,10 @@ class NameParser
           debugger
           puts 'shoot.'
         end
-        # NOTE: I tried 1000 each batch, here, and it was TOTALLY fine. ...attempting an increase. ...would be nice to
+        # NOTE: I tried 2500 each batch, here, and it was TOTALLY fine. ...attempting an increase. ...would be nice to
         # remove the "buffer" entirely and let it do 10K at a time (the size of #loop_over_names_in_batches), but I'd
         # like to get there cautiously.
-        if ((i+1) % 2500).zero?
+        if ((i+1) % 5000).zero?
           update_names(updates)
           updates = []
         end
@@ -74,6 +74,7 @@ class NameParser
     Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thread|
       stdin.write(@verbatims)
       stdin.close_write
+      # TODO: I think I'm missing the first one. ...or the last one...
       while line = stdout.gets
         json << line.chomp if line =~ /^{/
       end
