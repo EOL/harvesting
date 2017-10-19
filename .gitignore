@@ -16,6 +16,9 @@
 /log/*.log
 /tmp
 
+# OS X:
+.DS_Store
+
 # Created during specs, but not desirable to keep them around:
 spec/files/*diff
 
