@@ -167,11 +167,11 @@ module Store
       meta = @models[:occurrence].delete(:meta) || {}
       if @models[:occurrence][:sex]
         sex = @models[:occurrence].delete(:sex)
-        @models[:occurrence][:sex_term_id] = find_or_create_term(sex).try(:id)
+        @models[:occurrence][:sex_term_id] = find_or_create_term(sex, type: 'sex').try(:id)
       end
       if @models[:occurrence][:lifestage]
         lifestage = @models[:occurrence].delete(:lifestage)
-        @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage).try(:id)
+        @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage, type: 'lifestage').try(:id)
       end
       # TODO: there are some other normalizations and checks we should do here,
       # I expect.
@@ -179,7 +179,7 @@ module Store
       meta.each do |key, value|
         datum = {}
         datum[:occurence_id] = occurrence.id
-        datum[:predicate_term_id] = find_or_create_term(key).id
+        datum[:predicate_term_id] = find_or_create_term(key, type: 'meta-predicate').id
         datum = convert_meta_value(datum, value)
         prepare_model_for_store(OccurrenceMetadata, datum)
       end
@@ -204,17 +204,17 @@ module Store
       # TODO: assocs
       predicate = @models[:trait].delete(:predicate)
       # TODO: error handling for predicate ... cannot be blank.
-      predicate_term = find_or_create_term(predicate)
+      predicate_term = find_or_create_term(predicate, type: 'predicate')
       @models[:trait][:predicate_term_id] = predicate_term.id
       units = @models[:trait].delete(:units)
-      units_term = find_or_create_term(units)
+      units_term = find_or_create_term(units, type: 'units')
       @models[:trait][:units_term_id] = units_term.try(:id)
 
       @models[:trait] = convert_trait_value(@models[:trait])
 
       if @models[:trait][:statistical_method]
         stat_m = @models[:trait].delete(:statistical_method)
-        @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
+        @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m, type: 'statistical method').try(:id)
       end
       meta = @models[:trait].delete(:meta) || {}
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
@@ -228,7 +228,7 @@ module Store
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum[:trait_resource_pk] = trait.resource_pk
-        predicate_term = find_or_create_term(key)
+        predicate_term = find_or_create_term(key, type: 'meta-predicate')
         datum[:predicate_term_id] = predicate_term.id
         datum = convert_meta_value(datum, value)
         prepare_model_for_store(MetaTrait, datum)
@@ -246,13 +246,13 @@ module Store
     def convert_trait_value(instance)
       value = instance.delete(:value)
       if value =~ URI::regexp && Regexp.last_match.begin(0) == 0
-        object_term = find_or_create_term(value)
+        object_term = find_or_create_term(value, type: 'value')
         instance[:object_term_id] = object_term.id
       end
       if instance[:units]
         units = instance.delete(:units)
         if units =~ URI::regexp
-          units_term = find_or_create_term(units)
+          units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         else
           # TODO: we need a robust map of strings to reasonable units URIs... though that should be a "filter"
@@ -271,7 +271,7 @@ module Store
     # Simpler:
     def convert_meta_value(datum, value)
       if value =~ URI::regexp
-        object_term = find_or_create_term(value)
+        object_term = find_or_create_term(value, type: 'meta-value')
         datum[:object_term_id] = object_term.id
       else
         datum[:literal] = value
@@ -279,7 +279,7 @@ module Store
       datum
     end
 
-    def find_or_create_term(uri)
+    def find_or_create_term(uri, options = {})
       return nil if uri.blank?
       # TODO: again, this is slow to do one-at-a-time. We should get a full list
       # and query for all of them:
@@ -289,12 +289,11 @@ module Store
         name = uri.gsub(%r{^.*/}, '').gsub(/[^A-Za-z0-9]+/, ' ')
         term = Term.create(
           uri: uri, name: name, definition: I18n.t("terms.auto_created"),
-          comment: "Auto-added during harvest ##{@harvest.id}. "\
-            'A human needs to edit this.',
+          comment: "Auto-added during harvest ##{@harvest.id}. A human needs to edit this.",
           attribution: @resource.name, is_hidden_from_overview: true,
           is_hidden_from_glossary: true)
         # TODO: This isn't necessarily a problem with the measurements file; it could be the occurrences. :S
-        log_warning("Created term for #{uri}!")
+        log_warning("Created #{options[:type] || '(unspecified type of)'} term for #{uri}!")
       end
       term
     end
