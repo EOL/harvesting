@@ -17,7 +17,7 @@ class NameParser
     @attempts = 0
     # NOTE: this while look is ONLY here because gnparser seems to skip some names in each batch. For about 24K names,
     # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
-    # Ick. TODO: fix.
+    # Ick. TODO: find the problem and fix.
     while ScientificName.where(harvest_id: @harvest.id, canonical: nil).count > 0 && @attempts <= 10
       @attempts += 1
       loop_over_names_in_batches do |names|
