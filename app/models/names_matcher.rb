@@ -32,6 +32,7 @@ class NamesMatcher
     }
     (10..250).each { |n| @minimum_ancestry_match[n] = (n * 0.3).ceil }
     @ancestors = []
+    @unmatched = []
     @new_page_id = nil
   end
 
@@ -261,6 +262,7 @@ class NamesMatcher
   end
 
   def log_unmatched
+    return if @unmatched.blank?
     @unmatched.in_groups_of(100, false) do |group|
       @harvest.log("Unmatched nodes: #{group.join('; ')}", cat: :warns)
     end

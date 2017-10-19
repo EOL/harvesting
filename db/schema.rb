@@ -369,9 +369,6 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer  "parent_id",                 limit: 4
     t.integer  "scientific_name_id",        limit: 4
     t.integer  "removed_by_harvest_id",     limit: 4
-    t.integer  "lft",                       limit: 4
-    t.integer  "rgt",                       limit: 4
-    t.integer  "depth",                     limit: 4
     t.string   "canonical",                 limit: 255
     t.string   "taxonomic_status_verbatim", limit: 255
     t.string   "resource_pk",               limit: 255
@@ -385,12 +382,9 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
-  add_index "nodes", ["lft"], name: "index_nodes_on_lft", using: :btree
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
-  add_index "nodes", ["resource_id", "resource_pk"], name: "by_resource_and_pk", using: :btree
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
   add_index "nodes", ["resource_pk"], name: "index_nodes_on_resource_pk", using: :btree
-  add_index "nodes", ["rgt"], name: "index_nodes_on_rgt", using: :btree
 
   create_table "nodes_references", force: :cascade do |t|
     t.integer "harvest_id",       limit: 4

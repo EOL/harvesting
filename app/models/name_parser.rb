@@ -14,32 +14,34 @@ class NameParser
   end
 
   def parse
-    loop_over_names_in_batches do |names|
-      @names = {}
-      write_names_to_file(names)
-      learn_names(names)
-      json = parse_names_in_file
-      updates = []
-      JSON.parse(json).each_with_index do |result, i|
-        debugger unless @names.key?(result['verbatim'])
-        begin
-          @names[result['verbatim']].assign_attributes(parse_result(result))
-          updates << @names[result['verbatim']]
-        rescue => e
-          puts "error reading line #{i}"
-          debugger
-          puts 'shoot.'
+    @attempts = 0
+    # NOTE: this while look is ONLY here because gnparser seems to skip some names in each batch. For about 24K names,
+    # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
+    # Ick. TODO: fix.
+    while ScientificName.where(harvest_id: @harvest.id, canonical: nil).count > 0 && @attempts <= 10
+      @attempts += 1
+      loop_over_names_in_batches do |names|
+        @names = {}
+        write_names_to_file(names)
+        learn_names(names)
+        json = parse_names_in_file
+        updates = []
+        JSON.parse(json).each_with_index do |result, i|
+          debugger unless @names.key?(result['verbatim'])
+          begin
+            @names[result['verbatim']].assign_attributes(parse_result(result))
+            updates << @names[result['verbatim']]
+          rescue => e
+            puts "error reading line #{i}"
+            debugger
+            puts 'shoot.'
+          end
         end
-        # NOTE: I tried 2500 each batch, here, and it was TOTALLY fine. ...attempting an increase. ...would be nice to
-        # remove the "buffer" entirely and let it do 10K at a time (the size of #loop_over_names_in_batches), but I'd
-        # like to get there cautiously.
-        if ((i+1) % 5000).zero?
-          update_names(updates)
-          updates = []
-        end
+        update_names(updates) unless updates.empty?
       end
-      update_names(updates) unless updates.empty?
     end
+    debugger if @attempts >= 10
+    1
   end
 
   def update_names(updates)
@@ -54,12 +56,14 @@ class NameParser
   end
 
   def loop_over_names_in_batches
-    ScientificName.where(harvest_id: @harvest.id).find_in_batches(batch_size: 10_000) do |names|
+    # NOTE: gnparser is skipping about 20 lines (out of 24K or so). I don't know why.
+    ScientificName.where(harvest_id: @harvest.id, canonical: nil).find_in_batches(batch_size: 10_000) do |names|
       yield(names)
     end
   end
 
   def write_names_to_file(names)
+    @verbatims_size = names.size
     @verbatims = names.map(&:verbatim).join("\n") + "\n"
   end
 
@@ -83,7 +87,7 @@ class NameParser
         abort "!! FAILED #{cmd}"
       end
     end
-    debugger if @names.keys.size != json.size
+    debugger if @verbatims_size != json.size
     "[#{json.join(",")}]"
   end
 

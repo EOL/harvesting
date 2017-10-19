@@ -1,6 +1,5 @@
 class InitialContent < ActiveRecord::Migration
   def change
-    # NOTE: Quite a few indexes on this table! :S
     create_table :nodes do |t|
       t.integer :resource_id, null: false, index: true
       t.integer :harvest_id, null: false, index: true
@@ -8,9 +7,6 @@ class InitialContent < ActiveRecord::Migration
       t.integer :parent_id, index: true, comment: 'null should only be temporary; populated after propagation.'
       t.integer :scientific_name_id, comment: 'null should only be temporary; populated after propagation.'
       t.integer :removed_by_harvest_id
-      t.integer :lft, index: true
-      t.integer :rgt, index: true
-      t.integer :depth
 
       t.string :canonical # NOTE: I removed an index here to try and speed up writes.
       t.string :taxonomic_status_verbatim
@@ -24,7 +20,6 @@ class InitialContent < ActiveRecord::Migration
 
       t.timestamps
     end
-    add_index :nodes, [:resource_id, :resource_pk], name: 'by_resource_and_pk'
 
     create_table :node_ancestors do |t|
       t.integer :resource_id, null: false, index: true
