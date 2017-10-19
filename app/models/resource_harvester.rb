@@ -12,12 +12,14 @@ class ResourceHarvester
   include Store::ModelBuilder
 
   def initialize(resource, harvest = nil)
+    # TODO: this is WAAAY too tighly coupled with the model builder class (at least)
     @resource = resource
     @previous_harvest = @resource.harvests.completed.last
     @harvest = nil
     @uris = {}
     @formats = {}
     @harvest = harvest
+    @default_trait_resource_pk = 0
     @converted = {}
     # Placeholders to mark where we "currently are":
     @diff = nil
@@ -92,8 +94,7 @@ class ResourceHarvester
       fields = {}
       expected_by_file = @headers.dup
       @format.fields.each_with_index do |field, i|
-        raise(Exceptions::ColumnMissing, field.expected_header) if
-          @headers[i].nil?
+        raise(Exceptions::ColumnMissing, field.expected_header) if @headers[i].nil?
         debugger unless field.expected_header == @headers[i]
         raise(Exceptions::ColumnMismatch,
               "expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless

@@ -468,6 +468,47 @@ traity = Resource.quick_define(
   }
 )
 
+iucn = Resource.quick_define(
+  name: 'IUCN Structured Data',
+  abbr: 'IUCN-SD',
+  type: :csv,
+  field_sep: "\t",
+  pk_url: 'http://some.cool.url/with/a/path/to_$PK.html',
+  base_dir: Rails.public_path.join('data', 'iucn'),
+  partner: {
+    name: 'International Union for Conservation of Nature',
+    abbr: 'IUCN',
+    short_name: 'IUCN',
+    homepage_url: 'https://www.iucn.org/',
+    description: 'The International Union for Conservation of Nature (IUCN) is a membership Union uniquely composed of both government and civil society organisations. It provides public, private and non-governmental organisations with the knowledge and tools that enable human progress, economic development and nature conservation to take place together.',
+    auto_publish: true
+  },
+  formats: {
+    nodes: { loc: 'taxon.tab', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'furtherInformationURL' => 'to_ignored' },
+      { 'scientificName' => 'to_nodes_scientific', can_be_empty: false },
+      { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
+      { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
+      { 'class' => 'to_nodes_ancestor', submapping: 'class' },
+      { 'order' => 'to_nodes_ancestor', submapping: 'order' },
+      { 'family' => 'to_nodes_ancestor', submapping: 'family' }
+    ] },
+    occurrences: { loc: 'occurrence.tab', fields: [
+      { 'occurrenceID' => 'to_occurrences_pk', can_be_empty: false, is_unique: true },
+      { 'taxonID' => 'to_occurrences_nodes_fk', can_be_empty: false }
+    ] },
+    measurements: { loc: 'measurement_or_fact.tab', fields: [
+      { 'occurrenceID' => 'to_traits_occurrence_fk' },
+      { 'measurementOfTaxon' => 'to_traits_measurement_of_taxon' },
+      { 'measurementType' => 'to_traits_predicate', can_be_empty: false },
+      { 'measurementValue' => 'to_traits_value' },
+      { 'measurementRemarks' => 'to_traits_meta', submapping: 'http://rs.tdwg.org/dwc/terms/measurementRemarks' },
+      { 'source' => 'to_traits_source' }
+    ] }
+  }
+)
+
 freshwater = Resource.quick_define(
   name: 'CalPhotos in DwC-A',
   abbr: 'CalPhotos',

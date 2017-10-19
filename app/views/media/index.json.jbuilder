@@ -16,7 +16,9 @@ json.media @media do |medium|
     json.base_url "http://beta-repo.eol.org#{medium.base_url}"
   end
   json.license medium.license.try(:url)
-  json.language medium.language do |lang|
-    json.extract! lang, :group_code, :code
+  if medium.language
+    json.language do
+      json.extract! medium.language, :group_code, :code
+    end
   end
 end

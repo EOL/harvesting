@@ -576,7 +576,6 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer "lifestage_term_id",          limit: 4
     t.integer "removed_by_harvest_id",      limit: 4
     t.boolean "of_taxon"
-    t.string  "node_resource_pk",           limit: 255
     t.string  "occurrence_resource_pk",     limit: 255
     t.string  "assoc_resource_pk",          limit: 255
     t.string  "parent_pk",                  limit: 255

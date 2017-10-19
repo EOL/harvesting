@@ -359,8 +359,7 @@ class InitialContent < ActiveRecord::Migration
 
       t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
 
-      t.string :node_resource_pk, comment: 'temporary; will be replaced by object_node_id once IDs are resolved.'
-      t.string :occurrence_resource_pk, index: true, comment: 'used to add occurrence metadata.'
+      t.string :occurrence_resource_pk, index: true, comment: 'used to get node_id and occurrence metadata.'
       t.string :assoc_resource_pk, comment: 'temporary; will be used to find object_node_id'
       t.string :parent_pk, comment: 'temporary; will be used to move this to meta_traits'
       t.string :resource_pk, null: false

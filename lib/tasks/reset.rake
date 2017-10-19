@@ -1,4 +1,5 @@
-@all = %w[Mineralogy CalPhotos flickrBHL]
+# @all = %w[Mineralogy CalPhotos flickrBHL IUCN-SD]
+@all = %w[IUCN-SD]
 
 namespace :reset do
   namespace :full do

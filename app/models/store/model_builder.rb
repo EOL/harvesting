@@ -37,7 +37,8 @@ module Store
         @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
         @models[:scientific_name][:is_preferred] = true
       end
-      @models[:scientific_name][:taxonomic_status] =
+      @models[:scientific_name][:taxonomic_status] = @models[:scientific_name][:taxonomic_status_verbatim].blank? ?
+        :preferred :
         TaxonomicStatus.parse(@models[:scientific_name][:taxonomic_status_verbatim])
 
       prepare_model_for_store(ScientificName, @models[:scientific_name])
@@ -216,6 +217,7 @@ module Store
         @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m).try(:id)
       end
       meta = @models[:trait].delete(:meta) || {}
+      @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
       trait = prepare_model_for_store(Trait, @models[:trait])
       meta.each do |key, value|
         datum = {}
