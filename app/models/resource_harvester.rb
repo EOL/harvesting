@@ -352,18 +352,24 @@ class ResourceHarvester
   def resolve_trait_keys
     @harvest.log_call
     # Occurrences to nodes:
+    log_info('Occurrences to nodes...')
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Traits to nodes (through occurrences)
+    log_info('traits to nodes...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk', set: 'node_id', with: 'node_id')
     # Traits to sex term:
+    log_info('Traits to sex term...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                         set: 'sex_term_id', with: 'sex_term_id')
     # Traits to lifestage term:
+    log_info('Traits to lifestage term...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                         set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaTraits to traits:
+    log_info('MetaTraits to traits...')
     propagate_id(MetaTrait, fk: 'trait_resource_pk', other: 'traits.resource_pk', set: 'trait_id', with: 'id')
     # MetaTraits (simple, measurement row refers to parent) to traits:
+    log_info('MetaTraits (simple, measurement row refers to parent) to traits...')
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
 
     # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)

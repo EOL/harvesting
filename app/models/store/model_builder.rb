@@ -218,10 +218,6 @@ module Store
       end
       meta = @models[:trait].delete(:meta) || {}
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
-      if @models[:trait][:literal].size > 250
-        log_warning("Literally too long, trait #{@models[:trait][:resource_pk]}:\n#{@models[:trait][:literal]}!")
-        @models[:trait][:literal] = @models[:trait][:literal][0..249]
-      end
       trait = prepare_model_for_store(Trait, @models[:trait])
       meta.each do |key, value|
         datum = {}

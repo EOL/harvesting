@@ -581,7 +581,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string  "parent_pk",                  limit: 255
     t.string  "resource_pk",                limit: 255,   null: false
     t.string  "measurement",                limit: 255
-    t.string  "literal",                    limit: 255
+    t.text    "literal",                    limit: 65535
     t.text    "source",                     limit: 65535
   end
 

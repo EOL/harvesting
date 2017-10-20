@@ -360,12 +360,12 @@ class InitialContent < ActiveRecord::Migration
       t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
 
       t.string :occurrence_resource_pk, index: true, comment: 'used to get node_id and occurrence metadata.'
-      t.string :assoc_resource_pk, comment: 'temporary; will be used to find object_node_id'
-      t.string :parent_pk, comment: 'temporary; will be used to move this to meta_traits'
+      t.string :assoc_resource_pk, index: true, comment: 'temporary; will be used to find object_node_id'
+      t.string :parent_pk, index: true, comment: 'temporary; will be used to move this to meta_traits'
       t.string :resource_pk, null: false
       t.string :measurement
-      t.string :literal
 
+      t.text :literal, comment: 'sadly, must be a text, because some values are long lists of agents'
       t.text :source
     end
     add_index :traits, [:resource_id, :resource_pk]
