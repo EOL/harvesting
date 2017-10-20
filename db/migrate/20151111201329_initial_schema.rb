@@ -61,7 +61,7 @@ class InitialSchema < ActiveRecord::Migration
 
     create_table :formats do |t|
       t.integer :resource_id, null: false
-      t.integer :harvest_id,
+      t.integer :harvest_id, index: true,
         comment: "if null, only associated to resource, and is 'abstract'"
       t.integer :sheet, null: false, default: 1,
         comment: "which sheet to read, if it's in a multi-sheet file"
@@ -120,7 +120,7 @@ class InitialSchema < ActiveRecord::Migration
     end
 
     create_table :hlogs do |t|
-      t.integer :harvest_id, null: false
+      t.integer :harvest_id, index: true, null: false
       t.integer :format_id, comment: 'if empty, the log is not file-specific.'
       t.integer :category, comment: 'Enum: errors, warns, infos, progs, loops, starts, ends, counts, queries'
       t.text :message

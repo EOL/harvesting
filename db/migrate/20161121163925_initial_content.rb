@@ -29,7 +29,7 @@ class InitialContent < ActiveRecord::Migration
 
     # Another "waystation" for data that will be used elsewhere...
     create_table :agents do |t|
-      t.integer :harvest_id # We don't need the resource id; this is "temporary" data and won't be handled much.
+      t.integer :harvest_id, index: true # We don't need the resource id; this is "temporary" data and won't be handled much.
       t.string :resource_pk, null: false
       t.string :full_name
       t.string :role
