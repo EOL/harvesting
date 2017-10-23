@@ -23,7 +23,7 @@ dwh = Resource.quick_define(
   pk_url: 'http://eol.org/$PK&but=not_really',
   base_dir: Rails.public_path.join('data', 'dwh'),
   formats: {
-    nodes: { loc: 'taxa_c.tsv', fields: [
+    nodes: { loc: 'taxa.txt', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
       { 'acceptedNameUsageID' => 'to_nodes_accepted_name_fk' },
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },

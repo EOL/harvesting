@@ -3,10 +3,10 @@ source "https://rubygems.org"
 # Because we are going to create many, many records!
 gem 'activerecord-import'
 # Acts As List simplifies ordered lists of models:
-gem 'acts_as_list', '~> 0.7.6'
+gem 'acts_as_list'
 
 # Parse Excel files:
-gem "creek", "~> 1.1"
+gem "creek"
 
 # Required to run bin/delayed_job:
 gem 'daemons'
@@ -19,7 +19,7 @@ gem 'dalli'
 gem 'haml-rails'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
-gem "jbuilder", "~> 2.0"
+gem "jbuilder"
 # Use jquery as the JavaScript library
 gem "jquery-rails"
 
@@ -30,19 +30,19 @@ gem 'kaminari'
 gem 'therubyracer'
 
 # Use mysql as the database for Active Record
-gem "mysql2", "~> 0.3.18"
+gem "mysql2"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
-gem "rails", "4.2.4"
+gem "rails", "4.2.10"
 # Image resizing and manipulation:
 gem 'rmagick'
 
 # Use SCSS for stylesheets
-gem "sass-rails", "~> 5.0"
+gem "sass-rails"
 # ElasticSearch:
 gem 'searchkick'
 # bundle exec rake doc:rails generates the API under doc/api.
-gem "sdoc", "~> 0.4.0", group: :doc
+gem "sdoc"
 
 # Making forms simpler:
 gem "simple_form"
@@ -52,7 +52,7 @@ gem "simple_form"
 gem "turbolinks"
 
 # Use Uglifier as compressor for JavaScript assets
-gem "uglifier", ">= 1.3.0"
+gem "uglifier"
 
 group :development, :test do
   # Call "byebug" anywhere in the code to stop execution and get a debugger
@@ -62,7 +62,7 @@ group :development, :test do
   gem "factory_girl_rails"
 
   # Testing framework:
-  gem "rspec-rails", "~> 3"
+  gem "rspec-rails"
 end
 
 group :development do
@@ -70,5 +70,5 @@ group :development do
   gem "spring"
 
   # Access an IRB console on exception pages or by using <%= console %> in views
-  gem "web-console", "~> 2.0"
+  gem "web-console"
 end

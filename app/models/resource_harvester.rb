@@ -510,6 +510,7 @@ class ResourceHarvester
       unless @formats.has_key?(fid)
         @formats[fid] = {}
         @file = @format.file
+        raise "File missing!" unless File.exist?(@file)
         @formats[fid][:parser] = if @format.excel?
             ExcelParser.new(@file, sheet: @format.sheet,
               header_lines: @format.header_lines,
