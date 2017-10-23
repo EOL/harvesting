@@ -17,6 +17,7 @@ class InitialContent < ActiveRecord::Migration
       t.string :rank_verbatim
 
       t.boolean :in_unmapped_area, default: false, comment: 'True if the native_node_id is NOT in the EOL hierarchy.'
+      t.boolean :is_landmark, default: false, comment: 'True if the node should leave a "breadcrumb" on the overview.'
 
       t.timestamps
     end

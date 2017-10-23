@@ -3,6 +3,7 @@ class ResourceHarvester
   attr_accessor :resource, :harvest, :format, :line_num, :diff, :file, :parser, :headers
 
   # NOTE: Composition pattern, here. Too much to have in one file:
+  include Store::Boolean
   include Store::Nodes
   include Store::Media
   include Store::Vernaculars

@@ -12,16 +12,16 @@ dwh = Resource.quick_define(
   abbr: 'DWH',
   type: :csv,
   partner: {
-    name: "Encyclopedia of Life",
-    abbr: "EOL",
-    short_name: "EOL",
-    homepage_url: "http://eol.org",
-    description: "A webpage for every species. Or something like that.",
+    name: 'Encyclopedia of Life',
+    abbr: 'EOL',
+    short_name: 'EOL',
+    homepage_url: 'http://eol.org',
+    description: 'A webpage for every species. Or something like that.',
     auto_publish: true
   },
   field_sep: "\t",
   pk_url: 'http://eol.org/$PK&but=not_really',
-  base_dir: Rails.root.join('spec', 'files'),
+  base_dir: Rails.public_path.join('data', 'dwh'),
   formats: {
     nodes: { loc: 'taxa_c.tsv', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
@@ -39,7 +39,8 @@ dwh = Resource.quick_define(
       { 'furtherInformationURL' => 'to_nodes_further_information_url' },
       { 'datasetID' => 'to_ignored' },
       { 'EOLid' => 'to_nodes_page_id' },
-      { 'EOLidAnnotations' => 'to_ignored' }
+      { 'EOLidAnnotations' => 'to_ignored' },
+      { 'Landmark' => 'to_nodes_landmark'}
     ] }
   }
 )

@@ -19,7 +19,7 @@ class Field < ActiveRecord::Base
 
         to_nodes_pk to_nodes_scientific to_nodes_parent_fk to_nodes_ancestor to_nodes_rank
         to_nodes_further_information_url to_taxonomic_status to_nodes_accepted_name_fk to_nodes_remarks
-        to_nodes_publication to_nodes_page_id to_nodes_identifiers to_nodes_ref_fks
+        to_nodes_publication to_nodes_page_id to_nodes_identifiers to_nodes_ref_fks to_nodes_landmark
 
         to_vernaculars_verbatim to_vernaculars_source to_vernaculars_language to_vernaculars_locality
         to_vernaculars_preferred to_vernacular_nodes_fk

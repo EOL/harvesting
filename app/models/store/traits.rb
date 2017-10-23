@@ -12,10 +12,7 @@ module Store
     end
 
     def to_traits_measurement_of_taxon(_, val)
-      # TODO: generalize EOL's "truthiness"
-      val = val =~ /^[ty1+]/i ||   # Trying to capture "true", "yes", "1", and "+", here.
-            val =~ /(true|yes)$/i  # ...and this is meant for "URIs" that end in these terms.
-      @models[:trait][:of_taxon] = val ? true : false
+      @models[:trait][:of_taxon] = looks_true?(val)
     end
 
     def to_traits_parent_pk(_, val)

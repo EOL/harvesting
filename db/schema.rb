@@ -23,6 +23,8 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.text    "other_info",  limit: 65535
   end
 
+  add_index "agents", ["harvest_id"], name: "index_agents_on_harvest_id", using: :btree
+
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
     t.string   "resource_pk",               limit: 255,   null: false
@@ -166,6 +168,8 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.boolean "utf8",                            default: false, null: false
   end
 
+  add_index "formats", ["harvest_id"], name: "index_formats_on_harvest_id", using: :btree
+
   create_table "harvests", force: :cascade do |t|
     t.integer  "resource_id",            limit: 4,                 null: false
     t.integer  "time_in_minutes",        limit: 4
@@ -197,6 +201,8 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer  "line",       limit: 4
     t.datetime "created_at"
   end
+
+  add_index "hlogs", ["harvest_id"], name: "index_hlogs_on_harvest_id", using: :btree
 
   create_table "identifiers", force: :cascade do |t|
     t.integer "resource_id",      limit: 4,   null: false
@@ -377,6 +383,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string   "rank",                      limit: 255
     t.string   "rank_verbatim",             limit: 255
     t.boolean  "in_unmapped_area",                      default: false
+    t.boolean  "is_landmark",                           default: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -406,6 +413,8 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.text    "literal",           limit: 65535
   end
 
+  add_index "occurrence_metadata", ["harvest_id"], name: "index_occurrence_metadata_on_harvest_id", using: :btree
+
   create_table "occurrences", force: :cascade do |t|
     t.integer "harvest_id",        limit: 4
     t.string  "resource_pk",       limit: 255, null: false
@@ -415,6 +424,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string  "lifestage_term_id", limit: 255
   end
 
+  add_index "occurrences", ["harvest_id"], name: "index_occurrences_on_harvest_id", using: :btree
   add_index "occurrences", ["resource_pk"], name: "index_occurrences_on_resource_pk", using: :btree
 
   create_table "pages", force: :cascade do |t|
@@ -585,9 +595,11 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.text    "source",                     limit: 65535
   end
 
+  add_index "traits", ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk", using: :btree
   add_index "traits", ["harvest_id"], name: "index_traits_on_harvest_id", using: :btree
   add_index "traits", ["occurrence_resource_pk"], name: "index_traits_on_occurrence_resource_pk", using: :btree
   add_index "traits", ["parent_id"], name: "index_traits_on_parent_id", using: :btree
+  add_index "traits", ["parent_pk"], name: "index_traits_on_parent_pk", using: :btree
   add_index "traits", ["resource_id", "resource_pk"], name: "index_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "traits_references", force: :cascade do |t|
