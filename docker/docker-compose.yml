@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       - TZ=America/New_York
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms512m -Xmx30g
     volumes:
       - /u/data/eol-repo-elasticsearch/data:/usr/share/elasticsearch/data
     network_mode: "bridge"
@@ -33,6 +33,7 @@ services:
     restart: always
     volumes:
       - /u/data/eol-repo-app:/u/apps/harvester/public/data
+      - ./bin/init.sh:/etc/my_init.d/init.sh
     depends_on:
       - eol-repo-elasticsearch
       - eol-repo-mysql

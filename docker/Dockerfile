@@ -1,4 +1,4 @@
-FROM encoflife/base.ruby
+FROM encoflife/base.ruby:0.2.4
 MAINTAINER Martin Taheri <m3hran@gmail.com>
 LABEL Description="EOL repo harvester image"
 ENV TERM xterm
