@@ -2,7 +2,7 @@
 APP="harvester"
 
 echo "Updating $APP.."
-cd /u/apps/$APP && git pull && git checkout GEMFILE.lock
+cd /u/apps/$APP && git pull
 
 /bin/bash -l -c 'gem install bundler --pre'
 /bin/bash -l -c 'cd /u/apps/harvester/ && bundle' 
