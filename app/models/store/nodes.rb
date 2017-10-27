@@ -13,8 +13,7 @@ module Store
 
     def to_nodes_landmark(field, val)
       @models[:node] ||= {}
-      @models[:node][:is_landmark] = looks_true?(val)
-      # TODO: we shouldn't trust this unless it came from Resource #1; add some code in the names-matcher to check.
+      @models[:node][:landmark] = val
     end
 
     def to_nodes_scientific(field, val)

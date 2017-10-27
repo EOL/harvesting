@@ -1,7 +1,7 @@
 json.total_pages @nodes.total_pages
 json.current_page @nodes.current_page
 json.nodes @nodes do |node|
-  json.extract! node, *%i(page_id parent_resource_pk in_unmapped_area resource_pk)
+  json.extract! node, *%i(page_id parent_resource_pk in_unmapped_area resource_pk landmark)
   json.rank node.rank.try(:downcase)
   json.scientific_name node.scientific_name.normalized
   json.canonical_form node.scientific_name.canonical

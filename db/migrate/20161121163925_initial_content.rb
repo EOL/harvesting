@@ -7,6 +7,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :parent_id, index: true, comment: 'null should only be temporary; populated after propagation.'
       t.integer :scientific_name_id, comment: 'null should only be temporary; populated after propagation.'
       t.integer :removed_by_harvest_id
+      t.integer :landmark, default: false, comment: 'enum... but we\'re not *entirely* sure what the values are yet...'
 
       t.string :canonical # NOTE: I removed an index here to try and speed up writes.
       t.string :taxonomic_status_verbatim
@@ -17,7 +18,6 @@ class InitialContent < ActiveRecord::Migration
       t.string :rank_verbatim
 
       t.boolean :in_unmapped_area, default: false, comment: 'True if the native_node_id is NOT in the EOL hierarchy.'
-      t.boolean :is_landmark, default: false, comment: 'True if the node should leave a "breadcrumb" on the overview.'
 
       t.timestamps
     end

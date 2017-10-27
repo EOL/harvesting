@@ -1,3 +1,5 @@
+# A node in the hierarchy from a given content partner, including (most notably) its scientific name and the PK provided
+# by the resource.
 class Node < ActiveRecord::Base
   searchkick
 
@@ -23,7 +25,13 @@ class Node < ActiveRecord::Base
   scope :published, -> { where(removed_by_harvest_id: nil) }
 
   # NOTE: special scope used by Searchkick
-  scope :search_import, -> { where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children) }
+  scope :search_import, lambda do
+    where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children)
+  end
+
+  # Denotes the context in which the (non-zero) landmark ID should be used. Additional description:
+  # https://github.com/EOL/eol_website/issues/5
+  enum landmark: %i[minimal abbreviated extended full]
 
   # NOTE: special method used by Searchkick
   def search_data

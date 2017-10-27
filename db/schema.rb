@@ -375,6 +375,7 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.integer  "parent_id",                 limit: 4
     t.integer  "scientific_name_id",        limit: 4
     t.integer  "removed_by_harvest_id",     limit: 4
+    t.integer  "landmark",                  limit: 4,   default: 0
     t.string   "canonical",                 limit: 255
     t.string   "taxonomic_status_verbatim", limit: 255
     t.string   "resource_pk",               limit: 255
@@ -383,7 +384,6 @@ ActiveRecord::Schema.define(version: 20171012152024) do
     t.string   "rank",                      limit: 255
     t.string   "rank_verbatim",             limit: 255
     t.boolean  "in_unmapped_area",                      default: false
-    t.boolean  "is_landmark",                           default: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end

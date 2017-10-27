@@ -10,8 +10,8 @@
     %strong= t('nodes.fields.page_id')
     = link_to(@node.page_id, "http://eol.org/pages/#{@node.page_id}")
   %li
-    %strong= t('nodes.fields.is_landmark')
-    = @node.is_landmark? ? t('boolean.true') : t('boolean.false')
+    %strong= t('nodes.fields.landmark')
+    = @node.landmark
   %li
     %strong= t('nodes.fields.in_unmapped_area')
     = @node.in_unmapped_area? ? t('boolean.true') : t('boolean.false')
