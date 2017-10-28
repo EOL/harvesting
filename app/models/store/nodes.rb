@@ -13,7 +13,7 @@ module Store
 
     def to_nodes_landmark(field, val)
       @models[:node] ||= {}
-      @models[:node][:landmark] = val
+      @models[:node][:landmark] = Node.landmarks.keys[val.to_i]
     end
 
     def to_nodes_scientific(field, val)

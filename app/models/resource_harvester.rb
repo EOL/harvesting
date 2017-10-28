@@ -48,6 +48,7 @@ class ResourceHarvester
 
   def start
     @start_time = Time.now
+    @harvest.log("{{ Harvest begins for #{@resource.name} (#{@resource.id})", cat: :starts)
     Searchkick.disable_callbacks
     begin
       fast_forward = @harvest && !@harvest.stage.nil?
@@ -69,6 +70,7 @@ class ResourceHarvester
       4
     ensure
       Searchkick.enable_callbacks
+      @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id})", cat: :starts)
     end
   end
 
