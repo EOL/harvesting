@@ -31,7 +31,7 @@ class Node < ActiveRecord::Base
 
   # Denotes the context in which the (non-zero) landmark ID should be used. Additional description:
   # https://github.com/EOL/eol_website/issues/5
-  enum landmark: %i[minimal abbreviated extended full]
+  enum landmark: %i[none minimal abbreviated extended full]
 
   # NOTE: special method used by Searchkick
   def search_data
