@@ -1,4 +1,4 @@
-FactoryGirl.define do
+FactoryBot.define do
   factory :term do
     sequence(:uri) { |n| "http://domain.com/path/term_#{n}" }
     sequence(:name) { |n| "Term #{n}" }

@@ -15,4 +15,5 @@ Rails.application.configure do
   config.assets.debug = false
   config.assets.digest = true
   config.assets.raise_runtime_errors = true
+  config.default_host = 'http://beta-repo.eol.org'
 end

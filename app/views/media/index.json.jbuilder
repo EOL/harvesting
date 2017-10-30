@@ -9,11 +9,10 @@ json.media @media do |medium|
   json.page_id medium.node.page_id
   json.name medium.name_verbatim if medium.name.blank?
   json.description medium.description_verbatim if medium.description.blank?
-  # TODO: this should be configurable.
-  if Rails.env.development?
-    json.base_url "http://localhost:3000#{medium.base_url}"
+  if medium.base_url.nil? # The image has not been downloaded.
+    json.base_url "#{root_url}#{medium.default_base_url}"
   else
-    json.base_url "http://beta-repo.eol.org#{medium.base_url}"
+    json.base_url medium.base_url
   end
   json.license medium.license.try(:url)
   if medium.language
