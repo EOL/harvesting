@@ -1,7 +1,7 @@
 class NodesController < ApplicationController
   def index
     @resource = Resource.find(params[:resource_id])
-    @nodes = @resource.nodes.includes(:scientific_name, :identifiers, :ancestors).published.page(params[:page] || 1).per(params[:per] || 1000)
+    @nodes = prep_for_api(@resource.nodes.includes(:scientific_name, :identifiers, :ancestors))
     respond_to do |fmt|
       fmt.json { }
     end

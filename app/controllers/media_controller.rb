@@ -1,7 +1,7 @@
 class MediaController < ApplicationController
   def index
     @resource = Resource.find(params[:resource_id])
-    @media = @resource.media.includes(:node).published.page(params[:page] || 1).per(params[:per] || 1000)
+    @media = prep_for_api(@resource.media.includes(:node).published)
     respond_to do |fmt|
       fmt.json {}
     end

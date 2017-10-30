@@ -330,6 +330,7 @@ class InitialContent < ActiveRecord::Migration
       t.decimal :lat, precision: 64, scale: 12
       t.decimal :long, precision: 64, scale: 12
       t.decimal :alt, precision: 64, scale: 12
+      t.timestamps null: false
     end
 
     create_table :terms do |t|
@@ -340,6 +341,7 @@ class InitialContent < ActiveRecord::Migration
       t.text :attribution
       t.boolean :is_hidden_from_overview
       t.boolean :is_hidden_from_glossary
+      t.timestamps null: false
     end
 
     create_join_table :sections, :terms
@@ -368,6 +370,7 @@ class InitialContent < ActiveRecord::Migration
 
       t.text :literal, comment: 'sadly, must be a text, because some values are long lists of agents'
       t.text :source
+      t.timestamps null: false
     end
     add_index :traits, [:resource_id, :resource_pk]
 
