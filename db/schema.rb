@@ -257,14 +257,16 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   create_table "locations", force: :cascade do |t|
-    t.string  "lat_literal",  limit: 255
-    t.string  "long_literal", limit: 255
-    t.string  "alt_literal",  limit: 255
-    t.string  "locality",     limit: 255
-    t.string  "created",      limit: 255
-    t.decimal "lat",                      precision: 64, scale: 12
-    t.decimal "long",                     precision: 64, scale: 12
-    t.decimal "alt",                      precision: 64, scale: 12
+    t.string   "lat_literal",  limit: 255
+    t.string   "long_literal", limit: 255
+    t.string   "alt_literal",  limit: 255
+    t.string   "locality",     limit: 255
+    t.string   "created",      limit: 255
+    t.decimal  "lat",                      precision: 64, scale: 12
+    t.decimal  "long",                     precision: 64, scale: 12
+    t.decimal  "alt",                      precision: 64, scale: 12
+    t.datetime "created_at",                                         null: false
+    t.datetime "updated_at",                                         null: false
   end
 
   create_table "media", force: :cascade do |t|
@@ -561,38 +563,42 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   create_table "terms", force: :cascade do |t|
-    t.string  "uri",                     limit: 255,   null: false
-    t.string  "name",                    limit: 255
-    t.text    "definition",              limit: 65535
-    t.text    "comment",                 limit: 65535
-    t.text    "attribution",             limit: 65535
-    t.boolean "is_hidden_from_overview"
-    t.boolean "is_hidden_from_glossary"
+    t.string   "uri",                     limit: 255,   null: false
+    t.string   "name",                    limit: 255
+    t.text     "definition",              limit: 65535
+    t.text     "comment",                 limit: 65535
+    t.text     "attribution",             limit: 65535
+    t.boolean  "is_hidden_from_overview"
+    t.boolean  "is_hidden_from_glossary"
+    t.datetime "created_at",                            null: false
+    t.datetime "updated_at",                            null: false
   end
 
   add_index "terms", ["uri"], name: "index_terms_on_uri", using: :btree
 
   create_table "traits", force: :cascade do |t|
-    t.integer "resource_id",                limit: 4,     null: false
-    t.integer "parent_id",                  limit: 4
-    t.integer "harvest_id",                 limit: 4,     null: false
-    t.integer "node_id",                    limit: 4
-    t.integer "predicate_term_id",          limit: 4,     null: false
-    t.integer "object_term_id",             limit: 4
-    t.integer "object_node_id",             limit: 4
-    t.integer "units_term_id",              limit: 4
-    t.integer "statistical_method_term_id", limit: 4
-    t.integer "sex_term_id",                limit: 4
-    t.integer "lifestage_term_id",          limit: 4
-    t.integer "removed_by_harvest_id",      limit: 4
-    t.boolean "of_taxon"
-    t.string  "occurrence_resource_pk",     limit: 255
-    t.string  "assoc_resource_pk",          limit: 255
-    t.string  "parent_pk",                  limit: 255
-    t.string  "resource_pk",                limit: 255,   null: false
-    t.string  "measurement",                limit: 255
-    t.text    "literal",                    limit: 65535
-    t.text    "source",                     limit: 65535
+    t.integer  "resource_id",                limit: 4,     null: false
+    t.integer  "parent_id",                  limit: 4
+    t.integer  "harvest_id",                 limit: 4,     null: false
+    t.integer  "node_id",                    limit: 4
+    t.integer  "predicate_term_id",          limit: 4,     null: false
+    t.integer  "object_term_id",             limit: 4
+    t.integer  "object_node_id",             limit: 4
+    t.integer  "units_term_id",              limit: 4
+    t.integer  "statistical_method_term_id", limit: 4
+    t.integer  "sex_term_id",                limit: 4
+    t.integer  "lifestage_term_id",          limit: 4
+    t.integer  "removed_by_harvest_id",      limit: 4
+    t.boolean  "of_taxon"
+    t.string   "occurrence_resource_pk",     limit: 255
+    t.string   "assoc_resource_pk",          limit: 255
+    t.string   "parent_pk",                  limit: 255
+    t.string   "resource_pk",                limit: 255,   null: false
+    t.string   "measurement",                limit: 255
+    t.text     "literal",                    limit: 65535
+    t.text     "source",                     limit: 65535
+    t.datetime "created_at",                               null: false
+    t.datetime "updated_at",                               null: false
   end
 
   add_index "traits", ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk", using: :btree
