@@ -6,10 +6,11 @@ Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 terms_file = Rails.public_path.join('data', 'terms.json')
 terms = []
 if File.exist?(terms_file)
+  Term.delete_all
   puts "Found terms, reading..."
   json = JSON.parse(File.read(terms_file))
   json.each do |u|
-    u.delete('type') # unused
+    u['used_for'] = u.delete('type')
     u.delete('hide_from_gui') # unused
     u['is_hidden_from_overview'] = u.delete('exclude_from_exemplars')
     u['is_hidden_from_glossary'] = u.delete('hide_from_glossary')

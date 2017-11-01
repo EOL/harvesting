@@ -1,8 +1,7 @@
 class ResourcesController < ApplicationController
   def index
-    @resources = Resource.order(:name).includes([:partner])
-    @resources = @resources.where(["updated_at > ?", Time.at(params[:since].to_i)]) if params[:since]
-    @resources = @resources.page(params[:page]).per(params[:per_page] || 50)
+    params[:per_page] ||= 50
+    @resources = prep_for_api(Resource.order(:name).includes([:partner]))
   end
 
   def show

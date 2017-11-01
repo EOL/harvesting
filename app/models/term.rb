@@ -1,3 +1,3 @@
 class Term < ActiveRecord::Base
-  # Nothing here yet...
+  enum used_for: %i[unknown measurement association value metadata]
 end

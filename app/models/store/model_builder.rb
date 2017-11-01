@@ -179,8 +179,7 @@ module Store
         lifestage = @models[:occurrence].delete(:lifestage)
         @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage, type: 'lifestage').try(:id)
       end
-      # TODO: there are some other normalizations and checks we should do here,
-      # I expect.
+      # TODO: there are some other normalizations and checks we should do here, # I expect.
       occurrence = prepare_model_for_store(Occurrence, @models[:occurrence])
       meta.each do |key, value|
         datum = {}

@@ -577,6 +577,7 @@ ActiveRecord::Schema.define(version: 20171101123151) do
     t.boolean  "is_text_only"
     t.boolean  "is_verbatim_only"
     t.integer  "position",                 limit: 4
+    t.integer  "used_for",                 limit: 4
   end
 
   add_index "terms", ["uri"], name: "index_terms_on_uri", using: :btree

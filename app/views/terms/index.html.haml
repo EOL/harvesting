@@ -1,9 +1,10 @@
 %h1= t("terms.headers.index")
 .ui.list
+= paginate(@terms)
 - @terms.each do |term|
   .item
     - name = term.name
-    - name = t("terms.name_blank")
+    - name = t("terms.name_blank") if term.name.blank?
     = link_to(name, term)
     (
     = link_to(term.uri, term)

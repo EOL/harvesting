@@ -15,6 +15,11 @@ namespace :reset do
       ResourceHarvester.new(Resource.first).start
     end
 
+    desc 'rebuild the database, re-running migrations. The DWH harvests is performed, then the resource with the ENV RESOURCE abbreviation is run.'
+    task only: :first do
+      ResourceHarvester.new(Resource.where(abbr: ENV["RESOURCE"]).first).start
+    end
+
     desc 'rebuild the database, re-running migrations. All seed harvests are performed.'
     task all: :first do
       @all.each { |abbr| ResourceHarvester.new(Resource.where(abbr: abbr).first).start }
@@ -25,6 +30,11 @@ namespace :reset do
   task first: :environment do
     Rake::Task['db:reset'].invoke
     ResourceHarvester.new(Resource.first).start
+  end
+
+  desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'
+  task only: :first do
+    ResourceHarvester.new(Resource.where(abbr: ENV["RESOURCE"]).first).start
   end
 
   desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'

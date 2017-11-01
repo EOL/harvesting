@@ -1,6 +1,7 @@
 class TermsController < ApplicationController
   def index
-    @terms = Term.order([:name, :uri]).page(params[:page]).per(params[:per] || 50)
+    params[:per_page] ||= 50
+    @terms = prep_for_api(Term.order([:name, :uri]), updated: true)
   end
 
   def show
