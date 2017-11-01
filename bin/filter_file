@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-if ARGV.length < 4
-  puts 'Usage: filter_file source_id_file source_pk_col target_file target_fk_col'
+if ARGV.length < 3
+  puts 'Usage: filter_file source_id_file source_pk_col target_file [target_fk_col]'
   puts '       This currently only works on tab-separated files with ONE LINE for the header. They were most common.'
   exit
 end
@@ -31,11 +31,12 @@ end
 rows = []
 header = nil
 headers = nil
+fk_head = ARGV[3] || ARGV[1]
 CSV.foreach(backup, col_sep: "\t", quote_char: quote) do |row|
   if header.nil?
     headers = row
-    header = row.index(ARGV[3])
-    raise "Couldn't find a header of #{ARGV[3]} in #{ARGV[2]}" if header.nil?
+    header = row.index(fk_head)
+    raise "Couldn't find a header of #{fk_head} in #{ARGV[2]}" if header.nil?
     next
   end
   rows << row if ids.key?(row[header])
