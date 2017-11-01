@@ -3,6 +3,9 @@ diff_path = Rails.public_path.join('diff')
 Dir.glob("#{tmp_path}/names*").each { |file| File.unlink(file) }
 Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 
+Rails.cache.clear
+License.public_domain
+
 terms_file = Rails.public_path.join('data', 'terms.json')
 terms = []
 if File.exist?(terms_file)
@@ -130,7 +133,7 @@ sheet1_images: [
   'Language http://purl.org/dc/terms/language', # to_language_639_1
   'Rating http://ns.adobe.com/xap/1.0/Rating', # to_ignored
   'Audience http://purl.org/dc/terms/audience', # to_ignored
-  'License http://ns.adobe.com/xap/1.0/rights/UsageTerms', # license
+  'License http://ns.adobe.com/xap/1.0/rights/UsageTerms', # to_media_license
   'Rights http://purl.org/dc/terms/rights', # media_rights_statement
   'Owner http://ns.adobe.com/xap/1.0/rights/Owner', # media_owner
   'BibliographicCitation http://purl.org/dc/terms/bibliographicCitation', # bibliographic_citation
@@ -560,7 +563,7 @@ freshwater = Resource.quick_define(
       { 'accessURI' => 'to_media_source_url' },
       { 'furtherInformationURL' => 'to_media_source_page_url' },
       { 'CreateDate' => 'to_ignored' },
-      { 'UsageTerms' => 'to_media_rights_statement' },
+      { 'UsageTerms' => 'to_media_license' },
       { 'Owner' => 'to_media_owner' },
       { 'LocationCreated' => 'to_media_locality' },
       { 'rights' => 'to_media_rights_statement' },
@@ -624,7 +627,7 @@ flickr = Resource.quick_define(
       { 'furtherInformationURL' => 'to_media_source_page_url' },
       { 'CreateDate' => 'to_ignored' },
       { 'language' => 'to_media_language' },
-      { 'UsageTerms' => 'to_media_rights_statement' },
+      { 'UsageTerms' => 'to_media_license' },
       { 'Owner' => 'to_media_owner' },
       { 'description' => 'to_media_description' },
       { 'additionalInformation' => 'to_ignored' } # NOTE: I *think* this is reasonable (we can't show it!)...

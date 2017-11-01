@@ -14,6 +14,7 @@ module Store
     end
 
     def build_models
+      build_licenses
       @synonym = is_synonym?
       build_scientific_name if @models[:scientific_name]
       build_ancestors if @models[:ancestors]
@@ -26,6 +27,11 @@ module Store
       build_trait if @models[:trait]
       build_ref if @models[:reference]
       # TODO: still need to build agent, attribution, article, js_map, link, map, sound, video
+    end
+
+    def build_licenses
+      @licenses = {}
+      License.select("id, source_url").each { |lic| @licenses[lic.source_url] = lic.id }
     end
 
     def is_synonym?
@@ -135,16 +141,32 @@ module Store
       @models[:medium][:resource_id] = @resource.id
       @models[:medium][:harvest_id] = @harvest.id
       @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
-      # TODO: Default license values from resources (and partners)
-      @models[:medium][:license_id] ||= 1
+      lic_url = @models[:medium].delete(:license_url)
+      @models[:medium][:license_id] ||= find_or_build_license(lic_url)
+      debugger unless @stop
       # TODO: would be nice to have the format-definition (not the resource—might have multiple files for each) include
-      # default values for these.
+      # default values for subclass and format...
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
       build_references(:medium, MediaReference)
 
       # TODO: there are some other normalizations and checks we should do here.
       prepare_model_for_store(Medium, @models[:medium])
+    end
+
+    def find_or_build_license(url)
+      if url.blank?
+        return @resource.default_license&.id || License.public_domain.id
+      end
+      return @licenses[url] if @licenses.key?(url)
+      name =
+        if url =~ /creativecommons\/licenses/
+          "cc-" + url.split('/')[-2..-1].join(' ')
+        else
+          url.split('/').last.titleize
+        end
+      license = License.create(name: name, source_url: url, can_be_chosen_by_partners: false)
+      @licenses[url] = license.id
     end
 
     def build_references(key, klass)

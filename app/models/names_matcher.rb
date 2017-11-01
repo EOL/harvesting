@@ -72,6 +72,7 @@ class NamesMatcher
   end
 
   def start
+    @have_names = Harvest.completed.any?
     begin
       map_all_nodes_to_pages(@root_nodes)
     ensure
@@ -117,7 +118,8 @@ class NamesMatcher
 
   def map_node(node, opts = {})
     # NOTE: Surrogates never get matched in this version of the algorithm.
-    return pped(node, 'surrogate') if node.scientific_name.surrogate?
+    return unmapped(node, 'first_import') unless @have_names
+    return unmapped(node, 'surrogate') if node.scientific_name.surrogate?
     @ancestor = if node.scientific_name.virus?
                   # NOTE: If the node has been flagged (by gnparser) as a virus, then it may ONLY match other viruses.
                   Node.native_virus

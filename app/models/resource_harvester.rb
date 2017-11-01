@@ -2,6 +2,16 @@
 class ResourceHarvester
   attr_accessor :resource, :harvest, :format, :line_num, :diff, :file, :parser, :headers
 
+  class << self
+    def by_id(id)
+      ResourceHarvester.new(Resource.find(id)).start
+    end
+
+    def by_abbr(abbr)
+      ResourceHarvester.new(Resource.where(abbr: ENV["RESOURCE"]).first).start
+    end
+  end
+
   # NOTE: Composition pattern, here. Too much to have in one file:
   include Store::Boolean
   include Store::Nodes

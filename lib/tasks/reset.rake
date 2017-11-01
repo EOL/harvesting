@@ -17,12 +17,12 @@ namespace :reset do
 
     desc 'rebuild the database, re-running migrations. The DWH harvests is performed, then the resource with the ENV RESOURCE abbreviation is run.'
     task only: :first do
-      ResourceHarvester.new(Resource.where(abbr: ENV["RESOURCE"]).first).start
+      ResourceHarvester.by_abbr(ENV['RESOURCE'])
     end
 
     desc 'rebuild the database, re-running migrations. All seed harvests are performed.'
     task all: :first do
-      @all.each { |abbr| ResourceHarvester.new(Resource.where(abbr: abbr).first).start }
+      @all.each { |abbr| ResourceHarvester.by_abbr(abbr) }
     end
   end
 
@@ -34,11 +34,11 @@ namespace :reset do
 
   desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'
   task only: :first do
-    ResourceHarvester.new(Resource.where(abbr: ENV["RESOURCE"]).first).start
+    ResourceHarvester.by_abbr(ENV['RESOURCE'])
   end
 
   desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'
   task all: :first do
-    @all.each { |abbr| ResourceHarvester.new(Resource.where(abbr: abbr).first).start }
+    @all.each { |abbr| ResourceHarvester.by_abbr(abbr) }
   end
 end

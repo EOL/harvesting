@@ -1,5 +1,6 @@
 class Resource < ActiveRecord::Base
   belongs_to :partner, inverse_of: :resources
+  belongs_to :default_license, class_name: 'License', inverse_of: :resources
 
   has_many :formats, inverse_of: :resource
   has_many :harvests, inverse_of: :resource
@@ -61,6 +62,10 @@ class Resource < ActiveRecord::Base
       end
     end
     resource
+  end
+
+  def harvest
+    ResourceHarvester.new(self).start
   end
 
   def create_harvest_instance

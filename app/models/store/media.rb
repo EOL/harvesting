@@ -68,6 +68,11 @@ module Store
       @models[:medium][:name] = sanitize(val)
     end
 
+    def to_media_license(field, val)
+      @models[:medium] ||= {}
+      @models[:medium][:license_url] = val
+    end
+
     def to_media_description(field, val)
       @models[:medium] ||= {}
       @models[:medium][:description_verbatim] = val

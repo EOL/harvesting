@@ -4,7 +4,7 @@ class Medium < ActiveRecord::Base
   belongs_to :resource, inverse_of: :media
   belongs_to :harvest, inverse_of: :media
   belongs_to :node, inverse_of: :media
-  belongs_to :license
+  belongs_to :license, inverse_of: :media
   belongs_to :language
   belongs_to :location, inverse_of: :media
   belongs_to :bibliographic_citation

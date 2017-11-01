@@ -14,7 +14,7 @@ json.media @media do |medium|
   else
     json.base_url medium.base_url
   end
-  json.license medium.license.try(:url)
+  json.license medium.license.try(:source_url)
   if medium.language
     json.language do
       json.extract! medium.language, :group_code, :code
