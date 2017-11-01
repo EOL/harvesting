@@ -223,10 +223,7 @@ class ResourceHarvester
         log_info("row #{i}") if (i % 100_000).zero?
         @file = @parser.path_to_file
         @diff = @parser.diff
-        # We *could* skip this, but I prefer not to deal with the missing keys.
-        # TODO: this is conflated with model_builder. Extract.
-        @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
-                    trait: nil, identifiers: nil, location: nil, ref: nil }
+        reset_row
         begin
           @headers.each do |header|
             field = fields[header]

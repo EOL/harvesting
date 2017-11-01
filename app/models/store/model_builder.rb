@@ -7,6 +7,12 @@ module Store
       end
     end
 
+    def reset_row
+      # We *could* skip this, but I prefer not to deal with missing keys: makes the code cleaner
+      @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
+                  trait: nil, identifiers: nil, location: nil, ref: nil }
+    end
+
     def build_models
       @synonym = is_synonym?
       build_scientific_name if @models[:scientific_name]

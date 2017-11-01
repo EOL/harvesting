@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+if ARGV.length < 4
+  puts 'Usage: filter_file source_id_file source_pk_col target_file target_fk_col'
+  puts '       This currently only works on tab-separated files with ONE LINE for the header. They were most common.'
+  exit
+end
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'config', 'environment'))
+header = nil
+ids = {}
+quote = "\x00"
+CSV.foreach(ARGV[0], col_sep: "\t", quote_char: quote) do |row|
+  if header.nil?
+    header = row.index(ARGV[1])
+    raise "Couldn't find a header of #{ARGV[1]} in #{ARGV[0]}" if header.nil?
+    next
+  end
+  ids[row[header]] = true
+end
+puts "found #{ids.keys.size} IDs, examples: #{ids.keys[0..5].join("; ")}..."
+bn = File.basename(ARGV[2])
+path = ARGV[2].dup
+path = path.sub(bn, '')
+backup = "#{path}orig_#{bn}"
+if File.exist?(backup)
+  puts 'Already have a backup, skipping.'
+else
+  puts "Backing up #{ARGV[2]} as #{backup}"
+  `cp #{ARGV[2]} #{backup}`
+end
+rows = []
+header = nil
+headers = nil
+CSV.foreach(backup, col_sep: "\t", quote_char: quote) do |row|
+  if header.nil?
+    headers = row
+    header = row.index(ARGV[3])
+    raise "Couldn't find a header of #{ARGV[3]} in #{ARGV[2]}" if header.nil?
+    next
+  end
+  rows << row if ids.key?(row[header])
+end
+if rows.empty?
+  puts "!! NO MATCHING ROWS FOUND!"
+  exit
+end
+puts "Found #{rows.size} matching rows, writing:"
+CSV.open(ARGV[2], 'w', col_sep: "\t", quote_char: quote) do |csv|
+  csv << headers
+  rows.each { |row| csv << row }
+end
+puts "Done."
