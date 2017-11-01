@@ -334,13 +334,18 @@ class InitialContent < ActiveRecord::Migration
     end
 
     create_table :terms do |t|
+      t.integer :position
       t.string :uri, null: false, index: true
       t.string :name
       t.text :definition
       t.text :comment
       t.text :attribution
-      t.boolean :is_hidden_from_overview
-      t.boolean :is_hidden_from_glossary
+      t.text :ontology_information_url
+      t.text :ontology_source_url
+      t.boolean :is_hidden_from_overview, default: false
+      t.boolean :is_hidden_from_glossary, default: false
+      t.boolean :is_text_only, default: false
+      t.boolean :is_verbatim_only, default: false
       t.timestamps null: false
     end
 

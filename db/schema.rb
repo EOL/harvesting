@@ -563,15 +563,20 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   create_table "terms", force: :cascade do |t|
-    t.string   "uri",                     limit: 255,   null: false
-    t.string   "name",                    limit: 255
-    t.text     "definition",              limit: 65535
-    t.text     "comment",                 limit: 65535
-    t.text     "attribution",             limit: 65535
-    t.boolean  "is_hidden_from_overview"
-    t.boolean  "is_hidden_from_glossary"
-    t.datetime "created_at",                            null: false
-    t.datetime "updated_at",                            null: false
+    t.integer  "position",                 limit: 4
+    t.string   "uri",                      limit: 255,                   null: false
+    t.string   "name",                     limit: 255
+    t.text     "definition",               limit: 65535
+    t.text     "comment",                  limit: 65535
+    t.text     "attribution",              limit: 65535
+    t.text     "ontology_information_url", limit: 65535
+    t.text     "ontology_source_url",      limit: 65535
+    t.boolean  "is_hidden_from_overview",                default: false
+    t.boolean  "is_hidden_from_glossary",                default: false
+    t.boolean  "is_text_only",                           default: false
+    t.boolean  "is_verbatim_only",                       default: false
+    t.datetime "created_at",                                             null: false
+    t.datetime "updated_at",                                             null: false
   end
 
   add_index "terms", ["uri"], name: "index_terms_on_uri", using: :btree

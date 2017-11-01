@@ -69,7 +69,7 @@ class ResourceHarvester
       4
     ensure
       Searchkick.enable_callbacks
-      @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id})", cat: :starts) if @harvest
+      @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id})", cat: :ends) if @harvest
     end
   end
 

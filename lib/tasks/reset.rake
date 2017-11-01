@@ -3,7 +3,7 @@
 namespace :reset do
   namespace :full do
     desc 'rebuild the database, re-running migrations. Your gun, your foot: use caution. No harvests are performed.'
-    task empty: :environment do
+    task none: :environment do
       Rake::Task['db:drop'].invoke
       Rake::Task['db:create'].invoke
       Rake::Task['db:migrate'].invoke
@@ -11,7 +11,7 @@ namespace :reset do
     end
 
     desc 'rebuild the database, re-running migrations. Only the DWH harvest is performed.'
-    task first: :empty do
+    task first: :none do
       ResourceHarvester.new(Resource.first).start
     end
 

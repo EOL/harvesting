@@ -3,10 +3,28 @@ diff_path = Rails.public_path.join('diff')
 Dir.glob("#{tmp_path}/names*").each { |file| File.unlink(file) }
 Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 
-# rake reset:full_with_harvest
-# OR:
-# rake reset:first_harvest
-# Dynamic Hierarchy should be first:
+terms_file = Rails.public_path.join('data', 'terms.json')
+terms = []
+if File.exist?(terms_file)
+  puts "Found terms, reading..."
+  json = JSON.parse(File.read(terms_file))
+  json.each do |u|
+    u.delete('type') # unused
+    u.delete('hide_from_gui') # unused
+    u['is_hidden_from_overview'] = u.delete('exclude_from_exemplars')
+    u['is_hidden_from_glossary'] = u.delete('hide_from_glossary')
+    u['is_text_only'] = u.delete('value_is_text')
+    u['is_verbatim_only'] = u.delete('value_is_verbatim')
+    terms << u
+  end
+  puts "Importing terms..."
+  terms.in_groups_of(2000, false) do |group|
+    Term.import(group)
+  end
+else
+  puts "No terms file found (#{terms_file}), skipping. Your term URIs will not be defined."
+end
+
 dwh = Resource.quick_define(
   name: 'EOL Dynamic Hierarchy',
   abbr: 'DWH',
