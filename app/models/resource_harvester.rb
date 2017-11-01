@@ -25,7 +25,7 @@ class ResourceHarvester
   def initialize(resource, harvest = nil)
     # TODO: this is WAAAY too tighly coupled with the model builder class (at least)
     @resource = resource
-    @previous_harvest = @resource.harvests.completed.last
+    @previous_harvest = @resource.harvests&.completed&.last
     @harvest = nil
     @uris = {}
     @formats = {}
