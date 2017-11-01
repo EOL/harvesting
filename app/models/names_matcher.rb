@@ -247,7 +247,7 @@ class NamesMatcher
   def new_page_id
     # TODO: we need to be MIGHTY careful about colliding IDs, here, so we should be way more careful than this. ...but
     # to begin with, simply:
-    @new_page_id ||= Node.maximum(:page_id)
+    @new_page_id ||= Node.maximum(:page_id) || 1
     @new_page_id += 1
   end
 

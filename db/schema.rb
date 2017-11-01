@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171012152024) do
+ActiveRecord::Schema.define(version: 20171101123151) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -563,20 +563,20 @@ ActiveRecord::Schema.define(version: 20171012152024) do
   end
 
   create_table "terms", force: :cascade do |t|
-    t.integer  "position",                 limit: 4
     t.string   "uri",                      limit: 255,                   null: false
     t.string   "name",                     limit: 255
     t.text     "definition",               limit: 65535
     t.text     "comment",                  limit: 65535
     t.text     "attribution",              limit: 65535
-    t.text     "ontology_information_url", limit: 65535
-    t.text     "ontology_source_url",      limit: 65535
     t.boolean  "is_hidden_from_overview",                default: false
     t.boolean  "is_hidden_from_glossary",                default: false
-    t.boolean  "is_text_only",                           default: false
-    t.boolean  "is_verbatim_only",                       default: false
     t.datetime "created_at",                                             null: false
     t.datetime "updated_at",                                             null: false
+    t.text     "ontology_information_url", limit: 65535
+    t.text     "ontology_source_url",      limit: 65535
+    t.boolean  "is_text_only"
+    t.boolean  "is_verbatim_only"
+    t.integer  "position",                 limit: 4
   end
 
   add_index "terms", ["uri"], name: "index_terms_on_uri", using: :btree
