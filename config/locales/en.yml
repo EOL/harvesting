@@ -124,6 +124,7 @@ en:
       media: "This node has no associated media."
       traits: "This node has no associated traits."
     fields:
+      ancestors: "Ancestors:"
       authors: "Authors (semi-colon delimited):"
       canonical: "Canonical:"
       created: "Created:"
