@@ -440,6 +440,9 @@ class ResourceHarvester
 
   def log_err(e, msg)
     @harvest.log("#{msg}: #{e.message}", e: e, cat: :errors)
+    e.backtrace.each do |trace|
+      @harvest.log(trace, cat: :errors)
+    end
     @harvest.update_attribute(:failed_at, Time.now)
   end
 
