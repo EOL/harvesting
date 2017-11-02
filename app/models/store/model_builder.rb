@@ -143,7 +143,6 @@ module Store
       @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
       lic_url = @models[:medium].delete(:license_url)
       @models[:medium][:license_id] ||= find_or_build_license(lic_url)
-      debugger unless @stop
       # TODO: would be nice to have the format-definition (not the resource—might have multiple files for each) include
       # default values for subclass and format...
       @models[:medium][:subclass] ||= :image
