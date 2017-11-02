@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171102150737) do
+ActiveRecord::Schema.define(version: 20171102183913) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -410,11 +410,12 @@ ActiveRecord::Schema.define(version: 20171102150737) do
   add_index "nodes_references", ["reference_id"], name: "index_nodes_references_on_reference_id", using: :btree
 
   create_table "occurrence_metadata", force: :cascade do |t|
-    t.integer "harvest_id",        limit: 4
-    t.integer "occurence_id",      limit: 4
-    t.integer "predicate_term_id", limit: 4
-    t.integer "object_term_id",    limit: 4
-    t.text    "literal",           limit: 65535
+    t.integer "harvest_id",             limit: 4
+    t.integer "occurrence_id",          limit: 4
+    t.integer "predicate_term_id",      limit: 4
+    t.integer "object_term_id",         limit: 4
+    t.text    "literal",                limit: 65535
+    t.string  "occurrence_resource_pk", limit: 255
   end
 
   add_index "occurrence_metadata", ["harvest_id"], name: "index_occurrence_metadata_on_harvest_id", using: :btree

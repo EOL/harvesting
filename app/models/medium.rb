@@ -61,11 +61,10 @@ class Medium < ActiveRecord::Base
   end
 
   def basename
-    "#{resource_id}.#{id}"
+    "#{resource_id}.#{resource_pk.tr('^-_A-Za-z0-9', '_')}"
   end
 
   def download_and_resize
-    harvest.log("download_and_resize (#{id})")
     available_sizes = {}
     d_time = nil
     unless Dir.exist?(dir)
@@ -79,14 +78,18 @@ class Medium < ActiveRecord::Base
       image = Image.read(get_url).first # No animations supported!
       d_time = Time.now
     rescue Magick::ImageMagickError => e
-      logger.error("Couldn't get image #{get_url} for #{url}")
+      mess = "Couldn't get image #{get_url} for #{url}"
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
       return nil
     end
     orig_w = image.columns
     orig_h = image.rows
     image.format = 'JPEG'
     if File.exist?(orig_filename)
-      logger.warn "#{orig_filename} already exists. Skipping."
+      mess = "#{orig_filename} already exists. Skipping."
+      Delayed::Worker.logger.warn(mess)
+      harvest.log(mess, cat: :warns)
     else
       image.write(orig_filename)
       FileUtils.chmod(0o644, orig_filename)
@@ -99,6 +102,7 @@ class Medium < ActiveRecord::Base
     update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
                       unmodified_url: unmodified_url, base_url: base_url)
     image&.destroy! # Clear memory
+    harvest.log("download_and_resize completed for Medium.find(#{id}) <IMG src='#{unmodified_url}' />")
   end
 
   def safe_name
@@ -109,7 +113,9 @@ end
 def crop_image(size)
   filename = "#{dir}/#{basename}.#{size}.jpg"
   if File.exist?(filename)
-    logger.warn "#{filename} already exists. Skipping."
+    mess = "#{filename} already exists. Skipping."
+    Delayed::Worker.logger.warn(mess)
+    harvest.log(mess, cat: :warns)
     return false
   end
   (w, h) = size.split('x').map(&:to_i)

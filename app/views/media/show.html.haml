@@ -1,6 +1,6 @@
 %h1= @medium.safe_name
-- if medium.base_url.nil? # The image has not been downloaded.
-  - image_tag("#{root_url}#{medium.default_base_url}.260x190.jpg")
+- if @medium.base_url.nil? # The image has not been downloaded.
+  - image_tag("#{root_url}#{@medium.default_base_url}.260x190.jpg")
 - else
   = image_tag(@medium.base_url + ".260x190.jpg")
 .ui.list
