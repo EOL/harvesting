@@ -8,7 +8,7 @@ class ResourceHarvester
     end
 
     def by_abbr(abbr)
-      ResourceHarvester.new(Resource.where(abbr: ENV["RESOURCE"]).first).start
+      ResourceHarvester.new(Resource.where(abbr: abbr).first).start
     end
   end
 
