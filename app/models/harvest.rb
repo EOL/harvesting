@@ -5,6 +5,7 @@ class Harvest < ActiveRecord::Base
   has_many :nodes, inverse_of: :harvest, dependent: :destroy
   has_many :scientific_names, through: :nodes, source: 'scientific_names'
   has_many :occurrences, inverse_of: :harvest, dependent: :destroy
+  has_many :occurrence_metadata, inverse_of: :harvest, dependent: :destroy
   has_many :traits, inverse_of: :harvest, dependent: :destroy
   has_many :meta_traits, inverse_of: :harvest, dependent: :destroy
   has_many :identifiers, inverse_of: :harvest, dependent: :destroy

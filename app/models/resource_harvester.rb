@@ -364,6 +364,8 @@ class ResourceHarvester
     # Occurrences to nodes:
     log_info('Occurrences to nodes...')
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    propagate_id(OccurrenceMetadatum, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+                                      set: 'occurrence_id', with: 'id')
     # Traits to nodes (through occurrences)
     log_info('traits to nodes...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk', set: 'node_id', with: 'node_id')

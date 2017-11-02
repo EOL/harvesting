@@ -201,13 +201,13 @@ module Store
         @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage, type: 'lifestage').try(:id)
       end
       # TODO: there are some other normalizations and checks we should do here, # I expect.
-      occurrence = prepare_model_for_store(Occurrence, @models[:occurrence])
+      prepare_model_for_store(Occurrence, @models[:occurrence])
       meta.each do |key, value|
         datum = {}
-        datum[:occurence_id] = occurrence.id
+        datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
         datum[:predicate_term_id] = find_or_create_term(key, type: 'meta-predicate').id
         datum = convert_meta_value(datum, value)
-        prepare_model_for_store(OccurrenceMetadata, datum)
+        prepare_model_for_store(OccurrenceMetadatum, datum)
       end
     end
 
