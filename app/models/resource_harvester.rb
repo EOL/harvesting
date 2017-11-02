@@ -414,20 +414,8 @@ class ResourceHarvester
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
   end
 
-  # I AM NOT A FAN OF SQL... but this is **way** more efficient than alternatives:
   def propagate_id(klass, options = {})
-    fk = options[:fk]
-    set = options[:set]
-    with_field = options[:with]
-    (o_table, o_field) = options[:other].split('.')
-    sql = "UPDATE `#{klass.table_name}` t JOIN `#{o_table}` o ON (t.`#{fk}` = o.`#{o_field}` AND t.harvest_id = ?) "\
-          "SET t.`#{set}` = o.`#{with_field}`"
-    clean_execute(klass, [sql, @harvest.id])
-  end
-
-  def clean_execute(klass, args)
-    clean_sql = klass.send(:sanitize_sql, args)
-    klass.connection.execute(clean_sql)
+    klass.propagate_id(options.merge(harvest_id: @harvest.id))
   end
 
   def log_info(what)

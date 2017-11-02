@@ -16,9 +16,8 @@ class Node < ActiveRecord::Base
   has_many :identifiers, inverse_of: :node, dependent: :destroy
   has_many :nodes_references, inverse_of: :node, dependent: :destroy
   has_many :references, through: :nodes_references
-  has_many :node_ancestors, inverse_of: :node, dependent: :destroy
+  has_many :node_ancestors, -> { order(:depth) }, inverse_of: :node, dependent: :destroy
   has_many :descendants, class_name: 'NodeAncestor', inverse_of: :ancestor, foreign_key: :ancestor_id
-  has_many :ancestors, through: :node_ancestors
   has_many :children, class_name: 'Node', foreign_key: :parent_id, inverse_of: :parent
 
   scope :root, -> { where('parent_id IS NULL') }
@@ -26,7 +25,7 @@ class Node < ActiveRecord::Base
 
   # NOTE: special scope used by Searchkick
   scope :search_import, -> {
-    where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children)
+    where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children, node_ancestors: :ancestor)
   }
 
   # Denotes the context in which the (non-zero) landmark ID should be used. Additional description:
@@ -43,7 +42,7 @@ class Node < ActiveRecord::Base
       synonyms: scientific_names.map(&:canonical),
       synonym_authors: all_authors,
       canonical: canonical,
-      ancestor_page_ids: ancestors.map(&:page_id).compact,
+      ancestor_page_ids: node_ancestors.map(&:ancestor).map(&:page_id).compact,
       children: child_names,
       is_hybrid: scientific_name.try(:hybrid?),
       is_virus: scientific_name.try(:virus?),

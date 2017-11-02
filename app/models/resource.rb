@@ -68,6 +68,10 @@ class Resource < ActiveRecord::Base
     ResourceHarvester.new(self).start
   end
 
+  def resume
+    ResourceHarvester.new(self).resume
+  end
+
   def create_harvest_instance
     harvest = Harvest.create(resource_id: id)
     harvests << harvest

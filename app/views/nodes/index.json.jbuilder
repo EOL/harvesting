@@ -9,5 +9,5 @@ json.nodes @nodes do |node|
   json.identifiers node.identifiers do |ider|
     json.extract! ider, :identifier
   end
-  json.ancestors node.ancestors.map(&:resource_pk)
+  json.ancestors node.node_ancestors.map(&:ancestor_fk)
 end

@@ -41,6 +41,7 @@ class NamesMatcher
     how[:where][:canonical] = name.canonical
     how[:where][:ancestor_page_ids] = @ancestor.page_id if @ancestor
     how[:where][:is_hybrid] = true if name.hybrid?
+    how[:includes] = [:scientific_name]
     how.delete(:where) if how[:where].empty?
     Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
   end

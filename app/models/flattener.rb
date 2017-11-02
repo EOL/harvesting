@@ -48,9 +48,10 @@ class Flattener
   def build_node_ancestors
     @node_ancestors = []
     @ancestry.keys.each do |child|
-      @ancestry[child].each do |ancestor|
+      @ancestry[child].each_with_index do |ancestor, depth|
         next if ancestor.nil? # No need to store this one.
-        @node_ancestors << NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id)
+        @node_ancestors <<
+          NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
       end
     end
     # Without returning something simple, the return value is huge, slowing things down.
@@ -61,5 +62,6 @@ class Flattener
     NodeAncestor.where(resource_id: @resource.id).delete_all
     # TODO: error-handling
     NodeAncestor.import! @node_ancestors
+    NodeAncestor.propagate_id(fk: 'ancestor_id', other: 'nodes.id', set: 'ancestor_fk', with: 'resource_pk')
   end
 end

@@ -57,7 +57,11 @@ class Medium < ActiveRecord::Base
   end
 
   def default_base_url
-    "#{path}/#{id}"
+    "#{path}/#{basename}"
+  end
+
+  def basename
+    "#{resource_id}.#{id}"
   end
 
   def download_and_resize
@@ -68,7 +72,7 @@ class Medium < ActiveRecord::Base
       FileUtils.mkdir_p(dir)
       FileUtils.chmod(0o755, dir)
     end
-    orig_filename = "#{dir}/#{id}.jpg"
+    orig_filename = "#{dir}/#{basename}.jpg"
     begin
       # TODO: we really should use https. It will be the only thing availble, at some point...
       get_url = source_url.sub(/^https/, 'http')
@@ -103,7 +107,7 @@ class Medium < ActiveRecord::Base
 end
 
 def crop_image(size)
-  filename = "#{dir}/#{id}.#{size}.jpg"
+  filename = "#{dir}/#{basename}.#{size}.jpg"
   if File.exist?(filename)
     logger.warn "#{filename} already exists. Skipping."
     return false
