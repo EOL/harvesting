@@ -12,12 +12,38 @@ module Store
 
     def to_occurrences_sex(field, val)
       @models[:occurrence] ||= {}
-      @models[:occurrence][:sex] = val
+      @models[:occurrence][:sex] = get_sex(val)
     end
 
     def to_occurrences_lifestage(field, val)
       @models[:occurrence] ||= {}
-      @models[:occurrence][:lifestage] = val
+      @models[:occurrence][:lifestage] = get_lifestage(val)
+    end
+
+    def get_sex(uri)
+      @sexes ||= {}
+      get_meta_field(@sexes, uri, 'http://rs.tdwg.org/dwc/terms/sex')
+    end
+
+    def get_lifestage(uri)
+      @lifestages ||= {}
+      get_meta_field(@lifestages, uri, 'http://rs.tdwg.org/dwc/terms/lifeStage')
+    end
+
+    def get_meta_field(cache, uri, meta_uri)
+      return uri unless uri =~ URI::regexp
+      name =
+        if cache.key?(uri)
+          cache[uri]
+        elsif Term.exists?(uri: uri)
+          cache[uri] = Term.find_by_uri(uri).name
+        else
+          log_warning("No term exists for sex value of '#{uri}' (forced to use full URI)")
+          cache[uri] = uri
+        end
+      @models[:occurrence][:meta] ||= {}
+      @models[:occurrence][:meta][meta_uri] = uri
+      name
     end
 
     def to_occurrences_lat(field, val)

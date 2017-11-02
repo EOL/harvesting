@@ -7,6 +7,10 @@ Rails.application.routes.draw do
   resources :harvests
   resources :media, only: [:show]
   resources :nodes, only: [:show]
+  # Required for "association" links (e.g.: in the media view)
+  resources :licenses, only: [:show]
+  resources :languages, only: [:show]
+  resources :bibliographic_citations, only: [:show]
   resources :resources do
     resources :formats, except: [:destroy]
     resources :media, only: [:index, :show]
