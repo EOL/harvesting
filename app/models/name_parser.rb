@@ -45,14 +45,12 @@ class NameParser
   end
 
   def update_names(updates)
-    begin
-      ScientificName.import(updates,
-        on_duplicate_key_update: %i[authorship canonical genus hybrid infrageneric_epithet infraspecific_epithet
-        parse_quality specific_epithet surrogate uninomial verbatim virus warnings year])
-    rescue => e
-      debugger
-      3
-    end
+    ScientificName.import(
+      updates,
+      on_duplicate_key_update:
+        %i[authorship canonical genus hybrid infrageneric_epithet infraspecific_epithet normalized parse_quality
+           publication remarks specific_epithet surrogate uninomial verbatim virus warnings year]
+    )
   end
 
   def loop_over_names_in_batches
@@ -155,6 +153,7 @@ class NameParser
       end
       norm = norm[0..249] if norm.size > 250 # Forced to simply truncate it if we couldn't parse it.
     end
+    norm = result['verbatim'] if norm.blank?
 
     return attributes.merge(
       normalized: norm,
