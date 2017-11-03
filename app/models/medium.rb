@@ -100,7 +100,7 @@ class Medium < ActiveRecord::Base
     end
     unmodified_url = "#{default_base_url}.jpg"
     update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
-                      unmodified_url: unmodified_url, base_url: base_url)
+                      unmodified_url: unmodified_url, base_url: default_base_url)
     image&.destroy! # Clear memory
     harvest.log("download_and_resize completed for Medium.find(#{id}) <IMG src='#{unmodified_url}' />")
   end
@@ -108,29 +108,36 @@ class Medium < ActiveRecord::Base
   def safe_name
     name.blank? ? "#{subclass.titleize} of #{node.canonical}" : name
   end
-end
 
-def crop_image(image, size)
-  filename = "#{dir}/#{basename}.#{size}.jpg"
-  if File.exist?(filename)
-    mess = "#{filename} already exists. Skipping."
-    Delayed::Worker.logger.warn(mess)
-    harvest.log(mess, cat: :warns)
-    return false
-  end
-  (w, h) = size.split('x').map(&:to_i)
-  this_image =
-    if w == h
-      image.resize_to_fill(w, h).crop(NorthWestGravity, w, h)
-    else
-      image.resize_to_fit(w, h)
+  def crop_image(image, size)
+    filename = "#{dir}/#{basename}.#{size}.jpg"
+    if File.exist?(filename)
+      mess = "#{filename} already exists. Skipping."
+      Delayed::Worker.logger.warn(mess)
+      harvest.log(mess, cat: :warns)
+      return get_image_size(filename)
     end
-  new_w = this_image.columns
-  new_h = this_image.rows
-  this_image.strip! # Cleans up properties
-  this_image.write(filename) { self.quality = 80 }
-  this_image.destroy! # Reclaim memory.
-  # Note: we *should* honor crops. But none of these will have been cropped, so I am skipping it for now.
-  FileUtils.chmod(0o644, filename)
-  "#{new_w}x#{new_h}"
+    (w, h) = size.split('x').map(&:to_i)
+    this_image =
+      if w == h
+        image.resize_to_fill(w, h).crop(NorthWestGravity, w, h)
+      else
+        image.resize_to_fit(w, h)
+      end
+    new_w = this_image.columns
+    new_h = this_image.rows
+    this_image.strip! # Cleans up properties
+    this_image.write(filename) { self.quality = 80 }
+    this_image.destroy! # Reclaim memory.
+    # Note: we *should* honor crops. But none of these will have been cropped (yet), so I am skipping it for now.
+    FileUtils.chmod(0o644, filename)
+    "#{new_w}x#{new_h}"
+  end
+
+  def get_image_size(filename)
+    this_image = Image.read(filename).first
+    this_w = this_image.columns
+    this_h = this_image.rows
+    return "#{this_w}x#{this_h}"
+  end
 end
