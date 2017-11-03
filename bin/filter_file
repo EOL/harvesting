@@ -9,7 +9,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'config', 'envi
 header = nil
 ids = {}
 quote = "\x00"
-CSV.foreach(ARGV[0], col_sep: "\t", quote_char: quote) do |row|
+CSV.foreach(ARGV[0], col_sep: "\t", quote_char: quote, encoding: 'ISO-8859-1') do |row|
   if header.nil?
     header = row.index(ARGV[1])
     raise "Couldn't find a header of #{ARGV[1]} in #{ARGV[0]}" if header.nil?
@@ -32,7 +32,7 @@ rows = []
 header = nil
 headers = nil
 fk_head = ARGV[3] || ARGV[1]
-CSV.foreach(backup, col_sep: "\t", quote_char: quote) do |row|
+CSV.foreach(backup, col_sep: "\t", quote_char: quote, encoding: 'ISO-8859-1') do |row|
   if header.nil?
     headers = row
     header = row.index(fk_head)
@@ -46,7 +46,7 @@ if rows.empty?
   exit
 end
 puts "Found #{rows.size} matching rows, writing:"
-CSV.open(ARGV[2], 'w', col_sep: "\t", quote_char: quote) do |csv|
+CSV.open(ARGV[2], 'w', col_sep: "\t", quote_char: quote, encoding: 'ISO-8859-1') do |csv|
   csv << headers
   rows.each { |row| csv << row }
 end

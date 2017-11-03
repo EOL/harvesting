@@ -117,7 +117,7 @@ class ResourceHarvester
       end
       raise(Exceptions::ColumnUnmatched, expected_by_file.join(',')) if expected_by_file.size.positive?
       @file = @format.converted_csv_path
-      CSV.open(@file, 'wb') do |csv|
+      CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
         @parser.rows_as_hashes do |row, line|
           @line_num = line
           csv_row = []
@@ -152,7 +152,7 @@ class ResourceHarvester
     each_format do
       unless @converted[@format.id]
         @file = @format.converted_csv_path
-        CSV.open(@file, 'wb') do |csv|
+        CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
           @parser.rows_as_hashes do |row, line|
             csv_row = []
             @headers.each do |header|
