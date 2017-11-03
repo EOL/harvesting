@@ -1,7 +1,11 @@
 class ResourcesController < ApplicationController
   def index
     params[:per_page] ||= 50
-    @resources = prep_for_api(Resource.order(:name).includes([:partner]))
+    @resources = Resource.order(:name).includes([:partner])
+    unless params[:all]
+      @resources = @resources.where(publish_status: Resource.publish_statuses[:published])
+    end
+    @resources = prep_for_api(@resources, updated: true)
   end
 
   def show

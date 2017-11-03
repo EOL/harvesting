@@ -1,4 +1,7 @@
 %h1= t("resources.index.header")
+- unless params[:all]
+  .ui.button
+    = link_to(t("resources.actions.show_all"), resources_path(all: true))
 .ui.list
   - @resources.each do |resource|
     .item= link_to(resource.name, resource)

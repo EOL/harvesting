@@ -168,6 +168,7 @@ en:
         zero: "Added harvest job to the queue; there are no jobs ahead of it."
         one: "Added harvest job to the queue; there is only one job ahead of it."
         other: "Added harvest job to the queue, with %{count} jobs ahead of it."
+      show_all: "Include un-harvested"
     create:
       action: "create a new resource"
       header: "Create a Resource"
