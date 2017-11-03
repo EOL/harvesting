@@ -23,9 +23,8 @@
       .ui.inline.cookie.nag
         %span.title= t("nags.beta")
         %i.close.icon
-
       - flash.each do |key, value|
-        .ui.inline.nag{ class: "flash-#{key}" }
-          %span.title= value.html_safe
+        .ui.message{ class: "flash-#{key}" }
           %i.close.icon
+          %p= value.to_s.html_safe
       = content_for?(:body) ? yield(:body) : yield

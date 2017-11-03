@@ -95,7 +95,7 @@ class Medium < ActiveRecord::Base
       FileUtils.chmod(0o644, orig_filename)
     end
     Medium.sizes.each do |size|
-      available = crop_image(size)
+      available = crop_image(image, size)
       available_sizes[size] = available if available
     end
     unmodified_url = "#{default_base_url}.jpg"
@@ -110,7 +110,7 @@ class Medium < ActiveRecord::Base
   end
 end
 
-def crop_image(size)
+def crop_image(image, size)
   filename = "#{dir}/#{basename}.#{size}.jpg"
   if File.exist?(filename)
     mess = "#{filename} already exists. Skipping."

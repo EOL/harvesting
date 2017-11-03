@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   resources :languages, only: [:show]
   resources :bibliographic_citations, only: [:show]
   resources :resources do
+    get :harvest
     resources :formats, except: [:destroy]
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]

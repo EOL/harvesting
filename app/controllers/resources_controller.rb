@@ -17,6 +17,14 @@ class ResourcesController < ApplicationController
     end
   end
 
+  def harvest
+    @resource = Resource.find(params[:resource_id])
+    count = Delayed::Job.where(locked_at: nil).count
+    @resource.delay.harvest
+    flash[:notice] = t("resources.actions.harvest_enqueued", count: count)
+    redirect_to @resource
+  end
+
   def new
     @resource = Resource.new
   end

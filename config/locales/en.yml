@@ -163,6 +163,11 @@ en:
   resources:
     actions:
       back: "back to all resources"
+      harvest: "harvest (delayed job)"
+      harvest_enqueued:
+        zero: "Added harvest job to the queue; there are no jobs ahead of it."
+        one: "Added harvest job to the queue; there is only one job ahead of it."
+        other: "Added harvest job to the queue, with %{count} jobs ahead of it."
     create:
       action: "create a new resource"
       header: "Create a Resource"

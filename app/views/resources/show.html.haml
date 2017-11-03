@@ -7,6 +7,8 @@
     •
     = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
 
+.ui.button
+  = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
 
 .ui.list
   - unless @resource.abbr.blank?
