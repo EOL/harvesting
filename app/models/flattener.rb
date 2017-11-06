@@ -61,6 +61,7 @@ class Flattener
   def update_tables
     NodeAncestor.where(resource_id: @resource.id).delete_all
     # TODO: error-handling
+    puts("Flattening #{@node_ancestors.size} ancestors")
     NodeAncestor.import! @node_ancestors
     NodeAncestor.propagate_id(fk: 'ancestor_id', other: 'nodes.id', set: 'ancestor_fk', with: 'resource_pk')
   end
