@@ -20,7 +20,7 @@ module Store
       @models[:node] ||= {}
       @models[:scientific_name] ||= {}
       name = val =~ /^".*"$/ ? val.sub(/^"/, '').sub(/"$/, '') : val
-      @models[:scientific_name][:verbatim] = val
+      @models[:scientific_name][:verbatim] = name
     end
 
     def to_nodes_parent_fk(field, val)
