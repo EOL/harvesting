@@ -6,7 +6,7 @@ class NamesMatcher
   def initialize(harvest)
     @harvest = harvest
     @resource = @harvest.resource
-    @root_nodes = @resource.nodes.published.root
+    @root_nodes = @resource.nodes.published.includes(:scientific_name).root
     @node_updates = []
     @strategies = %i[
       match_canonical_and_authors_in_eol
@@ -113,7 +113,7 @@ class NamesMatcher
     end
     return unless node.children.any?
     @ancestors.push(node)
-    map_nodes(node.children)
+    map_nodes(node.children.includes(:scientific_name))
     @ancestors.pop
   end
 

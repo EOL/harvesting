@@ -7,6 +7,7 @@ namespace :reset do
       Rake::Task['db:drop'].invoke
       Rake::Task['db:create'].invoke
       Rake::Task['db:migrate'].invoke
+      Rake::Task['searchkick:reindex:all'].invoke
       Rake::Task['db:seed'].invoke
     end
 
@@ -29,6 +30,7 @@ namespace :reset do
   desc 'reset the database, using the schema instead of migrations. Only the DWH harvest is performed.'
   task first: :environment do
     Rake::Task['db:reset'].invoke
+    Rake::Task['searchkick:reindex:all'].invoke
     ResourceHarvester.new(Resource.first).start
   end
 
