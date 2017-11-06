@@ -3,6 +3,8 @@
 class Format < ActiveRecord::Base
   default_scope { order(represents: :asc) }
 
+  before_destroy :remove_files
+
   has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :destroy
   has_many :hlogs, inverse_of: :format, dependent: :destroy
 
@@ -93,5 +95,10 @@ class Format < ActiveRecord::Base
 
   def name
     "#{represents} for #{resource.name}"
+  end
+
+  def remove_files
+    File.unlink(converted_csv_path) if File.exist?(converted_csv_path)
+    File.unlink(diff_path) if File.exist?(diff_path)
   end
 end
