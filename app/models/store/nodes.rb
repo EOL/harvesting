@@ -19,6 +19,7 @@ module Store
     def to_nodes_scientific(field, val)
       @models[:node] ||= {}
       @models[:scientific_name] ||= {}
+      name = val =~ /^".*"$/ ? val.sub(/^"/, '').sub(/"$/, '') : val
       @models[:scientific_name][:verbatim] = val
     end
 
