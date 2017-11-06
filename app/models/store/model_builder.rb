@@ -63,12 +63,10 @@ module Store
       prepare_model_for_store(Node, @models[:node])
     end
 
-    # TODO: an update of this type might be trickier to handle than I have here.
-    # e.g.: The only change on this row was to set "Karninvora" to "Carnivora";
-    # we do not unpublish "Karnivora" (rightly, because we don't know whether
-    # it's actually used elsewhere), so it will still exist and still be
-    # published and will still have children that it shouldn't. But, as
-    # mentioned, this is a difficult case to detect.
+    # TODO: an UPDATE of this type might be trickier to handle than I have here. e.g.: The only change on this row was
+    # to set "Karninvora" to "Carnivora"; we do not unpublish "Karnivora" (rightly, because we don't know whether it's
+    # actually used elsewhere), so it will still exist and still be published and will still have children that it
+    # shouldn't. But, as mentioned, this is a difficult case to detect.
     def build_ancestors
       ancestry = []
       prev = nil
@@ -102,7 +100,8 @@ module Store
             debugger
             puts "phoey!"
           end
-          @nodes_by_ancestry[ancestry_joined] = [sci_name] # Remember that we don't need to do this again.
+          @nodes_by_ancestry[ancestry_joined] ||= [] # Remember that we don't need to do this again.
+          @nodes_by_ancestry[ancestry_joined] << sci_name
         end
         prev = ancestor_pk
       end

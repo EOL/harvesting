@@ -166,7 +166,8 @@ class ResourceHarvester
       cmd = "/usr/bin/sort #{@format.converted_csv_path} > "\
             "#{@format.converted_csv_path}_sorted"
       log_cmd(cmd)
-      if system(cmd)
+      # NOTE: the LC_ALL fixes a problem with unicode characters.
+      if system({'LC_ALL' => 'C'}, cmd)
         FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
       else
         raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
@@ -205,9 +206,8 @@ class ResourceHarvester
     File.unlink(@format.diff) if File.exist?(@format.diff)
     cmd = "/usr/bin/diff #{old_fmt.converted_csv_path} "\
       "#{@format.converted_csv_path} > #{@format.diff}"
-    # TODO: We can't trust the exit code! diff exits 0 if the files are the
-    # same, and 1 if not.
-    run_cmd(cmd)
+    # TODO: We can't trust the exit code! diff exits 0 if the files are the same, and 1 if not.
+    run_cmd(cmd, {'LC_ALL' => 'C'})
   end
 
   def fake_diff_from_nothing
@@ -216,9 +216,14 @@ class ResourceHarvester
     run_cmd("echo \".\" >> #{@format.diff}")
   end
 
-  def run_cmd(cmd)
+  def run_cmd(cmd, env = {})
     log_cmd(cmd)
-    system(cmd)
+    # NOTE: the LC_ALL fixes a problem with diff.
+    if env.blank?
+      system(cmd)
+    else
+      system(env, cmd)
+    end
   end
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
@@ -299,7 +304,9 @@ class ResourceHarvester
         models.in_groups_of(group_size, false) do |group|
           log_info "... #{g_count * group_size}" if (g_count % 10).zero?
           g_count += 1
-          klass.import! group
+          # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
+          # DB validations are adequate and we want to go faster:
+          klass.import! group, validate: false
         end
       rescue => e
         debugger
