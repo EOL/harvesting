@@ -11,6 +11,8 @@ class Harvest < ActiveRecord::Base
   has_many :identifiers, inverse_of: :harvest, dependent: :destroy
   has_many :media, inverse_of: :harvest, dependent: :destroy
 
+  delegate :resume, to: :resource
+
   # NOTE: Be careful. #completed is this scope, #completed! sets the stage to completed, and completed? checks that the
   # stage is "completed"...
   scope :completed, -> { where("completed_at IS NOT NULL") }
