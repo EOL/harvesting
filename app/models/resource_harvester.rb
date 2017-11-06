@@ -155,6 +155,8 @@ class ResourceHarvester
         CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
           @parser.rows_as_hashes do |row, line|
             csv_row = []
+            # Un-quote cells; we use a special quote char:
+            line.map! { |cell| cell =~ /^".*"$/ ? cell.sub(/^"/, '').sub(/"$/, '') : cell  }
             @headers.each do |header|
               csv_row << row[header]
             end
