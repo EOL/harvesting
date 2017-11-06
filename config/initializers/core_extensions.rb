@@ -7,7 +7,7 @@ class ActiveRecord::Base
       with_field = options[:with]
       (o_table, o_field) = options[:other].split('.')
       sql  = "UPDATE `#{table_name}` t JOIN `#{o_table}` o ON (t.`#{fk}` = o.`#{o_field}`"
-      sql += " AND t.harvest_id = ? AND o.harvest_id = ?" if options[:harvest_id]
+      sql += " AND t.harvest_id = ? AND o.harvest_id = t.harvest_id" if options[:harvest_id]
       sql += ") SET t.`#{set}` = o.`#{with_field}`"
       clean_execute([sql, options[:harvest_id]])
     end
