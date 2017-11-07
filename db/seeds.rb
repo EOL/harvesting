@@ -6,11 +6,32 @@ Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 Rails.cache.clear
 License.public_domain
 
+file = Rails.root.join('db', 'data', 'datasets.csv')
+if File.exist?(file)
+  puts '.. Importing datasets'
+  datasets = []
+  headers = nil
+  CSV.foreach(file, encoding: 'ISO-8859-1') do |row|
+    if headers.nil?
+      headers = row
+    else
+      data = {}
+      row.each_with_index do |field, i|
+        data[headers[i]] = field
+      end
+      datasets << data
+    end
+  end
+  Dataset.import(datasets)
+else
+  puts "NO datasets file found (#{file}), skipping. Your names attributions may be missing."
+end
+
 terms_file = Rails.public_path.join('data', 'terms.json')
 terms = []
 if File.exist?(terms_file)
   Term.delete_all
-  puts "Found terms, reading..."
+  puts '.. Importing terms'
   json = JSON.parse(File.read(terms_file))
   json.each do |u|
     u['used_for'] = u.delete('type')
@@ -21,7 +42,6 @@ if File.exist?(terms_file)
     u['is_verbatim_only'] = u.delete('value_is_verbatim')
     terms << u
   end
-  puts "Importing terms..."
   terms.in_groups_of(2000, false) do |group|
     Term.import(group)
   end
@@ -59,7 +79,7 @@ dwh = Resource.quick_define(
       { 'taxonRemarks' => 'to_nodes_remarks' },
       { 'namePublishedIn' => 'to_nodes_publication' },
       { 'furtherInformationURL' => 'to_nodes_further_information_url' },
-      { 'datasetID' => 'to_ignored' },
+      { 'datasetID' => 'to_nodes_dataset_id' },
       { 'EOLid' => 'to_nodes_page_id' },
       { 'EOLidAnnotations' => 'to_ignored' },
       { 'Landmark' => 'to_nodes_landmark'}
@@ -623,8 +643,8 @@ flickr = Resource.quick_define(
       { 'type' => 'to_media_type', can_be_empty: false },
       { 'format' => 'to_media_subtype' },
       { 'title' => 'to_media_name' },
-      { 'accessURI' => 'to_media_source_url' },
-      { 'furtherInformationURL' => 'to_media_source_page_url' },
+      { 'accessURI' => 'to_media_source_page_url' },
+      { 'furtherInformationURL' => 'to_media_source_url' },
       { 'CreateDate' => 'to_ignored' },
       { 'language' => 'to_media_language' },
       { 'UsageTerms' => 'to_media_license' },

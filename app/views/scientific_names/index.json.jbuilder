@@ -15,6 +15,8 @@ json.scientific_names @names do |name|
       .sub(name.specific_epithet, "<i>#{name.specific_epithet}</i>")
   end
 
+  json.attribution name.attribution_html
+
   json.italicized ital
   json.canonical_form canon
   json.is_preferred name.node.scientific_name_id == name.id # TODO: make primary field? Note sure.

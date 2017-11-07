@@ -86,6 +86,7 @@ class Medium < ActiveRecord::Base
     orig_w = image.columns
     orig_h = image.rows
     image.format = 'JPEG'
+    image.auto_orient
     if File.exist?(orig_filename)
       mess = "#{orig_filename} already exists. Skipping."
       Delayed::Worker.logger.warn(mess)

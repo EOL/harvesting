@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171102183913) do
+ActiveRecord::Schema.define(version: 20171107145752) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -123,6 +123,17 @@ ActiveRecord::Schema.define(version: 20171102183913) do
   end
 
   add_index "data_references", ["data_type", "data_id"], name: "index_data_references_on_data_type_and_data_id", using: :btree
+
+  create_table "datasets", id: false, force: :cascade do |t|
+    t.string "id",        limit: 255,   null: false
+    t.text   "name",      limit: 65535, null: false
+    t.text   "link",      limit: 65535, null: false
+    t.string "publisher", limit: 255
+    t.string "supplier",  limit: 255
+    t.text   "metadata",  limit: 65535
+  end
+
+  add_index "datasets", ["id"], name: "index_datasets_on_id", using: :btree
 
   create_table "delayed_jobs", force: :cascade do |t|
     t.integer  "priority",   limit: 4,     default: 0, null: false
@@ -536,6 +547,7 @@ ActiveRecord::Schema.define(version: 20171102183913) do
     t.boolean "surrogate"
     t.boolean "virus"
     t.integer "removed_by_harvest_id",     limit: 4
+    t.string  "dataset_id",                limit: 255
   end
 
   add_index "scientific_names", ["harvest_id"], name: "index_scientific_names_on_harvest_id", using: :btree

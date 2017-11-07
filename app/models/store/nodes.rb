@@ -43,6 +43,11 @@ module Store
       @models[:node][:further_information_url] = val
     end
 
+    def to_nodes_dataset_id(field, val)
+      @models[:scientific_name] ||= {}
+      @models[:scientific_name][:dataset_id] = val
+    end
+
     def to_taxonomic_status(field, val)
       @models[:scientific_name] ||= {}
       @models[:scientific_name][:taxonomic_status_verbatim] = val
