@@ -16,6 +16,9 @@
 /log/*.log
 /tmp
 
+# A common temp file that we never want committed:
+t
+
 # OS X:
 .DS_Store
 
