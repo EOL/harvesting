@@ -97,6 +97,31 @@ class Format < ActiveRecord::Base
     "#{represents} for #{resource.name}"
   end
 
+  def headers
+    fields.sort_by(&:position).map(&:expected_header)
+  end
+
+  def open_converted_csv
+    CSV.read(converted_csv_path, encoding: 'ISO-8859-1')
+  end
+
+  def file_parser
+    raise "File missing!" unless File.exist?(file)
+    parser =
+      if excel?
+        ExcelParser.new(file, sheet: sheet, header_lines: header_lines, data_begins_on_line: data_begins_on_line)
+      elsif csv?
+        CsvParser.new(file, field_sep: field_sep, line_sep: line_sep, header_lines: header_lines,
+                            data_begins_on_line: data_begins_on_line)
+      else
+        raise "I don't know how to read formats of #{file_type}!"
+      end
+  end
+
+  def open_diff
+    CsvParser.new(diff)
+  end
+
   def remove_files
     File.unlink(converted_csv_path) if File.exist?(converted_csv_path)
     File.unlink(diff_path) if File.exist?(diff_path)

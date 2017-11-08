@@ -34,6 +34,7 @@ class NamesMatcher
     @ancestors = []
     @unmatched = []
     @new_page_id = nil
+    @in_unmapped_area = true
   end
 
   def match(name, how)
@@ -99,11 +100,10 @@ class NamesMatcher
 
   def map_if_needed(node)
     if node.canonical.blank?
-      puts
       @harvest.log("cannot match node with blank canonical: Node##{node.id}", cat: :warns)
     elsif node.needs_to_be_mapped?
       if node.parent_id.nil? || node.parent_id == 0 # NOTE: nil is preferred; 0 is "old school"
-        @in_unmapped_area = @resource.id != 1 # NOTE: DWH is resource ID 1, and is always "mapped"
+        @in_unmapped_area = true
         @ancestors = []
       end
       strategy = 0
@@ -235,6 +235,7 @@ class NamesMatcher
   # TODO: in_unmapped_area ...if there are no matching ancestors...
   def unmapped(node, message, opts = {})
     @unmatched << "#{node.canonical} (##{node.id})"
+    @in_unmapped_area = false if @resource.id == 1 # NOTE: DWH is resource ID 1, and is always "mapped"
     node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area)
     @node_updates << node
     true # Just avoiding a large return value.
@@ -243,7 +244,7 @@ class NamesMatcher
   def update_nodes
     @harvest.log_call
     return if @node_updates.empty?
-    Node.import!(@node_updates, on_duplicate_key_update: [:page_id])
+    Node.import!(@node_updates, on_duplicate_key_update: [:page_id, :in_unmapped_area])
     true # Just avoiding a large return value.
   end
 

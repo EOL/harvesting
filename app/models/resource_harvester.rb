@@ -165,8 +165,7 @@ class ResourceHarvester
         end
         @converted[@format.id] = true # Shouldn't need this, but being safe
       end
-      cmd = "/usr/bin/sort #{@format.converted_csv_path} > "\
-            "#{@format.converted_csv_path}_sorted"
+      cmd = "/usr/bin/sort #{@format.converted_csv_path} > #{@format.converted_csv_path}_sorted"
       log_cmd(cmd)
       # NOTE: the LC_ALL fixes a problem with unicode characters.
       if system({'LC_ALL' => 'C'}, cmd)
@@ -522,18 +521,7 @@ class ResourceHarvester
       unless @formats.has_key?(fid)
         @formats[fid] = {}
         @file = @format.file
-        raise "File missing!" unless File.exist?(@file)
-        @formats[fid][:parser] = if @format.excel?
-            ExcelParser.new(@file, sheet: @format.sheet,
-              header_lines: @format.header_lines,
-              data_begins_on_line: @format.data_begins_on_line)
-          elsif @format.csv?
-            CsvParser.new(@file, field_sep: @format.field_sep,
-              line_sep: @format.line_sep, header_lines: @format.header_lines,
-              data_begins_on_line: @format.data_begins_on_line)
-          else
-            raise "I don't know how to read formats of #{@format.file_type}!"
-          end
+        @formats[fid][:parser] = @format.file_parser
         @formats[fid][:headers] = @formats[fid][:parser].headers
       end
       @parser = @formats[fid][:parser]
@@ -550,8 +538,8 @@ class ResourceHarvester
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = CsvParser.new(@format.diff)
-        @formats[fid][:headers] = @format.fields.sort_by(&:position).map(&:expected_header)
+        @formats[fid][:parser] = @format.open_diff
+        @formats[fid][:headers] = @format.headers
       end
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]

@@ -78,7 +78,7 @@ class Medium < ActiveRecord::Base
       image = Image.read(get_url).first # No animations supported!
       d_time = Time.now
     rescue Magick::ImageMagickError => e
-      mess = "Couldn't get image #{get_url} for #{url}"
+      mess = "Couldn't get image #{get_url} for Medium ##{id}"
       Delayed::Worker.logger.error(mess)
       harvest.log(mess, cat: :errors)
       return nil
