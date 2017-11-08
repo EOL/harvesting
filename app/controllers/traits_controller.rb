@@ -4,8 +4,9 @@ class TraitsController < ApplicationController
     @traits = prep_for_api(@resource.
                            traits.primary
                            .includes(:predicate_term, :object_term, :units_term, :statistical_method_term, :sex_term,
-                                     :lifestage_term, :node, meta_traits: %i(predicate_term object_term units_term
-                                                                             statistical_method_term))
+                                     :lifestage_term,
+                                     node: :scientific_name,
+                                     meta_traits: %i[predicate_term object_term units_term statistical_method_term])
                        .published)
     respond_to do |fmt|
       fmt.json {}

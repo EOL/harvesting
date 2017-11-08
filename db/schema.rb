@@ -421,12 +421,17 @@ ActiveRecord::Schema.define(version: 20171107145752) do
   add_index "nodes_references", ["reference_id"], name: "index_nodes_references_on_reference_id", using: :btree
 
   create_table "occurrence_metadata", force: :cascade do |t|
-    t.integer "harvest_id",             limit: 4
-    t.integer "occurrence_id",          limit: 4
-    t.integer "predicate_term_id",      limit: 4
-    t.integer "object_term_id",         limit: 4
-    t.text    "literal",                limit: 65535
-    t.string  "occurrence_resource_pk", limit: 255
+    t.integer "harvest_id",                 limit: 4
+    t.integer "occurrence_id",              limit: 4
+    t.integer "predicate_term_id",          limit: 4
+    t.integer "object_term_id",             limit: 4
+    t.text    "literal",                    limit: 65535
+    t.integer "resource_id",                limit: 4
+    t.integer "units_term_id",              limit: 4
+    t.integer "statistical_method_term_id", limit: 4
+    t.string  "resource_pk",                limit: 255
+    t.string  "measurement",                limit: 255
+    t.string  "occurrence_resource_pk",     limit: 255
   end
 
   add_index "occurrence_metadata", ["harvest_id"], name: "index_occurrence_metadata_on_harvest_id", using: :btree

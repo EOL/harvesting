@@ -18,6 +18,25 @@ class ScientificName < ActiveRecord::Base
     authorship.try(:split, '; ')
   end
 
+  def italicized
+    italicize(normalized)
+  end
+
+  def canonical_italicized
+    italicize(canonical)
+  end
+
+  # TODO: We might want to store these in the DB rather than calculating them every time.
+  def italicize(name)
+    name = verbatim if name.blank?
+    name.gsub!(/\s+/, ' ') # This is just aesthetic cleanup.
+    name = name.sub(genus, "<i>#{genus}</i>") if genus
+    name = name.sub(specific_epithet, "<i>#{specific_epithet}</i>") if specific_epithet
+    name = name.sub(infraspecific_epithet, "<i>#{infraspecific_epithet}</i>") if infraspecific_epithet
+    name = name.sub(infrageneric_epithet, "<i>#{infrageneric_epithet}</i>") if infrageneric_epithet
+    name.gsub('</i> <i>', ' ') # This is just aesthetic cleanup.
+  end
+
   def attribution_html
     # dataset_id is just a field...
     # publication is a field... called "publisher" in her example...

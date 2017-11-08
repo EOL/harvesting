@@ -204,6 +204,8 @@ module Store
         datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
         datum[:predicate_term_id] = find_or_create_term(key, type: 'meta-predicate').id
         datum = convert_meta_value(datum, value)
+        datum[:resource_id] = @resource.id
+        datum[:harvest_id] = @harvest.id
         prepare_model_for_store(OccurrenceMetadatum, datum)
       end
     end
@@ -224,6 +226,7 @@ module Store
         debugger
         return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent and NO occurrence ID.")
       end
+      occ_meta = !@models[:trait][:of_taxon] && parent.blank?
       # TODO: assocs
       predicate = @models[:trait].delete(:predicate)
       # TODO: error handling for predicate ... cannot be blank.
@@ -241,16 +244,21 @@ module Store
       end
       meta = @models[:trait].delete(:meta) || {}
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
-      trait = prepare_model_for_store(Trait, @models[:trait])
+      klass = Trait
+      klass = OccurrenceMetadatum if occ_meta
+      @models[:trait].delete(:of_taxon) if occ_meta
+      trait = prepare_model_for_store(klass, @models[:trait])
       meta.each do |key, value|
         datum = {}
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
-        datum[:trait_resource_pk] = trait.resource_pk
+        datum[:trait_resource_pk] = trait.resource_pk unless occ_meta
         predicate_term = find_or_create_term(key, type: 'meta-predicate')
         datum[:predicate_term_id] = predicate_term.id
         datum = convert_meta_value(datum, value)
-        prepare_model_for_store(MetaTrait, datum)
+        klass = MetaTrait
+        klass = OccurrenceMetadatum if !@models[:trait][:of_taxon] && parent.blank?
+        prepare_model_for_store(klass, datum)
       end
     end
 
