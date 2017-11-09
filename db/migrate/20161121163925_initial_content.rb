@@ -288,14 +288,6 @@ class InitialContent < ActiveRecord::Migration
       t.string :trait_resource_fk, null: false, comment: 'to be replaced during normalization'
     end
 
-    create_table :assocs_references do |t|
-      t.integer :harvest_id, index: true
-      t.integer :assoc_id, index: true
-      t.integer :reference_id, index: true
-      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
-      t.string :assoc_resource_fk, null: false, comment: 'to be replaced during normalization'
-    end
-
     create_table :roles do |t|
       t.string :name, null: false, comment: 'passed to I18n.t'
 
@@ -353,7 +345,6 @@ class InitialContent < ActiveRecord::Migration
       t.integer :node_id, comment: 'cannot be null AFTER ID reconciliation; will be before'
       t.integer :predicate_term_id, null: false
       t.integer :object_term_id
-      t.integer :object_node_id
       t.integer :units_term_id
       t.integer :statistical_method_term_id
       t.integer :sex_term_id
@@ -363,7 +354,7 @@ class InitialContent < ActiveRecord::Migration
       t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
 
       t.string :occurrence_resource_pk, index: true, comment: 'used to get node_id and occurrence metadata.'
-      t.string :assoc_resource_pk, index: true, comment: 'temporary; will be used to find object_node_id'
+      t.string :assoc_resource_pk, index: true, comment: 'temporary; will be used to add meta-data to assocs'
       t.string :parent_pk, index: true, comment: 'temporary; will be used to move this to meta_traits'
       t.string :resource_pk, null: false
       t.string :measurement
@@ -375,6 +366,63 @@ class InitialContent < ActiveRecord::Migration
     add_index :traits, [:resource_id, :resource_pk]
 
     create_table :meta_traits do |t|
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false
+      t.integer :removed_by_harvest_id
+      t.integer :trait_id
+      t.integer :predicate_term_id, null: false
+      t.integer :object_term_id
+      t.integer :units_term_id
+      t.integer :statistical_method_term_id
+      t.string  :trait_resource_pk, null: false
+      t.string  :measurement
+      t.string  :literal
+      t.text    :source
+    end
+
+    create_table :assocs do |t|
+      t.integer :resource_id, null: false, index: true, comment: 'Supplier'
+      t.integer :harvest_id, null: false, index: true
+      t.integer :removed_by_harvest_id
+      t.integer :predicate_term_id, null: false
+      t.integer :occurrence_id
+      t.integer :page_id
+      t.integer :target_occurrence_id
+      t.integer :target_page_id
+      t.string :resource_pk, null: false
+      t.string :occurrence_resource_fk, index: true, comment: 'used to get node_id and occurrence metadata.'
+      t.string :target_occurrence_resource_fk, index: true, comment: 'used to get node_id and occurrence metadata.'
+      t.text :source
+      t.timestamps null: false
+    end
+
+    # One might say "This isn't *really* "meta," since it's not associations of associations." ...But associations are
+    # data, and this is data about data. ...plus this is more intuitive (Principle of Least Surprise)
+    create_table :meta_assocs do |t|
+      t.integer :resource_id, null: false
+      t.integer :harvest_id, null: false
+      t.integer :removed_by_harvest_id
+      t.integer :assoc_id, comment: 'null if the metadata came from the measurement file; populated if from a column '\
+                                    'in the associations file.'
+      t.integer :predicate_term_id, null: false
+      t.integer :object_term_id
+      t.integer :units_term_id
+      t.integer :statistical_method_term_id
+      t.string  :assoc_resource_pk, comment: 'replaced during normalization to attach measurements to associations.'
+      t.string  :measurement
+      t.string  :literal
+      t.text    :source
+    end
+
+    create_table :assocs_references do |t|
+      t.integer :harvest_id, index: true
+      t.integer :assoc_id, index: true
+      t.integer :reference_id, index: true
+      t.string :ref_resource_fk, null: false, comment: 'to be replaced during normalization'
+      t.string :assoc_resource_fk, null: false, comment: 'to be replaced during normalization'
+    end
+
+    create_table :assoc_traits do |t|
       t.integer :resource_id, null: false, comment: 'Supplier', index: true
       t.integer :harvest_id, null: false, index: true
       t.integer :trait_id, comment: 'temporarily null, added during ID resolution'
@@ -389,10 +437,6 @@ class InitialContent < ActiveRecord::Migration
       t.string :literal
 
       t.text :source
-    end
-
-    create_table :assocs do |t|
-      t.integer :trait_id, null: false
     end
   end
 end

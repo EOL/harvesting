@@ -53,6 +53,12 @@ module Store
       @models[:scientific_name][:taxonomic_status_verbatim] = val
     end
 
+    def to_node_ref_fks(field, val)
+      @models[:node] ||= {}
+      @models[:node][:ref_sep] ||= field.submapping
+      @models[:node][:ref_fks] = val
+    end
+
     def to_nodes_accepted_name_fk(field, val)
       # TODO: What we really want to do here is, if there is a value here, move all of the fields from the node to the
       # scientific name, but that's hairy and I don't want to do it right now. Soon.

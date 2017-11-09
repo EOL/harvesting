@@ -1,5 +1,5 @@
 # A fact formed by combining one 'occurrence' with another 'occurrence'.
-# NOTE: The name "assoc" is reserved in Rails.
+# NOTE: The name "association" is reserved in Rails.
 class Assoc < ActiveRecord::Base
   belongs_to :resource, inverse_of: :traits
   belongs_to :harvest, inverse_of: :traits

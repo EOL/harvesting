@@ -21,11 +21,6 @@ module Store
       @models[:trait][:parent_pk] = val
     end
 
-    def to_traits_assoc_node_fk(_, val)
-      @models[:trait] ||= {}
-      @models[:trait][:assoc_resource_pk] = val
-    end
-
     def to_traits_predicate(_, val)
       @models[:trait] ||= {}
       @models[:trait][:predicate] = val
@@ -51,9 +46,15 @@ module Store
       @models[:trait][:source] = val
     end
 
-    def to_traits_ref_fk(_, val)
+    def to_traits_ref_fks(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:ref_fk] = val
+      @models[:trait][:ref_sep] ||= field.submapping
+      @models[:trait][:ref_fks] = val
+    end
+
+    def to_traits_assoc_node_fk(_, val)
+      @models[:trait] ||= {}
+      @models[:trait][:assoc_resource_pk] = val
     end
 
     def to_traits_meta(field, val)

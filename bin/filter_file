@@ -1,15 +1,19 @@
 #!/usr/bin/env ruby
 
 if ARGV.length < 3
-  puts 'Usage: filter_file source_id_file source_pk_col target_file [target_fk_col]'
-  puts '       This currently only works on tab-separated files with ONE LINE for the header. They were most common.'
+  puts 'Usage: filter_file source_id_file source_pk_col target_file [target_fk_col] [target_secondary_fk_col]'
+  puts '       This currently only works on files with ONE LINE for the header.'
   exit
 end
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'config', 'environment'))
 header = nil
 ids = {}
-quote = "\x00"
-CSV.foreach(ARGV[0], col_sep: "\t", quote_char: quote, encoding: 'ISO-8859-1') do |row|
+comma_count = `grep -c "," #{ARGV[0]}`.chomp.to_i
+tab_count = `grep -c "\t" #{ARGV[0]}`.chomp.to_i
+null_count = `grep -c "\\x00" #{ARGV[0]}`.chomp.to_i
+sep = comma_count > tab_count ? ',' : "\t"
+quote = null_count.zero? ? '"' : "\x00"
+CSV.foreach(ARGV[0], col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
   if header.nil?
     header = row.index(ARGV[1])
     raise "Couldn't find a header of #{ARGV[1]} in #{ARGV[0]}" if header.nil?
@@ -32,22 +36,28 @@ rows = []
 header = nil
 headers = nil
 fk_head = ARGV[3] || ARGV[1]
-CSV.foreach(backup, col_sep: "\t", quote_char: quote, encoding: 'ISO-8859-1') do |row|
+second_header = ARGV[4]
+CSV.foreach(backup, col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
   if header.nil?
     headers = row
     header = row.index(fk_head)
+    second_header = row.index(second_header) if second_header
     raise "Couldn't find a header of #{fk_head} in #{ARGV[2]}" if header.nil?
     next
   end
-  rows << row if ids.key?(row[header])
+  if ids.key?(row[header])
+    rows << row
+  elsif second_header && ids.key?(row[second_header])
+    rows << row
+  end
 end
 if rows.empty?
-  puts "!! NO MATCHING ROWS FOUND!"
+  puts '!! NO MATCHING ROWS FOUND!'
   exit
 end
 puts "Found #{rows.size} matching rows, writing:"
-CSV.open(ARGV[2], 'w', col_sep: "\t", quote_char: quote, encoding: 'ISO-8859-1') do |csv|
+CSV.open(ARGV[2], 'w', col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |csv|
   csv << headers
   rows.each { |row| csv << row }
 end
-puts "Done."
+puts 'Done.'

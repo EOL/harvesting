@@ -25,6 +25,7 @@ module Store
       build_vernacular if @models[:vernacular] # TODO: this one is not very robust
       build_occurrence if @models[:occurrence]
       build_trait if @models[:trait]
+      build_assoc if @models[:assoc]
       build_ref if @models[:reference]
       # TODO: still need to build agent, attribution, article, js_map, link, map, sound, video
     end
@@ -60,6 +61,7 @@ module Store
       return if @synonym # Don't build a node for synonyms.
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
+      build_references(:node, NodeReference)
       prepare_model_for_store(Node, @models[:node])
     end
 
@@ -213,8 +215,6 @@ module Store
     def build_trait
       parent = @models[:trait][:parent_pk]
       occurrence = @models[:trait][:occurrence_resource_pk]
-      # TODO: we need to keep a "back reference" of which traits have been hung off of occurrences, because some
-      # meta-traits can affect an occurrence and we need to be sure those changes are applied to all associated traits.
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon] && parent
@@ -227,9 +227,7 @@ module Store
         return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent and NO occurrence ID.")
       end
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?
-      # TODO: assocs
       predicate = @models[:trait].delete(:predicate)
-      # TODO: error handling for predicate ... cannot be blank.
       predicate_term = find_or_create_term(predicate, type: 'predicate')
       @models[:trait][:predicate_term_id] = predicate_term.id
       units = @models[:trait].delete(:units)
@@ -259,6 +257,27 @@ module Store
         klass = MetaTrait
         klass = OccurrenceMetadatum if !@models[:trait][:of_taxon] && parent.blank?
         prepare_model_for_store(klass, datum)
+      end
+    end
+
+    def build_assoc
+      @models[:assoc][:resource_id] = @resource.id
+      @models[:assoc][:harvest_id] = @harvest.id
+      predicate = @models[:assoc].delete(:predicate)
+      predicate_term = find_or_create_term(predicate, type: 'predicate')
+      @models[:assoc][:predicate_term_id] = predicate_term.id
+      meta = @models[:assoc].delete(:meta) || {}
+      @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
+      assoc = prepare_model_for_store(Assoc, @models[:assoc])
+      meta.each do |key, value|
+        datum = {}
+        predicate_term = find_or_create_term(key, type: 'meta-predicate')
+        datum[:predicate_term_id] = predicate_term.id
+        datum[:harvest_id] = @harvest.id
+        datum[:resource_id] = @resource.id
+        datum[:trait_resource_pk] = trait.resource_pk
+        datum = convert_meta_value(datum, value)
+        prepare_model_for_store(MetaAssoc, datum)
       end
     end
 

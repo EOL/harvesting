@@ -15,6 +15,7 @@ class ResourceHarvester
   # NOTE: Composition pattern, here. Too much to have in one file:
   include Store::Boolean
   include Store::Nodes
+  include Store::Assocs
   include Store::Media
   include Store::Vernaculars
   include Store::Traits

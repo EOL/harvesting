@@ -29,19 +29,21 @@ class Field < ActiveRecord::Base
 
         to_attributions_pk to_attributions_name to_attributions_role to_attributions_email to_attributions_url
 
-        to_media_pk to_media_nodes_fk to_section to_media_type to_media_subtype to_media_license to_media_language to_format
-        to_derived_from to_bibliographic_citation to_attributions_fk to_media_name to_media_description
+        to_media_pk to_media_nodes_fk to_section to_media_type to_media_subtype to_media_license to_media_language
+        to_format to_derived_from to_bibliographic_citation to_attributions_fk to_media_name to_media_description
         to_media_source_url to_media_source_page_url to_media_rights_statement to_media_usage_statement to_media_owner
         to_media_lat to_media_long to_media_lat_literal to_media_long_literal to_media_locality to_media_ref_fks
 
-        to_occurrences_pk to_occurrences_nodes_fk to_occurrences_sex
-        to_occurrences_lifestage to_occurrences_lat to_occurrences_long to_occurrences_lat_literal
-        to_occurrences_long_literal to_occurrences_locality to_occurrences_meta
+        to_occurrences_pk to_occurrences_nodes_fk to_occurrences_sex to_occurrences_lifestage to_occurrences_lat
+        to_occurrences_long to_occurrences_lat_literal to_occurrences_long_literal to_occurrences_locality
+        to_occurrences_meta
 
-        to_traits_pk to_traits_occurrence_fk
-        to_traits_measurement_of_taxon to_traits_parent_pk to_traits_assoc_node_fk to_traits_predicate
-        to_traits_value to_traits_units to_traits_statistical_method to_traits_source to_traits_ref_fks
-        to_traits_meta ]
+        to_traits_pk to_traits_occurrence_fk to_traits_measurement_of_taxon to_traits_parent_pk to_traits_assoc_node_fk
+        to_traits_predicate to_traits_value to_traits_units to_traits_statistical_method to_traits_source
+        to_traits_ref_fks to_traits_meta
+
+        to_associations_pk to_associations_occurrence_fk to_associations_target_occurrence_fk to_associations_predicate
+        to_associations_source to_associations_ref_fks to_associations_meta ]
 
         # TODO: assocs
 

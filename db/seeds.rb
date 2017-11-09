@@ -660,4 +660,57 @@ flickr = Resource.quick_define(
   }
 )
 
+mam_inter = Resource.quick_define(
+  name: 'Mammal Interactions Test Data',
+  abbr: 'mam_inter',
+  type: :csv,
+  field_sep: ",",
+  pk_url: 'http://some.cool.url/with/a/path/to_$PK.html',
+  base_dir: Rails.public_path.join('data', 'mam_inter'),
+  partner: {
+    name: 'Encyclopedia of Life',
+    abbr: 'EOL',
+    short_name: 'EOL',
+    homepage_url: 'http://eol.org',
+    description: 'A webpage for every species. Or something like that.',
+    auto_publish: true
+  },
+  formats: {
+    nodes: { loc: 'taxa.csv', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'scientificName' => 'to_nodes_scientific', can_be_empty: false },
+      { 'parentNameUsageID' => 'to_nodes_parent_fk' },
+      { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
+      { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
+      { 'class' => 'to_nodes_ancestor', submapping: 'class' },
+      { 'order' => 'to_nodes_ancestor', submapping: 'order' },
+      { 'family' => 'to_nodes_ancestor', submapping: 'family' },
+      { 'genus' => 'to_nodes_ancestor', submapping: 'genus' },
+      { 'taxonRank' => 'to_nodes_rank' },
+      { 'furtherInformationURL' => 'to_nodes_further_information_url' }
+    ] },
+    occurrences: { loc: 'occurrence.csv', fields: [
+      { 'occurrenceID' => 'to_occurrences_pk', can_be_empty: false, is_unique: true },
+      { 'taxonID' => 'to_occurrences_nodes_fk', can_be_empty: false }
+    ] },
+    assocs: { loc: 'association.csv', fields: [
+      { 'associationID' => 'to_associations_pk', is_unique: true, can_be_empty: false },
+      { 'occurrenceID' => 'to_associations_occurrence_fk', can_be_empty: false },
+      { 'associationType' => 'to_associations_predicate', can_be_empty: false },
+      { 'targetOccurrenceID' => 'to_associations_target_occurrence_fk' },
+      { 'measurementDeterminedDate' => 'to_associations_meta',
+        submapping: 'http://rs.tdwg.org/dwc/terms/measurementDeterminedDate' },
+      { 'measurementDeterminedBy' => 'to_associations_meta',
+        submapping: 'http://rs.tdwg.org/dwc/terms/measurementDeterminedBy' },
+      { 'measurementMethod' => 'to_associations_meta', submapping: 'http://rs.tdwg.org/dwc/terms/measurementMethod' },
+      { 'measurementRemarks' => 'to_associations_meta', submapping: 'http://rs.tdwg.org/dwc/terms/measurementRemarks' },
+      { 'source' => 'to_associations_source' },
+      { 'bibliographicCitation' => 'to_associations_meta',
+        submapping: 'http://purl.org/dc/terms/bibliographicCitation' },
+      { 'contributor' => 'to_associations_meta', submapping: 'http://purl.org/dc/terms/contributor' },
+      { 'referenceID' => 'to_associations_ref_fks' }
+    ] }
+  }
+)
+
 Node.reindex # This empties all of the stuff from ElasticSearch.
