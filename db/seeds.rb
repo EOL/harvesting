@@ -665,6 +665,7 @@ mam_inter = Resource.quick_define(
   abbr: 'mam_inter',
   type: :csv,
   field_sep: ",",
+  line_sep: "\r\n",
   pk_url: 'http://some.cool.url/with/a/path/to_$PK.html',
   base_dir: Rails.public_path.join('data', 'mam_inter'),
   partner: {
@@ -714,3 +715,22 @@ mam_inter = Resource.quick_define(
 )
 
 Node.reindex # This empties all of the stuff from ElasticSearch.
+
+
+# Jonathan's thought: use a table to store ids. You could do something like
+# create_table :keys_to_ids do |t|
+#   t.integer :resource_id
+#   t.string :their_key
+#   t.string :our_type
+#   t.integer :our_id
+# end
+#
+# class KeyToId < ActiveRecord::Base
+#   belongs_to :resource, inverse_of: :key_to_ids
+#   belongs_to :our, polymorphic: true
+# end
+#
+# # ...then when you harvest something with a PK or FK, you slurp in the known IDs:
+# known_ids = {}
+# KeyToId.where(resource_id: @resource.id, our_type: klass.name).find_each { |kti| known_ids[kti.their_key] = kti.our_id }
+# YOU WERE HERE

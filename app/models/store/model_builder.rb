@@ -61,7 +61,7 @@ module Store
       return if @synonym # Don't build a node for synonyms.
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
-      build_references(:node, NodeReference)
+      build_references(:node, NodesReference)
       prepare_model_for_store(Node, @models[:node])
     end
 

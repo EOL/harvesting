@@ -37,6 +37,7 @@ class Resource < ActiveRecord::Base
     options[:formats].each do |rep, f_def|
       fmt = Format.where(
             field_sep: options[:field_sep] || ",",
+            line_sep: options[:line_sep] || "\n",
             resource_id: resource.id,
             represents: rep).
           abstract.
