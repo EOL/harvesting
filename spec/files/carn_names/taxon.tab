@@ -1,0 +1,6 @@
+taxonID	furtherInformationURL	referenceID	parentNameUsageID	scientificName	namePublishedIn	kingdom	phylum	class	order	family	genus	taxonRank	taxonomicStatus	taxonRemarks
+accepted_22668	http://indiabiodiversity.org/species/show/24362			Martes gwatkinsi		Animalia	Chordata	Mammalia	Carnivora	Mustelidae	Martes	Species	accepted	
+synonym_22671	http://indiabiodiversity.org/species/show/24362		accepted_22668	Martes flavigula gwatkinsi								Species	synonym	
+accepted_22676	http://indiabiodiversity.org/species/show/24394			Viverra civettina		Animalia	Chordata	Mammalia	Carnivora	Viverridae	Viverra	Species	accepted	
+synonym_22679	http://indiabiodiversity.org/species/show/24394		accepted_22676	Viverra megaspila								Species	synonym	
+accepted_22682	http://indiabiodiversity.org/species/show/24426			Paradoxurus jerdoni		Animalia	Chordata	Mammalia	Carnivora	Viverridae	Paradoxurus	Species	accepted	
