@@ -347,8 +347,8 @@ class InitialContent < ActiveRecord::Migration
       t.integer :object_term_id
       t.integer :units_term_id
       t.integer :statistical_method_term_id
-      t.integer :sex_term_id
-      t.integer :lifestage_term_id
+      t.integer :sex_term_id, comment: 'denormalized through occurrence.'
+      t.integer :lifestage_term_id, comment: 'denormalized through occurrence.'
       t.integer :removed_by_harvest_id
 
       t.boolean :of_taxon, comment: 'temporary; used during ID resolution.'
@@ -385,10 +385,10 @@ class InitialContent < ActiveRecord::Migration
       t.integer :harvest_id, null: false, index: true
       t.integer :removed_by_harvest_id
       t.integer :predicate_term_id, null: false
-      t.integer :occurrence_id
-      t.integer :page_id
-      t.integer :target_occurrence_id
-      t.integer :target_page_id
+      t.integer :node_id, index: true
+      t.integer :target_node_id, index: true
+      t.integer :sex_term_id, comment: 'denormalized through occurrence.'
+      t.integer :lifestage_term_id, comment: 'denormalized through occurrence.'
       t.string :resource_pk, null: false
       t.string :occurrence_resource_fk, index: true, comment: 'used to get node_id and occurrence metadata.'
       t.string :target_occurrence_resource_fk, index: true, comment: 'used to get node_id and occurrence metadata.'
@@ -408,7 +408,7 @@ class InitialContent < ActiveRecord::Migration
       t.integer :object_term_id
       t.integer :units_term_id
       t.integer :statistical_method_term_id
-      t.string  :assoc_resource_pk, comment: 'replaced during normalization to attach measurements to associations.'
+      t.string  :assoc_resource_fk, comment: 'replaced during normalization to attach measurements to associations.'
       t.string  :measurement
       t.string  :literal
       t.text    :source

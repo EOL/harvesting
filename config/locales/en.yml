@@ -119,9 +119,11 @@ en:
       updated_at: "Updated:"
   nodes:
     empty_fields:
+      assocs: "This node has no associated... uhhh... associations."
       authors: "(none)"
       children: "This node has no children."
       media: "This node has no associated media."
+      target_node: "The target node does not exist. Perhaps you truncated the taxa?"
       traits: "This node has no associated traits."
     fields:
       ancestors: "Ancestors:"
@@ -145,6 +147,7 @@ en:
       vernaculars: "Vernacular Names:"
       year: "Year of authority (first, if several found):"
     headers:
+      assocs: "Associations:"
       children: "Children:"
       media: "Media:"
       traits: "Traits:"

@@ -19,9 +19,17 @@ class CsvParser
     return false unless File.exist?(@path_to_file)
     quote = '"'
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
-    CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
-      yield(row, i)
-      i += 1
+    begin
+      CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
+        yield(row, i)
+        i += 1
+      end
+    rescue CSV::MalformedCSVError
+      # Try again without the row sep, which can cause problems:
+      CSV.foreach(@path_to_file, col_sep: @col_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
+        yield(row, i)
+        i += 1
+      end
     end
     true
   end

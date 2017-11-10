@@ -13,15 +13,15 @@ class ResourceHarvester
   end
 
   # NOTE: Composition pattern, here. Too much to have in one file:
-  include Store::Boolean
-  include Store::Nodes
   include Store::Assocs
+  include Store::Boolean
   include Store::Media
-  include Store::Vernaculars
-  include Store::Traits
+  include Store::ModelBuilder
+  include Store::Nodes
   include Store::Occurrences
   include Store::References
-  include Store::ModelBuilder
+  include Store::Traits
+  include Store::Vernaculars
 
   def initialize(resource, harvest = nil)
     # TODO: this is WAAAY too tighly coupled with the model builder class (at least)
@@ -80,7 +80,17 @@ class ResourceHarvester
       4
     ensure
       Searchkick.enable_callbacks
-      @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id})", cat: :ends) if @harvest
+      took = Time.now - @start_time
+      if took < 90
+        took = "#{took}s"
+      elsif took < (90 * 60)
+        took = "#{(took / 60.0).round(1)}m"
+      elsif took < (48 * 60 * 60)
+        took = "#{(took / (60 * 60.0)).round(1)}h"
+      else
+        took = "#{(took / (24 * 60 * 60.0)).round(1)}d"
+      end
+      @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id}), took #{took}", cat: :ends) if @harvest
     end
   end
 
@@ -393,8 +403,27 @@ class ResourceHarvester
     log_info('MetaTraits (simple, measurement row refers to parent) to traits...')
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
 
-    # TODO: transfer the lat, long, and locality from occurrences to traits... (I don't think we caputure these yet)
-    # TODO: traits that are assocs! Yeesh.
+    # Assoc to nodes (through occurrences)
+    log_info('Assocs to nodes...')
+    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk', set: 'node_id', with: 'node_id')
+    propagate_id(Assoc, fk: 'target_occurrence_resource_fk', other: 'occurrences.resource_pk',
+                        set: 'target_node_id', with: 'node_id')
+    # Assoc to sex term:
+    log_info('Assoc to sex term...')
+    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
+                        set: 'sex_term_id', with: 'sex_term_id')
+    # Assoc to lifestage term:
+    log_info('Assoc to lifestage term...')
+    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
+                        set: 'lifestage_term_id', with: 'lifestage_term_id')
+    # MetaAssoc to assocs:
+    # TODO: this is not handled during harvest, yet.
+    # log_info('MetaAssoc to assocs...')
+    # propagate_id(MetaAssoc, fk: 'assoc_resource_pk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
+    resolve_references(AssocsReference, 'assoc')
+
+    # TODO: transfer the lat, long, and locality from occurrences to traits and assocs... (I don't think we caputure
+    # these yet)
   end
 
   def resolve_references(klass, singular)

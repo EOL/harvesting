@@ -76,13 +76,16 @@ module Store
         ancestor_pk = @models[:ancestors][rank]
         ancestry << ancestor_pk
         ancestry_joined = ancestry.join('->')
-        sci_name = @models[:scientific_name][:verbatim]
+        # DUPES_OK sci_name = @models[:scientific_name][:verbatim]
         # NOTE: @nodes_by_ancestry is just a cache, to make sure we don't redefine things. The value is never used.
         if @nodes_by_ancestry.key?(ancestry_joined)
-          if @nodes_by_ancestry[ancestry_joined].include?(sci_name)
-            # TODO: catch errors at the harvesting level; we want to log and somehow stop the process, not exit.
-            raise "ILLEGAL DUPLICATE: #{ancestry_joined}->#{sci_name}"
-          end
+          # Do nothing. We used to want to avoid dupes, but now I think DUPES_OK as long as the IDs are different, and
+          # validations would have already checked that.
+
+          # DUPES_OK if @nodes_by_ancestry[ancestry_joined].include?(sci_name)
+          # DUPES_OK   # TODO: catch errors at the harvesting level; we want to log and somehow stop the process, not exit.
+          # DUPES_OK   raise "ILLEGAL DUPLICATE: #{ancestry_joined}->#{sci_name}"
+          # DUPES_OK end
         else # New ancestry...
           begin
             model =
@@ -102,8 +105,9 @@ module Store
             debugger
             puts "phoey!"
           end
-          @nodes_by_ancestry[ancestry_joined] ||= [] # Remember that we don't need to do this again.
-          @nodes_by_ancestry[ancestry_joined] << sci_name
+          # DUPES_OK @nodes_by_ancestry[ancestry_joined] ||= [] # Remember that we don't need to do this again.
+          # DUPES_OK @nodes_by_ancestry[ancestry_joined] << sci_name
+          @nodes_by_ancestry[ancestry_joined] = true
         end
         prev = ancestor_pk
       end
@@ -168,7 +172,7 @@ module Store
     end
 
     def build_references(key, klass)
-      sep = @models[key].delete(:ref_sep)
+      sep = @models[key].delete(:ref_sep) || /[|;]/
       unless @models[key][:ref_fks].blank?
         fks = @models[key].delete(:ref_fks)
         fks.split(/#{sep}\s*/).each do |ref_fk|
@@ -268,6 +272,7 @@ module Store
       @models[:assoc][:predicate_term_id] = predicate_term.id
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
+      build_references(:assoc, AssocsReference)
       assoc = prepare_model_for_store(Assoc, @models[:assoc])
       meta.each do |key, value|
         datum = {}
@@ -284,7 +289,9 @@ module Store
     def build_ref
       @models[:reference][:resource_id] ||= @resource.id
       @models[:reference][:harvest_id] ||= @harvest.id
-      @models[:reference][:body] = @models[:reference][:parts].join(' ') if @models[:reference][:body].blank?
+      # NOTE: sometimes all there is, is a URL or a DOI (or both), with an empty body.
+      @models[:reference][:body] = @models[:reference][:parts].join(' ') if
+        @models[:reference][:body].blank? && @models[:reference][:parts]
       @models[:reference].delete(:parts)
       prepare_model_for_store(Reference, @models[:reference])
     end

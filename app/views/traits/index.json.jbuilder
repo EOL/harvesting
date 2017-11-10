@@ -3,10 +3,8 @@ json.current_page @traits.current_page
 json.traits @traits do |trait|
   json.page_id trait.node.page_id
   json.scientific_name trait.node.scientific_name.italicized
-  json.resource_id trait.resource_id
   json.resource_pk trait.resource_pk
   json.predicate trait.predicate_term.uri
-  json.association trait.object_node_id
   json.value_uri trait.object_term.try(:uri)
   json.value_num trait.measurement
   json.value_literal trait.literal

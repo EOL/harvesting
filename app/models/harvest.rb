@@ -8,6 +8,10 @@ class Harvest < ActiveRecord::Base
   has_many :occurrence_metadata, inverse_of: :harvest, dependent: :destroy
   has_many :traits, inverse_of: :harvest, dependent: :destroy
   has_many :meta_traits, inverse_of: :harvest, dependent: :destroy
+  has_many :assocs, inverse_of: :harvest, dependent: :destroy
+  has_many :meta_assocs, inverse_of: :harvest, dependent: :destroy
+  has_many :assocs_references, inverse_of: :harvest, dependent: :destroy
+  has_many :assoc_traits, inverse_of: :harvest, dependent: :destroy
   has_many :identifiers, inverse_of: :harvest, dependent: :destroy
   has_many :media, inverse_of: :harvest, dependent: :destroy
 

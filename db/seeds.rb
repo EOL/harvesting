@@ -709,7 +709,27 @@ mam_inter = Resource.quick_define(
       { 'bibliographicCitation' => 'to_associations_meta',
         submapping: 'http://purl.org/dc/terms/bibliographicCitation' },
       { 'contributor' => 'to_associations_meta', submapping: 'http://purl.org/dc/terms/contributor' },
-      { 'referenceID' => 'to_associations_ref_fks' }
+      { 'referenceID' => 'to_associations_ref_fks', submapping: ';' }
+    ] },
+    refs: { loc: 'references.csv', fields: [
+      { 'identifier' => 'to_refs_pk', is_unique: true, can_be_empty: false },
+      { 'publicationType' => 'to_ignored' },
+      { 'full_reference' => 'to_refs_body' },
+      { 'primaryTitle' => 'to_ignored' },
+      { 'title' => 'to_ignored' },
+      { 'pages' => 'to_ignored' },
+      { 'pageStart' => 'to_ignored' },
+      { 'pageEnd' => 'to_ignored' },
+      { 'volume' => 'to_ignored' },
+      { 'edition' => 'to_ignored' },
+      { 'publisher' => 'to_ignored' },
+      { 'authorList' => 'to_ignored' },
+      { 'editorList' => 'to_ignored' },
+      { 'created' => 'to_ignored' },
+      { 'language' => 'to_ignored' },
+      { 'uri' => 'to_refs_url' },
+      { 'doi' => 'to_refs_doi' },
+      { 'schema#localityName' => 'to_ignored' }
     ] }
   }
 )

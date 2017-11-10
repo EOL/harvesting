@@ -91,10 +91,10 @@ ActiveRecord::Schema.define(version: 20171107145752) do
     t.integer  "harvest_id",                    limit: 4,     null: false
     t.integer  "removed_by_harvest_id",         limit: 4
     t.integer  "predicate_term_id",             limit: 4,     null: false
-    t.integer  "occurrence_id",                 limit: 4
-    t.integer  "page_id",                       limit: 4
-    t.integer  "target_occurrence_id",          limit: 4
-    t.integer  "target_page_id",                limit: 4
+    t.integer  "node_id",                       limit: 4
+    t.integer  "target_node_id",                limit: 4
+    t.integer  "sex_term_id",                   limit: 4
+    t.integer  "lifestage_term_id",             limit: 4
     t.string   "resource_pk",                   limit: 255,   null: false
     t.string   "occurrence_resource_fk",        limit: 255
     t.string   "target_occurrence_resource_fk", limit: 255
@@ -104,8 +104,10 @@ ActiveRecord::Schema.define(version: 20171107145752) do
   end
 
   add_index "assocs", ["harvest_id"], name: "index_assocs_on_harvest_id", using: :btree
+  add_index "assocs", ["node_id"], name: "index_assocs_on_node_id", using: :btree
   add_index "assocs", ["occurrence_resource_fk"], name: "index_assocs_on_occurrence_resource_fk", using: :btree
   add_index "assocs", ["resource_id"], name: "index_assocs_on_resource_id", using: :btree
+  add_index "assocs", ["target_node_id"], name: "index_assocs_on_target_node_id", using: :btree
   add_index "assocs", ["target_occurrence_resource_fk"], name: "index_assocs_on_target_occurrence_resource_fk", using: :btree
 
   create_table "assocs_references", force: :cascade do |t|
@@ -398,7 +400,7 @@ ActiveRecord::Schema.define(version: 20171107145752) do
     t.integer "object_term_id",             limit: 4
     t.integer "units_term_id",              limit: 4
     t.integer "statistical_method_term_id", limit: 4
-    t.string  "assoc_resource_pk",          limit: 255
+    t.string  "assoc_resource_fk",          limit: 255
     t.string  "measurement",                limit: 255
     t.string  "literal",                    limit: 255
     t.text    "source",                     limit: 65535

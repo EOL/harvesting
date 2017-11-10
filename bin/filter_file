@@ -45,9 +45,7 @@ CSV.foreach(backup, col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do 
     raise "Couldn't find a header of #{fk_head} in #{ARGV[2]}" if header.nil?
     next
   end
-  if ids.key?(row[header])
-    rows << row
-  elsif second_header && ids.key?(row[second_header])
+  if ids.key?(row[header]) && (second_header.nil? || ids.key?(row[second_header]))
     rows << row
   end
 end

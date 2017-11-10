@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     resources :nodes, only: [:index, :show]
     resources :scientific_names, only: [:index]
     resources :traits, only: [:index]
+    resources :assocs, only: [:index]
     resources :vernaculars, only: [:index]
   end
   resources :terms
