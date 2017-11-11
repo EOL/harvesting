@@ -58,7 +58,7 @@ class NamesMatcher
   def match_synonyms_and_authors_from_partners(name)
     where = { synonym_authors: name.authors }
     where[:resource_id] = { not: @resource.id } unless @resource.might_have_duplicate_taxa
-    match(name, fields: [:synonyms], where: )
+    match(name, fields: [:synonyms], where: where)
   end
 
   def match_canonical_in_eol(name)
