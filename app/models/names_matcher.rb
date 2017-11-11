@@ -55,9 +55,10 @@ class NamesMatcher
     match(name, fields: [:synonyms], where: { resource_id: 1, synonym_authors: name.authors })
   end
 
-  # TODO: some resources CAN match themselves...
   def match_synonyms_and_authors_from_partners(name)
-    match(name, fields: [:synonyms], where: { synonym_authors: name.authors, resource_id: { not: @resource.id } })
+    where = { synonym_authors: name.authors }
+    where[:resource_id] = { not: @resource.id } unless @resource.might_have_duplicate_taxa
+    match(name, fields: [:synonyms], where: )
   end
 
   def match_canonical_in_eol(name)
@@ -174,7 +175,7 @@ class NamesMatcher
   end
 
   def more_than_one_match(node, matching_nodes)
-    puts ".. Oh fun! #{matching_nodes.total_count} matches for \"#{node.canonical}\""
+    puts ".. Oh fun! #{matching_nodes.total_count} matches for \"#{node.canonical}\" via #{@strategies[opts[:strategy]]}"
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
