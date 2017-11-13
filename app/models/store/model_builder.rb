@@ -14,7 +14,6 @@ module Store
     end
 
     def build_models
-      debugger if @models[:scientific_name]
       build_licenses
       fix_parent_fks_used_for_accepted_fks
       @synonym = is_synonym?
@@ -55,7 +54,6 @@ module Store
     end
 
     def build_scientific_name
-      debugger
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
       if @synonym
@@ -374,7 +372,13 @@ module Store
       elsif Language.exists?(group_code: lang_code)
         Language.where(group_code: lang_code).first
       else
-        Language.create!(code: lang_code, group_code: lang_code)
+        attrs =
+          if (iso = ISO_639.find(lang_code))
+            { code: iso.alpha3, group_code: iso.alpha2 }
+          else
+            { code: lang_code, group_code: lang_code }
+          end
+        Language.create!(attrs)
       end
     end
 

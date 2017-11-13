@@ -18,6 +18,9 @@ gem 'dalli'
 # Because ERB is just plain silly compared to Haml:
 gem 'haml-rails'
 
+# To aid in converting language codes:
+gem 'iso-639'
+
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem "jbuilder"
 # Use jquery as the JavaScript library
