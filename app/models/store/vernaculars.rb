@@ -21,5 +21,15 @@ module Store
       @models[:vernacular] ||= {}
       @models[:vernacular][:is_preferred] = Store.is_truthy?(val)
     end
+
+    def to_vernaculars_remarks(field, val)
+      @models[:vernacular] ||= {}
+      @models[:vernacular][:remarks] = val
+    end
+
+    def to_vernaculars_source(field, val)
+      @models[:vernacular] ||= {}
+      @models[:vernacular][:source] = val
+    end
   end
 end

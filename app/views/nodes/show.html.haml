@@ -13,6 +13,18 @@
     %strong= t('nodes.fields.ancestors')
     = @node.node_ancestors.map { |na| link_to(na.ancestor.name, na.ancestor) + " <sub>#{na.ancestor.landmark}</sub>".html_safe }.join(' &rarr; ').html_safe
   %li
+    - if pk = @node.parent_resource_pk
+      - if @node.parent
+        %strong= t('nodes.fields.parent')
+        = link_to(@node.parent.canonical, @node.parent)
+      - else
+        %strong= t('nodes.fields.parent_missing', pk: pk)
+    - else
+      %strong= t('nodes.fields.parent_nil')
+  %li
+    %strong= t('nodes.fields.name_rank_verbatim')
+    = @node.rank_verbatim
+  %li
     %strong= t('nodes.fields.landmark')
     = @node.landmark
   %li
@@ -23,64 +35,58 @@
     = l(@node.created_at, format: :short)
     = t(:node_created_by_harvest,
       date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
-  %li
-    - if pk = @node.parent_resource_pk
-      - if @node.parent
-        %strong= t('nodes.fields.parent')
-        = link_to(@node.parent.canonical, @node.parent)
-      - else
-        %strong= t('nodes.fields.parent_missing', pk: pk)
-    - else
-      %strong= t('nodes.fields.parent_nil')
-  %li
-    %strong= t('nodes.fields.name')
-    %ul
-      %li
-        %strong= t('nodes.fields.name_verbatim')
-        = @node.scientific_name.verbatim
-      - if @node.scientific_name
-        %li
-          %strong= t('nodes.fields.normalized')
-          = @node.scientific_name.try(:normalized)
-        %li
-          %strong= t('nodes.fields.canonical')
-          = @node.try(:canonical)
-        %li
-          %strong= t('nodes.fields.authors')
-          - if @node.scientific_name.authors
-            = @node.scientific_name.authors.join('; ')
-          - else
-            = t('nodes.empty_fields.authors')
-        %li
-          %strong= t('nodes.fields.year')
-          = @node.scientific_name.year
-        %li
-          %strong= t('nodes.fields.name_parse_quality')
-          = @node.scientific_name.parse_quality
-        %li
-          %strong= t('nodes.fields.name_taxonomic_status_verbatim')
-          = @node.scientific_name.taxonomic_status_verbatim
-        %li
-          %strong= t('nodes.fields.name_taxonomic_status')
-          = @node.scientific_name.taxonomic_status
-      - else
-        %li
-          %strong= t(:node_name_not_parsed_notice)
-      - if @node.vernaculars.published.empty?
-        %li
-          %strong= t(:node_vernaculars_empty_notice)
-      - else
-        %li
-          = t('nodes.fields.vernaculars')
-          %ul
-            - @node.vernaculars.published.each do |vern|
-              %li
-                = vern.verbatim
-                = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
+%h2= t('nodes.fields.scientific_names')
+.ui.cards
+  - if !@node.scientific_names.any?
     %li
-      %strong= t('nodes.fields.name_rank_verbatim')
-      = @node.rank_verbatim
-
+      %strong= t(:node_name_not_parsed_notice)
+  - else
+    - @node.scientific_names.each do |name|
+      - preferred = @node.scientific_name && @node.scientific_name == name
+      .ui.card{ class: "#{'red' if preferred}" }
+        .content
+          .header= name.verbatim
+          - if preferred && @node.scientific_names.size > 1
+            .meta
+              = t('nodes.fields.preferred_name')
+          .ui.list
+            .item
+              .header= t('nodes.fields.italicized')
+              = name.try(:italicized).try(:html_safe)
+            .item
+              .header= t('nodes.fields.normalized')
+              = name.try(:normalized)
+            .item
+              .header= t('nodes.fields.canonical')
+              = @node.try(:canonical)
+            .item
+              .header= t('nodes.fields.authors')
+              - if name.authors
+                = name.authors.join('; ')
+              - else
+                = t('nodes.empty_fields.authors')
+            .item
+              .header= t('nodes.fields.year')
+              = name.year
+            .item
+              .header= t('nodes.fields.name_parse_quality')
+              = name.parse_quality
+            .item
+              .header= t('nodes.fields.name_taxonomic_status_verbatim')
+              = name.taxonomic_status_verbatim
+            .item
+              .header= t('nodes.fields.name_taxonomic_status')
+              = name.taxonomic_status
+%h2= t('nodes.fields.vernaculars')
+- if @node.vernaculars.published.empty?
+  %strong= t(:node_vernaculars_empty_notice)
+- else
+  = t('nodes.fields.vernaculars')
+  %ul
+    - @node.vernaculars.published.each do |vern|
+      %li
+        = vern.verbatim
+        = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
 %h2= t('nodes.headers.children')
 - if @node.children.published.empty?
   = t('nodes.empty_fields.children')

@@ -200,7 +200,7 @@ class ResourceHarvester
     # TODO: really this dir name (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join('diff')) unless
       Dir.exist?(Rails.public_path.join('diff'))
-    each_format do
+    each_format(type: :converted) do
       @format.update_attribute(:diff, @format.diff_path)
       other_fmt = @previous_harvest ? @previous_harvest.formats.find { |f| f.represents == @format.represents } : nil
       @file = @format.diff # We're now reading from the diff...
@@ -544,11 +544,11 @@ class ResourceHarvester
     @harvest.complete
   end
 
-  def each_format(&block)
+  def each_format(options = {}, &block)
     @harvest.formats.each do |fmt|
       @format = fmt
       fid = @format.id
-      unless @formats.has_key?(fid)
+      unless @formats.key?(fid)
         @formats[fid] = {}
         @file = @format.file
         @formats[fid][:parser] = @format.file_parser
@@ -568,7 +568,7 @@ class ResourceHarvester
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = @format.open_diff
+        @formats[fid][:parser] = @format.diff_parser
         @formats[fid][:headers] = @format.headers
       end
       @parser = @formats[fid][:parser]

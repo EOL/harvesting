@@ -14,7 +14,9 @@ module Store
     end
 
     def build_models
+      debugger if @models[:scientific_name]
       build_licenses
+      fix_parent_fks_used_for_accepted_fks
       @synonym = is_synonym?
       build_scientific_name if @models[:scientific_name]
       build_ancestors if @models[:ancestors]
@@ -35,11 +37,25 @@ module Store
       License.select("id, source_url").each { |lic| @licenses[lic.source_url] = lic.id }
     end
 
+    # NOTE: Some resources (esp. older ones) can overload the "parentNameUsageID" field when the taxonomic status is not
+    # prefered. ...This indicates a synonym, and the "parentNameUsageID" should be treated as an "acceptedNameUsageID"
+    # value instead (which the code uses as the "synonym_of" field on the scientific name hash).
+    def fix_parent_fks_used_for_accepted_fks
+      return unless @models[:node]
+      return unless @models[:scientific_name].key?(:taxonomic_status_verbatim)
+      return if @models[:scientific_name][:taxonomic_status_verbatim].blank?
+      preferred = TaxonomicStatus.preferred?(@models[:scientific_name][:taxonomic_status_verbatim])
+      return if @models[:node][:parent_resource_pk].blank? || preferred
+      raise 'Synonym provided, but no scientific name available to assign it to!' if @models[:scientific_name].nil?
+      @models[:scientific_name][:synonym_of] = @models[:node].delete(:parent_resource_pk)
+    end
+
     def is_synonym?
       @models[:scientific_name] && @models[:scientific_name][:synonym_of]
     end
 
     def build_scientific_name
+      debugger
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
       if @synonym
@@ -182,6 +198,7 @@ module Store
       end
     end
 
+    # TODO: handle things if there's no "is_preferred" field. ...not sure if we should assume pref'd or not, though.
     def build_vernacular
       lang_code = @models[:vernacular][:language_code_verbatim] || 'en'
       lang = find_or_create_language(lang_code)

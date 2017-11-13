@@ -118,7 +118,7 @@ class Format < ActiveRecord::Base
       end
   end
 
-  def open_diff
+  def diff_parser
     CsvParser.new(diff)
   end
 

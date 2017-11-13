@@ -23,7 +23,7 @@ class Field < ActiveRecord::Base
         to_nodes_dataset_id
 
         to_vernaculars_verbatim to_vernaculars_source to_vernaculars_language to_vernaculars_locality
-        to_vernaculars_preferred to_vernacular_nodes_fk
+        to_vernaculars_preferred to_vernacular_nodes_fk to_vernaculars_remarks
 
         to_refs_pk to_refs_body to_refs_part to_refs_url to_refs_doi
 

@@ -49,7 +49,7 @@ else
   puts "No terms file found (#{terms_file}), skipping. Your term URIs will not be defined."
 end
 
-dwh = Resource.quick_define(
+Resource.quick_define(
   name: 'EOL Dynamic Hierarchy',
   abbr: 'DWH',
   type: :csv,
@@ -128,8 +128,6 @@ Field.where(format_id: fmt.id, position: 3).first_or_create do |f|
   f.unique_in_format = true
   f.can_be_empty = false
 end
-
-resource.create_harvest_instance unless resource.harvests.count > 0
 
 # Apologies for the long 'comment', but this describes the Excel file's format,
 # so it's useful:
@@ -369,18 +367,6 @@ Field.where(format_id: fmt.id, position: 15).first_or_create do |f|
   f.mapping = 'to_nodes_ref_fks'
 end
 
-# You don't want this code to run with db:seed, but you DO want to copy/paste
-# this code manually, when you want to see the Excel file get tested:
-if(false)
-  # @all_at_once = false
-  excel_resource = Resource.where(name: 'Test Excel').first
-  # if(@all_at_once)
-  #   excel_resource.start_harvest
-  # else
-  harvester = ResourceHarvester.new(excel_resource)
-  harvester.start
-end
-
 # Okay, I want to be able to create these things (much) faster:
 simple_resource = Resource.quick_define(
   name: 'Simple Deltas',
@@ -431,7 +417,7 @@ if(false)
   harvester.start
 end
 
-traity = Resource.quick_define(
+Resource.quick_define(
   name: 'Mineralogy',
   abbr: 'Mineralogy',
   type: :csv,
@@ -511,7 +497,7 @@ traity = Resource.quick_define(
   }
 )
 
-iucn = Resource.quick_define(
+Resource.quick_define(
   name: 'IUCN Structured Data',
   abbr: 'IUCN-SD',
   type: :csv,
@@ -552,7 +538,7 @@ iucn = Resource.quick_define(
   }
 )
 
-freshwater = Resource.quick_define(
+Resource.quick_define(
   name: 'CalPhotos in DwC-A',
   abbr: 'CalPhotos',
   type: :csv,
@@ -611,7 +597,7 @@ freshwater = Resource.quick_define(
   }
 )
 
-flickr = Resource.quick_define(
+Resource.quick_define(
   name: 'Flickr BHL',
   abbr: 'flickrBHL',
   type: :csv,
@@ -660,7 +646,7 @@ flickr = Resource.quick_define(
   }
 )
 
-mam_inter = Resource.quick_define(
+Resource.quick_define(
   name: 'Mammal Interactions Test Data',
   abbr: 'mam_inter',
   type: :csv,
@@ -734,8 +720,54 @@ mam_inter = Resource.quick_define(
   }
 )
 
-Node.reindex # This empties all of the stuff from ElasticSearch.
+Resource.quick_define(
+  name: 'Carnivore Names Test',
+  abbr: 'carn_names',
+  type: :csv,
+  partner: {
+    name: 'Encyclopedia of Life',
+    abbr: 'EOL',
+    short_name: 'EOL',
+    homepage_url: 'http://eol.org',
+    description: 'A webpage for every species. Or something like that.',
+    auto_publish: true
+  },
+  field_sep: "\t",
+  pk_url: 'http://eol.org/$PK&but=not_really',
+  base_dir: Rails.root.join('spec', 'files', 'carn_names'),
+  formats: {
+    nodes: { loc: 'taxon.tab', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'furtherInformationURL' => 'to_nodes_further_information_url' },
+      { 'referenceID' => 'to_ignored' }, # unused in this resource.
+      { 'parentNameUsageID' => 'to_nodes_parent_fk' },
+      { 'scientificName' => 'to_nodes_scientific' },
+      { 'namePublishedIn' => 'to_nodes_publication' },
+      { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
+      { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
+      { 'class' => 'to_nodes_ancestor', submapping: 'class' },
+      { 'order' => 'to_nodes_ancestor', submapping: 'order' },
+      { 'family' => 'to_nodes_ancestor', submapping: 'family' },
+      { 'genus' => 'to_nodes_ancestor', submapping: 'genus' },
+      { 'taxonRank' => 'to_nodes_rank' },
+      { 'taxonomicStatus' => 'to_taxonomic_status' },
+      { 'taxonRemarks' => 'to_nodes_remarks' }
+    ] },
+    vernaculars: { loc: 'vernacular_name.tab', fields: [
+      # vernacularName	source	language	locality	countryCode	isPreferredName	taxonRemarks	taxonID
+      { 'vernacularName' => 'to_vernaculars_verbatim' },
+      { 'source' => 'to_vernaculars_source' },
+      { 'language' => 'to_vernaculars_language' },
+      { 'locality' => 'to_vernaculars_locality' },
+      { 'countryCode' => 'to_ignored' }, # ???
+      { 'isPreferredName' => 'to_vernaculars_preferred' },
+      { 'taxonRemarks' => 'to_vernaculars_remarks' },
+      { 'taxonID' => 'to_vernacular_nodes_fk', can_be_empty: false }
+    ] }
+  }
+)
 
+Node.reindex # This empties all of the stuff from ElasticSearch.
 
 # Jonathan's thought: use a table to store ids. You could do something like
 # create_table :keys_to_ids do |t|
