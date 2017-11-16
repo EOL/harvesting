@@ -12,9 +12,9 @@ module Store
 
     def to_vernaculars_language(field, val)
       @models[:vernacular] ||= {}
-      # TODO: we will have more to do, since we "know" this is ISO 639.1, but
-      # right now we just store it and that's fine:
-      @models[:vernacular][:language_code_verbatim] = val
+      lang = val.dup
+      lang = field.submapping if lang.blank?
+      @models[:vernacular][:language_code_verbatim] = lang
     end
 
     def to_vernaculars_preferred(field, val)

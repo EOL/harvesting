@@ -3,6 +3,7 @@
 if ARGV.length < 3
   puts 'Usage: filter_file source_id_file source_pk_col target_file [target_fk_col] [target_secondary_fk_col]'
   puts '       This currently only works on files with ONE LINE for the header.'
+  puts '       If the source_pk_col ends in ".", the source_pk_col will be split on [;|] to find PKs.'
   exit
 end
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'config', 'environment'))
@@ -12,14 +13,23 @@ comma_count = `grep -c "," #{ARGV[0]}`.chomp.to_i
 tab_count = `grep -c "\t" #{ARGV[0]}`.chomp.to_i
 null_count = `grep -c "\\x00" #{ARGV[0]}`.chomp.to_i
 sep = comma_count > tab_count ? ',' : "\t"
-quote = null_count.zero? ? '"' : "\x00"
+quote = null_count.positive? || sep == "\t" ? "\x00" : '"'
+field = ARGV[1].dup
+div = field.sub!(/\.$/, '') ? /[;|]/ : nil
 CSV.foreach(ARGV[0], col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
   if header.nil?
-    header = row.index(ARGV[1])
-    raise "Couldn't find a header of #{ARGV[1]} in #{ARGV[0]}" if header.nil?
+    header = row.index(field)
+    raise "Couldn't find a header of #{field} in #{ARGV[0]}" if header.nil?
     next
   end
-  ids[row[header]] = true
+  next if row[header].nil? || row[header].blank?
+  if div
+    row[header].split(div).each do |id|
+      ids[id] = true
+    end
+  else
+    ids[row[header]] = true
+  end
 end
 puts "found #{ids.keys.size} IDs, examples: #{ids.keys[0..5].join("; ")}..."
 bn = File.basename(ARGV[2])
@@ -35,8 +45,9 @@ end
 rows = []
 header = nil
 headers = nil
-fk_head = ARGV[3] || ARGV[1]
+fk_head = ARGV[3] || field
 second_header = ARGV[4]
+line_count = 0
 CSV.foreach(backup, col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
   if header.nil?
     headers = row
@@ -45,6 +56,7 @@ CSV.foreach(backup, col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do 
     raise "Couldn't find a header of #{fk_head} in #{ARGV[2]}" if header.nil?
     next
   end
+  line_count += 1
   if ids.key?(row[header]) && (second_header.nil? || ids.key?(row[second_header]))
     rows << row
   end
@@ -53,7 +65,7 @@ if rows.empty?
   puts '!! NO MATCHING ROWS FOUND!'
   exit
 end
-puts "Found #{rows.size} matching rows, writing:"
+puts "Found #{rows.size} matching rows out of #{line_count}, writing:"
 CSV.open(ARGV[2], 'w', col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |csv|
   csv << headers
   rows.each { |row| csv << row }

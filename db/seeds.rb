@@ -49,18 +49,20 @@ else
   puts "No terms file found (#{terms_file}), skipping. Your term URIs will not be defined."
 end
 
+eol_attrs = {
+  name: 'Encyclopedia of Life',
+  abbr: 'EOL',
+  short_name: 'EOL',
+  homepage_url: 'http://eol.org',
+  description: 'A webpage for every species. Or something like that.',
+  auto_publish: true
+}
+
 Resource.quick_define(
   name: 'EOL Dynamic Hierarchy',
   abbr: 'DWH',
   type: :csv,
-  partner: {
-    name: 'Encyclopedia of Life',
-    abbr: 'EOL',
-    short_name: 'EOL',
-    homepage_url: 'http://eol.org',
-    description: 'A webpage for every species. Or something like that.',
-    auto_publish: true
-  },
+  partner: eol_attrs,
   field_sep: "\t",
   pk_url: 'http://eol.org/$PK&but=not_really',
   base_dir: Rails.public_path.join('data', 'dwh'),
@@ -395,7 +397,7 @@ simple_resource = Resource.quick_define(
     vernaculars: { loc: 't_d_names.csv', fields: [
       { 'TID' => 'to_vernacular_nodes_fk', can_be_empty: false },
       { 'name' => 'to_vernaculars_verbatim' },
-      { 'language' => 'to_vernaculars_language' },
+      { 'language' => 'to_vernaculars_language', submapping: 'en' },
       { 'preferred' => 'to_vernaculars_preferred' }
     ] }
   }
@@ -640,7 +642,7 @@ Resource.quick_define(
     ] },
     vernaculars: { loc: 'vernacular_name.tab', fields: [
       { 'vernacularName' => 'to_vernaculars_verbatim' },
-      { 'language' => 'to_vernaculars_language' },
+      { 'language' => 'to_vernaculars_language', submapping: 'en' },
       { 'taxonID' => 'to_vernacular_nodes_fk' }
     ] }
   }
@@ -654,14 +656,7 @@ Resource.quick_define(
   line_sep: "\r\n",
   pk_url: 'http://some.cool.url/with/a/path/to_$PK.html',
   base_dir: Rails.public_path.join('data', 'mam_inter'),
-  partner: {
-    name: 'Encyclopedia of Life',
-    abbr: 'EOL',
-    short_name: 'EOL',
-    homepage_url: 'http://eol.org',
-    description: 'A webpage for every species. Or something like that.',
-    auto_publish: true
-  },
+  partner: eol_attrs,
   formats: {
     nodes: { loc: 'taxa.csv', fields: [
       { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
@@ -724,14 +719,7 @@ Resource.quick_define(
   name: 'Carnivore Names Test',
   abbr: 'carn_names',
   type: :csv,
-  partner: {
-    name: 'Encyclopedia of Life',
-    abbr: 'EOL',
-    short_name: 'EOL',
-    homepage_url: 'http://eol.org',
-    description: 'A webpage for every species. Or something like that.',
-    auto_publish: true
-  },
+  partner: eol_attrs,
   field_sep: "\t",
   pk_url: 'http://eol.org/$PK&but=not_really',
   base_dir: Rails.root.join('spec', 'files', 'carn_names'),
@@ -757,11 +745,67 @@ Resource.quick_define(
       # vernacularName	source	language	locality	countryCode	isPreferredName	taxonRemarks	taxonID
       { 'vernacularName' => 'to_vernaculars_verbatim' },
       { 'source' => 'to_vernaculars_source' },
-      { 'language' => 'to_vernaculars_language' },
+      { 'language' => 'to_vernaculars_language', submapping: 'en' },
       { 'locality' => 'to_vernaculars_locality' },
       { 'countryCode' => 'to_ignored' }, # ???
       { 'isPreferredName' => 'to_vernaculars_preferred' },
       { 'taxonRemarks' => 'to_vernaculars_remarks' },
+      { 'taxonID' => 'to_vernacular_nodes_fk', can_be_empty: false }
+    ] }
+  }
+)
+
+Resource.quick_define(
+  name: 'Carnivora Articles Test',
+  abbr: 'carn_art',
+  type: :csv,
+  partner: eol_attrs,
+  field_sep: "\t",
+  pk_url: '',
+  base_dir: Rails.public_path.join('data', 'carn_art'),
+  formats: {
+    nodes: { loc: 'taxon.tab', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'furtherInformationURL' => 'to_nodes_further_information_url' },
+      { 'scientificName' => 'to_nodes_scientific' },
+      { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
+      { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
+      { 'class' => 'to_nodes_ancestor', submapping: 'class' },
+      { 'order' => 'to_nodes_ancestor', submapping: 'order' },
+      { 'family' => 'to_nodes_ancestor', submapping: 'family' },
+      { 'referenceID' => 'to_nodes_ref_fks', submapping: ';' },
+      { 'modified' => 'to_ignored' }
+    ] },
+    media: { loc: 'media_resource.tab', fields: [
+      { 'identifier' => 'to_media_pk', is_unique: true, can_be_empty: false },
+      { 'taxonID' => 'to_media_nodes_fk', can_be_empty: false },
+      { 'type' => 'to_media_type', can_be_empty: false },
+      { 'format' => 'to_media_subtype' },
+      { 'CVterm' => 'to_section' },
+      { 'title' => 'to_media_name' },
+      { 'description' => 'to_media_description' },
+      { 'accessURI' => 'to_media_source_page_url' },
+      { 'thumbnailURL' => 'to_ignored' },
+      { 'furtherInformationURL' => 'to_media_source_url' },
+      { 'language' => 'to_media_language' },
+      { 'audience' => 'to_ignored' },
+      { 'UsageTerms' => 'to_media_license' },
+      { 'rights' => 'to_media_rights_statement' },
+      { 'Owner' => 'to_media_owner' },
+      { 'LocationCreated' => 'to_media_locality' },
+      { 'CreateDate' => 'to_ignored' },
+      { 'modified' => 'to_ignored' },
+      { 'bibliographicCitation' => 'to_bibliographic_citation' },
+      { 'ReferenceID' => 'to_media_ref_fks', submapping: ',' }
+    ] },
+    refs: { loc: 'reference.tab', fields: [
+      { 'identifier' => 'to_refs_pk', is_unique: true, can_be_empty: false },
+      { 'full_reference' => 'to_refs_body' },
+      { 'uri' => 'to_refs_url' }
+    ] },
+    vernaculars: { loc: 'vernacular_name.tab', fields: [
+      { 'vernacularName' => 'to_vernaculars_verbatim', can_be_empty: false },
+      { 'language' => 'to_vernaculars_language', submapping: 'en' },
       { 'taxonID' => 'to_vernacular_nodes_fk', can_be_empty: false }
     ] }
   }
