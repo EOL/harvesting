@@ -20,7 +20,8 @@ class Flattener
     end
     build_ancestry
     build_node_ancestors
-    update_tables
+    propagate_ancestor_ids
+    @harvest.log('Flattener#flatten', cat: :ends)
   end
 
   private
@@ -57,28 +58,38 @@ class Flattener
 
   def build_node_ancestors
     @harvest.log("Flattener#build_node_ancestors (#{@ancestry.keys.size} ancestry keys)", cat: :starts)
+    num_deleted = NodeAncestor.where(resource_id: @resource.id).delete_all
+    @harvest.log("old ancestors (#{num_deleted}) deleted.")
     @node_ancestors = []
     @ancestry.keys.each do |child|
       @ancestry[child].each_with_index do |ancestor, depth|
         next if ancestor.nil? # No need to store this one.
         @node_ancestors <<
           NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
+        if @node_ancestors.size >= 10_000
+          update_tables
+          @node_ancestors = []
+        end
       end
     end
+    update_tables
     # Without returning something simple, the return value is huge, slowing things down.
     true
   end
 
   def update_tables
     @harvest.log('Flattener#update_tables', cat: :starts)
-    NodeAncestor.where(resource_id: @resource.id).delete_all
     # TODO: error-handling
     if @node_ancestors.empty?
-      puts("NOTHING TO FLATTEN!")
+      @harvest.log("NOTHING TO FLATTEN!")
     else
-      puts("Flattening #{@node_ancestors.size} ancestors")
+      @harvest.log("Flattening #{@node_ancestors.size} ancestors")
       NodeAncestor.import! @node_ancestors
-      NodeAncestor.propagate_id(fk: 'ancestor_id', other: 'nodes.id', set: 'ancestor_fk', with: 'resource_pk')
     end
+  end
+
+  def propagate_ancestor_ids
+    @harvest.log('Flattener#propagate_ancestor_ids', cat: :starts)
+    NodeAncestor.propagate_id(fk: 'ancestor_id', other: 'nodes.id', set: 'ancestor_fk', with: 'resource_pk')
   end
 end
