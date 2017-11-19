@@ -1,19 +1,23 @@
 class Flattener
   attr_reader :ancestry
 
-  def self.flatten(resource)
-    flattener = self.new(resource)
+  def self.flatten(resource, harvest)
+    flattener = self.new(resource, harvest)
     flattener.flatten
   end
 
-  def initialize(resource)
+  def initialize(resource, harvest)
     @resource = resource
+    @harvest = harvest
   end
 
   def flatten
-    puts("Flattener.flatten(#{@resource.id}) #{@resource.name}")
+    @harvest.log('Flattener#flatten', cat: :starts)
     study_resource
-    return if @children.empty?
+    if @children.empty?
+      @harvest.log('NO CHILDREN FOUND', cat: :warns)
+      return nil
+    end
     build_ancestry
     build_node_ancestors
     update_tables
@@ -22,15 +26,20 @@ class Flattener
   private
 
   def study_resource
+    @harvest.log('Flattener#study_resource', cat: :starts)
     @children = {}
-    Node.where(resource_id: @resource.id).published.pluck("CONCAT_WS(',', id, parent_id) ids").each do |str|
-      (entry,parent) = str.split(',')
-      @children[parent] ||= []
-      @children[parent] << entry
+    Node.where(resource_id: @resource.id).published.pluck_in_batches(:id, :parent_id) do |batch|
+      batch.each do |row|
+        entry = row.first
+        parent = row.last
+        @children[parent] ||= []
+        @children[parent] << entry
+      end
     end
   end
 
   def build_ancestry
+    @harvest.log('Flattener#build_ancestry', cat: :starts)
     @ancestry = {}
     walk_down_tree(nil, [])
   end
@@ -41,11 +50,13 @@ class Flattener
     ancestors_here << id
     @children[id].each do |child_id|
       @ancestry[child_id] = ancestors_here
+      @harvest.log("ancestry now has #{@ancestry.keys.size}") if (@ancestry.keys.size % 10_000).zero?
       walk_down_tree(child_id, ancestors_here)
     end
   end
 
   def build_node_ancestors
+    @harvest.log("Flattener#build_node_ancestors (#{@ancestry.keys.size} ancestry keys)", cat: :starts)
     @node_ancestors = []
     @ancestry.keys.each do |child|
       @ancestry[child].each_with_index do |ancestor, depth|
@@ -59,6 +70,7 @@ class Flattener
   end
 
   def update_tables
+    @harvest.log('Flattener#update_tables', cat: :starts)
     NodeAncestor.where(resource_id: @resource.id).delete_all
     # TODO: error-handling
     if @node_ancestors.empty?
