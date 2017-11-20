@@ -61,13 +61,16 @@ class Flattener
     num_deleted = NodeAncestor.where(resource_id: @resource.id).delete_all
     @harvest.log("old ancestors (#{num_deleted}) deleted.")
     @node_ancestors = []
-    @ancestry.keys.each do |child|
+    ancestry_size_pct = @ancestry.keys.size / 100.0
+    ancestry_index = 0
+    @ancestry.each_key do |child|
+      ancestry_index += 1
       @ancestry[child].each_with_index do |ancestor, depth|
         next if ancestor.nil? # No need to store this one.
         @node_ancestors <<
           NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
         if @node_ancestors.size >= 10_000
-          update_tables
+          update_tables((ancestry_index / ancestry_size_pct).floor)
           @node_ancestors = []
         end
       end
@@ -77,13 +80,12 @@ class Flattener
     true
   end
 
-  def update_tables
-    @harvest.log('Flattener#update_tables', cat: :starts)
+  def update_tables(pct = nil)
     # TODO: error-handling
     if @node_ancestors.empty?
       @harvest.log("NOTHING TO FLATTEN!")
     else
-      @harvest.log("Flattening #{@node_ancestors.size} ancestors")
+      @harvest.log("Flattening #{@node_ancestors.size} ancestors #{"(#{pct}%)" unless pct.nil?}")
       NodeAncestor.import! @node_ancestors
     end
   end

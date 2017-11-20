@@ -62,7 +62,7 @@ class ResourceHarvester
     Searchkick.disable_callbacks
     begin
       fast_forward = @harvest && !@harvest.stage.nil?
-      steps = Harvest.stages.keys.each do |stage|
+      steps = Harvest.stages.each_key do |stage|
         if fast_forward && harvest.stage != stage
           @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
           next
