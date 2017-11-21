@@ -174,7 +174,7 @@ class NamesMatcher
     map_unflagged_node(node, opts) # NOTE: dat recursion
   end
 
-  def more_than_one_match(node, matching_nodes)
+  def more_than_one_match(node, matching_nodes, opts = {})
     puts ".. Oh fun! #{matching_nodes.total_count} matches for \"#{node.canonical}\" via #{@strategies[opts[:strategy]]}"
     scores = {}
     matching_nodes.each do |matching_node|
