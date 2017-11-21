@@ -4,6 +4,7 @@ namespace :reset do
   namespace :full do
     desc 'rebuild the database, re-running migrations. Your gun, your foot: use caution. No harvests are performed.'
     task none: :environment do
+      Rake::Task['log:clear'].invoke
       Rake::Task['db:drop'].invoke
       Rake::Task['db:create'].invoke
       Rake::Task['db:migrate'].invoke
@@ -29,6 +30,7 @@ namespace :reset do
 
   desc 'reset the database, using the schema instead of migrations. Only the DWH harvest is performed.'
   task first: :environment do
+    Rake::Task['log:clear'].invoke
     Rake::Task['db:reset'].invoke
     Rake::Task['searchkick:reindex:all'].invoke
     ResourceHarvester.new(Resource.first).start

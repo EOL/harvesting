@@ -19,8 +19,12 @@ class Flattener
       return nil
     end
     build_ancestry
-    build_node_ancestors
-    propagate_ancestor_ids
+    count = build_node_ancestors
+    if count.zero?
+      @harvest.log('Flattener: nothing to flatten! (Completely flat resource?)', cat: :warns)
+    else
+      propagate_ancestor_ids
+    end
     @harvest.log('Flattener#flatten', cat: :ends)
   end
 
@@ -63,6 +67,7 @@ class Flattener
     @node_ancestors = []
     ancestry_size_pct = @ancestry.keys.size / 100.0
     ancestry_index = 0
+    count = 0
     @ancestry.each_key do |child|
       ancestry_index += 1
       @ancestry[child].each_with_index do |ancestor, depth|
@@ -70,28 +75,26 @@ class Flattener
         @node_ancestors <<
           NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
         if @node_ancestors.size >= 100_000
-          update_tables((ancestry_index / ancestry_size_pct).floor)
+          count += update_tables((ancestry_index / ancestry_size_pct).floor)
           @node_ancestors = []
         end
       end
     end
-    update_tables
-    # Without returning something simple, the return value is huge, slowing things down.
-    true
+    count += update_tables
   end
 
   def update_tables(pct = nil)
     # TODO: error-handling
-    if @node_ancestors.empty?
-      @harvest.log("NOTHING TO FLATTEN!")
-    else
+    if @node_ancestors.any?
       @harvest.log("Flattening #{@node_ancestors.size} ancestors #{"(#{pct}%)" unless pct.nil?}")
       NodeAncestor.import! @node_ancestors
     end
+    @node_ancestors.size
   end
 
   def propagate_ancestor_ids
     @harvest.log('Flattener#propagate_ancestor_ids', cat: :starts)
-    NodeAncestor.propagate_id(fk: 'ancestor_id', other: 'nodes.id', set: 'ancestor_fk', with: 'resource_pk')
+    NodeAncestor.propagate_id(fk: 'ancestor_id', other: 'nodes.id', set: 'ancestor_fk', with: 'resource_pk',
+                              resource_id: @resource.id)
   end
 end
