@@ -1,4 +1,4 @@
-@all = %w[Mineralogy CalPhotos flickrBHL IUCN-SD]
+@all = %w[Mineralogy CalPhotos flickrBHL IUCN-SD mam_inter carn_names] # MISSING FILE: carn_art]
 
 namespace :reset do
   namespace :full do

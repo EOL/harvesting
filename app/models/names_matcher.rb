@@ -149,7 +149,7 @@ class NamesMatcher
     opts[:strategy] ||= 0
     results = send(@strategies[opts[:strategy]], node.scientific_name)
     return save_match(node, results.first[:page_id]) if results.total_count == 1
-    return more_than_one_match(node, results) if results.total_count > 1
+    return more_than_one_match(node, results, opts) if results.total_count > 1
     return unmapped(node, 'virus', opts) if node.scientific_name.virus?
     opts[:strategy] += 1
     # NOTE: mmmmmaybe we want to do a sanity check here and abort if the name is

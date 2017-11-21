@@ -69,7 +69,7 @@ class Flattener
         next if ancestor.nil? # No need to store this one.
         @node_ancestors <<
           NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
-        if @node_ancestors.size >= 10_000
+        if @node_ancestors.size >= 100_000
           update_tables((ancestry_index / ancestry_size_pct).floor)
           @node_ancestors = []
         end
