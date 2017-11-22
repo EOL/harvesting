@@ -811,6 +811,115 @@ Resource.quick_define(
   }
 )
 
+Resource.quick_define(
+  name: 'PanTHERIA',
+  abbr: 'pantheria',
+  type: :csv,
+  partner: {
+    name: 'PanTHERIA',
+    abbr: 'pantheria',
+    short_name: 'Pantheria',
+    homepage_url: 'http://esapubs.org/archive/ecol/E090/184/',
+    description: 'PanTHERIA is a species-level data set compiled for analysis of life history, ecology, and geography '\
+      'of all known extant and recently extinct mammals.',
+    auto_publish: false
+  },
+  field_sep: "\t",
+  pk_url: '',
+  base_dir: Rails.public_path.join('data', 'pantheria'),
+  formats: {
+    nodes: { loc: 'taxa.txt', fields: [
+      { 'taxonID' => 'to_nodes_pk', is_unique: true, can_be_empty: false },
+      { 'scientificName' => 'to_nodes_scientific' },
+      { 'parentNameUsageID' => 'to_nodes_parent_fk' },
+      { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
+      { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
+      { 'class' => 'to_nodes_ancestor', submapping: 'class' },
+      { 'order' => 'to_nodes_ancestor', submapping: 'order' },
+      { 'family' => 'to_nodes_ancestor', submapping: 'family' },
+      { 'genus' => 'to_nodes_ancestor', submapping: 'genus' },
+      { 'taxonRank' => 'to_nodes_rank' },
+      { 'furtherInformationURL' => 'to_nodes_further_information_url' },
+      { 'taxonomicStatus' => 'to_taxonomic_status' },
+      { 'taxonRemarks' => 'to_nodes_remarks' },
+      { 'namePublishedIn' => 'to_nodes_publication' },
+      { 'referenceID' => 'to_nodes_ref_fks', submapping: ';' }
+    ] },
+    refs: { loc: 'references.txt', fields: [
+      { 'ReferenceID' => 'to_refs_pk' },
+      { 'PublicationType' => 'to_ignored' },
+      { 'Full Reference' => 'to_refs_body' },
+      { 'PrimaryTitle' => 'to_refs_part' },
+      { 'SecondaryTitle' => 'to_refs_part' },
+      { 'Pages' => 'to_refs_part' },
+      { 'PageStart' => 'to_ignored' },
+      { 'PageEnd' => 'to_ignored' },
+      { 'VolumeEdition' => 'to_refs_part' },
+      { 'Publisher' => 'to_refs_part' },
+      { 'AuthorList' => 'to_refs_part' },
+      { 'EditorList' => 'to_refs_part' },
+      { 'DateCreated' => 'to_refs_part' },
+      { 'Language' => 'to_ignored' }, # TODO: should we handle this? I don't think we care about it.
+      { 'URL' => 'to_refs_url' },
+      { 'DOI' => 'to_refs_doi' },
+      { 'LocalityOfPublisher' => 'to_refs_part' }
+    ] },
+    occurrences: { loc: 'occurrences.txt', fields: [
+      { 'OccurrenceID' => 'to_occurrences_pk', can_be_empty: false, is_unique: true },
+      { 'TaxonID' => 'to_occurrences_nodes_fk', can_be_empty: false },
+      { 'Event ID' => 'to_ignored' },
+      { 'Institution Code' => 'to_ignored' },
+      { 'Collection Code' => 'to_ignored' },
+      { 'Catalog Number' => 'to_ignored' },
+      { 'Sex' => 'to_occurrences_sex' },
+      { 'LifeStage' => 'to_occurrences_lifestage' },
+      { 'Reproductive Condition' => 'to_occurrences_meta',
+        submapping: 'http://rs.tdwg.org/dwc/terms/reproductiveCondition' },
+      { 'Behavior' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/behavior' },
+      { 'Establishment Means' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/establishmentMeans' },
+      { 'Remarks' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/occurrenceRemarks' },
+      { 'Count of Individuals' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/individualCount' },
+      { 'Preparations' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/preparations' },
+      { 'FieldNotes' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/fieldNotes' },
+      { 'Sampling Protocol' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/samplingProtocol' },
+      { 'Sampling Effort' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/samplingEffort' },
+      { 'Recorded By' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/recordedBy' },
+      { 'Identified By' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/identifiedBy' },
+      { 'Date Identified' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/dateIdentified' },
+      { 'Event Date' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/eventDate' },
+      { 'Modified Date' => 'to_occurrences_meta', submapping: 'http://purl.org/dc/terms/modified' },
+      { 'Locality' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/locality' },
+      { 'Decimal Latitude' => 'to_occurrences_lat' },
+      { 'Decimal Longitude' => 'to_occurrences_long' },
+      { 'Verbatim Latitude' => 'to_occurrences_lat_literal' },
+      { 'Verbatim Longitude' => 'to_occurrences_long_literal' },
+      { 'Verbatim Elevation' => 'to_occurrences_meta', submapping: 'http://rs.tdwg.org/dwc/terms/verbatimElevation' }
+    ] },
+    measurements: { loc: 'measurementsORfacts.txt', fields: [
+      { 'Measurement ID' => 'to_traits_pk', can_be_empty: false, is_unique: true },
+      { 'Occurrence ID' => 'to_traits_occurrence_fk' },
+      { 'MeasurementOfTaxon' => 'to_traits_measurement_of_taxon' },
+      { 'Association ID' => 'to_traits_assoc_node_fk' },
+      { 'Parent Measurement ID' => 'to_traits_parent_pk' },
+      { 'Measurement Type' => 'to_traits_predicate', can_be_empty: false },
+      { 'Measurement Value' => 'to_traits_value' },
+      { 'Unit' => 'to_traits_units' },
+      { 'Accuracy' => 'to_traits_meta', submapping: 'http://rs.tdwg.org/dwc/terms/measurementAccuracy' },
+      { 'Statistical Method' => 'to_traits_statistical_method' },
+      { 'Determined Date' => 'to_traits_meta',
+        submapping: 'http://rs.tdwg.org/dwc/terms/measurementDeterminedDate' },
+      { 'Determined By' => 'to_traits_meta',
+        submapping: 'http://rs.tdwg.org/dwc/terms/measurementDeterminedBy' },
+      { 'Measurement Method' => 'to_traits_meta', submapping: 'http://rs.tdwg.org/dwc/terms/measurementMethod' },
+      { 'Remarks' => 'to_traits_meta', submapping: 'http://rs.tdwg.org/dwc/terms/measurementRemarks' },
+      { 'Source' => 'to_traits_source' },
+      { 'Citation' => 'to_traits_meta', submapping: 'http://purl.org/dc/terms/bibliographicCitation' },
+      { 'Contributor' => 'to_traits_meta', submapping: 'http://purl.org/dc/terms/contributor' },
+      { 'ReferenceID' => 'to_ignored' } # TODO: this one (and there's another in another resource) should be handled...
+    ] }
+  }
+)
+
 Node.reindex # This empties all of the stuff from ElasticSearch.
 
 # Jonathan's thought: use a table to store ids. You could do something like
