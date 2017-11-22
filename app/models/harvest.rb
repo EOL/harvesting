@@ -25,6 +25,9 @@ class Harvest < ActiveRecord::Base
   # the list here (because it's database-dependent), but really, if you change the methods there, you MUST do something
   # about these, probably involving a complex migration of bumping the integer values in the DB to insert the new name
   # or remove an old one....
+  #
+  # HINT: Choose the NEXT stage you want to run, NOT the one that's completed. This is the CURRENT stage, and is
+  # INCOMPLETE.
   enum stage: %i[
     create_harvest_instance fetch_files validate_each_file convert_to_csv calculate_delta parse_diff_and_store
     resolve_node_keys resolve_media_keys resolve_trait_keys resolve_missing_parents rebuild_nodes

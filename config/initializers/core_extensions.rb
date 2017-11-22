@@ -30,7 +30,7 @@ class ActiveRecord::Base
       update_clause += " AND t.#{filter_field} = ? AND o.#{filter_field} = t.#{filter_field}" if filter
       update_clause += ')'
       set_clause = "SET t.`#{set}` = o.`#{with_field}`"
-      page_size = 10_000
+      page_size = 100_000 # TODO: play around with this, find the ideal value. 10K seemed too small, ran in 300-600ms.
       if max - min > page_size
         range_clause = "WHERE t.#{primary_key} >= ? AND t.#{primary_key} <= ?"
         while max > min
