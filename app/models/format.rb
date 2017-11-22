@@ -80,6 +80,11 @@ class Format < ActiveRecord::Base
     special_path('diff', 'diff')
   end
 
+  def diff_size
+    return 0 unless File.exist?(diff)
+    `wc #{diff}`.to_i
+  end
+
   # You can pass in :cat, :e, :line as options
   def log(message, options = {})
     harvest.log(message, options.merge(format: self))

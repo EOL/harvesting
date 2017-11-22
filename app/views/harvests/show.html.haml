@@ -79,12 +79,13 @@
           = ", sheet ##{fmt.sheet}"
         = "(#{fmt.fields.size} fields)"
 
-%h2 Harvesting Log
-- if @harvest.hlogs.empty?
+%h2 Harvesting Log (most recent first)
+- if @logs.empty?
   %p The logs for this harvest are empty.
 - else
+  = paginate(@logs)
   %ul
-    - @harvest.hlogs.order(:created_at).each do |log|
+    - @logs.each do |log|
       %li
         %strong= log.category
         (
@@ -93,3 +94,4 @@
         = log.message
         - if log.line?
           = "(on line #{log.line})"
+  = paginate(@logs)

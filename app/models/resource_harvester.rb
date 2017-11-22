@@ -242,7 +242,7 @@ class ResourceHarvester
   def parse_diff_and_store
     clear_storage_vars
     each_diff do
-      log_info "Loading #{@format.represents} (#{@format.id}) diff file into memory..."
+      log_info "Loading #{@format.represents} (##{@format.id}) diff file into memory (#{@format.diff_size} lines)..."
       fields = build_fields
       i = 0
       any_diff = @parser.diff_as_hashes(@headers) do |row|
