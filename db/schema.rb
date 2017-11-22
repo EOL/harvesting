@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171107145752) do
+ActiveRecord::Schema.define(version: 20171122190510) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -79,7 +79,7 @@ ActiveRecord::Schema.define(version: 20171107145752) do
     t.integer "removed_by_harvest_id",      limit: 4
     t.string  "trait_resource_pk",          limit: 255,   null: false
     t.string  "measurement",                limit: 255
-    t.string  "literal",                    limit: 255
+    t.text    "literal",                    limit: 65535
     t.text    "source",                     limit: 65535
   end
 
@@ -402,7 +402,7 @@ ActiveRecord::Schema.define(version: 20171107145752) do
     t.integer "statistical_method_term_id", limit: 4
     t.string  "assoc_resource_fk",          limit: 255
     t.string  "measurement",                limit: 255
-    t.string  "literal",                    limit: 255
+    t.text    "literal",                    limit: 65535
     t.text    "source",                     limit: 65535
   end
 
@@ -417,7 +417,7 @@ ActiveRecord::Schema.define(version: 20171107145752) do
     t.integer "statistical_method_term_id", limit: 4
     t.string  "trait_resource_pk",          limit: 255,   null: false
     t.string  "measurement",                limit: 255
-    t.string  "literal",                    limit: 255
+    t.text    "literal",                    limit: 65535
     t.text    "source",                     limit: 65535
   end
 

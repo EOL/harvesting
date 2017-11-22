@@ -53,7 +53,7 @@ module Store
       @models[:scientific_name][:taxonomic_status_verbatim] = val
     end
 
-    def to_node_ref_fks(field, val)
+    def to_nodes_ref_fks(field, val)
       @models[:node] ||= {}
       @models[:node][:ref_sep] ||= field.submapping
       @models[:node][:ref_fks] = val

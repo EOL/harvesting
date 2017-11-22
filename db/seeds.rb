@@ -586,7 +586,7 @@ Resource.quick_define(
       { 'Pages' => 'to_refs_part' },
       { 'PageStart' => 'to_ignored' },
       { 'PageEnd' => 'to_ignored' },
-      { 'VolumeEdition' => 'to_refs_part' },
+      { 'VolumeEdition' => 'to_refs_part' }, # TODO: this looks like a bug; should be TWO fields. Oh well.
       { 'Publisher' => 'to_refs_part' },
       { 'AuthorList' => 'to_refs_part' },
       { 'EditorList' => 'to_refs_part' },
@@ -854,7 +854,8 @@ Resource.quick_define(
       { 'Pages' => 'to_refs_part' },
       { 'PageStart' => 'to_ignored' },
       { 'PageEnd' => 'to_ignored' },
-      { 'VolumeEdition' => 'to_refs_part' },
+      { 'Volume' => 'to_refs_part' },
+      { 'Edition' => 'to_refs_part' },
       { 'Publisher' => 'to_refs_part' },
       { 'AuthorList' => 'to_refs_part' },
       { 'EditorList' => 'to_refs_part' },

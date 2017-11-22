@@ -86,7 +86,7 @@ class Format < ActiveRecord::Base
   end
 
   def special_path(dir, ext)
-    Rails.public_path.join(dir, "#{resource.name_brief}_#{represents}_#{id}.#{ext}")
+    Rails.public_path.join(dir, "#{resource.abbr}_#{represents}_#{id}.#{ext}")
   end
 
   def warn(message, line = nil)

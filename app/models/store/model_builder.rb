@@ -227,6 +227,7 @@ module Store
         datum = convert_meta_value(datum, value)
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
+        datum.delete(:source) # TODO: we should allow (and show) this. :S
         prepare_model_for_store(OccurrenceMetadatum, datum)
       end
     end
@@ -264,6 +265,7 @@ module Store
       klass = Trait
       klass = OccurrenceMetadatum if occ_meta
       @models[:trait].delete(:of_taxon) if occ_meta
+      @models[:trait].delete(:source) if occ_meta # TODO: we should allow (and show) this. :S
       trait = prepare_model_for_store(klass, @models[:trait])
       meta.each do |key, value|
         datum = {}
@@ -274,7 +276,10 @@ module Store
         datum[:predicate_term_id] = predicate_term.id
         datum = convert_meta_value(datum, value)
         klass = MetaTrait
-        klass = OccurrenceMetadatum if !@models[:trait][:of_taxon] && parent.blank?
+        if !@models[:trait][:of_taxon] && parent.blank?
+          klass = OccurrenceMetadatum
+          datum.delete(:source) # TODO: handle this...
+        end
         prepare_model_for_store(klass, datum)
       end
     end
@@ -313,13 +318,13 @@ module Store
 
     def convert_trait_value(instance)
       value = instance.delete(:value)
-      if value =~ URI::regexp && Regexp.last_match.begin(0) == 0
+      if value =~ URI::ABS_URI && Regexp.last_match.begin(0) == 0
         object_term = find_or_create_term(value, type: 'value')
         instance[:object_term_id] = object_term.id
       end
       if instance[:units]
         units = instance.delete(:units)
-        if units =~ URI::regexp
+        if units =~ URI::ABS_URI
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         else
@@ -338,7 +343,7 @@ module Store
 
     # Simpler:
     def convert_meta_value(datum, value)
-      if value =~ URI::regexp
+      if value =~ URI::ABS_URI
         object_term = find_or_create_term(value, type: 'meta-value')
         datum[:object_term_id] = object_term.id
       else

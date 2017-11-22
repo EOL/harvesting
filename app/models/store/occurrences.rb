@@ -31,7 +31,7 @@ module Store
     end
 
     def get_meta_field(cache, uri, meta_uri)
-      return uri unless uri =~ URI::regexp
+      return uri unless uri =~ URI::ABS_URI
       name =
         if cache.key?(uri)
           cache[uri]
