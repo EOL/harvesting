@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171122190510) do
+ActiveRecord::Schema.define(version: 20171123030442) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -47,8 +47,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   end
 
   add_index "articles", ["guid"], name: "index_articles_on_guid", using: :btree
+  add_index "articles", ["harvest_id", "resource_pk"], name: "index_articles_on_harvest_id_and_resource_pk", using: :btree
   add_index "articles", ["harvest_id"], name: "index_articles_on_harvest_id", using: :btree
-  add_index "articles", ["resource_id", "resource_pk"], name: "index_articles_on_resource_id_and_resource_pk", using: :btree
   add_index "articles", ["resource_id"], name: "index_articles_on_resource_id", using: :btree
 
   create_table "articles_references", force: :cascade do |t|
@@ -60,6 +60,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   end
 
   add_index "articles_references", ["article_id"], name: "index_articles_references_on_article_id", using: :btree
+  add_index "articles_references", ["harvest_id", "article_resource_fk"], name: "index_articles_references_on_harvest_id_and_article_resource_fk", using: :btree
+  add_index "articles_references", ["harvest_id", "ref_resource_fk"], name: "index_articles_references_on_harvest_id_and_ref_resource_fk", using: :btree
   add_index "articles_references", ["harvest_id"], name: "index_articles_references_on_harvest_id", using: :btree
   add_index "articles_references", ["reference_id"], name: "index_articles_references_on_reference_id", using: :btree
 
@@ -83,6 +85,7 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.text    "source",                     limit: 65535
   end
 
+  add_index "assoc_traits", ["harvest_id", "trait_resource_pk"], name: "index_assoc_traits_on_harvest_id_and_trait_resource_pk", using: :btree
   add_index "assoc_traits", ["harvest_id"], name: "index_assoc_traits_on_harvest_id", using: :btree
   add_index "assoc_traits", ["resource_id"], name: "index_assoc_traits_on_resource_id", using: :btree
 
@@ -107,6 +110,7 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   add_index "assocs", ["node_id"], name: "index_assocs_on_node_id", using: :btree
   add_index "assocs", ["occurrence_resource_fk"], name: "index_assocs_on_occurrence_resource_fk", using: :btree
   add_index "assocs", ["resource_id"], name: "index_assocs_on_resource_id", using: :btree
+  add_index "assocs", ["resource_pk"], name: "index_assocs_on_resource_pk", using: :btree
   add_index "assocs", ["target_node_id"], name: "index_assocs_on_target_node_id", using: :btree
   add_index "assocs", ["target_occurrence_resource_fk"], name: "index_assocs_on_target_occurrence_resource_fk", using: :btree
 
@@ -119,6 +123,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   end
 
   add_index "assocs_references", ["assoc_id"], name: "index_assocs_references_on_assoc_id", using: :btree
+  add_index "assocs_references", ["harvest_id", "assoc_resource_fk"], name: "index_assocs_references_on_harvest_id_and_assoc_resource_fk", using: :btree
+  add_index "assocs_references", ["harvest_id", "ref_resource_fk"], name: "index_assocs_references_on_harvest_id_and_ref_resource_fk", using: :btree
   add_index "assocs_references", ["harvest_id"], name: "index_assocs_references_on_harvest_id", using: :btree
   add_index "assocs_references", ["reference_id"], name: "index_assocs_references_on_reference_id", using: :btree
 
@@ -134,8 +140,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.datetime "updated_at",                          null: false
   end
 
+  add_index "attributions", ["harvest_id", "resource_pk"], name: "index_attributions_on_harvest_id_and_resource_pk", using: :btree
   add_index "attributions", ["harvest_id"], name: "index_attributions_on_harvest_id", using: :btree
-  add_index "attributions", ["resource_id", "resource_pk"], name: "index_attributions_on_resource_id_and_resource_pk", using: :btree
 
   create_table "attributions_contents", force: :cascade do |t|
     t.integer "attribution_id", limit: 4,   null: false
@@ -296,8 +302,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   end
 
   add_index "links", ["guid"], name: "index_links_on_guid", using: :btree
+  add_index "links", ["harvest_id", "resource_pk"], name: "index_links_on_harvest_id_and_resource_pk", using: :btree
   add_index "links", ["harvest_id"], name: "index_links_on_harvest_id", using: :btree
-  add_index "links", ["resource_id", "resource_pk"], name: "index_links_on_resource_id_and_resource_pk", using: :btree
   add_index "links", ["resource_id"], name: "index_links_on_resource_id", using: :btree
 
   create_table "links_sections", id: false, force: :cascade do |t|
@@ -359,9 +365,11 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   end
 
   add_index "media", ["guid"], name: "index_media_on_guid", using: :btree
+  add_index "media", ["harvest_id", "bibliographic_citation_fk"], name: "index_media_on_harvest_id_and_bibliographic_citation_fk", using: :btree
+  add_index "media", ["harvest_id", "node_resource_pk"], name: "index_media_on_harvest_id_and_node_resource_pk", using: :btree
+  add_index "media", ["harvest_id", "resource_pk"], name: "index_media_on_harvest_id_and_resource_pk", using: :btree
   add_index "media", ["harvest_id"], name: "index_media_on_harvest_id", using: :btree
   add_index "media", ["node_id"], name: "index_media_on_node_id", using: :btree
-  add_index "media", ["resource_id", "resource_pk"], name: "index_media_on_resource_id_and_resource_pk", using: :btree
   add_index "media", ["resource_id"], name: "index_media_on_resource_id", using: :btree
   add_index "media", ["subclass"], name: "index_media_on_subclass", using: :btree
 
@@ -382,6 +390,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.string  "medium_resource_fk", limit: 255, null: false
   end
 
+  add_index "media_references", ["harvest_id", "medium_resource_fk"], name: "index_media_references_on_harvest_id_and_medium_resource_fk", using: :btree
+  add_index "media_references", ["harvest_id", "ref_resource_fk"], name: "index_media_references_on_harvest_id_and_ref_resource_fk", using: :btree
   add_index "media_references", ["harvest_id"], name: "index_media_references_on_harvest_id", using: :btree
   add_index "media_references", ["medium_id"], name: "index_media_references_on_medium_id", using: :btree
   add_index "media_references", ["reference_id"], name: "index_media_references_on_reference_id", using: :btree
@@ -406,6 +416,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.text    "source",                     limit: 65535
   end
 
+  add_index "meta_assocs", ["harvest_id", "assoc_resource_fk"], name: "index_meta_assocs_on_harvest_id_and_assoc_resource_fk", using: :btree
+
   create_table "meta_traits", force: :cascade do |t|
     t.integer "resource_id",                limit: 4,     null: false
     t.integer "harvest_id",                 limit: 4,     null: false
@@ -421,6 +433,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.text    "source",                     limit: 65535
   end
 
+  add_index "meta_traits", ["harvest_id", "trait_resource_pk"], name: "index_meta_traits_on_harvest_id_and_trait_resource_pk", using: :btree
+
   create_table "node_ancestors", force: :cascade do |t|
     t.integer "resource_id", limit: 4,   null: false
     t.integer "node_id",     limit: 4,   null: false
@@ -431,6 +445,7 @@ ActiveRecord::Schema.define(version: 20171122190510) do
 
   add_index "node_ancestors", ["ancestor_id"], name: "index_node_ancestors_on_ancestor_id", using: :btree
   add_index "node_ancestors", ["node_id"], name: "index_node_ancestors_on_node_id", using: :btree
+  add_index "node_ancestors", ["resource_id", "ancestor_fk"], name: "index_node_ancestors_on_resource_id_and_ancestor_fk", using: :btree
   add_index "node_ancestors", ["resource_id"], name: "index_node_ancestors_on_resource_id", using: :btree
 
   create_table "nodes", force: :cascade do |t|
@@ -455,6 +470,7 @@ ActiveRecord::Schema.define(version: 20171122190510) do
 
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
+  add_index "nodes", ["parent_resource_pk"], name: "index_nodes_on_parent_resource_pk", using: :btree
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
   add_index "nodes", ["resource_pk"], name: "index_nodes_on_resource_pk", using: :btree
 
@@ -466,6 +482,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.string  "node_resource_fk", limit: 255, null: false
   end
 
+  add_index "nodes_references", ["harvest_id", "node_resource_fk"], name: "index_nodes_references_on_harvest_id_and_node_resource_fk", using: :btree
+  add_index "nodes_references", ["harvest_id", "ref_resource_fk"], name: "index_nodes_references_on_harvest_id_and_ref_resource_fk", using: :btree
   add_index "nodes_references", ["harvest_id"], name: "index_nodes_references_on_harvest_id", using: :btree
   add_index "nodes_references", ["node_id"], name: "index_nodes_references_on_node_id", using: :btree
   add_index "nodes_references", ["reference_id"], name: "index_nodes_references_on_reference_id", using: :btree
@@ -484,6 +502,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.string  "occurrence_resource_pk",     limit: 255
   end
 
+  add_index "occurrence_metadata", ["harvest_id", "occurrence_resource_pk"], name: "index_occurrence_metadata_on_harvest_id_and_occurrence_resourc", using: :btree
+  add_index "occurrence_metadata", ["harvest_id", "resource_pk"], name: "index_occurrence_metadata_on_harvest_id_and_resource_pk", using: :btree
   add_index "occurrence_metadata", ["harvest_id"], name: "index_occurrence_metadata_on_harvest_id", using: :btree
 
   create_table "occurrences", force: :cascade do |t|
@@ -495,6 +515,7 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.string  "lifestage_term_id", limit: 255
   end
 
+  add_index "occurrences", ["harvest_id", "node_resource_pk"], name: "index_occurrences_on_harvest_id_and_node_resource_pk", using: :btree
   add_index "occurrences", ["harvest_id"], name: "index_occurrences_on_harvest_id", using: :btree
   add_index "occurrences", ["resource_pk"], name: "index_occurrences_on_resource_pk", using: :btree
 
@@ -532,8 +553,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.datetime "updated_at",                          null: false
   end
 
+  add_index "references", ["harvest_id", "resource_pk"], name: "index_references_on_harvest_id_and_resource_pk", using: :btree
   add_index "references", ["harvest_id"], name: "index_references_on_harvest_id", using: :btree
-  add_index "references", ["resource_id", "resource_pk"], name: "index_references_on_resource_id_and_resource_pk", using: :btree
 
   create_table "resources", force: :cascade do |t|
     t.integer  "position",                  limit: 4
@@ -619,6 +640,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.string  "name_resource_fk",   limit: 255, null: false
   end
 
+  add_index "scientific_names_references", ["harvest_id", "name_resource_fk"], name: "index_s_names_refs_on_harv_and_name_resource_fk", using: :btree
+  add_index "scientific_names_references", ["harvest_id", "ref_resource_fk"], name: "index_s_names_refs_on_harv_and_ref_resource_fk", using: :btree
   add_index "scientific_names_references", ["harvest_id"], name: "index_scientific_names_references_on_harvest_id", using: :btree
   add_index "scientific_names_references", ["reference_id"], name: "index_scientific_names_references_on_reference_id", using: :btree
   add_index "scientific_names_references", ["scientific_name_id"], name: "index_scientific_names_references_on_scientific_name_id", using: :btree
@@ -677,11 +700,11 @@ ActiveRecord::Schema.define(version: 20171122190510) do
   end
 
   add_index "traits", ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk", using: :btree
+  add_index "traits", ["harvest_id", "resource_pk"], name: "index_traits_on_harvest_id_and_resource_pk", using: :btree
   add_index "traits", ["harvest_id"], name: "index_traits_on_harvest_id", using: :btree
   add_index "traits", ["occurrence_resource_pk"], name: "index_traits_on_occurrence_resource_pk", using: :btree
   add_index "traits", ["parent_id"], name: "index_traits_on_parent_id", using: :btree
   add_index "traits", ["parent_pk"], name: "index_traits_on_parent_pk", using: :btree
-  add_index "traits", ["resource_id", "resource_pk"], name: "index_traits_on_resource_id_and_resource_pk", using: :btree
 
   create_table "traits_references", force: :cascade do |t|
     t.integer "harvest_id",        limit: 4
@@ -691,6 +714,8 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.string  "trait_resource_fk", limit: 255, null: false
   end
 
+  add_index "traits_references", ["harvest_id", "ref_resource_fk"], name: "index_traits_references_on_harvest_id_and_ref_resource_fk", using: :btree
+  add_index "traits_references", ["harvest_id", "trait_resource_fk"], name: "index_traits_references_on_harvest_id_and_trait_resource_fk", using: :btree
   add_index "traits_references", ["harvest_id"], name: "index_traits_references_on_harvest_id", using: :btree
   add_index "traits_references", ["reference_id"], name: "index_traits_references_on_reference_id", using: :btree
   add_index "traits_references", ["trait_id"], name: "index_traits_references_on_trait_id", using: :btree
@@ -721,6 +746,7 @@ ActiveRecord::Schema.define(version: 20171122190510) do
     t.integer "removed_by_harvest_id",  limit: 4
   end
 
+  add_index "vernaculars", ["harvest_id", "node_resource_pk"], name: "index_vernaculars_on_harvest_id_and_node_resource_pk", using: :btree
   add_index "vernaculars", ["harvest_id"], name: "index_vernaculars_on_harvest_id", using: :btree
   add_index "vernaculars", ["resource_id", "verbatim"], name: "index_vernaculars_on_resource_id_and_verbatim", using: :btree
   add_index "vernaculars", ["verbatim"], name: "index_vernaculars_on_verbatim", using: :btree
