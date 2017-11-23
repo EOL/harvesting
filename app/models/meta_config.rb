@@ -6,6 +6,65 @@ class MetaConfig
     new(path, resource).import
   end
 
+  # NOTE: this doesn't *quite* seem to work, and I'm not sure why yet... Oh! It's because I'm not selecting the right
+  # format. Ooops.
+  def self.analyze
+    hashes = {}
+    Resource.find_each do |resource|
+      format = resource.formats.last
+      filename = format.get_from
+      basename = File.basename(filename)
+      filename = filename.sub(basename, 'meta.xml')
+      unless File.exist?(filename)
+        # puts "SKIPPING missing meta file for format: #{format.id}"
+        next
+      end
+      @doc = File.open(filename) { |f| Nokogiri::XML(f) }
+      tables = @doc.css('archive table')
+      tables.each do |table|
+        location = table.css("files location").first.text
+        puts "++ #{resource.name}/#{location}"
+        table.css('field').each do |field|
+          i = field['index'].to_i
+          format = resource.formats.where("get_from LIKE '%#{location}'")&.first
+          if format.nil?
+            # puts "SKIPPING missing format for #{location}"
+            next
+          end
+          db_field = format.fields[i]
+          if db_field.nil?
+            # puts "SKIPPING missing db field for format #{format.id}..."
+            next
+          end
+          key = "#{field['term']}/#{format.represents}"
+          if hashes.key? key
+            if hashes[key][:represents] == "to_ignored"
+              # puts ".. It was ignored; overriding..."
+            elsif hashes[key][:represents] == db_field.mapping
+              next
+            else
+              puts "!! I'm leaving the old value for #{key} of #{hashes[key][:represents]} and losing the value "\
+                "of #{db_field.mapping}"
+              next
+            end
+          end
+          hashes[key] = {
+            term: field['term'],
+            for_format: format.represents,
+            represents: db_field.mapping,
+            submapping: db_field.unique_in_format,
+            is_unique: db_field.unique_in_format,
+            is_required: !db_field.can_be_empty
+          }
+        end
+      end
+    end
+    File.open(Rails.root.join('db', 'data', 'meta_analyzed.json'),"w") do |f|
+      f.write(hashes.values.sort_by { |h| h[:term] }.to_json.gsub(/,/, ",\n"))
+    end
+    puts "Done. Created #{hashes.keys.size} hashes."
+  end
+
   def initialize(path, resource = nil)
     @path = path
     @resource = resource || Resource.create
