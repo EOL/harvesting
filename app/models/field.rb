@@ -9,12 +9,11 @@ class Field < ActiveRecord::Base
   # behaviors for each are handled by ResourceHarvester, q.v. NOTE: to_ignored fields, if altered between harvests,
   # STILL trigger a diff, even though nothing will change!
   enum mapping:
-    # TODO: review this list and flesh out the missing methods! Also, this is conflated with the Store:: classes, and we
-    # should probably find some way to handle that. I feel these belong here, since it's DB-specific... but it requires
-    # some duplication.
-    #
-    # NOTE: things that can have references: taxa, media, measurements, assocs. Each of them can have *multiple*
-    # refs, separated by "some safe char," which we will store in the submapping.
+    # TODO: This is dumb. Change this to an associated table, and use seeds to "intuit" all of the values possible in
+    # that table right from the code.
+
+    # NOTE: things that can have references: taxa, media, measurements, assocs. Each of them can have *multiple* refs,
+    # separated by "some safe char," which we will store in the submapping.
     %i[ to_ignored
 
         to_nodes_pk to_nodes_scientific to_nodes_parent_fk to_nodes_ancestor to_nodes_rank
@@ -44,8 +43,6 @@ class Field < ActiveRecord::Base
 
         to_associations_pk to_associations_occurrence_fk to_associations_target_occurrence_fk to_associations_predicate
         to_associations_source to_associations_ref_fks to_associations_meta ]
-
-        # TODO: assocs
 
   enum special_handling: %i[iso_639_1 iso_639_3]
 end
