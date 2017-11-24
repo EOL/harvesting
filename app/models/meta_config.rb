@@ -71,10 +71,10 @@ class MetaConfig
   end
 
   def import
+    @resource.formats.delete_all
     filename = "#{@path}/meta.xml"
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-    debugger
     tables = @doc.css('archive table')
     formats = []
     tables.each do |table|
@@ -120,6 +120,8 @@ class MetaConfig
         else
           raise "I cannot determine what #{table_name} represents!"
         end
+      sep = table['fieldsTerminatedBy']
+      sep = "\t" if sep == "\\t"
       fmt = Format.create!(
         resource_id: @resource.id,
         harvest_id: nil,
@@ -128,14 +130,36 @@ class MetaConfig
         file_type: :csv,
         represents: reps,
         get_from: "#{@path}/#{table_name}",
-        field_sep: table['fieldsTerminatedBy'],
+        field_sep: sep,
         line_sep: table['linesTerminatedBy'],
         utf8: table['encoding'] =~ /^UTF/
       )
+      headers = `head -n #{table['ignoreHeaderLines']} #{@path}/#{table_name}`.split(sep)
+      headers.last.chomp!
       fields = []
       table.css('field').each do |field|
-
+        assumption = MetaXmlField.where(term: field['term'], for_format: reps)&.first
+        a_submap = assumption&.submapping
+        a_submap = nil if a_submap == '0'
+        mapping_name = assumption&.represents || :to_ignored
+        index = field['index'].to_i
+        header_name = headers[index]
+        if mapping_name == 'to_nodes_ancestor'
+          a_submap = header_name.downcase
+        end
+        fields[index] = {
+          format_id: fmt.id,
+          position: field['index'],
+          validation: nil, # TODO...
+          mapping: Field.mappings[mapping_name],
+          special_handling: nil, # TODO...
+          submapping: a_submap,
+          expected_header: header_name,
+          unique_in_format: assumption ? assumption.is_unique : true,
+          can_be_empty: assumption ? !assumption.is_required : true
+        }
       end
+      Field.import!(fields)
     end
   end
 end

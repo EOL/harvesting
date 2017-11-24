@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171123030442) do
+ActiveRecord::Schema.define(version: 20171123041948) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -434,6 +434,15 @@ ActiveRecord::Schema.define(version: 20171123030442) do
   end
 
   add_index "meta_traits", ["harvest_id", "trait_resource_pk"], name: "index_meta_traits_on_harvest_id_and_trait_resource_pk", using: :btree
+
+  create_table "meta_xml_fields", force: :cascade do |t|
+    t.string  "term",        limit: 255
+    t.string  "for_format",  limit: 255
+    t.string  "represents",  limit: 255
+    t.string  "submapping",  limit: 255
+    t.boolean "is_unique"
+    t.boolean "is_required"
+  end
 
   create_table "node_ancestors", force: :cascade do |t|
     t.integer "resource_id", limit: 4,   null: false
