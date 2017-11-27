@@ -70,7 +70,7 @@ class Resource < ActiveRecord::Base
   def self.from_xml(path)
     abbr = File.basename(path)
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
-    resource = create(name: abbr.titleize, abbr: abbr.downcase, type: :csv, pk_url: '$PK')
+    resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
     MetaConfig.import(path, resource)
   end
 
