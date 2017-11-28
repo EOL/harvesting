@@ -102,7 +102,7 @@
   %ul
     - @node.media.published.each do |medium|
       %li
-        = link_to(medium.name_verbatim || truncate(medium.description_verbatim, 20), medium)
+        = link_to(medium.name_verbatim || truncate(medium.description_verbatim, length: 20), medium)
         = "(#{medium.format})"
 
 %h2= t('nodes.headers.traits')
