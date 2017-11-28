@@ -75,7 +75,18 @@ class Medium < ActiveRecord::Base
     begin
       # TODO: we really should use https. It will be the only thing availble, at some point...
       get_url = source_url.sub(/^https/, 'http')
-      image = Image.read(get_url).first # No animations supported!
+      require 'open-uri'
+      raw = open(get_url)
+      content_type = str.content_type
+      unless content_type =~ /^image/i
+        # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
+        # clearer.
+        mess = "#{get_url} is NOT an image! (#{content_type})"
+        Delayed::Worker.logger.error(mess)
+        harvest.log(mess, cat: :errors)
+        raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
+      end
+      image = Image.read(raw.to_io).first # No animations supported!
       d_time = Time.now
     rescue Magick::ImageMagickError => e
       mess = "Couldn't get image #{get_url} for Medium ##{id}"

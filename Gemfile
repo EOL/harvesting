@@ -29,11 +29,11 @@ gem "jquery-rails"
 # Pagination!
 gem 'kaminari'
 
-# JS runtime
-gem 'therubyracer'
-
 # Use mysql as the database for Active Record
 gem "mysql2"
+
+# Debugging:
+gem 'pry-rails'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
 gem "rails", "4.2.10"
@@ -50,6 +50,9 @@ gem "sdoc"
 # Making forms simpler:
 gem "simple_form"
 
+# JS runtime
+gem 'therubyracer'
+
 # Turbolinks makes following links in your web application faster. Read more:
 # https://github.com/rails/turbolinks
 gem "turbolinks"
@@ -58,9 +61,8 @@ gem "turbolinks"
 gem "uglifier"
 
 group :development, :test do
-  # Call "byebug" anywhere in the code to stop execution and get a debugger
-  # console
-  gem "byebug"
+  # Yes, pry is kinda redundant with byebug, but it doesnt' do stepping, sooo:
+  gem 'byebug'
 
   gem "factory_bot_rails"
 
