@@ -77,7 +77,7 @@ class Medium < ActiveRecord::Base
       get_url = source_url.sub(/^https/, 'http')
       require 'open-uri'
       raw = open(get_url)
-      content_type = str.content_type
+      content_type = raw.content_type
       unless content_type =~ /^image/i
         # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
         # clearer.
