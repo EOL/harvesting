@@ -921,6 +921,8 @@ Resource.quick_define(
   }
 )
 
+MetaXmlField.read_analyzed
+
 Node.reindex # This empties all of the stuff from ElasticSearch.
 
 # Jonathan's thought: use a table to store ids. You could do something like

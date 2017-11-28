@@ -147,6 +147,17 @@ class NamesMatcher
 
   def map_unflagged_node(node, opts)
     opts[:strategy] ||= 0
+    common_exceptions = {
+      'Animalia' => 1,
+      'Plantae' => 281,
+      'Chromista' => 3352,
+      'Fungi' => 5559,
+      'Protozoa' => 4651,
+    }
+    # COMMON KINGDOMS (much easier/faster to hard-code these!):
+    if (page_id = common_exceptions.key?(node.scientific_name.canonical))
+      return save_match(node, page_id)
+    end
     results = send(@strategies[opts[:strategy]], node.scientific_name)
     return save_match(node, results.first[:page_id]) if results.total_count == 1
     return more_than_one_match(node, results, opts) if results.total_count > 1

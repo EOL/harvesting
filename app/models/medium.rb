@@ -13,7 +13,7 @@ class Medium < ActiveRecord::Base
   has_many :references, through: :media_references
 
   enum subclass: [:image, :video, :sound, :map_image ]
-  enum format: [:jpg, :youtube, :flash, :vimeo, :mp3, :ogg, :wav]
+  enum format: [:jpg, :youtube, :flash, :vimeo, :mp3, :ogg, :wav, :mp4]
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
 

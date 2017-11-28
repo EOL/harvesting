@@ -6,8 +6,6 @@ class MetaConfig
     new(path, resource).import
   end
 
-  # NOTE: this doesn't *quite* seem to work, and I'm not sure why yet... Oh! It's because I'm not selecting the right
-  # format. Ooops.
   def self.analyze
     hashes = {}
     Resource.find_each do |resource|
@@ -52,7 +50,7 @@ class MetaConfig
             term: field['term'],
             for_format: format.represents,
             represents: db_field.mapping,
-            submapping: db_field.unique_in_format,
+            submapping: db_field.submapping,
             is_unique: db_field.unique_in_format,
             is_required: !db_field.can_be_empty
           }
@@ -76,6 +74,7 @@ class MetaConfig
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
     tables = @doc.css('archive table')
+    ignored_fields = []
     formats = []
     tables.each do |table|
       table_name = table.css("files location").text
@@ -155,11 +154,17 @@ class MetaConfig
           special_handling: nil, # TODO...
           submapping: a_submap,
           expected_header: header_name,
-          unique_in_format: assumption ? assumption.is_unique : true,
+          unique_in_format: assumption ? assumption.is_unique : false,
           can_be_empty: assumption ? !assumption.is_required : true
         }
+        if mapping_name == 'to_ignored'
+          ignored_fields << { file: table_name, reps: reps, head: header_name, term: field['term'] }
+        end
       end
       Field.import!(fields)
+    end
+    ignored_fields.each do |ignored|
+      puts "!! IGNORED #{ignored[:file]} (#{ignored[:reps]}) -> #{ignored[:head]}/#{ignored[:term]}"
     end
   end
 end

@@ -27,12 +27,12 @@ module Store
         'sound' => :sound,
         'map_image' => :map_image,
         'map_js' => :map_js,
-        'http://purl.org/dc/dcmitype/stillimage' => :image
+        'http://purl.org/dc/dcmitype/stillimage' => :image,
+        'http://purl.org/dc/dcmitype/movingimage' => :video
       }
       type = if @media_type_mappings.key?(val.downcase)
         @media_type_mappings[val.downcase]
       else
-        debugger
         log_warning(%Q{Could not find a media type (subclass) of "#{val.downcase}"})
         :image
       end
@@ -45,6 +45,7 @@ module Store
         'video/x-youtube' => :youtube,
         'application/x-shockwave-flash' => :flash,
         'video/vimeo' => :vimeo,
+        'video/mp4' => :mp4,
         'application/javascript' => :map_js,
         'audio/mpeg' => :mp3, # NOTE: this one is "best".
         'audio/mp3' => :mp3,
@@ -55,7 +56,6 @@ module Store
       type = if @media_subtype_mappings.key?(val.downcase)
         @media_subtype_mappings[val.downcase]
       else
-        debugger
         log_warning(%Q{Could not find a media subtype (format) of "#{val.downcase}"})
         :jpg
       end
