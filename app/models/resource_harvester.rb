@@ -296,6 +296,7 @@ class ResourceHarvester
     @new = {}
     @old = {}
     @missing_media_types = {}
+    @bad_statuses = {}
   end
 
   def find_orphan_parent_nodes

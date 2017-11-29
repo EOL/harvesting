@@ -76,7 +76,6 @@ module Store
       begin
         TaxonomicStatus.parse(status)
       rescue Errors::UnmatchedTaxonomicStatus => e
-        @bad_statuses = {}
         log_warning("New Taxonomic status: #{status}; treatings as unusable...") unless @bad_statuses.key?(status)
         @bad_statuses[status] = true
         return :unusable
