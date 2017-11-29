@@ -5,8 +5,8 @@ class Format < ActiveRecord::Base
 
   before_destroy :remove_files
 
-  has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :destroy
-  has_many :hlogs, inverse_of: :format, dependent: :destroy
+  has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :delete_all
+  has_many :hlogs, inverse_of: :format, dependent: :delete_all
 
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats

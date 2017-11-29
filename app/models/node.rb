@@ -8,16 +8,16 @@ class Node < ActiveRecord::Base
   belongs_to :harvest, inverse_of: :nodes
   belongs_to :scientific_name, inverse_of: :nodes
 
-  has_many :scientific_names, inverse_of: :node, dependent: :destroy
-  has_many :media, inverse_of: :node, dependent: :destroy
-  has_many :vernaculars, inverse_of: :node, dependent: :destroy
-  has_many :occurrences, inverse_of: :node, dependent: :destroy
-  has_many :traits, inverse_of: :node, dependent: :destroy
-  has_many :assocs, inverse_of: :node, dependent: :destroy
-  has_many :identifiers, inverse_of: :node, dependent: :destroy
-  has_many :nodes_references, inverse_of: :node, dependent: :destroy
+  has_many :scientific_names, inverse_of: :node, dependent: :delete_all
+  has_many :media, inverse_of: :node, dependent: :delete_all
+  has_many :vernaculars, inverse_of: :node, dependent: :delete_all
+  has_many :occurrences, inverse_of: :node, dependent: :delete_all
+  has_many :traits, inverse_of: :node, dependent: :delete_all
+  has_many :assocs, inverse_of: :node, dependent: :delete_all
+  has_many :identifiers, inverse_of: :node, dependent: :delete_all
+  has_many :nodes_references, inverse_of: :node, dependent: :delete_all
   has_many :references, through: :nodes_references
-  has_many :node_ancestors, -> { order(:depth) }, inverse_of: :node, dependent: :destroy
+  has_many :node_ancestors, -> { order(:depth) }, inverse_of: :node, dependent: :delete_all
   has_many :descendants, class_name: 'NodeAncestor', inverse_of: :ancestor, foreign_key: :ancestor_id
   has_many :children, class_name: 'Node', foreign_key: :parent_id, inverse_of: :parent
 

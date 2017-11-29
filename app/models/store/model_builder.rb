@@ -167,6 +167,8 @@ module Store
 
     # NOTE: this can and should fail if there was no node PK or if it's unmatched:
     def build_medium
+      # TODO: handle this later:
+      return if @models[:medium][:is_article]
       debugger unless @models[:medium][:resource_pk]
       debugger unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id

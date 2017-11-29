@@ -41,6 +41,7 @@ module Store
         :image
       end
       @models[:medium][:subclass] = type
+      @models[:medium][:is_article] = true if type == :article
     end
 
     def to_media_subtype(field, val)
@@ -56,7 +57,8 @@ module Store
         'audio/mp3' => :mp3,
         'audio/ogg' => :ogg, # NOTE: this one is "best"
         'application/ogg' => :ogg,
-        'audio/wav' => :wav
+        'audio/wav' => :wav,
+        'text/html' => nil, # Nothing needed; it's just an article!
       }
       norm_val = val.downcase
       type = if @media_subtype_mappings.key?(norm_val)

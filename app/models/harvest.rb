@@ -1,19 +1,19 @@
 class Harvest < ActiveRecord::Base
   belongs_to :resource, inverse_of: :harvests
-  has_many :formats, inverse_of: :harvest, dependent: :destroy
-  has_many :hlogs, inverse_of: :harvest, dependent: :destroy
-  has_many :nodes, inverse_of: :harvest, dependent: :destroy
+  has_many :formats, inverse_of: :harvest, dependent: :destroy # NOTE: a few more deletes off of this one.
+  has_many :hlogs, inverse_of: :harvest # destroyed via formats
+  has_many :nodes, inverse_of: :harvest, dependent: :destroy # NOTE: a lot of dependent deletes from this one.
   has_many :scientific_names, through: :nodes, source: 'scientific_names'
-  has_many :occurrences, inverse_of: :harvest, dependent: :destroy
-  has_many :occurrence_metadata, inverse_of: :harvest, dependent: :destroy
-  has_many :traits, inverse_of: :harvest, dependent: :destroy
-  has_many :meta_traits, inverse_of: :harvest, dependent: :destroy
-  has_many :assocs, inverse_of: :harvest, dependent: :destroy
-  has_many :meta_assocs, inverse_of: :harvest, dependent: :destroy
-  has_many :assocs_references, inverse_of: :harvest, dependent: :destroy
-  has_many :assoc_traits, inverse_of: :harvest, dependent: :destroy
-  has_many :identifiers, inverse_of: :harvest, dependent: :destroy
-  has_many :media, inverse_of: :harvest, dependent: :destroy
+  has_many :occurrences, inverse_of: :harvest # destroyed via nodes
+  has_many :occurrence_metadata, inverse_of: :harvest, dependent: :delete_all
+  has_many :traits, inverse_of: :harvest # destroyed via nodes
+  has_many :meta_traits, inverse_of: :harvest, dependent: :delete_all
+  has_many :assocs, inverse_of: :harvest # destroyed via nodes
+  has_many :meta_assocs, inverse_of: :harvest, dependent: :delete_all
+  has_many :assocs_references, inverse_of: :harvest, dependent: :delete_all
+  has_many :assoc_traits, inverse_of: :harvest, dependent: :delete_all
+  has_many :identifiers, inverse_of: :harvest # destroyed via nodes
+  has_many :media, inverse_of: :harvest # destroyed via nodes
 
   delegate :resume, to: :resource
 
