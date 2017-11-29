@@ -66,9 +66,20 @@ module Store
       end
       @models[:scientific_name][:taxonomic_status] = @models[:scientific_name][:taxonomic_status_verbatim].blank? ?
         :preferred :
-        TaxonomicStatus.parse(@models[:scientific_name][:taxonomic_status_verbatim])
+        parse_status(@models[:scientific_name][:taxonomic_status_verbatim])
 
       prepare_model_for_store(ScientificName, @models[:scientific_name])
+    end
+
+    def parse_status(status)
+      begin
+        TaxonomicStatus.parse(status)
+      rescue Errors::UnmatchedTaxonomicStatus => e
+        @bad_statuses = {}
+        log_warning("New Taxonomic status: #{status}; treatings as unusable...") unless @bad_statuses.key?(status) = true
+        @bad_statuses[status] = true
+        return :unusable
+      end
     end
 
     def build_node

@@ -62,7 +62,8 @@ class TaxonomicStatus
       'database artifact',
       'genbank common',
       'other',
-      'unavailable, database artifact'
+      'unavailable, database artifact',
+      'misapplied'
     ]
   }
 
@@ -94,9 +95,7 @@ class TaxonomicStatus
       end
       # TODO: rearrange this once we know how to handle missing keys
       return map[string] if map.key?(string)
-      # TODO: not sure what we want to do. :) Warn, at least, but probably also treat it as unusable?
-      debugger
-      1
+      raise Errors::UnmatchedTaxonomicStatus, string
     end
 
     def normalize(verbatim)
