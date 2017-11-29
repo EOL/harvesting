@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171123041948) do
+ActiveRecord::Schema.define(version: 20171129184726) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -746,7 +746,7 @@ ActiveRecord::Schema.define(version: 20171123041948) do
     t.integer "node_id",                limit: 4
     t.integer "language_id",            limit: 4
     t.string  "node_resource_pk",       limit: 255
-    t.string  "verbatim",               limit: 255
+    t.text    "verbatim",               limit: 65535
     t.string  "language_code_verbatim", limit: 255
     t.string  "locality",               limit: 255
     t.text    "remarks",                limit: 65535
@@ -757,7 +757,5 @@ ActiveRecord::Schema.define(version: 20171123041948) do
 
   add_index "vernaculars", ["harvest_id", "node_resource_pk"], name: "index_vernaculars_on_harvest_id_and_node_resource_pk", using: :btree
   add_index "vernaculars", ["harvest_id"], name: "index_vernaculars_on_harvest_id", using: :btree
-  add_index "vernaculars", ["resource_id", "verbatim"], name: "index_vernaculars_on_resource_id_and_verbatim", using: :btree
-  add_index "vernaculars", ["verbatim"], name: "index_vernaculars_on_verbatim", using: :btree
 
 end

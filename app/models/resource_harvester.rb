@@ -295,6 +295,7 @@ class ResourceHarvester
     @models = {}
     @new = {}
     @old = {}
+    @missing_media_types = {}
   end
 
   def find_orphan_parent_nodes
@@ -493,7 +494,8 @@ class ResourceHarvester
 
   def queue_downloads
     @harvest.log_call
-    @harvest.media.find_each { |med| med.delay.download_and_resize }
+    # TODO: Likely other "kinds" of downloads for other kinds of media.
+    @harvest.media.where(format: Medium.formats[:jpg]).find_each { |med| med.delay.download_and_resize }
   end
 
   def parse_names

@@ -32,6 +32,7 @@ module Store
     end
 
     def build_licenses
+      return if @licenses
       @licenses = {}
       License.select("id, source_url").each { |lic| @licenses[lic.source_url] = lic.id }
     end
@@ -76,7 +77,7 @@ module Store
         TaxonomicStatus.parse(status)
       rescue Errors::UnmatchedTaxonomicStatus => e
         @bad_statuses = {}
-        log_warning("New Taxonomic status: #{status}; treatings as unusable...") unless @bad_statuses.key?(status) = true
+        log_warning("New Taxonomic status: #{status}; treatings as unusable...") unless @bad_statuses.key?(status)
         @bad_statuses[status] = true
         return :unusable
       end
@@ -383,10 +384,20 @@ module Store
     end
 
     def find_or_create_language(lang_code)
-      if Language.exists?(code: lang_code)
-        Language.where(code: lang_code).first
+      @languages_by_code ||= {}
+      @languages_by_group ||= {}
+      if @languages_by_code.key?(lang_code)
+        @languages_by_code[lang_code]
+      elsif @languages_by_group.key?(lang_code)
+        @languages_by_group[lang_code]
+      elsif Language.exists?(code: lang_code)
+        lang = Language.where(code: lang_code).first
+        @languages_by_code[lang_code] = lang
+        lang
       elsif Language.exists?(group_code: lang_code)
-        Language.where(group_code: lang_code).first
+        lang = Language.where(group_code: lang_code).first
+        @languages_by_group[lang_code] = lang
+        lang
       else
         attrs =
           if (iso = ISO_639.find(lang_code))
@@ -394,7 +405,10 @@ module Store
           else
             { code: lang_code, group_code: lang_code }
           end
-        Language.create!(attrs)
+        # NOTE: languages don't have "name" fields; that's handled by I18n based on the code.
+        lang = Language.create!(attrs)
+        @languages_by_code[lang_code] = lang
+        lang
       end
     end
 
