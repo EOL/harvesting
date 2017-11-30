@@ -280,9 +280,9 @@ class NamesMatcher
   def log_unmatched
     return if @unmatched.blank?
     if @unmatched.size > 100
-      @harvest.log("#{@unmatched.size} Unmatched nodes! That's too many to output. First 50: #{@unmatched[0..50].join('; ')}", cat: :warns)
+      @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. First 50: #{@unmatched[0..50].join('; ')}", cat: :warns)
     else
-      @harvest.log("Unmatched nodes (#{@unmatched.size}): #{@unmatched.join('; ')}", cat: :warns)
+      @harvest.log("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}", cat: :warns)
     end
   end
 end
