@@ -164,7 +164,7 @@ class MetaConfig
       Field.import!(fields)
     end
     ignored_fields.each do |ignored|
-      puts "!! IGNORED #{ignored[:file]} (#{ignored[:reps]}) -> #{ignored[:head]}/#{ignored[:term]}"
+      puts "!! IGNORED #{ignored[:file]} (#{ignored[:reps]}) header: #{ignored[:head]} term: #{ignored[:term]}"
     end
   end
 end

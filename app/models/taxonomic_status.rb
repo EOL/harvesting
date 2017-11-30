@@ -63,7 +63,8 @@ class TaxonomicStatus
       'genbank common',
       'other',
       'unavailable, database artifact',
-      'misapplied'
+      'misapplied',
+      'ambiguous synonym'
     ]
   }
 

@@ -69,8 +69,16 @@ class Resource < ActiveRecord::Base
 
   def self.from_xml(path)
     abbr = File.basename(path)
+    partner = Partner.create(
+      name: abbr.titleize,
+      abbr: abbr.downcase,
+      short_name: abbr.tr('_', ' '),
+      homepage_url: "#{abbr}.com",
+      description: 'This resource was auto-created by parsing meta.xml. A curator will edit this description shortly.',
+      auto_publish: false
+    )
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
-    resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
+    resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK', partner_id: partner.id)
     MetaConfig.import(path, resource)
   end
 
