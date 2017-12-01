@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171129184726) do
+ActiveRecord::Schema.define(version: 20171130215805) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -604,35 +604,37 @@ ActiveRecord::Schema.define(version: 20171129184726) do
   end
 
   create_table "scientific_names", force: :cascade do |t|
-    t.integer "resource_id",               limit: 4,                    null: false
-    t.integer "harvest_id",                limit: 4,                    null: false
-    t.integer "node_id",                   limit: 4
-    t.integer "normalized_name_id",        limit: 4
-    t.integer "parse_quality",             limit: 4
-    t.integer "taxonomic_status",          limit: 4
-    t.string  "node_resource_pk",          limit: 255
-    t.string  "taxonomic_status_verbatim", limit: 255
-    t.string  "warnings",                  limit: 255
-    t.string  "genus",                     limit: 255
-    t.string  "specific_epithet",          limit: 255
-    t.string  "infraspecific_epithet",     limit: 255
-    t.string  "infrageneric_epithet",      limit: 255
-    t.string  "normalized",                limit: 255
-    t.string  "canonical",                 limit: 255
-    t.string  "uninomial",                 limit: 255
-    t.text    "verbatim",                  limit: 65535,                null: false
-    t.text    "authorship",                limit: 65535
-    t.text    "publication",               limit: 65535
-    t.text    "remarks",                   limit: 65535
-    t.integer "year",                      limit: 4
-    t.boolean "is_preferred"
-    t.boolean "is_used_for_merges",                      default: true
-    t.boolean "is_publishable",                          default: true
-    t.boolean "hybrid"
-    t.boolean "surrogate"
-    t.boolean "virus"
-    t.integer "removed_by_harvest_id",     limit: 4
-    t.string  "dataset_id",                limit: 255
+    t.integer  "resource_id",               limit: 4,                    null: false
+    t.integer  "harvest_id",                limit: 4,                    null: false
+    t.integer  "node_id",                   limit: 4
+    t.integer  "normalized_name_id",        limit: 4
+    t.integer  "parse_quality",             limit: 4
+    t.integer  "taxonomic_status",          limit: 4
+    t.string   "node_resource_pk",          limit: 255
+    t.string   "taxonomic_status_verbatim", limit: 255
+    t.string   "warnings",                  limit: 255
+    t.string   "genus",                     limit: 255
+    t.string   "specific_epithet",          limit: 255
+    t.string   "infraspecific_epithet",     limit: 255
+    t.string   "infrageneric_epithet",      limit: 255
+    t.string   "normalized",                limit: 255
+    t.string   "canonical",                 limit: 255
+    t.string   "uninomial",                 limit: 255
+    t.text     "verbatim",                  limit: 65535,                null: false
+    t.text     "authorship",                limit: 65535
+    t.text     "publication",               limit: 65535
+    t.text     "remarks",                   limit: 65535
+    t.integer  "year",                      limit: 4
+    t.boolean  "is_preferred"
+    t.boolean  "is_used_for_merges",                      default: true
+    t.boolean  "is_publishable",                          default: true
+    t.boolean  "hybrid"
+    t.boolean  "surrogate"
+    t.boolean  "virus"
+    t.integer  "removed_by_harvest_id",     limit: 4
+    t.string   "dataset_id",                limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   add_index "scientific_names", ["harvest_id"], name: "index_scientific_names_on_harvest_id", using: :btree
@@ -741,18 +743,20 @@ ActiveRecord::Schema.define(version: 20171129184726) do
   end
 
   create_table "vernaculars", force: :cascade do |t|
-    t.integer "resource_id",            limit: 4,     null: false
-    t.integer "harvest_id",             limit: 4,     null: false
-    t.integer "node_id",                limit: 4
-    t.integer "language_id",            limit: 4
-    t.string  "node_resource_pk",       limit: 255
-    t.text    "verbatim",               limit: 65535
-    t.string  "language_code_verbatim", limit: 255
-    t.string  "locality",               limit: 255
-    t.text    "remarks",                limit: 65535
-    t.text    "source",                 limit: 65535
-    t.boolean "is_preferred"
-    t.integer "removed_by_harvest_id",  limit: 4
+    t.integer  "resource_id",            limit: 4,     null: false
+    t.integer  "harvest_id",             limit: 4,     null: false
+    t.integer  "node_id",                limit: 4
+    t.integer  "language_id",            limit: 4
+    t.string   "node_resource_pk",       limit: 255
+    t.text     "verbatim",               limit: 65535
+    t.string   "language_code_verbatim", limit: 255
+    t.string   "locality",               limit: 255
+    t.text     "remarks",                limit: 65535
+    t.text     "source",                 limit: 65535
+    t.boolean  "is_preferred"
+    t.integer  "removed_by_harvest_id",  limit: 4
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   add_index "vernaculars", ["harvest_id", "node_resource_pk"], name: "index_vernaculars_on_harvest_id_and_node_resource_pk", using: :btree

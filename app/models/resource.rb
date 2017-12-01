@@ -109,4 +109,9 @@ class Resource < ActiveRecord::Base
     harvester.start
     harvester
   end
+
+  # Because this happens often enough that it was worth making a method out of it. TODO: rename the @!#$*& fields:
+  def swap_media_source_urls
+    media.update_all('source_url=@tmp:=source_url, source_url=source_page_url, source_page_url=@tmp')
+  end
 end

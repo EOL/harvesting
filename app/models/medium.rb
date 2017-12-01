@@ -65,37 +65,42 @@ class Medium < ActiveRecord::Base
   end
 
   def download_and_resize
-    available_sizes = {}
-    d_time = nil
     unless Dir.exist?(dir)
       FileUtils.mkdir_p(dir)
       FileUtils.chmod(0o755, dir)
     end
     orig_filename = "#{dir}/#{basename}.jpg"
+    # TODO: we really should use https. It will be the only thing availble, at some point...
+    get_url = source_url.sub(/^https/, 'http')
+    require 'open-uri'
     begin
-      # TODO: we really should use https. It will be the only thing availble, at some point...
-      get_url = source_url.sub(/^https/, 'http')
-      require 'open-uri'
       raw = open(get_url)
-      content_type = raw.content_type
-      unless content_type =~ /^image/i
-        # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
-        # clearer.
-        mess = "#{get_url} is NOT an image! (#{content_type})"
-        Delayed::Worker.logger.error(mess)
-        harvest.log(mess, cat: :errors)
-        raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
-      end
-      image = Image.read(raw.to_io).first # No animations supported!
-      d_time = Time.now
+    rescue Net::ReadTimeout
+      mess = "Timed out reading #{get_url} for Medium ##{id}"
+      harvest.log(mess, cat: :errors)
+      raise Net::ReadTimeout, mess
+    end
+    content_type = raw.content_type
+    unless content_type.match?(/^image/i)
+      # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
+      # clearer.
+      mess = "#{get_url} is NOT an image! (#{content_type})"
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
+      raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
+    end
+    begin
+      image = Image.read(raw.to_io).first # NOTE: #first because no animations are supported!
     rescue Magick::ImageMagickError => e
-      mess = "Couldn't get image #{get_url} for Medium ##{id}"
+      mess = "Couldn't parse image #{get_url} for Medium ##{id} (#{e.message})"
       Delayed::Worker.logger.error(mess)
       harvest.log(mess, cat: :errors)
       return nil
     end
+    d_time = Time.now
     orig_w = image.columns
     orig_h = image.rows
+    available_sizes = {}
     image.format = 'JPEG'
     image.auto_orient
     if File.exist?(orig_filename)
