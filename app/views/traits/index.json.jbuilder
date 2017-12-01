@@ -16,6 +16,7 @@ json.traits @traits do |trait|
 
   json.metadata (trait.meta_traits + trait.children + trait.occurrence.occurrence_metadata).compact do |meta|
     json.predicate meta.predicate_term.try(:uri)
+    # NOTE Using if's rather than #&. because we don't want the json to return nil, if missing:
     json.units meta.units_term.try(:uri) if meta.respond_to?(:units_term)
     json.statistical_method meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term)
     json.value_uri meta.object_term.try(:uri)
