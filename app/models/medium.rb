@@ -84,7 +84,8 @@ class Medium < ActiveRecord::Base
     unless content_type.match?(/^image/i)
       # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
       # clearer.
-      mess = "#{get_url} is NOT an image! (#{content_type})"
+      mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{id}) resource: #{resource.name} "\
+        "(#{resource.id}), PK: #{resource_pk}"
       Delayed::Worker.logger.error(mess)
       harvest.log(mess, cat: :errors)
       raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.

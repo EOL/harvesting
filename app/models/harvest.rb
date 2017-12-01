@@ -36,6 +36,10 @@ class Harvest < ActiveRecord::Base
     complete_harvest_instance completed
   ]
 
+  def download_all_images
+    media.where(format: Medium.formats[:jpg]).find_each { |med| med.delay.download_and_resize }
+  end
+
   def complete
     update_attribute(:completed_at, Time.now)
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)

@@ -496,7 +496,7 @@ class ResourceHarvester
   def queue_downloads
     @harvest.log_call
     # TODO: Likely other "kinds" of downloads for other kinds of media.
-    @harvest.media.where(format: Medium.formats[:jpg]).find_each { |med| med.delay.download_and_resize }
+    @harvest.download_all_images
   end
 
   def parse_names
