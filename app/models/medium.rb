@@ -80,6 +80,12 @@ class Medium < ActiveRecord::Base
       harvest.log(mess, cat: :errors)
       raise Net::ReadTimeout, mess
     end
+    if raw.nil?
+      mess = "#{get_url} was empty. Medium.find(#{id}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
+      return nil
+    end
     content_type = raw.content_type
     unless content_type.match?(/^image/i)
       # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
