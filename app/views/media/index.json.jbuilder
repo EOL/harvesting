@@ -6,7 +6,7 @@ json.media @media do |medium|
     *%i[guid resource_pk subclass format owner source_url name description unmodified_url
         source_page_url rights_statement usage_statement sizes location_id bibliographic_citation_id]
 
-  json.page_id medium.node.page_id
+  json.page_id medium.node&.page_id # SOMETIMES, there's no node with this resource_pk! TODO: handle during harvest.
   json.name medium.name_verbatim if medium.name.blank?
   json.description medium.description_verbatim if medium.description.blank?
   if medium.base_url.nil? # The image has not been downloaded.
