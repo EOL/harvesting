@@ -15,6 +15,7 @@ json.traits @traits do |trait|
   json.source trait.source
 
   json.metadata (trait.meta_traits + trait.children + trait.occurrence.occurrence_metadata).compact do |meta|
+    json.eol_pk "#{meta.class.name}-#{meta.id}"
     json.predicate meta.predicate_term.try(:uri)
     # NOTE Using if's rather than #&. because we don't want the json to return nil, if missing:
     json.units meta.units_term.try(:uri) if meta.respond_to?(:units_term)
