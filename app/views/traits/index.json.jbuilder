@@ -3,6 +3,7 @@ json.current_page @traits.current_page
 json.traits @traits do |trait|
   json.page_id trait.node.page_id
   json.scientific_name trait.node.scientific_name.italicized
+  json.eol_pk "R#{trait.resource_id}-PK#{trait.id}"
   json.resource_pk trait.resource_pk
   json.predicate trait.predicate_term.uri
   json.value_uri trait.object_term.try(:uri)
