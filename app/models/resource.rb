@@ -16,7 +16,7 @@ class Resource < ActiveRecord::Base
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
-  enum publish_status: %i(unpublished publishing published deprecated)
+  enum publish_status: %i(unpublished publishing published deprecated updated_files)
 
   acts_as_list
 

@@ -186,11 +186,12 @@ en:
     index:
       header: "Resources"
     publish_status:
-      deprecated: "Deprecated (will never harvest)"
-      nil: "Never harvested"
-      published: "Harvested"
-      publishing: "Harvesting (incomplete)"
-      unpublished: "Unharvested"
+      deprecated: "deprecated (will never harvest)"
+      nil: "never harvested"
+      published: "harvested"
+      publishing: "harvesting (incomplete)"
+      unpublished: "unharvested"
+      updated_files: "new files!"
     show:
       add_format: "Add a file format definition"
   terms:

@@ -12,6 +12,7 @@ json.assocs @assocs do |assoc|
   json.source assoc.source
 
   json.metadata (assoc.meta_assocs + assoc.references + assoc.occurrence.occurrence_metadata).compact do |meta|
+    json.eol_pk "#{meta.class.name}-#{meta.id}"
     if meta.is_a?(Reference)
       # TODO: we should probably make this URI configurable:
       json.predicate 'http://eol.org/schema/reference/referenceID'

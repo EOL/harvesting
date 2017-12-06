@@ -102,6 +102,8 @@ class ResourceHarvester
 
   # grab the file from each format
   def fetch_files
+    # TODO: we should compress the files.
+    # https://stackoverflow.com/questions/9204423/how-to-unzip-a-file-in-ruby-on-rails
     Harvest::Fetcher.fetch_format_files(@harvest)
     @harvest.update_attribute(:fetched_at, Time.now)
   end
