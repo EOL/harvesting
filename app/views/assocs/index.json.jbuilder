@@ -3,7 +3,7 @@ json.current_page @assocs.current_page
 json.assocs @assocs do |assoc|
   json.page_id assoc.node.page_id
   json.scientific_name assoc.node.scientific_name.italicized
-  json.target_page_id assoc.target_node.page_id
+  json.object_page_id assoc.target_node.page_id
   json.target_scientific_name assoc.target_node.scientific_name.italicized
   json.eol_pk "R#{assoc.resource_id}-PK#{assoc.id}"
   json.resource_pk assoc.resource_pk
