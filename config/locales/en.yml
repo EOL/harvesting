@@ -184,15 +184,18 @@ en:
       updated: "Saved changes to <a href=%{path}>%{name}</a>"
       destroyed: "Deleted %{name} forever. You cannot get it back."
     index:
-      header: "Resources"
-      jobs:
-        zero: "No pending jobs."
-        one: "One pending job."
-        other: "%{count} pending jobs."
       harvest_jobs:
         zero: "No pending harvests."
         one: "One pending harvest."
         other: "%{count} pending harvests."
+      header: "Resource Harvesting Control Panel"
+      harvest_header: "Last Harvest:"
+      list_header: "The Resources (most recent first):"
+      media_jobs:
+        zero: "No pending media downloads."
+        one: "One pending media download."
+        other: "%{count} pending media downloads."
+      no_harvest: "No harvests (yet)."
     publish_status:
       deprecated: "deprecated (will never harvest)"
       nil: "never harvested"
