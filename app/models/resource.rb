@@ -16,7 +16,7 @@ class Resource < ActiveRecord::Base
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
-  enum publish_status: %i(unpublished publishing published deprecated updated_files)
+  enum publish_status: %i(unpublished publishing published deprecated updated_files harvest_pending)
 
   acts_as_list
 
@@ -83,7 +83,8 @@ class Resource < ActiveRecord::Base
     resource
   end
 
-  def enqueue_harvest
+  def enqueue
+    harvest_pending!
     Delayed::Job.enqueue(HarvestJob.new(id))
   end
 

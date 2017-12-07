@@ -198,6 +198,7 @@ en:
       no_harvest: "No harvests (yet)."
     publish_status:
       deprecated: "deprecated (will never harvest)"
+      harvest_pending: "pending"
       nil: "never harvested"
       published: "harvested"
       publishing: "harvesting (incomplete)"

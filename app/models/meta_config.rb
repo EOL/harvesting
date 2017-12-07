@@ -133,6 +133,7 @@ class MetaConfig
         line_sep: table['linesTerminatedBy'],
         utf8: table['encoding'] =~ /^UTF/
       )
+      raise 'I cannot yet parse files with no headers' if table['ignoreHeaderLines'].to_i.zero?
       headers = `head -n #{table['ignoreHeaderLines']} #{@path}/#{table_name}`.split(sep)
       headers.last.chomp!
       fields = []

@@ -5,6 +5,7 @@ class ResourcesController < ApplicationController
     unless params[:all]
       @resources = @resources.where(publish_status: Resource.publish_statuses[:published])
     end
+    params[:per_page] = 15 if request.format.html?
     @resources = prep_for_api(@resources, updated: true)
   end
 
@@ -24,7 +25,7 @@ class ResourcesController < ApplicationController
   def harvest
     @resource = Resource.find(params[:resource_id])
     count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count
-    @resource.enqueue_harvest
+    @resource.enqueue
     flash[:notice] = t("resources.actions.harvest_enqueued", count: count)
     redirect_to @resource
   end
