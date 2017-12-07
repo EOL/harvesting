@@ -83,6 +83,10 @@ class Resource < ActiveRecord::Base
     resource
   end
 
+  def enqueue_harvest
+    Delayed::Job.enqueue(HarvestJob.new(id))
+  end
+
   def harvest
     ResourceHarvester.new(self).start
   end
