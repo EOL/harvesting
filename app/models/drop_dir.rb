@@ -7,12 +7,13 @@ class DropDir
       Dir.glob("#{path}/*").each do |file| # NOTE: file is a full path, now.
         ext = File.extname(file)
         basename = File.basename(file, ext)
-        resource = Resource.exists?(abbr: basename) ? Resource.find_by_abbr(basename) : nil
+        abbr = shorten(basename)
+        resource = Resource.exists?(abbr: abbr) ? Resource.find_by_abbr(abbr) : nil
         dir =
           if resource
             Rails.public_path.join('data', resource.abbr)
           else
-            Rails.public_path.join('data', basename)
+            Rails.public_path.join('data', abbr)
           end
         FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
         if ext.casecmp('.tgz')
@@ -39,6 +40,32 @@ class DropDir
           end
         end
       end
+    end
+
+    def shorten(basename)
+      abbr = basename.dup
+      return abbr if abbr.size <= 16
+      elements = abbr.split(/[^A-Za-z0-9]/)
+      if elements.size > 2
+        temp = elements.shift[0..3] + '-'
+        final = elements.pop[0..3]
+        # NOTE: 16 - 5 (four chrs plus a sep) = 11
+        while !elements.empty? && (temp.size + final.size <= 11)
+          temp += "#{elements.shift[0..3]}-"
+        end
+        abbr = temp + final
+      elsif elements.size > 1
+        abbr = "#{elements.first[0..7]}-#{elements.last[0..6]}"
+      else
+        if matches = abbr.scan(/^(.*)(\d+)$/).first
+          name = matches.first
+          digits = matches.last
+          allowed_size = 15 - digits.size
+          name = name[0..allowed_size]
+          abbr = "#{name}-#{digits}"
+        end
+      end
+      abbr
     end
 
     def untgz(file, dir)
