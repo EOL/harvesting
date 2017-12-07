@@ -25,6 +25,7 @@ class DropDir
         end
         flatten_dirs(dir)
         remove_dot_files(dir)
+        File.unlink(file) # If we've gotten this far, we've extracted it. Now remove it.
         if resource
           resource.updated_files!
         else
