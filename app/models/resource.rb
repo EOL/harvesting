@@ -69,7 +69,6 @@ class Resource < ActiveRecord::Base
 
   def self.from_xml(path)
     abbr = File.basename(path)
-    partner = fake_partner
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
     resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
     resource.partner = resource.fake_partner
@@ -90,7 +89,7 @@ class Resource < ActiveRecord::Base
   def resume
     ResourceHarvester.new(self).resume
   end
-  
+
   def fake_partner
     return partner unless partner.nil?
     Partner.create(
