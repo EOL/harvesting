@@ -5,7 +5,7 @@
     = t("resources.index.harvest_jobs", count: Delayed::Job.where(queue: 'harvest').count)
   .ui.label
     %i.image.icon
-    = t("resources.index.media_jobs", count: Delayed::Job.where(queue: 'harvest').count)
+    = t("resources.index.media_jobs", count: Delayed::Job.where(queue: 'media').count)
 %h2= t("resources.index.harvest_header")
 .ui.segment
   - harv = Harvest.last
