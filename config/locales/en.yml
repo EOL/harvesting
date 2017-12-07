@@ -190,7 +190,7 @@ en:
         other: "%{count} pending harvests."
       header: "Resource Harvesting Control Panel"
       harvest_header: "Last Harvest:"
-      list_header: "The Resources (most recent first):"
+      list_header: "The Resources:"
       media_jobs:
         zero: "No pending media downloads."
         one: "One pending media download."
