@@ -78,6 +78,7 @@ class MetaConfig
     formats = []
     tables.each do |table|
       table_name = table.css("files location").text
+      raise "No headers: #{table_name.downcase} #{filename}" if table['ignoreHeaderLines'].to_i.zero?
       # TODO: :attributions, :articles, :images, :js_maps, :links, :maps, :sounds, :videos
       reps =
         case table['rowType']
@@ -133,7 +134,6 @@ class MetaConfig
         line_sep: table['linesTerminatedBy'],
         utf8: table['encoding'] =~ /^UTF/
       )
-      raise 'I cannot yet parse files with no headers' if table['ignoreHeaderLines'].to_i.zero?
       headers = `head -n #{table['ignoreHeaderLines']} #{@path}/#{table_name}`.split(sep)
       headers.last.chomp!
       fields = []
