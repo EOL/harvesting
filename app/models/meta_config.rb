@@ -148,7 +148,7 @@ class MetaConfig
         end
         fields[index] = {
           format_id: fmt.id,
-          position: field['index'],
+          position: index,
           validation: nil, # TODO...
           mapping: Field.mappings[mapping_name],
           special_handling: nil, # TODO...

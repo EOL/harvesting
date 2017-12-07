@@ -121,7 +121,6 @@ class ResourceHarvester
       expected_by_file = @headers.dup
       @format.fields.each_with_index do |field, i|
         raise(Exceptions::ColumnMissing, field.expected_header) if @headers[i].nil?
-        debugger unless field.expected_header == @headers[i]
         raise(Exceptions::ColumnMismatch,
               "expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless
           field.expected_header == @headers[i]
