@@ -80,6 +80,7 @@ class Resource < ActiveRecord::Base
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
     resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK', partner_id: partner.id)
     MetaConfig.import(path, resource)
+    resource
   end
 
   def harvest

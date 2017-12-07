@@ -185,6 +185,14 @@ en:
       destroyed: "Deleted %{name} forever. You cannot get it back."
     index:
       header: "Resources"
+      jobs:
+        zero: "No pending jobs."
+        one: "One pending job."
+        other: "%{count} pending jobs."
+      harvest_jobs:
+        zero: "No pending harvests."
+        one: "One pending harvest."
+        other: "%{count} pending harvests."
     publish_status:
       deprecated: "deprecated (will never harvest)"
       nil: "never harvested"

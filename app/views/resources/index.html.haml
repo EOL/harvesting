@@ -1,7 +1,9 @@
 %h1= t("resources.index.header")
 - unless params[:all]
-  .ui.button
-    = link_to(t("resources.actions.show_all"), resources_path(all: true))
+  %p
+    .ui.button= link_to(t("resources.actions.show_all"), resources_path(all: true))
+%p= t("resources.index.jobs", count: Delayed::Job.count)
+%p= t("resources.index.harvest_jobs", count: Delayed::Job.where('handler LIKE "%object:Resource%"').count)
 .ui.list
   - @resources.each do |resource|
     .item

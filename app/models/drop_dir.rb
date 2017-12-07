@@ -30,7 +30,9 @@ class DropDir
           resource.updated_files!
         else
           if File.exist?("#{dir}/meta.xml")
-            Resource.delay.from_xml(dir)
+            resource = Resource.from_xml(dir)
+            Rails.logger.info("DropDir: will harvest resource #{resource.name} (#{resource.id})")
+            resource.delay.harvest
           else
             # TODO: we can assume it's an Excel and write a .from_excel method much like .from_xml...
             Rails.logger.error("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!")
