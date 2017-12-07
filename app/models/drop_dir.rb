@@ -16,9 +16,11 @@ class DropDir
             Rails.public_path.join('data', abbr)
           end
         FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
-        if ext.casecmp('.tgz')
+        if ext.casecmp('.tgz').zero?
           untgz(file, dir)
-        elsif ext.casecmp('.zip')
+        elsif ext.casecmp('.tar.gz').zero?
+          untgz(file, dir)
+        elsif ext.casecmp('.zip').zero?
           unzip(file, dir)
         else
           Rails.logger.error("DropDir: I don't know how to handle a #{ext}: #{basename}#{ext}")
