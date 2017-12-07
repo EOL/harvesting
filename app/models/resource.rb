@@ -67,23 +67,13 @@ class Resource < ActiveRecord::Base
     resource
   end
 
-  def fake_partner
-    return partner unless partner.nil?
-    Partner.create(
-      name: name || abbr.titleize,
-      abbr: abbr.downcase,
-      short_name: abbr.tr('_', ' '),
-      homepage_url: "#{abbr}.com",
-      description: 'This resource was auto-created by parsing meta.xml. A curator will edit this description shortly.',
-      auto_publish: false
-    )
-  end
-
   def self.from_xml(path)
     abbr = File.basename(path)
     partner = fake_partner
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
-    resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK', partner_id: partner.id)
+    resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
+    resource.partner = resource.fake_partner
+    resource.save
     MetaConfig.import(path, resource)
     resource
   end
@@ -99,6 +89,18 @@ class Resource < ActiveRecord::Base
 
   def resume
     ResourceHarvester.new(self).resume
+  end
+  
+  def fake_partner
+    return partner unless partner.nil?
+    Partner.create(
+      name: name || abbr.titleize,
+      abbr: abbr.downcase,
+      short_name: abbr.tr('_', ' '),
+      homepage_url: "#{abbr}.com",
+      description: 'This resource was auto-created by parsing meta.xml. A curator will edit this description shortly.',
+      auto_publish: false
+    )
   end
 
   def create_harvest_instance
