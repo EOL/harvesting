@@ -44,25 +44,33 @@
     = @format.utf8? ? "Yes." : "No."
 
 %h2= "Fields (#{@format.fields.size})"
-- if @format.fields.empty?
-  This format has no fields defined and it
-  %strong cannot be harvested.
-- else
-  .ui.list
-    - @format.fields.each do |field|
-      .item
-        %strong= "#{field.expected_header}"
-        = field.validation? ? field.validation : nil
-        \&rarr;
-        - unless field.mapping.blank?
-          = field.mapping
-        - unless field.submapping.blank?
-          = "(#{field.submapping})"
-        - unless field.special_handling.blank?
-          %strong Special Handling:
-          = field.special_handling
-        = field.unique_in_format? ? "(must be unique)" : nil
-        = field.can_be_empty? ? nil : "(must not be empty)"
-.ui.list
-  .item= link_to(t("formats.show.actions.add_field"), new_format_field_path(@format))
-  .item= link_to(t("formats.show.actions.return"), resource_path(@format.resource))
+.ui.segment
+  - if @format.fields.empty?
+    .ui.header
+      This format has no fields defined and it
+      %strong cannot be harvested.
+  - else
+    %p
+      .ui.relaxed.divided.list
+        - @format.fields.each do |field|
+          .item
+            %i.large.columns.middle.aligned.icon
+            .content
+              .header
+                = "#{field.position}."
+                = link_to("#{field.expected_header}", edit_format_field_path(@format, field))
+                \&rarr;
+                - unless field.mapping.blank?
+                  = field.mapping
+                - unless field.submapping.blank?
+                  = "(#{field.submapping})"
+              .description
+                = field.validation? ? field.validation : nil
+                - unless field.special_handling.blank?
+                  %strong Special Handling:
+                  = field.special_handling
+                = field.unique_in_format? ? "(must be unique)" : nil
+                = field.can_be_empty? ? nil : "(must not be empty)"
+.ui.section
+  .ui.button= link_to(t("formats.show.actions.add_field"), new_format_field_path(@format))
+  .ui.button= link_to(t("formats.show.actions.return"), resource_path(@format.resource))

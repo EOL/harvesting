@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   root 'resources#index'
 
   resources :formats, only: [:show, :destroy] do
-    resources :fields, only: [:create, :new]
+    resources :fields, only: [:create, :new, :edit]
   end
   resources :harvests
   resources :media, only: [:show]
