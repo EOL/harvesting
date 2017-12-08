@@ -28,23 +28,11 @@ else
 end
 
 terms_file = Rails.public_path.join('data', 'terms.json')
-terms = []
 if File.exist?(terms_file)
   Term.delete_all
   puts '.. Importing terms'
   json = JSON.parse(File.read(terms_file))
-  json.each do |u|
-    u['used_for'] = u.delete('type')
-    u.delete('hide_from_gui') # unused
-    u['is_hidden_from_overview'] = u.delete('exclude_from_exemplars')
-    u['is_hidden_from_glossary'] = u.delete('hide_from_glossary')
-    u['is_text_only'] = u.delete('value_is_text')
-    u['is_verbatim_only'] = u.delete('value_is_verbatim')
-    terms << u
-  end
-  terms.in_groups_of(2000, false) do |group|
-    Term.import(group)
-  end
+  Term.from_json(json)
 else
   puts "No terms file found (#{terms_file}), skipping. Your term URIs will not be defined."
 end
