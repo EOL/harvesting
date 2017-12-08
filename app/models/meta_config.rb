@@ -98,7 +98,13 @@ class MetaConfig
           :vernaculars
         when "http://eol.org/schema/Association"
           :assocs
+        when "http://rs.tdwg.org/dwc/terms/Event"
+          :skip
         end
+      if reps == :skip
+        puts "SKIPPING events file..."
+        next
+      end
       reps ||=
         case table_name.downcase
         when /^agent/
@@ -117,6 +123,7 @@ class MetaConfig
           :assocs
         when /(measurement|data|fact)/
           :measurements
+        when /^events/
         else
           raise "I cannot determine what #{table_name} represents!"
         end
