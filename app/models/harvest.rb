@@ -58,7 +58,7 @@ class Harvest < ActiveRecord::Base
   # Reminder: :errors, :warns, :infos, :progs, :loops, :starts, :ends, :counts, :queries, :commands
   def log(message, options = {})
     options[:cat] ||= :infos
-    trace = options[:e] ? options[:e].backtrace&.join("\n") || e.class : nil
+    trace = options[:e] ? options[:e].backtrace&.join("\n") || options[:e].class : nil
     hash = {
       harvest: self,
       category: options[:cat],
