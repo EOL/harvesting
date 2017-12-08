@@ -31,7 +31,7 @@ class CsvParser
         i += 1
       end
     rescue => e
-      raise(e.class.new(e.message + " IN #{@path_to_file}")
+      raise(e.class.new(e.message + " IN #{@path_to_file}"))
     end
     true
   end
