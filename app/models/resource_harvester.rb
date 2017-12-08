@@ -73,7 +73,7 @@ class ResourceHarvester
       end
     rescue => e
       if @harvest
-        log_err(e, 'harvest failed')
+        log_err(e)
         @harvest.update_attribute(:failed_at, Time.now)
       end
     ensure
@@ -278,7 +278,7 @@ class ResourceHarvester
             build_models
           end
         rescue => e
-          log_err(e, "Failed to save data from row #{@line_num}...")
+          log_err(e)
         end
       end
       log_warning('There were no differences in this file!') unless any_diff
@@ -470,8 +470,8 @@ class ResourceHarvester
     @harvest.log(what, cat: :commands)
   end
 
-  def log_err(e, msg)
-    @harvest.log("#{msg}: #{e.message}", e: e, cat: :errors)
+  def log_err(e)
+    @harvest.log("ERROR: #{e.message}", e: e, cat: :errors)
     e.backtrace.each do |trace|
       break if trace.match?(/\bpry\b/)
       break if trace.match?(/\bbundler\b/)
