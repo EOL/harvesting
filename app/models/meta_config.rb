@@ -80,7 +80,7 @@ class MetaConfig
       table_name = table.css("files location").text
       raise "No headers: #{table_name.downcase} #{filename}" if table['ignoreHeaderLines'].to_i.zero?
       table_file = "#{@path}/#{table_name}"
-      unless File.exist?()
+      unless File.exist?(table_file)
         puts "!! SKIPPING missing file: #{table_file}"
         next
       end
