@@ -31,7 +31,7 @@ class CsvParser
         i += 1
       end
     rescue => e
-      raise(e.class.new(e.message + " IN #{@path_to_file}"))
+      raise(e.class.new(e.message + " IN +#{i} #{@path_to_file}"))
     end
     true
   end
@@ -82,6 +82,7 @@ class CsvParser
         @diff = diff_type(Regexp.last_match(1))
         next
       end
+      debugger if row.first.nil?
       next if ignore_row?(row.first, row.size)
       yield(row_as_diff(row, db_headers))
     end
