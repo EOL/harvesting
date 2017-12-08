@@ -138,19 +138,19 @@ class ResourceHarvester
             val = row[header]
             if val.blank?
               unless check.can_be_empty?
-                log_err(Exceptions::ColumnEmpty, "Illegal empty value for #{@format.represents}/#{header} "\
-                  "on line #{@line_num}")
+                log_err(Exceptions::ColumnEmpty.new("Illegal empty value for #{@format.represents}/#{header} "\
+                  "on line #{@line_num}"))
                 end
             end
             if check.must_be_integers?
               unless row[header].match?(/\a[\d,]+\z/m)
-                log_err(Exceptions::ColumnNonInteger, "Illegal non-integer for #{@format.represents}/#{header} "\
-                  "on line #{@line_num}, got #{val}")
+                log_err(Exceptions::ColumnNonInteger.new("Illegal non-integer for #{@format.represents}/#{header} "\
+                  "on line #{@line_num}, got #{val}"))
               end
             elsif check.must_know_uris?
               unless uri_exists?(val)
-                log_err(Exceptions::ColumnUnknownUri, "Illegal unknown URI <#{val}> for "\
-                  "#{@format.represents}/#{header} on line #{@line_num}")
+                log_err(Exceptions::ColumnUnknownUri.new("Illegal unknown URI <#{val}> for "\
+                  "#{@format.represents}/#{header} on line #{@line_num}"))
               end
             end
             csv_row << val
