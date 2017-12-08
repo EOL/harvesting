@@ -63,7 +63,8 @@ class Harvest < ActiveRecord::Base
       harvest: self,
       category: options[:cat],
       message: message[0..65_534], # Truncates really long messages, alas...
-      backtrace: trace
+      backtrace: trace,
+      line: options[:line]
     }
     # TODO: we should be able to configure whether this outputs to STDOUT:
     puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"

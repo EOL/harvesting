@@ -73,11 +73,9 @@ class ResourceHarvester
       end
     rescue => e
       if @harvest
-        log_err(e, 'harvest failed')
+        log_warning(e, 'harvest failed')
         @harvest.update_attribute(:failed_at, Time.now)
       end
-      debugger
-      4
     ensure
       Searchkick.enable_callbacks
       took = Time.now - @start_time
@@ -138,15 +136,15 @@ class ResourceHarvester
             next unless check
             val = row[header]
             if val.blank?
-              log_warning("Illegal empty value for #{header}") unless check.can_be_empty?
+              log_err(Exception, "Illegal empty value for #{@format.represents}/#{header} on line #{@line_num}") unless check.can_be_empty?
             end
             if check.must_be_integers?
               unless row[header] =~ /\a[\d,]+\z/m
-                log_warning("Illegal non-integer for #{header}, got #{val}")
+                log_err(Exception, "Illegal non-integer for #{@format.represents}/#{header} on line #{@line_num}, got #{val}")
               end
             elsif check.must_know_uris?
               unless uri_exists?(val)
-                log_warning("Illegal unknown URI <#{val}> for #{header}")
+                log_err(Exception, "Illegal unknown URI <#{val}> for #{@format.represents}/#{header} on line #{@line_num}")
               end
             end
             csv_row << val
@@ -275,9 +273,6 @@ class ResourceHarvester
           end
         rescue => e
           log_err(e, "Failed to save data from row #{@line_num}...")
-          debugger
-          raise e
-          # end
         end
       end
       log_warning('There were no differences in this file!') unless any_diff
@@ -476,6 +471,7 @@ class ResourceHarvester
       @harvest.log(trace, cat: :errors)
     end
     @harvest.update_attribute(:failed_at, Time.now)
+    raise e, msg
   end
 
   def log_warning(msg)
