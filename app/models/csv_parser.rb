@@ -82,7 +82,6 @@ class CsvParser
         @diff = diff_type(Regexp.last_match(1))
         next
       end
-      debugger if row.first.nil?
       next if ignore_row?(row.first, row.size)
       yield(row_as_diff(row, db_headers))
     end
@@ -114,10 +113,12 @@ class CsvParser
   end
 
   def row_as_diff(row, headers)
-    if @diff == :changed || @diff == :new
-      row.first.sub!(/^> /, '')
-    elsif @diff == :removed
-      row.first.sub!(/^< /, '')
+    if row.first # Because if it's nil, then we're looking at an empty first field, which is ok.
+      if @diff == :changed || @diff == :new
+        row.first.sub!(/^> /, '')
+      elsif @diff == :removed
+        row.first.sub!(/^< /, '')
+      end
     end
     Hash[headers.zip(row)]
   end
