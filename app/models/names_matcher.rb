@@ -200,7 +200,7 @@ class NamesMatcher
         # This is just a warning, since it won't match, but might be worth investigating, since it's *possible* we're
         # skipping a better match.
         @harvest.log("insufficient ancestry matches for node #{node.id} vs node #{matching_node.id} ; matches " \
-          "#{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}", cat: :warns)
+          "#{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}", cat: :names_matches)
       else
         scores[matching_node][:score] =
           scores[matching_node][:matching_children] * @child_match_weight +
@@ -232,7 +232,7 @@ class NamesMatcher
       unmapped(node, message, cat: :warns)
     else
       @harvest.log("Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
-        "#{simple_scores.inspect}")
+        "#{simple_scores.inspect}", cat: :names_matches)
       save_match(node, best_match['page_id'])
     end
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
@@ -280,9 +280,9 @@ class NamesMatcher
   def log_unmatched
     return if @unmatched.blank?
     if @unmatched.size > 100
-      @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. First 50: #{@unmatched[0..50].join('; ')}", cat: :warns)
+      @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. First 50: #{@unmatched[0..50].join('; ')}", cat: :names_matches)
     else
-      @harvest.log("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}", cat: :warns)
+      @harvest.log("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}", cat: :names_matches)
     end
   end
 end

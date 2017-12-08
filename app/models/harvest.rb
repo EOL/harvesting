@@ -55,7 +55,7 @@ class Harvest < ActiveRecord::Base
     log("Starting method #{caller(0..0)}")
   end
 
-  # Reminder: :errors, :warns, :infos, :progs, :loops, :starts, :ends, :counts, :queries, :commands
+  # Reminder: errors warns infos progs loops starts ends counts queries commands names_matches
   def log(message, options = {})
     options[:cat] ||= :infos
     trace = options[:e] ? options[:e].backtrace&.join("\n") || options[:e].class : nil
