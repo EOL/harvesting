@@ -44,7 +44,7 @@ class ResourceHarvester
 
   def resume
     @harvest = @resource.harvests.last
-    raise "Previous harvest completed!" if @harvest.completed?
+    raise('Previous harvest completed!') if @harvest.completed?
     @previous_harvest = @resource.harvests.completed[-2] if @harvest == @previous_harvest
     start
   end
@@ -118,14 +118,15 @@ class ResourceHarvester
       fields = {}
       expected_by_file = @headers.dup
       @format.fields.each_with_index do |field, i|
-        raise(Exceptions::ColumnMissing, field.expected_header) if @headers[i].nil?
-        raise(Exceptions::ColumnMismatch,
-              "expected '#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'") unless
-          field.expected_header == @headers[i]
+        raise(Exceptions::ColumnMissing.new(field.expected_header)) if @headers[i].nil?
+        unless field.expected_header == @headers[i]
+          raise(Exceptions::ColumnMismatch.new("expected '#{field.expected_header}' as column #{i}, but got "\
+            "'#{@headers[i]}'"))
+        end
         fields[@headers[i]] = field
         expected_by_file.delete(@headers[i])
       end
-      raise(Exceptions::ColumnUnmatched, expected_by_file.join(',')) if expected_by_file.size.positive?
+      raise(Exceptions::ColumnUnmatched.new(expected_by_file.join(','))) if expected_by_file.size.positive?
       @file = @format.converted_csv_path
       CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
         @parser.rows_as_hashes do |row, line|
@@ -470,7 +471,7 @@ class ResourceHarvester
   end
 
   def log_err(e, msg)
-    @harvest.log("#{msg}: #{e.respond_to?(:message) ? e.message : e.class}", e: e, cat: :errors)
+    @harvest.log("#{msg}: #{e.message}", e: e, cat: :errors)
     e.backtrace.each do |trace|
       break if trace.match?(/\bpry\b/)
       break if trace.match?(/\bbundler\b/)
@@ -478,7 +479,7 @@ class ResourceHarvester
       @harvest.log(trace, cat: :errors)
     end
     @harvest.update_attribute(:failed_at, Time.now)
-    raise e, msg
+    raise e
   end
 
   def log_warning(msg)
