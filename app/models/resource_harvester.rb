@@ -472,11 +472,14 @@ class ResourceHarvester
 
   def log_err(e)
     @harvest.log("ERROR: #{e.message}", e: e, cat: :errors)
-    e.backtrace.each do |trace|
-      break if trace.match?(/\bpry\b/)
-      break if trace.match?(/\bbundler\b/)
-      break if trace.match?(/^script/)
-      @harvest.log(trace, cat: :errors)
+    # custom exceptions have no backtrace, for some reason:
+    if e.backtrace # rubocop:disable Style/SafeNavigation
+      e.backtrace.each do |trace|
+        break if trace.match?(/\bpry\b/)
+        break if trace.match?(/\bbundler\b/)
+        break if trace.match?(/^script/)
+        @harvest.log(trace, cat: :errors)
+      end
     end
     @harvest.update_attribute(:failed_at, Time.now)
     raise e
