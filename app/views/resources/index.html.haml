@@ -8,12 +8,14 @@
     = t("resources.index.media_jobs", count: Delayed::Job.where(queue: 'media', locked_at: nil).count)
 %h2= t("resources.index.harvest_header")
 .ui.segment
-  - harv = Harvest.last
+  - hlog = Hlog.last
+  - harv = hlog&.harvest
   - if harv.nil?
     .ui.header= t("resources.index.no_harvest")
   - else
     .ui.header= harv.resource.name
     = render('harvests/show', harv: harv)
+    = hlog.message
 %h2= t("resources.index.list_header")
 .ui.segment
   %p= paginate(@resources)

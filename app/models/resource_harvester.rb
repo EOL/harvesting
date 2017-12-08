@@ -118,15 +118,15 @@ class ResourceHarvester
       fields = {}
       expected_by_file = @headers.dup
       @format.fields.each_with_index do |field, i|
-        raise(Exceptions::ColumnMissing.new(field.expected_header)) if @headers[i].nil?
+        raise(Exceptions::ColumnMissing.new("#{@format.represents}: #{field.expected_header}")) if @headers[i].nil?
         unless field.expected_header == @headers[i]
-          raise(Exceptions::ColumnMismatch.new("expected '#{field.expected_header}' as column #{i}, but got "\
+          raise(Exceptions::ColumnMismatch.new("#{@format.represents} expected '#{field.expected_header}' as column #{i}, but got "\
             "'#{@headers[i]}'"))
         end
         fields[@headers[i]] = field
         expected_by_file.delete(@headers[i])
       end
-      raise(Exceptions::ColumnUnmatched.new(expected_by_file.join(','))) if expected_by_file.size.positive?
+      raise(Exceptions::ColumnUnmatched.new("#{@format.represents}: #{expected_by_file.join(',')}")) if expected_by_file.size.positive?
       @file = @format.converted_csv_path
       CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
         @parser.rows_as_hashes do |row, line|
@@ -476,6 +476,7 @@ class ResourceHarvester
     if e.backtrace # rubocop:disable Style/SafeNavigation
       e.backtrace.each do |trace|
         break if trace.match?(/\bpry\b/)
+        break if trace.match?(/\delayed_job.rb\b/)
         break if trace.match?(/\bbundler\b/)
         break if trace.match?(/^script/)
         @harvest.log(trace, cat: :errors)
