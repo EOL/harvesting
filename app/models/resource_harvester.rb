@@ -46,6 +46,8 @@ class ResourceHarvester
     @harvest = @resource.harvests.last
     raise('Previous harvest completed!') if @harvest.completed?
     @previous_harvest = @resource.harvests.completed[-2] if @harvest == @previous_harvest
+    @resource.publishing!
+    @harvest.update_attribute(:failed_at, nil)
     start
   end
 
