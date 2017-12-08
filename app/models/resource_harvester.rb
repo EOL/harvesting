@@ -73,7 +73,7 @@ class ResourceHarvester
       end
     rescue => e
       if @harvest
-        log_warning('harvest failed')
+        log_err(e, 'harvest failed')
         @harvest.update_attribute(:failed_at, Time.now)
       end
     ensure
