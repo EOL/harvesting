@@ -134,7 +134,7 @@ class MetaConfig
         line_sep: table['linesTerminatedBy'],
         utf8: table['encoding'] =~ /^UTF/
       )
-      headers = `head -n #{table['ignoreHeaderLines']} #{@path}/#{table_name}`.split(sep)
+      headers = `head -n #{table['ignoreHeaderLines']} #{@path}/#{table_name.gsub(' ', '\\ ')}`.split(sep)
       headers.last.chomp!
       fields = []
       table.css('field').each do |field|
