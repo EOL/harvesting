@@ -30,6 +30,8 @@ class CsvParser
         yield(row, i)
         i += 1
       end
+    rescue => e
+      raise(e.class.new(e.message + " IN #{@path_to_file}")
     end
     true
   end
