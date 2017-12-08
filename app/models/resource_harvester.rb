@@ -465,9 +465,11 @@ class ResourceHarvester
   end
 
   def log_err(e, msg)
-    @harvest.log("#{msg}: #{e.message}", e: e, cat: :errors)
+    @harvest.log("#{msg}: #{e&.message || e.class}", e: e, cat: :errors)
     e.backtrace.each do |trace|
-      last if trace =~ /\/bundler/
+      last if trace.match?(/\bpry\b/)
+      last if trace.match?(/\bbundler\b/)
+      last if trace.match?(/^script/)
       @harvest.log(trace, cat: :errors)
     end
     @harvest.update_attribute(:failed_at, Time.now)
