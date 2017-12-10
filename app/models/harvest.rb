@@ -37,7 +37,7 @@ class Harvest < ActiveRecord::Base
   ]
 
   def download_all_images
-    media.where(format: Medium.formats[:jpg]).find_each { |med| med.delay.download_and_resize }
+    media.where(format: Medium.formats[:jpg], downloaded_at: nil).find_each { |med| med.delay.download_and_resize }
   end
 
   def complete

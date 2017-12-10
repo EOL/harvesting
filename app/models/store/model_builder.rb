@@ -331,13 +331,14 @@ module Store
 
     def convert_trait_value(instance)
       value = instance.delete(:value)
-      if value =~ URI::ABS_URI && Regexp.last_match.begin(0) == 0
+      if value =~ URI::ABS_URI && Regexp.last_match.begin(0).zero?
         object_term = find_or_create_term(value, type: 'value')
         instance[:object_term_id] = object_term.id
       end
-      if instance[:units]
+      # if instance[:units]
+      if (!Float(value).nil? rescue false) # rubocop:disable Style/RescueModifier
         units = instance.delete(:units)
-        if units =~ URI::ABS_URI
+        if units.match?(URI::ABS_URI)
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         else

@@ -24,6 +24,7 @@ class Term < ActiveRecord::Base
                                     is_verbatim_only position used_for]
       )
     end
+    Rails.cache.clear
     terms
   end
 end
