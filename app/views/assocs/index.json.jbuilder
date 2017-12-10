@@ -20,14 +20,14 @@ json.assocs @assocs do |assoc|
       body = meta.body
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
-      json.value_literal body
+      json.literal body
     else
       json.predicate meta.predicate_term.try(:uri)
       json.units meta.units_term.try(:uri) if meta.respond_to?(:units_term)
       json.statistical_method meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term)
       json.value_uri meta.object_term.try(:uri)
-      json.value_num meta.measurement if meta.respond_to?(:measurement)
-      json.value_literal meta.literal
+      json.measurement meta.measurement if meta.respond_to?(:measurement)
+      json.literal meta.literal
       json.sex meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term
       json.lifestage meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
       json.source meta.source if meta.respond_to?(:source)

@@ -7,8 +7,8 @@ json.traits @traits do |trait|
   json.resource_pk trait.resource_pk
   json.predicate trait.predicate_term.uri
   json.value_uri trait.object_term.try(:uri)
-  json.value_num trait.measurement
-  json.value_literal trait.literal
+  json.measurement trait.measurement
+  json.literal trait.literal
   json.units trait.units_term.try(:uri)
   json.statistical_method trait.statistical_method_term.try(:uri)
   json.sex trait.sex_term.try(:uri)
@@ -22,8 +22,8 @@ json.traits @traits do |trait|
     json.units meta.units_term.try(:uri) if meta.respond_to?(:units_term)
     json.statistical_method meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term)
     json.value_uri meta.object_term.try(:uri)
-    json.value_num meta.measurement if meta.respond_to?(:measurement)
-    json.value_literal meta.literal
+    json.measurement meta.measurement if meta.respond_to?(:measurement)
+    json.literal meta.literal
     json.sex meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term
     json.lifestage meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
     json.source meta.source if meta.respond_to?(:source)
