@@ -17,7 +17,7 @@ json.assocs @assocs do |assoc|
     if meta.is_a?(Reference)
       # TODO: we should probably make this URI configurable:
       json.predicate 'http://eol.org/schema/reference/referenceID'
-      body = meta.body
+      body = meta.body || ''
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       json.literal body
