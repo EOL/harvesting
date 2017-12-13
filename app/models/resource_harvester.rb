@@ -23,14 +23,13 @@ class ResourceHarvester
   include Store::Traits
   include Store::Vernaculars
 
-  def initialize(resource, harvest = nil)
+  def initialize(resource)
     # TODO: this is WAAAY too tighly coupled with the model builder class (at least)
     @resource = resource
     @previous_harvest = @resource.harvests&.completed&.last
-    @harvest = nil
     @uris = {}
     @formats = {}
-    @harvest = harvest
+    @harvest = nil
     @default_trait_resource_pk = 0
     @converted = {}
     # Placeholders to mark where we "currently are":
@@ -43,12 +42,16 @@ class ResourceHarvester
   end
 
   def resume
+    prep_resume
+    start
+  end
+
+  def prep_resume
     @harvest = @resource.harvests.last
     raise('Previous harvest completed!') if @harvest.completed?
     @previous_harvest = @resource.harvests.completed[-2] if @harvest == @previous_harvest
     @resource.publishing!
     @harvest.update_attribute(:failed_at, nil)
-    start
   end
 
   def inspect

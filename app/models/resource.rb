@@ -86,8 +86,12 @@ class Resource < ActiveRecord::Base
     ResourceHarvester.new(self).start
   end
 
+  def resume_instance
+    @resume_instance ||= ResourceHarvester.new(self)
+  end
+
   def resume
-    ResourceHarvester.new(self).resume
+    resume_instance.resume
   end
 
   def fake_partner
