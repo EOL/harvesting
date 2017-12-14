@@ -15,10 +15,10 @@ class NameParser
 
   def parse
     @attempts = 0
-    # NOTE: this while look is ONLY here because gnparser seems to skip some names in each batch. For about 24K names,
+    # NOTE: this while loop is ONLY here because gnparser seems to skip some names in each batch. For about 24K names,
     # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
     # Ick. TODO: find the problem and fix.
-    while ScientificName.where(harvest_id: @harvest.id, canonical: nil).count > 0 && @attempts <= 10
+    while ScientificName.where(harvest_id: @harvest.id, canonical: nil).count.positive? && @attempts <= 10
       @attempts += 1
       loop_over_names_in_batches do |names|
         @names = {}
@@ -27,21 +27,21 @@ class NameParser
         json = parse_names_in_file
         updates = []
         JSON.parse(json).each_with_index do |result, i|
-          debugger unless @names.key?(result['verbatim'])
           begin
             @names[result['verbatim']].assign_attributes(parse_result(result))
             updates << @names[result['verbatim']]
           rescue => e
-            puts "error reading line #{i}"
-            debugger
-            puts 'shoot.'
+            @harvest.log("error reading line #{i}", cat: :errors)
+            raise(e)
           end
         end
         update_names(updates) unless updates.empty?
       end
     end
-    debugger if @attempts >= 10
-    1
+    if @attempts >= 10
+      @harvest.log('Required more than 10 attempts to parse all names!', cat: :errors)
+      raise 'Too many attempts to parse names'
+    end
   end
 
   def update_names(updates)
@@ -85,8 +85,10 @@ class NameParser
         abort "!! FAILED #{cmd}"
       end
     end
-    debugger if @verbatims_size != json.size
-    "[#{json.join(",")}]"
+    if @verbatims_size != json.size
+      @harvest.log("Found #{@verbatims_size} verbatims from #{json.size} results", cat: :warns)
+    end
+    "[#{json.join(',')}]"
   end
 
   # Examples of the types of results you will get may be found by doing:
@@ -111,11 +113,9 @@ class NameParser
           if k == 'infraspecific_epithets'
             attributes['infraspecific_epithet'] = v.map { |i| i['value'] }.join(' ; ')
             v.each do |i|
-              debugger unless i.is_a?(Hash)
               add_authorship(authorships, i)
             end
           else
-            debugger unless v.is_a?(Hash)
             attributes[k] = v['value']
             add_authorship(authorships, v)
           end

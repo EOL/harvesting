@@ -7,12 +7,14 @@ class Resource < ActiveRecord::Base
   has_many :scientific_names, inverse_of: :resource
   has_many :nodes, inverse_of: :resource
   has_many :vernaculars, inverse_of: :resource
+  has_many :articles, inverse_of: :resource
   has_many :media, inverse_of: :resource
   has_many :traits, inverse_of: :resource
   has_many :meta_traits, inverse_of: :resource
   has_many :assocs, inverse_of: :resource
   has_many :meta_assocs, inverse_of: :resource
   has_many :identifiers, inverse_of: :resource
+  has_many :references, inverse_of: :resource
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
@@ -88,10 +90,12 @@ class Resource < ActiveRecord::Base
 
   def resume_instance
     @resume_instance ||= ResourceHarvester.new(self)
+    @resume_instance.prep_resume
+    @resume_instance
   end
 
   def resume
-    resume_instance.resume
+    resume_instance.start
   end
 
   def fake_partner

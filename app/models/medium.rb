@@ -122,6 +122,7 @@ class Medium < ActiveRecord::Base
       available = crop_image(image, size)
       available_sizes[size] = available if available
     end
+    available_sizes[:original] = "#{orig_w}x#{orig_h}"
     unmodified_url = "#{default_base_url}.jpg"
     update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
                       unmodified_url: unmodified_url, base_url: default_base_url)

@@ -91,8 +91,38 @@
   %ul
     - @resource.harvests.order(created_at: :desc).each do |harv|
       .item= render('harvests/show', harv: harv)
+%h2= "Content"
+.ui.segment
+  .ui.statistics
+    .statistic
+      .value= @resource.nodes.published.count
+      .label= t("resources.stats.nodes")
+    .statistic
+      .value= @resource.articles.published.count
+      .label= t("resources.stats.articles")
+    .statistic
+      .value= @resource.identifiers.count
+      .label= t("resources.stats.identifiers")
+    .statistic
+      .value= @resource.media.published.count
+      .label= t("resources.stats.media")
+    .statistic
+      .value= @resource.references.published.count
+      .label= t("resources.stats.references")
+    .statistic
+      .value= @resource.scientific_names.published.count
+      .label= t("resources.stats.scientific_names")
+    .statistic
+      .value= @resource.traits.published.count
+      .label= t("resources.stats.traits")
+    .statistic
+      .value= @resource.assocs.published.count
+      .label= t("resources.stats.associations")
+    .statistic
+      .value= @resource.vernaculars.published.count
+      .label= t("resources.stats.vernaculars")
+
 %h2= t(:resource_nodes_title)
-= t(:resource_nodes_count, count: @resource.nodes.published.count)
 - unless @resource.nodes.published.empty?
   %h3= t(:resource_nodes_root_head_count, count: @resource.nodes.root.count)
   = paginate(@root_nodes)

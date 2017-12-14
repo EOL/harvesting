@@ -6,7 +6,7 @@ class NamesMatcher
   def initialize(harvest)
     @harvest = harvest
     @resource = @harvest.resource
-    @root_nodes = @resource.nodes.published.includes(:scientific_name).root
+    @root_nodes = @resource.nodes.published.includes(:scientific_name).where(harvest_id: @harvest.id).root
     @node_updates = []
     @strategies = %i[
       match_canonical_and_authors_in_eol

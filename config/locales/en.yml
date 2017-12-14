@@ -157,10 +157,6 @@ en:
   node_name_not_parsed_notice: "This (verbatim) name has not yet been parsed."
   node_vernaculars_empty_notice: "This node has no vernacular names."
   resource_nodes_title: "Nodes"
-  resource_nodes_count:
-    zero: "There are no nodes for this resource."
-    one: "This resource has only one node."
-    other: "This resource has a total of %{count} nodes."
   resource_nodes_root_head_count:
     zero: "There are no root nodes for this resource."
     one: "This resource has only one root node."
@@ -184,12 +180,16 @@ en:
       updated: "Saved changes to <a href=%{path}>%{name}</a>"
       destroyed: "Deleted %{name} forever. You cannot get it back."
     index:
+      failures:
+        zero: "No recent failures. (Yay!)"
+        one: "Recent failure:"
+        other: "Recent failures:"
       harvest_jobs:
         zero: "No pending harvests."
         one: "One pending harvest."
         other: "%{count} pending harvests."
       header: "Resource Harvesting Control Panel"
-      harvest_header: "Last Harvest:"
+      harvest_header: "Harvests:"
       list_header: "The Resources:"
       media_jobs:
         zero: "No pending media downloads."
@@ -209,6 +209,16 @@ en:
       updated_files: "new files!"
     show:
       add_format: "Add a file format definition"
+    stats:
+      articles: "articles"
+      associations: "associations"
+      identifiers: "identifiers"
+      media: "media"
+      nodes: "nodes"
+      references: "references"
+      scientific_names: "scientific_names"
+      traits: "traits"
+      vernaculars: "vernaculars"
   terms:
     auto_created: "automatically added during harvest"
     flash:

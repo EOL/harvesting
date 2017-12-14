@@ -25,6 +25,13 @@
     .ui.header= t("resources.index.most_recent_harvest")
     = harv.resource.name
     = render('harvests/show', harv: harv)
+  - harvs = Harvest.where(['failed_at > ?', 2.days.ago]).order('updated_at DESC').limit(5)
+  .ui.header= t("resources.index.failures", count: harvs.size)
+  - unless harvs.empty?
+    - harvs.each do |harv|
+      = harv.resource.name
+      = render('harvests/show', harv: harv)
+      %br
 %h2= t("resources.index.list_header")
 .ui.segment
   %p= paginate(@resources)
