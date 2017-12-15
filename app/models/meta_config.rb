@@ -1,5 +1,5 @@
 # Read a meta.xml config file and create the resource file formats.
-class MetaConfig
+class Resource::FromMetaXml
   attr_accessor :resource, :path, :doc
 
   def self.import(path, resource = nil)

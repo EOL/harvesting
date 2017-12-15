@@ -75,7 +75,7 @@ class Resource < ActiveRecord::Base
     resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
     resource.partner = resource.fake_partner
     resource.save
-    MetaConfig.import(path, resource)
+    Resource::FromMetaXml.import(path, resource)
     resource
   end
 

@@ -374,7 +374,7 @@ module Store
         # Quick and dirty. A Human will have to do better later:
         name = uri.gsub(%r{^.*/}, '').gsub(/[^A-Za-z0-9]+/, ' ')
         term = Term.create(
-          uri: uri, name: name, definition: I18n.t("terms.auto_created"),
+          uri: uri, name: name, definition: I18n.t('terms.auto_created'),
           comment: "Auto-added during harvest ##{@harvest.id}. A human needs to edit this.",
           attribution: @resource.name, is_hidden_from_overview: true,
           is_hidden_from_glossary: true)
@@ -413,7 +413,7 @@ module Store
       end
     end
 
-    # TODO - extract to Store::Storage
+    # TODO: extract to Store::Storage
     def prepare_model_for_store(klass, model)
       if @diff == :changed
         key = @format.model_fks[klass]
@@ -430,7 +430,7 @@ module Store
       end
     end
 
-    # TODO - extract to Store::Storage
+    # TODO: extract to Store::Storage
     def removed_by_harvest(klass, key, pk)
       @old[klass] ||= {}
       @old[klass][key] ||= []
