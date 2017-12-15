@@ -21,7 +21,7 @@
   %body
     .ui.container
       .ui.inline.cookie.nag
-        %span.title= t("nags.beta")
+        %span.title= t("nags.beta").html_safe
         %i.close.icon
       - flash.each do |key, value|
         .ui.message{ class: "flash-#{key}" }

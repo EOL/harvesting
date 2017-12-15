@@ -38,6 +38,7 @@ class ScientificName < ActiveRecord::Base
   end
 
   def attribution_html
+    return nil unless resource_id == 1
     # dataset_id is just a field...
     # publication is a field... called "publisher" in her example...
     "Reference taxon: #{[scientific_name_link, according_to, via_statement].join(" ")}"

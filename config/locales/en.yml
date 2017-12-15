@@ -72,7 +72,7 @@ en:
       alt: "Altitude (decimal):"
   link_simple_see_all: "see all"
   nags:
-    beta: "This site is currently in BETA. Not all functionality is complete and your data may not be preserved."
+    beta: "This is an alpha version of EOL version 3. Provide feedback and join the discussion at <a href='https://discuss.eol.org/'>https://discuss.eol.org</a>."
   media:
     empty_fields:
       resource: "No resource attached (this is highly unusual)!"
