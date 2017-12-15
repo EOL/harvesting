@@ -56,8 +56,8 @@ class Resource
     end
 
     def download_resource(link, abbr)
-      ext = '.tgz'
-      ext = '.zip' if link.match?(/zip$/)
+      ext = 'tgz'
+      ext = 'zip' if link.match?(/zip$/)
       path = Rails.public_path.join('drop', "#{abbr}.#{ext}")
       `wget -O #{path} #{link}`
     end
