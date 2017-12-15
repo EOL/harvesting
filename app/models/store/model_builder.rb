@@ -339,7 +339,7 @@ module Store
       # NOTE we have to check both for units AND for a numeric value to see if it's "numeric"
       if instance[:units] || (!Float(value.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
         units = instance.delete(:units)
-        if units.match?(URI::ABS_URI)
+        if units&.match?(URI::ABS_URI)
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         else
