@@ -18,11 +18,11 @@ class Resource::FromMetaXml
         next
       end
       @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-      tables = @doc.css('archive table')
-      tables.each do |table|
-        location = table.css("files location").first.text
+      file_configs = @doc.css('archive files')
+      file_configs.each do |file_config|
+        location = file_config("location").first.text
         puts "++ #{resource.name}/#{location}"
-        table.css('field').each do |field|
+        file_config('field').each do |field|
           i = field['index'].to_i
           format = resource.formats.where("get_from LIKE '%#{location}'")&.first
           if format.nil?
@@ -73,20 +73,20 @@ class Resource::FromMetaXml
     filename = "#{@path}/meta.xml"
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-    tables = @doc.css('archive table')
+    file_configs = @doc.css('archive files')
     ignored_fields = []
     formats = []
-    tables.each do |table|
-      table_name = table.css("files location").text
-      raise "No headers: #{table_name.downcase} #{filename}" if table['ignoreHeaderLines'].to_i.zero?
-      table_file = "#{@path}/#{table_name}"
-      unless File.exist?(table_file)
-        puts "!! SKIPPING missing file: #{table_file}"
+    file_configs.each do |file_config|
+      file_config_name = file_config.css("location").text
+      raise "No headers: #{file_config_name.downcase} #{filename}" if file_config['ignoreHeaderLines'].to_i.zero?
+      file_config_file = "#{@path}/#{file_config_name}"
+      unless File.exist?(file_config_file)
+        puts "!! SKIPPING missing file: #{file_config_file}"
         next
       end
       # TODO: :attributions, :articles, :images, :js_maps, :links, :maps, :sounds, :videos
       reps =
-        case table['rowType']
+        case file_config['rowType']
         when "http://rs.tdwg.org/dwc/terms/Taxon"
           :nodes
         when "http://rs.tdwg.org/dwc/terms/Occurrence"
@@ -111,7 +111,7 @@ class Resource::FromMetaXml
         next
       end
       reps ||=
-        case table_name.downcase
+        case file_config_name.downcase
         when /^agent/
           :agents
         when /^tax/
@@ -130,26 +130,26 @@ class Resource::FromMetaXml
           :measurements
         when /^events/
         else
-          raise "I cannot determine what #{table_name} represents!"
+          raise "I cannot determine what #{file_config_name} represents!"
         end
-      sep = table['fieldsTerminatedBy']
+      sep = file_config['fieldsTerminatedBy']
       sep = "\t" if sep == "\\t"
       fmt = Format.create!(
         resource_id: @resource.id,
         harvest_id: nil,
-        header_lines: table['ignoreHeaderLines'],
-        data_begins_on_line: table['ignoreHeaderLines'],
+        header_lines: file_config['ignoreHeaderLines'],
+        data_begins_on_line: file_config['ignoreHeaderLines'],
         file_type: :csv,
         represents: reps,
-        get_from: "#{@path}/#{table_name}",
+        get_from: "#{@path}/#{file_config_name}",
         field_sep: sep,
-        line_sep: table['linesTerminatedBy'],
-        utf8: table['encoding'] =~ /^UTF/
+        line_sep: file_config['linesTerminatedBy'],
+        utf8: file_config['encoding'] =~ /^UTF/
       )
-      headers = `head -n #{table['ignoreHeaderLines']} #{table_file.gsub(' ', '\\ ')}`.split(sep)
+      headers = `head -n #{file_config['ignoreHeaderLines']} #{file_config_file.gsub(' ', '\\ ')}`.split(sep)
       headers.last.chomp!
       fields = []
-      table.css('field').each do |field|
+      file_config.css('field').each do |field|
         assumption = MetaXmlField.where(term: field['term'], for_format: reps)&.first
         a_submap = assumption&.submapping
         a_submap = nil if a_submap == '0'
@@ -171,7 +171,7 @@ class Resource::FromMetaXml
           can_be_empty: assumption ? !assumption.is_required : true
         }
         if mapping_name == 'to_ignored'
-          ignored_fields << { file: table_name, reps: reps, head: header_name, term: field['term'] }
+          ignored_fields << { file: file_config_name, reps: reps, head: header_name, term: field['term'] }
         end
       end
       Field.import!(fields)
