@@ -342,10 +342,8 @@ module Store
         if units&.match?(URI::ABS_URI)
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
-        else
-          # TODO: we need a robust map of strings to reasonable units URIs... though that should be a "filter"
-          debugger
-          puts "Augh! We don't have a units map for #{units}"
+        elsif !units.blank?
+          log_warning("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
         end
         instance[:measurement] = value.tr(',', '')
         # NOTE: We are handling unit normalization at the publishing layer for now.
