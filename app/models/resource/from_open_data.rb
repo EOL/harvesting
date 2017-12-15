@@ -14,9 +14,18 @@ class Resource
       noko = noko_parse(@url)
       create_resource(noko)
       get_partner_info(noko.css('.breadcrumb li a')[-2])
+      @resource.fake_partner if @partner.nil?
       download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
       DropDir.check
-      @resource.fake_partner if @partner.nil?
+      dir = Rails.public_path.join('data', @resource.abbr)
+      if File.exist?("#{dir}/meta.xml")
+        resource = Resource.from_xml(dir)
+        log("...Will harvest resource #{resource.name} (#{resource.id})")
+        resource.enqueue
+      else
+        # TODO: we can assume it's an Excel and write a .from_excel method much like .from_xml...
+        fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
+      end
     end
 
     def noko_parse(url)
