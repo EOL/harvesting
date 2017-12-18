@@ -1,6 +1,6 @@
 json.total_pages @traits.total_pages
 json.current_page @traits.current_page
-json.traits @traits do |trait|
+json.traits(@traits.reject { |t| t.page_id.nil? }) do |trait|
   json.page_id trait.node.page_id
   json.scientific_name trait.node.scientific_name.italicized
   json.eol_pk "R#{trait.resource_id}-PK#{trait.id}"
