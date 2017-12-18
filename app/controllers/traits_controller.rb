@@ -6,7 +6,7 @@ class TraitsController < ApplicationController
     meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
     property_fields = meta_fields + %i[sex_term lifestage_term]
     @traits = prep_for_api(
-      @resource .traits.primary.published
+      @resource .traits.primary.published.matched
                 .includes(property_fields,
                           children: meta_fields,
                           occurrence: { occurrence_metadata: simple_meta_fields },

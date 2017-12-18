@@ -1,6 +1,6 @@
 class TaxonomicStatus
   class << self
-    attr_accessor :map, :inverse_map, :regexes
+    attr_accessor :inverse_map, :regexes
   end
 
   @inverse_map = {
@@ -64,7 +64,11 @@ class TaxonomicStatus
       'other',
       'unavailable, database artifact',
       'misapplied',
-      'ambiguous synonym'
+      'ambiguous synonym',
+      'in-part',
+      'includes',
+      'pro parte',
+      'type material'
     ]
   }
 
