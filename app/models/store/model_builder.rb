@@ -57,6 +57,7 @@ module Store
     def build_scientific_name
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
+      @models[:scientific_name][:resource_pk] = @models[:node][:resource_pk] # Always the same, especially for synonyms.
       if @synonym
         syn_of = @models[:scientific_name].delete(:synonym_of)
         @models[:scientific_name][:node_resource_pk] = syn_of

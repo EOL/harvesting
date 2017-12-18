@@ -389,9 +389,10 @@ class ResourceHarvester
 
   def resolve_trait_keys
     @harvest.log_call
-    # Occurrences to nodes:
+    # Occurrences to nodes (through scientific_names):
     log_info('Occurrences to nodes...')
-    propagate_id(Occurrence, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    propagate_id(Occurrence, fk: 'node_resource_pk', other: 'scientific_names.resource_pk',
+                             set: 'node_id', with: 'node_id')
     propagate_id(OccurrenceMetadatum, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                                       set: 'occurrence_id', with: 'id')
     # Traits to nodes (through occurrences)

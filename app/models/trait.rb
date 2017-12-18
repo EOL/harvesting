@@ -21,4 +21,5 @@ class Trait < ActiveRecord::Base
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :primary, -> { where(of_taxon: true) }
   scope :matched, -> { where('node_id IS NOT NULL') }
+  scope :unmatched, -> { where('node_id IS NULL') }
 end
