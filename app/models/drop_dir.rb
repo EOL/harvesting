@@ -77,7 +77,8 @@ class DropDir
     def unzip(file, dir)
       # NOTE: -u for "update and create if necessary"
       # NOTE: -q for "quiet"
-      res = `cd #{dir} && unzip -qu #{file}`
+      # NOTE: -o for "overwrite files WITHOUT prompting"
+      res = `cd #{dir} && unzip -quo #{file}`
     end
 
     def remove_dot_files(dir)

@@ -134,4 +134,21 @@ class Resource < ActiveRecord::Base
   def swap_media_source_urls
     media.update_all('source_url=@tmp:=source_url, source_url=source_page_url, source_page_url=@tmp')
   end
+
+  # NOTE: keeps formats, of course.
+  def remove_content
+    harvests.each { |h| h.destroy }
+    # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
+    Node.where(resource_id: id).delete_all
+    ScientificName.where(resource_id: id).delete_all
+    Vernacular.where(resource_id: id).delete_all
+    Article.where(resource_id: id).delete_all
+    Medium.where(resource_id: id).delete_all
+    Trait.where(resource_id: id).delete_all
+    MetaTrait.where(resource_id: id).delete_all
+    Assoc.where(resource_id: id).delete_all
+    MetaAssoc.where(resource_id: id).delete_all
+    Identifier.where(resource_id: id).delete_all
+    Reference.where(resource_id: id).delete_all
+  end
 end
