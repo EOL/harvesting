@@ -417,10 +417,12 @@ class ResourceHarvester
     log_info('Assocs to occurrences...')
     propagate_id(Assoc, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                         set: 'occurrence_id', with: 'id')
+    propagate_id(Assoc, fk: 'target_occurrence_resource_pk', other: 'occurrences.resource_pk',
+                        set: 'target_occurrence_id', with: 'id')
     # Assoc to nodes (through occurrences)
     log_info('Assocs to nodes...')
     propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id', set: 'node_id', with: 'node_id')
-    propagate_id(Assoc, fk: 'target_occurrence_resource_fk', other: 'occurrences.resource_pk',
+    propagate_id(Assoc, fk: 'target_occurrence_id', other: 'occurrences.id',
                         set: 'target_node_id', with: 'node_id')
     # Assoc to sex term:
     log_info('Assoc to sex term...')
