@@ -69,14 +69,20 @@ class Resource < ActiveRecord::Base
     resource
   end
 
-  def self.from_xml(path)
+  def self.from_xml(path, resource = nil)
     abbr = File.basename(path)
+    resource&.formats&.delete_all
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
-    resource = create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
+    resource ||= create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
     resource.partner = resource.fake_partner
     resource.save
     Resource::FromMetaXml.import(path, resource)
     resource
+  end
+
+  def re_read_xml
+    path = formats.any? ? File.dirname(formats.first.get_from) : Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
+    Resource.from_xml(path, self)
   end
 
   def enqueue
