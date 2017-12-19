@@ -9,8 +9,10 @@ class AddOccurrenceIdToDataTables < ActiveRecord::Migration
     Harvest.pluck(:id).each do |harvest_id|
       Trait.propagate_id(harvest_id: harvest_id, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                          set: 'occurrence_id', with: 'id')
-      Assoc.propagate_id(harvest_id: harvest_id, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+      Assoc.propagate_id(harvest_id: harvest_id, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
                          set: 'occurrence_id', with: 'id')
+      Assoc.propagate_id(harvest_id: harvest_id, fk: 'target_occurrence_resource_fk', other: 'occurrences.resource_pk',
+                         set: 'target_occurrence_id', with: 'id')
     end
   end
 end
