@@ -389,15 +389,16 @@ class ResourceHarvester
 
   def resolve_trait_keys
     @harvest.log_call
-    # Occurrences to nodes (through scientific_names):
-    log_info('Occurrences to nodes...')
+    log_info('Occurrences to nodes (through scientific_names)...')
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'scientific_names.resource_pk',
                              set: 'node_id', with: 'node_id')
     propagate_id(OccurrenceMetadatum, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                                       set: 'occurrence_id', with: 'id')
-    # Traits to nodes (through occurrences)
-    log_info('traits to nodes...')
-    propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk', set: 'node_id', with: 'node_id')
+    log_info('traits to occurrences...')
+    propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+                        set: 'occurrence_id', with: 'id')
+    log_info('traits to nodes (through occurrences)...')
+    propagate_id(Trait, fk: 'occurrence_id', other: 'occurrences.id', set: 'node_id', with: 'node_id')
     # Traits to sex term:
     log_info('Traits to sex term...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
@@ -413,9 +414,12 @@ class ResourceHarvester
     log_info('MetaTraits (simple, measurement row refers to parent) to traits...')
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
 
+    log_info('Assocs to occurrences...')
+    propagate_id(Assoc, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+                        set: 'occurrence_id', with: 'id')
     # Assoc to nodes (through occurrences)
     log_info('Assocs to nodes...')
-    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk', set: 'node_id', with: 'node_id')
+    propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id', set: 'node_id', with: 'node_id')
     propagate_id(Assoc, fk: 'target_occurrence_resource_fk', other: 'occurrences.resource_pk',
                         set: 'target_node_id', with: 'node_id')
     # Assoc to sex term:
