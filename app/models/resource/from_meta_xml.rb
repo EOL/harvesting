@@ -18,7 +18,7 @@ class Resource::FromMetaXml
         next
       end
       @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-      file_configs = @doc.css('archive files')
+      file_configs = @doc.css('archive table')
       file_configs.each do |file_config|
         location = file_config("location").first.text
         puts "++ #{resource.name}/#{location}"
@@ -73,11 +73,11 @@ class Resource::FromMetaXml
     filename = "#{@path}/meta.xml"
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-    file_configs = @doc.css('archive files')
+    file_configs = @doc.css('archive table')
     ignored_fields = []
     formats = []
     file_configs.each do |file_config|
-      file_config_name = file_config.css("location").text
+      file_config_name = file_config.css('location').text
       raise "No headers: #{file_config_name.downcase} #{filename}" if file_config['ignoreHeaderLines'].to_i.zero?
       file_config_file = "#{@path}/#{file_config_name}"
       unless File.exist?(file_config_file)
