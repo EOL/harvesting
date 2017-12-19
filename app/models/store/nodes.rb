@@ -25,6 +25,9 @@ module Store
 
     def to_nodes_parent_fk(field, val)
       @models[:node] ||= {}
+      # It seems the intent of a '0' in this column really is a blank, since there are no IDs that match '0' in these
+      # resources.
+      val = nil if val == '0'
       @models[:node][:parent_resource_pk] = val
     end
 
