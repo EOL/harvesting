@@ -6,12 +6,12 @@ class TraitsController < ApplicationController
     meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
     property_fields = meta_fields + %i[sex_term lifestage_term]
     @traits = prep_for_api(
-      @resource .traits.primary.published.matched
-                .includes(property_fields,
-                          children: meta_fields,
-                          occurrence: { occurrence_metadata: simple_meta_fields },
-                          node: :scientific_name,
-                          meta_traits: meta_fields)
+      @resource.traits.primary.published.matched
+               .includes(property_fields,
+                         children: meta_fields,
+                         occurrence: { occurrence_metadata: simple_meta_fields },
+                         node: :scientific_name,
+                         meta_traits: meta_fields)
     )
     respond_to do |fmt|
       fmt.json {}

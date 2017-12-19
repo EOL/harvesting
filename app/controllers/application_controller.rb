@@ -9,6 +9,6 @@ class ApplicationController < ActionController::Base
   def prep_for_api(query, opts = {})
     field = opts[:updated] ? 'updated_at' : 'created_at'
     query = query.where(["#{field} > ?", Time.at(params[:since].to_i)]) if params[:since]
-    query = query.page(params[:page]).per(params[:per_page] || 1000)
+    query = query.page(params[:page] || 1).per(params[:per_page] || 1000)
   end
 end
