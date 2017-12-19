@@ -93,7 +93,7 @@
       .item= render('harvests/show', harv: harv)
 %h2= "Content"
 .ui.segment
-  .ui.statistics
+  .ui.tiny.statistics
     .statistic
       .value= @resource.nodes.published.count
       .label= t("resources.stats.nodes")
