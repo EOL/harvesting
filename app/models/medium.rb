@@ -16,9 +16,14 @@ class Medium < ActiveRecord::Base
   enum format: [:jpg, :youtube, :flash, :vimeo, :mp3, :ogg, :wav, :mp4]
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :missing, -> { where(format: Medium.formats[:jpg], downloaded_at: nil) }
 
   class << self
     attr_accessor :sizes, :bucket_size
+
+    def download_and_resize(images)
+      images.find_each { |img| img.delay.download_and_resize }
+    end
   end
 
   @sizes = %w[88x88 98x68 580x360 130x130 260x190]

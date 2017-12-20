@@ -136,6 +136,10 @@ class Resource < ActiveRecord::Base
     harvester
   end
 
+  def download_missing_images
+    Medium.download_and_resize(media.published.missing)
+  end
+
   # Because this happens often enough that it was worth making a method out of it. TODO: rename the @!#$*& fields:
   def swap_media_source_urls
     media.update_all('source_url=@tmp:=source_url, source_url=source_page_url, source_page_url=@tmp')

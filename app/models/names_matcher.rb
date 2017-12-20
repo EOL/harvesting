@@ -155,8 +155,8 @@ class NamesMatcher
       'Protozoa' => 4651,
     }
     # COMMON KINGDOMS (much easier/faster to hard-code these!):
-    if (page_id = common_exceptions.key?(node.scientific_name.canonical))
-      return save_match(node, page_id)
+    if common_exceptions.key?(node.scientific_name.canonical)
+      return save_match(node, common_exceptions[node.scientific_name.canonical])
     end
     results = send(@strategies[opts[:strategy]], node.scientific_name)
     return save_match(node, results.first[:page_id]) if results.total_count == 1
