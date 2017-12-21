@@ -267,6 +267,7 @@ module Store
       @models[:trait][:predicate_term_id] = predicate_term.id
       units = @models[:trait].delete(:units)
       units_term = find_or_create_term(units, type: 'units')
+      build_references(:trait, TraitsReference)
       @models[:trait][:units_term_id] = units_term.try(:id)
 
       @models[:trait] = convert_trait_value(@models[:trait])

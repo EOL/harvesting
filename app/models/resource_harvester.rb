@@ -413,6 +413,7 @@ class ResourceHarvester
     # MetaTraits (simple, measurement row refers to parent) to traits:
     log_info('MetaTraits (simple, measurement row refers to parent) to traits...')
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
+    resolve_references(TraitsReference, 'trait')
 
     log_info('Assocs to occurrences...')
     propagate_id(Assoc, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
