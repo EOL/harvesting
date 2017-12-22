@@ -177,12 +177,13 @@ en:
     edit:
       header: "You are Editing \"%{name}\""
     flash:
-      created: "Created resource <a href=%{path}>%{name}</a>"
+      created: "Imported resource <a href=%{path}>%{name}</a> from opendata.eol.org; <b>HARVESTED QUEUED.</b>"
       destroyed: "Deleted %{name} forever. You cannot get it back."
       harvest_enqueued:
         zero: "Added harvest job to the queue; there are no jobs ahead of it."
         one: "Added harvest job to the queue; there is only one job ahead of it."
         other: "Added harvest job to the queue, with %{count} jobs ahead of it."
+      imported: "Created a new resource from opendata.eol.org!"
       re_read_xml: "Formats updated to latest version of meta.xml file."
       updated: "Saved changes to <a href=%{path}>%{name}</a>"
     index:
@@ -190,6 +191,7 @@ en:
         zero: "No recent failures. (Yay!)"
         one: "Recent failure:"
         other: "Recent failures:"
+      from_url_header: "Import Resource from OpenData:"
       harvest_jobs:
         zero: "No pending harvests."
         one: "One pending harvest."

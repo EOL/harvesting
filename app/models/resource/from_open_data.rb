@@ -15,17 +15,17 @@ class Resource
       create_resource(noko)
       get_partner_info(noko.css('.breadcrumb li a')[-2])
       @resource.fake_partner if @partner.nil?
-      download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
-      DropDir.check
-      dir = Rails.public_path.join('data', @resource.abbr)
+      file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
+      dir = DropDir.unpack_file(file)
+      # TODO: Find Excel and write a .from_excel method much like .from_xml...
       if File.exist?("#{dir}/meta.xml")
-        resource = Resource.from_xml(dir)
-        log("...Will harvest resource #{resource.name} (#{resource.id})")
-        resource.enqueue
+        Resource.from_xml(dir, @resource)
+        log("...Will harvest resource #{@resource.name} (#{@resource.id})")
+        @resource.enqueue
       else
-        # TODO: we can assume it's an Excel and write a .from_excel method much like .from_xml...
         fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
       end
+      @resource
     end
 
     def noko_parse(url)
@@ -43,7 +43,8 @@ class Resource
       name = strip_string(noko.css('h1').first.text)
       abbr = abbreviate(name)
       desc = noko.css('.prose p,blockquote').map(&:text).map { |txt| strip_string(txt) }.join("\n")
-      @resource = Resource.create(name: name, abbr: abbr, description: desc, notes: 'auto-harvested, requires editing.')
+      @resource = Resource.create(name: name, abbr: abbr, description: desc, notes: 'auto-harvested, requires editing.',
+                                  opendata_url: @url)
     end
 
     def get_partner_info(link)
@@ -67,18 +68,27 @@ class Resource
     def download_resource(link, abbr)
       ext = 'tgz'
       ext = 'zip' if link.match?(/zip$/)
-      path = Rails.public_path.join('drop', "#{abbr}.#{ext}")
-      `wget -O #{path} #{link}`
+      path = Rails.public_path.join('tmp', 'resource_files')
+      FileUtils.mkdir_p(path) unless Dir.exist?(path)
+      path = path.join("#{abbr}.#{ext}")
+      require 'open-uri'
+      File.open(path, 'wb') do |file|
+        open(link, 'rb') do |input|
+          file.write(input.read)
+        end
+      end
+      raise('Did not download') unless File.exist?(path) && File.size(path).positive?
+      path
     end
 
     def strip_string(str)
-      str.gsub(/\W+/m, '').gsub(/\s+$/m, '')
+      str.gsub(/\W+/m, ' ').gsub(/^\s+/m, '').gsub(/\s+$/m, '')
     end
 
     def abbreviate(name)
       return name if name.size < 8
       words = name.split
-      abbr = if words > 4
+      abbr = if words.size > 4
         words.map { |w| w.first }.join
       elsif name.sub(/[^A-Z]/, '').size >= 3
         name.sub(/[^A-Z]/, '')
@@ -91,7 +101,7 @@ class Resource
     def shorten(name)
       return name if name.size < 8
       words = name.split
-      if words > 4
+      if words.size > 4
         return words[0..1]
       elsif name.sub(/[^A-Z]/, '').size >= 3
         return name.sub(/[^A-Z]/, '')
@@ -105,11 +115,10 @@ class Resource
       # for now...
       puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
       STDOUT.flush
-      hlogs << Hlog.create!(hash.merge(format: options[:format]))
     end
 
     def fail_with(e)
-      log(mess, cat: :errors)
+      log(e.message, cat: :errors)
       raise e
     end
   end

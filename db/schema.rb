@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171221175421) do
+ActiveRecord::Schema.define(version: 20171222193551) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -597,6 +597,7 @@ ActiveRecord::Schema.define(version: 20171221175421) do
     t.integer  "dataset_license_id",        limit: 4
     t.string   "dataset_rights_holder",     limit: 255
     t.string   "dataset_rights_statement",  limit: 255
+    t.string   "opendata_url",              limit: 255
   end
 
   add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree

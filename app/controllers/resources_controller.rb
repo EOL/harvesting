@@ -47,13 +47,18 @@ class ResourcesController < ApplicationController
 
   def create
     @resource = Resource.new(resource_params)
-    if @resource.save
-      flash[:notice] = I18n.t("resources.flash.created", name: @resource.name,
-        path: resource_path(@resource)).html_safe
+    if @resource.opendata_url
+      @resource = Resource::FromOpenData.url(@resource.opendata_url)
+      flash[:notice] = I18n.t('resources.flash.imported', name: @resource.name,
+                                                          path: resource_path(@resource)).html_safe
+      redirect_to @resource
+    elsif @resource.save
+      flash[:notice] = I18n.t('resources.flash.created', name: @resource.name,
+                                                         path: resource_path(@resource)).html_safe
       redirect_to @resource
     else
       # TODO: some kind of hint as to the problem, in a flash...
-      render "new"
+      render 'new'
     end
   end
 
@@ -81,7 +86,7 @@ class ResourcesController < ApplicationController
 private
 
   def resource_params
-    params.require(:resource).permit(:name, :abbr, :pk_url,
+    params.require(:resource).permit(:name, :abbr, :pk_url, :opendata_url,
       :min_days_between_harvests, :harvest_day_of_month, :harvest_months_json,
       :auto_publish, :not_trusted, :might_have_duplicate_taxa)
   end

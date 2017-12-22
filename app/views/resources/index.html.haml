@@ -48,3 +48,9 @@
   .ui.button= link_to(t("resources.create.action"), new_resource_path)
   - unless params[:all]
     .ui.button= link_to(t("resources.actions.show_all"), resources_path(all: true))
+.ui.segment
+  %h2= t("resources.index.from_url_header")
+  = simple_form_for Resource.new do |f|
+    .fields
+      = f.input :opendata_url, wrapper_html: { class: 'twelve wide' }
+    = f.button :submit

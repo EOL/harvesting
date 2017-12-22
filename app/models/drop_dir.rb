@@ -1,47 +1,62 @@
 class DropDir
   class << self
     def check
-      Rails.logger.info("DropDir.check")
+      Rails.logger.info('DropDir.check')
       path = Rails.public_path.join('drop')
       FileUtils.mkdir_p(path) unless Dir.exist?(path)
+      resources = []
       Dir.glob("#{path}/*").each do |file| # NOTE: file is a full path, now.
-        ext = File.extname(file)
-        basename = File.basename(file, ext)
-        abbr = shorten(basename)
-        resource = Resource.exists?(abbr: abbr) ? Resource.find_by_abbr(abbr) : nil
-        dir =
-          if resource
-            Rails.public_path.join('data', resource.abbr)
-          else
-            Rails.public_path.join('data', abbr)
-          end
-        FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
-        if ext.casecmp('.tgz').zero?
-          untgz(file, dir)
-        elsif ext.casecmp('.tar.gz').zero?
-          untgz(file, dir)
-        elsif ext.casecmp('.zip').zero?
-          unzip(file, dir)
-        else
-          Rails.logger.error("DropDir: I don't know how to handle a #{ext}: #{basename}#{ext}")
-          raise("Cannot extract #{basename}#{ext}")
-        end
-        flatten_dirs(dir)
-        remove_dot_files(dir)
-        File.unlink(file) # If we've gotten this far, we've extracted it. Now remove it.
-        if resource
-          resource.updated_files!
-        else
-          if File.exist?("#{dir}/meta.xml")
-            resource = Resource.from_xml(dir)
-            Rails.logger.info("DropDir: will harvest resource #{resource.name} (#{resource.id})")
-            resource.enqueue
-          else
-            # TODO: we can assume it's an Excel and write a .from_excel method much like .from_xml...
-            Rails.logger.error("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!")
-          end
-        end
+        resources << pickup_file(file)
       end
+    end
+
+    def pickup_file(file, resource)
+      (basename, abbr, ext) = parse_name(file)
+      dir = unpack_file(file, basename: basename, abbr: abbr, ext: ext)
+      resource = Resource.find_by_abbr(abbr) if Resource.exists?(abbr: abbr)
+      if resource
+        resource.updated_files!
+        false
+      elsif File.exist?("#{dir}/meta.xml")
+        resource = Resource.from_xml(dir)
+        Rails.logger.info("DropDir: will harvest resource #{resource.name} (#{resource.id})")
+        resource.enqueue
+        true
+      else
+        # TODO: we can assume it's an Excel and write a .from_excel method much like .from_xml...
+        Rails.logger.error("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!")
+        false
+      end
+    end
+
+    def parse_name(file)
+      ext = File.extname(file)
+      basename = File.basename(file, ext)
+      abbr = shorten(basename)
+      [basename, abbr, ext]
+    end
+
+    def unpack_file(file, options = {})
+      basename = options[:basename]
+      abbr = options[:abbr]
+      ext = options[:ext]
+      (basename, abbr, ext) = DropDir.parse_name(file) unless basename && abbr && ext
+      dir = Rails.public_path.join('data', abbr)
+      FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
+      if ext.casecmp('.tgz').zero?
+        untgz(file, dir)
+      elsif ext.casecmp('.tar.gz').zero?
+        untgz(file, dir)
+      elsif ext.casecmp('.zip').zero?
+        unzip(file, dir)
+      else
+        Rails.logger.error("DropDir: I don't know how to handle a #{ext}: #{basename}#{ext}")
+        raise("Cannot extract #{basename}#{ext}")
+      end
+      flatten_dirs(dir)
+      remove_dot_files(dir)
+      File.unlink(file) # If we've gotten this far, we've extracted it. Now remove it.
+      dir
     end
 
     def shorten(basename)
