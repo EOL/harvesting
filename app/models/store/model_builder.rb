@@ -261,6 +261,7 @@ module Store
         debugger
         return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent and NO occurrence ID.")
       end
+      build_references(:trait, TraitsReference)
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?
       predicate = @models[:trait].delete(:predicate)
       predicate_term = find_or_create_term(predicate, type: 'predicate')

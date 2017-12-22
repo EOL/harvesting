@@ -82,7 +82,7 @@ class Format < ActiveRecord::Base
 
   def diff_size
     return 0 unless File.exist?(diff)
-    `wc #{diff}`.to_i
+    `wc #{diff.gsub(' ', '\\ ')}`.to_i
   end
 
   # You can pass in :cat, :e, :line as options

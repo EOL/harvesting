@@ -46,7 +46,7 @@ module Store
       @models[:trait][:source] = val
     end
 
-    def to_traits_ref_fks(_, val)
+    def to_traits_ref_fks(field, val)
       @models[:trait] ||= {}
       @models[:trait][:ref_sep] ||= field.submapping
       @models[:trait][:ref_fks] = val

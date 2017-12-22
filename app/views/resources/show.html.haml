@@ -9,6 +9,8 @@
 
 .ui.button
   = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+.ui.button
+  = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
 
 .ui.list
   - unless @resource.abbr.blank?

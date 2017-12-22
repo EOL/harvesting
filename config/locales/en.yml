@@ -59,6 +59,10 @@ en:
       csv: "Delimited Text (csv, tsv, tab, etc)"
   harvests:
     later: "TODO"
+    actions:
+      destroy: "destroy"
+    flash:
+      destroyed: "Harvest destroyed."
   layout:
     title: "EOL Resource Harvester"
   location:
@@ -164,11 +168,8 @@ en:
   resources:
     actions:
       back: "back to all resources"
-      harvest: "harvest (delayed job)"
-      harvest_enqueued:
-        zero: "Added harvest job to the queue; there are no jobs ahead of it."
-        one: "Added harvest job to the queue; there is only one job ahead of it."
-        other: "Added harvest job to the queue, with %{count} jobs ahead of it."
+      harvest: "harvest"
+      re_read_xml: "re-read XML"
       show_all: "Include un-harvested"
     create:
       action: "create a new resource"
@@ -177,8 +178,13 @@ en:
       header: "You are Editing \"%{name}\""
     flash:
       created: "Created resource <a href=%{path}>%{name}</a>"
-      updated: "Saved changes to <a href=%{path}>%{name}</a>"
       destroyed: "Deleted %{name} forever. You cannot get it back."
+      harvest_enqueued:
+        zero: "Added harvest job to the queue; there are no jobs ahead of it."
+        one: "Added harvest job to the queue; there is only one job ahead of it."
+        other: "Added harvest job to the queue, with %{count} jobs ahead of it."
+      re_read_xml: "Formats updated to latest version of meta.xml file."
+      updated: "Saved changes to <a href=%{path}>%{name}</a>"
     index:
       failures:
         zero: "No recent failures. (Yay!)"

@@ -73,17 +73,15 @@ class NameParser
     # TODO: the command should be config'd, so we can move it around as needed. Eventually we'll use a service.
     cmd = 'gnparser'
     json = []
-    Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thread|
+    Open3.popen3(cmd) do |stdin, stdout, _, wait_thread|
       stdin.write(@verbatims)
       stdin.close_write
       # TODO: I think I'm missing the first one. ...or the last one...
-      while line = stdout.gets
+      while (line = stdout.gets)
         json << line.chomp if line =~ /^{/
       end
       exit_status = wait_thread.value
-      unless exit_status.success?
-        abort "!! FAILED #{cmd}"
-      end
+      abort "!! FAILED #{cmd}" unless exit_status.success?
     end
     if @verbatims_size != json.size
       @harvest.log("Found #{@verbatims_size} verbatims from #{json.size} results", cat: :warns)
@@ -140,7 +138,7 @@ class NameParser
       quality = result['quality'] ? result['quality'].to_i : 0
       norm = result['normalized'] ? result['normalized'] : nil
     else
-      warns = "UNPARSED"
+      warns = 'UNPARSED'
       quality = 0
       canon = result['verbatim']
     end
@@ -155,7 +153,7 @@ class NameParser
     end
     norm = result['verbatim'] if norm.blank?
 
-    return attributes.merge(
+    attributes.merge(
       normalized: norm,
       canonical: canon,
       authorship: authorships.flat_map { |a| a[:authors].blank? ? [] : a[:authors].map { |n| n.tr(';', '|') } }.join('; '),

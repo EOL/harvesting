@@ -52,8 +52,9 @@ class Harvest < ActiveRecord::Base
 
   def log_call
     i = caller.index { |c| c =~ /harvester/ } # TODO: really, we don't KNOW that's the name. :S
-    (file, method) = caller(i+1..i+1).first.split
-    log("#{file.split('/').last.split(':')[0..1].join(':')}##{method[1..-2]}", cat: :starts)
+    (path, line, info) = caller(i+1..i+1).first.split(':')
+    method = info.split.last[1..-2]
+    log("#{path.split('/').last}:#{line}##{method}", cat: :starts)
   rescue
     log("Starting method #{caller(0..0)}")
   end

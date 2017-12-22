@@ -909,7 +909,7 @@ Resource.quick_define(
   }
 )
 
-MetaXmlField.read_analyzed
+MetaXmlField.reimport
 
 Node.reindex # This empties all of the stuff from ElasticSearch.
 

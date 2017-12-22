@@ -186,7 +186,8 @@ class ResourceHarvester
         end
         @converted[@format.id] = true # Shouldn't need this, but being safe
       end
-      cmd = "/usr/bin/sort #{@format.converted_csv_path} > #{@format.converted_csv_path}_sorted"
+      path = @format.converted_csv_path.to_s.gsub(' ', '\\ ')
+      cmd = "/usr/bin/sort #{path} > #{path}_sorted"
       log_cmd(cmd)
       # NOTE: the LC_ALL fixes a problem with unicode characters.
       if system({'LC_ALL' => 'C'}, cmd)
@@ -233,9 +234,11 @@ class ResourceHarvester
   end
 
   def fake_diff_from_nothing
-    run_cmd("echo \"0a\" > #{@format.diff}")
-    run_cmd("tail -n +#{@format.data_begins_on_line} #{@format.converted_csv_path} >> #{@format.diff}")
-    run_cmd("echo \".\" >> #{@format.diff}")
+    diff = @format.diff.to_s.gsub(' ', '\\ ')
+    csv = @format.converted_csv_path.to_s.gsub(' ', '\\ ')
+    run_cmd("echo \"0a\" > #{diff}")
+    run_cmd("tail -n +#{@format.data_begins_on_line} #{csv} >> #{diff}")
+    run_cmd("echo \".\" >> #{diff}")
   end
 
   def run_cmd(cmd, env = {})

@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   resources :bibliographic_citations, only: [:show]
   resources :resources do
     get :harvest
+    get :re_read_xml
     resources :formats, except: [:destroy]
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]

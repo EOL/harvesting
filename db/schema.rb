@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171130215805) do
+ActiveRecord::Schema.define(version: 20171219175847) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -104,14 +104,18 @@ ActiveRecord::Schema.define(version: 20171130215805) do
     t.text     "source",                        limit: 65535
     t.datetime "created_at",                                  null: false
     t.datetime "updated_at",                                  null: false
+    t.integer  "occurrence_id",                 limit: 4
+    t.integer  "target_occurrence_id",          limit: 4
   end
 
   add_index "assocs", ["harvest_id"], name: "index_assocs_on_harvest_id", using: :btree
   add_index "assocs", ["node_id"], name: "index_assocs_on_node_id", using: :btree
+  add_index "assocs", ["occurrence_id"], name: "index_assocs_on_occurrence_id", using: :btree
   add_index "assocs", ["occurrence_resource_fk"], name: "index_assocs_on_occurrence_resource_fk", using: :btree
   add_index "assocs", ["resource_id"], name: "index_assocs_on_resource_id", using: :btree
   add_index "assocs", ["resource_pk"], name: "index_assocs_on_resource_pk", using: :btree
   add_index "assocs", ["target_node_id"], name: "index_assocs_on_target_node_id", using: :btree
+  add_index "assocs", ["target_occurrence_id"], name: "index_assocs_on_target_occurrence_id", using: :btree
   add_index "assocs", ["target_occurrence_resource_fk"], name: "index_assocs_on_target_occurrence_resource_fk", using: :btree
 
   create_table "assocs_references", force: :cascade do |t|
@@ -635,6 +639,7 @@ ActiveRecord::Schema.define(version: 20171130215805) do
     t.string   "dataset_id",                limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "resource_pk",               limit: 255
   end
 
   add_index "scientific_names", ["harvest_id"], name: "index_scientific_names_on_harvest_id", using: :btree
@@ -642,6 +647,7 @@ ActiveRecord::Schema.define(version: 20171130215805) do
   add_index "scientific_names", ["node_resource_pk"], name: "index_scientific_names_on_node_resource_pk", using: :btree
   add_index "scientific_names", ["normalized"], name: "index_scientific_names_on_normalized", using: :btree
   add_index "scientific_names", ["normalized_name_id"], name: "index_scientific_names_on_normalized_name_id", using: :btree
+  add_index "scientific_names", ["resource_pk"], name: "index_scientific_names_on_resource_pk", using: :btree
 
   create_table "scientific_names_references", force: :cascade do |t|
     t.integer "harvest_id",         limit: 4
@@ -708,11 +714,13 @@ ActiveRecord::Schema.define(version: 20171130215805) do
     t.text     "source",                     limit: 65535
     t.datetime "created_at",                               null: false
     t.datetime "updated_at",                               null: false
+    t.integer  "occurrence_id",              limit: 4
   end
 
   add_index "traits", ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk", using: :btree
   add_index "traits", ["harvest_id", "resource_pk"], name: "index_traits_on_harvest_id_and_resource_pk", using: :btree
   add_index "traits", ["harvest_id"], name: "index_traits_on_harvest_id", using: :btree
+  add_index "traits", ["occurrence_id"], name: "index_traits_on_occurrence_id", using: :btree
   add_index "traits", ["occurrence_resource_pk"], name: "index_traits_on_occurrence_resource_pk", using: :btree
   add_index "traits", ["parent_id"], name: "index_traits_on_parent_id", using: :btree
   add_index "traits", ["parent_pk"], name: "index_traits_on_parent_pk", using: :btree
