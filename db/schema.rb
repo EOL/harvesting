@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171219175847) do
+ActiveRecord::Schema.define(version: 20171221175421) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -599,7 +599,7 @@ ActiveRecord::Schema.define(version: 20171219175847) do
     t.string   "dataset_rights_statement",  limit: 255
   end
 
-  add_index "resources", ["name"], name: "index_resources_on_name", using: :btree
+  add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree
 
   create_table "roles", force: :cascade do |t|
     t.string   "name",       limit: 255, null: false

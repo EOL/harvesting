@@ -15,7 +15,7 @@ json.traits(@traits.reject { |t| t.node.page_id.nil? }) do |trait|
   json.lifestage trait.lifestage_term.try(:uri)
   json.source trait.source
 
-  json.metadata (trait.meta_traits + trait.children + trait.occurrence.occurrence_metadata).compact do |meta|
+  json.metadata (trait.meta_traits + trait.references + trait.children + trait.occurrence.occurrence_metadata).compact do |meta|
     meta_data_to_json(json, meta)
   end
 end
