@@ -89,13 +89,13 @@ class Resource
       return name if name.size < 8
       words = name.split
       abbr = if words.size > 4
-        words.map { |w| w.first }.join
+        words.map { |w| w.first }.join[0..15]
       elsif name.sub(/[^A-Z]/, '').size >= 3
-        name.sub(/[^A-Z]/, '')
+        name.sub(/[^A-Z]/, '')[0..15]
       else
-        name[0..7]
+        name[0..15]
       end
-      abbr.gsub(/\s+/, '_')
+      abbr.gsub(/\s+/, '_')[0..15]
     end
 
     def shorten(name)

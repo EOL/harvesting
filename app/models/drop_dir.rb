@@ -82,7 +82,7 @@ class DropDir
           abbr = "#{name}-#{digits}"
         end
       end
-      abbr
+      abbr[0..15]
     end
 
     def untgz(file, dir)
