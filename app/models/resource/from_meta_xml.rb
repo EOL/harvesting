@@ -132,8 +132,8 @@ class Resource::FromMetaXml
         else
           raise "I cannot determine what #{file_config_name} represents!"
         end
-      sep = file_config['fieldsTerminatedBy']
-      sep = "\t" if sep == "\\t"
+      sep = YAML.safe_load(%(---\n"#{file_config['fieldsTerminatedBy']}"\n))
+      lines = YAML.safe_load(%(---\n"#{file_config['linesTerminatedBy']}"\n))
       fmt = Format.create!(
         resource_id: @resource.id,
         harvest_id: nil,
@@ -143,7 +143,7 @@ class Resource::FromMetaXml
         represents: reps,
         get_from: "#{@path}/#{file_config_name}",
         field_sep: sep,
-        line_sep: file_config['linesTerminatedBy'],
+        line_sep: lines,
         utf8: file_config['encoding'] =~ /^UTF/
       )
       headers = `head -n #{file_config['ignoreHeaderLines']} #{file_config_file.gsub(' ', '\\ ')}`.split(sep)

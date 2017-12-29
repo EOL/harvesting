@@ -131,6 +131,7 @@ class ResourceHarvester
         fields[@headers[i]] = field
         expected_by_file.delete(@headers[i])
       end
+      debugger if expected_by_file.size.positive?
       raise(Exceptions::ColumnUnmatched.new("#{@format.represents}: #{expected_by_file.join(',')}")) if expected_by_file.size.positive?
       @file = @format.converted_csv_path
       CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|

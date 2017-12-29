@@ -32,6 +32,7 @@ class NameParser
             updates << @names[result['verbatim']]
           rescue => e
             @harvest.log("error reading line #{i}", cat: :errors)
+            debugger if Rails.env.development?
             raise(e)
           end
         end
@@ -66,7 +67,10 @@ class NameParser
   end
 
   def learn_names(names)
-    names.each { |name| @names[name.verbatim] = name }
+    names.each do |name|
+      clean_name = name.verbatim.gsub(/^\s+/, '').gsub(/\s+$/, '')
+      @names[clean_name] = name
+    end
   end
 
   def parse_names_in_file

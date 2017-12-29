@@ -21,15 +21,22 @@ class CsvParser
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
     begin
       CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
+        next if row.compact.empty?
         yield(row, i)
         i += 1
       end
-    rescue CSV::MalformedCSVError
-      # Try again without the row sep, which can cause problems:
-      CSV.foreach(@path_to_file, col_sep: @col_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
-        yield(row, i)
-        i += 1
+    rescue CSV::MalformedCSVError => e
+      if @row_sep == "\n"
+        puts "WARNING: Re-reading #{@path_to_file} with CRLF insteead of LF."
+        @row_sep = "\r\n"
+      elsif @row_sep == "\r\n"
+        puts "WARNING: Re-reading #{@path_to_file} with CR insteead of CRLF."
+        @row_sep = "\r"
+      else
+        debugger
+        raise e
       end
+      retry
     rescue => e
       raise(e.class.new(e.message + " IN +#{i} #{@path_to_file}"))
     end

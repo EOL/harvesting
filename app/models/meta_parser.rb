@@ -8,7 +8,7 @@ class MetaParser
   end
 
   def initialize(resource)
-    # TODO: make it read URLs, if we can do that. Also handle gzip.
+    # TODO: make it handle gzip.
     # uri = URI.parse(resource.harvest_from)
     # %w(http https).include?(uri.scheme) # Means it's a URL!
     @file = resource.harvest_from
@@ -29,8 +29,8 @@ class MetaParser
     table = Format.create(
       resource_id: @resource.id,
       header_lines: node.attributes["ignoreHeaderLines"].value.to_i,
-      field_sep: node.attributes["fieldsTerminatedBy"].value,
-      line_sep: node.attributes["linesTerminatedBy"].value,
+      field_sep: node.attributes["fieldsTerminatedBy"].value.gsub('\\\\', '\\'),
+      line_sep: node.attributes["linesTerminatedBy"].value.gsub('\\\\', '\\'),
       utf8: utf8
     )
     node.css("files/location").each { |locnode| read_fileloc(table, locnode) }
