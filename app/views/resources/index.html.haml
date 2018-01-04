@@ -8,7 +8,7 @@
     = t("resources.index.media_jobs", count: Delayed::Job.where(queue: 'media', locked_at: nil).count)
 %h2= t("resources.index.harvest_header")
 .ui.segment
-  - hlog = Hlog.last
+  - hlog = Hlog.non_download.last
   - harv = hlog&.harvest
   - if harv.nil?
     .ui.header= t("resources.index.no_log")

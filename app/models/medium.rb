@@ -132,7 +132,7 @@ class Medium < ActiveRecord::Base
     update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
                       unmodified_url: unmodified_url, base_url: default_base_url)
     image&.destroy! # Clear memory
-    harvest.log("download_and_resize completed for Medium.find(#{id}) /#{base_url}.260x190.jpg")
+    harvest.log("download_and_resize completed for Medium.find(#{id}) /#{base_url}.260x190.jpg", cat: :downloads)
   end
 
   def safe_name
