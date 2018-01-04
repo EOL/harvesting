@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171222193551) do
+ActiveRecord::Schema.define(version: 20180104202615) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -198,6 +198,7 @@ ActiveRecord::Schema.define(version: 20171222193551) do
   end
 
   add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority", using: :btree
+  add_index "delayed_jobs", ["queue"], name: "index_delayed_jobs_on_queue", using: :btree
 
   create_table "fields", force: :cascade do |t|
     t.integer "format_id",        limit: 4,                   null: false
