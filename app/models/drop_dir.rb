@@ -10,7 +10,7 @@ class DropDir
       end
     end
 
-    def pickup_file(file, resource)
+    def pickup_file(file, resource = nil)
       (basename, abbr, ext) = parse_name(file)
       dir = unpack_file(file, basename: basename, abbr: abbr, ext: ext)
       resource = Resource.find_by_abbr(abbr) if Resource.exists?(abbr: abbr)
