@@ -71,6 +71,10 @@ class ResourceHarvester
         if fast_forward && harvest.stage != stage
           @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
           next
+        # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
+        elsif Harvest.where(resource_id: @resource.id).running.count.positive?
+          harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
+          raise Exception.new("MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
         end
         fast_forward = false
         @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
@@ -488,6 +492,7 @@ class ResourceHarvester
   end
 
   def log_err(e)
+    puts "ERROR: #{e.message}"
     @harvest.log("ERROR: #{e.message}", e: e, cat: :errors)
     # custom exceptions have no backtrace, for some reason:
     if e.backtrace # rubocop:disable Style/SafeNavigation

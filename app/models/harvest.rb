@@ -23,6 +23,7 @@ class Harvest < ActiveRecord::Base
   # stage is "completed"...
   scope :completed, -> { where('completed_at IS NOT NULL') }
   scope :failed, -> { where('failed_at IS NOT NULL') }
+  scope :running, -> { where('failed_at IS NULL AND completed_at IS NULL') }
 
   # NOTE: BE **VERY** careful, here: these are the methods used in ResourceHarvester. It made more sense to me to keep
   # the list here (because it's database-dependent), but really, if you change the methods there, you MUST do something
