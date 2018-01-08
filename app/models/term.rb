@@ -1,6 +1,21 @@
 class Term < ActiveRecord::Base
   enum used_for: %i[unknown measurement association value metadata]
 
+  def self.add_new_terms
+    Term.from_file(Rails.root.join('doc', 'new_terms.json'))
+  end
+
+  def self.from_file(terms_file, options = {})
+    unless File.exist?(terms_file)
+      puts("No terms file found (#{terms_file}), skipping. #{'Your term URIs will not be defined.' if options[:flush]}")
+      return
+    end
+    Term.delete_all if options[:flush]
+    puts '.. Importing terms'
+    json = JSON.parse(File.read(terms_file))
+    Term.from_json(json)
+  end
+
   def self.from_json(json)
     terms = []
     existing_terms = {}

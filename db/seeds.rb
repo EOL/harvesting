@@ -27,15 +27,7 @@ else
   puts "NO datasets file found (#{file}), skipping. Your names attributions may be missing."
 end
 
-terms_file = Rails.public_path.join('data', 'terms.json')
-if File.exist?(terms_file)
-  Term.delete_all
-  puts '.. Importing terms'
-  json = JSON.parse(File.read(terms_file))
-  Term.from_json(json)
-else
-  puts "No terms file found (#{terms_file}), skipping. Your term URIs will not be defined."
-end
+Term.from_file(Rails.public_path.join('data', 'terms.json'), flush: true)
 
 eol_attrs = {
   name: 'Encyclopedia of Life',
