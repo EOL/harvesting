@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+
+require 'active_support/inflector'
+
+table = ''
+tables = {}
+actual_tables = []
+
+here = File.dirname(__FILE__)
+File.foreach(File.join(here, '../db', 'schema.rb')) do |line|
+  if line =~ /create_table "(\w+)"/
+    table = $1.camelize.singularize
+    actual_tables << table
+  elsif line =~ /\bt\.(\w+)\s+"(\w+)"/
+    type = $1
+    column = $2.camelize
+    column.gsub!('Id', 'ID')
+    type = 'string' if type == 'text'
+    type = 'uint' if type == 'integer'
+    tables[table] ||= []
+    tables[table] << "#{column} #{type}"
+    if column.match(/ID$/)
+      assoc = column.gsub('ID', '')
+      assoc.gsub!(/^From(?=[A-Z])/, '')
+      assoc.gsub!(/^To(?=[A-Z])/, '')
+      assoc.gsub!(/^Default(?=[A-Z])/, '')
+      assoc.gsub!(/^Native(?=[A-Z])/, '')
+      tables[table] << "#{assoc} #{assoc}"
+      assoc_class = assoc.camelize
+      tables[assoc_class] ||= []
+      tables[assoc_class] << "#{table.pluralize} []#{table}"
+    end
+  end
+end
+actual_tables.each do |table|
+  fields = tables[table]
+  puts "type #{table} struct {"
+  fields.each do |field|
+    puts "  #{field}"
+  end
+  puts "}\n"
+end

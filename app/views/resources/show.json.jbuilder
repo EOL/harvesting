@@ -4,17 +4,17 @@ json.pk_url @resource.pk_url
 
 # TODO: right now we're just force-feeding them everything as "new"; we'll handle deltas later. Harder problem!
 json.nodes do
-  json.new @resource.nodes.published.count
+  json.new @nodes.count
 end
 json.scientific_names do
-  json.new @resource.scientific_names.published.count
+  json.new @scientific_names.count
 end
 json.vernaculars do
-  json.new @resource.vernaculars.published.count
+  json.new @vernaculars.count
 end
 json.media do
-  json.new @resource.media.published.count
+  json.new @media.count
 end
 json.traits do
-  json.new @resource.traits.published.count
+  json.new @traits.count
 end
