@@ -72,7 +72,7 @@ class ResourceHarvester
           @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
           next
         # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
-        elsif Harvest.where(resource_id: @resource.id).running.count.positive?
+        elsif Harvest.where(resource_id: @resource.id).running.count > 1
           harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
           raise Exception.new("MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
         end
