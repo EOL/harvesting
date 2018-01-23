@@ -9,6 +9,7 @@ gem 'creek'
 # Required to run bin/delayed_job:
 gem 'daemons'
 # Background jobs:
+gem 'delayed_job', '~> 4.1.4'
 gem 'delayed_job_active_record'
 # Dalli store:
 gem 'dalli'
