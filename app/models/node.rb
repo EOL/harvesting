@@ -82,6 +82,14 @@ class Node < ActiveRecord::Base
           include: { identifiers: {}, scientific_name: { only: %i[normalized verbatim canonical] } })
   end
 
+  def safe_canonical
+    scientific_name&.canonical || "Unamed clade #{resource_pk}"
+  end
+
+  def safe_scientific
+    scientific_name&.normalized || scientific_name&.verbatim || safe_canonical
+  end
+
   def source_url
     resource.pk_url.gsub('$PK', CGI.escape(resource_pk))
   end
