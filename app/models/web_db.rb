@@ -30,7 +30,7 @@ class WebDb < ActiveRecord::Base
       id
     end
 
-    def to_hash(table, field)
+    def map_ids(table, field)
       response = connection.exec_query("SELECT id, #{field} FROM #{table}")
       map = {}
       response.rows.each do |row|
@@ -41,6 +41,16 @@ class WebDb < ActiveRecord::Base
 
     def remove_resource_data(table, resource_id)
       connection.execute("DELETE FROM #{table} WHERE resource_id = #{resource_id}")
+    end
+
+    def import_csv(file, table)
+      connection.execute("LOAD DATA #{Rails.env.development? ? 'LOCAL ' : ''}INFILE '#{file}' REPLACE INTO TABLE `#{table}`")
+    end
+
+    # TODO: IMPORTANT! Create the resource if it's not there. Ugh.
+    def resource_id(resource)
+      response = connection.exec_query("SELECT id FROM resources WHERE repository_id = #{resource.id}")
+      response.rows[0][0]
     end
   end
 end
