@@ -6,6 +6,12 @@ class Publisher
     new(resource: resource_in).by_resource
   end
 
+  def self.first
+    publisher = new(resource: Resource.first)
+    publisher.by_resource
+    publisher
+  end
+
   def initialize(options = {})
     @resource = options[:resource]
     @web_resource_id = nil
@@ -56,10 +62,11 @@ class Publisher
   end
 
   def slurp_nodes
-    @nodes = @resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors)
     # TODO: REPLAAAAAAAAAAAAAAAAAAAAAAAAAAACE MEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!! TEMP TEMP TEMP
-    # @nodes.find_in_batches(batch_size: 10_000) do
-    @nodes.limit(100).each do
+    @nodes = @resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors)
+    @nodes.find_in_batches(batch_size: 10_000) do
+    # @nodes = @resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors).limit(100)
+    # @nodes.each do
       nodes_to_hashes
     end
   end
@@ -75,17 +82,20 @@ class Publisher
   end
 
   def node_to_struct(node)
-    # NOTE: Ignoring is_hidden, timestamps. Not required.
     same_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk landmark source_url]
     web_node = Struct::WebNode.new
     same_attributes.each do |field|
       web_node[field] = clean_values(node[field])
     end
+    now = Time.now.to_s(:db)
     web_node.resource_id = @web_resource_id
-    web_node.canonical_form = node.safe_canonical
-    web_node.scientific_name = node.safe_scientific
-    web_node.has_breadcrumb = !node.no_landmark?
+    web_node.canonical_form = clean_values(node.safe_canonical)
+    web_node.scientific_name = clean_values(node.safe_scientific)
+    web_node.has_breadcrumb = clean_values(!node.no_landmark?)
     web_node.rank_id = get_rank(node.rank)
+    web_node.is_hidden = 0
+    web_node.created_at = now
+    web_node.updated_at = now
     @nodes_by_pk[node.resource_pk] = web_node
   end
 
@@ -135,7 +145,7 @@ class Publisher
     propagate_node_ids
     puts "Propagated node IDs in #{took = Time.delta_s(t)}"
     t = Time.now
-    load_hashes_from_array(@nodes_by_pk.values)
+    load_hashes_from_array(@nodes_by_pk.values, replace: true)
     puts "Re-loaded nodes in #{took = Time.delta_s(t)}"
     t = Time.now
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
@@ -150,7 +160,7 @@ class Publisher
       count[node.parent_resource_pk] += 1
     end
     @nodes_by_pk.each do |pk, node|
-      node.children_count = count[pk]
+      node.children_count = count[pk] || 0
     end
   end
 
@@ -164,31 +174,52 @@ class Publisher
   def propagate_node_ids
     @nodes_by_pk.each do |node_pk, node|
       # TODO: the whole of node_ancestors... many of the relationships on the other models, like scientific_names...
+      unless @nodes_by_pk.key?(node.parent_resource_pk)
+        puts "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
+        next
+      end
       node.parent_id = @nodes_by_pk[node.parent_resource_pk].id
-      @ancestors_by_node_pk[node_pk].each do |ancestor|
+      @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
         ancestor.node_id = node.id
-        ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_fk].id
+        unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
+          puts "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
+          next
+        end
+        ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
       end
     end
   end
 
-  def load_hashes_from_array(array)
+  def load_hashes_from_array(array, options = {})
     t = Time.now
-    file = write_local_csv(array)
-    puts "Wrote to #{file} in #{took = Time.delta_s(t)}"
-    WebDb.import_csv(file.path, array.first.class.name.split(':').last.underscore.pluralize)
-    File.unlink(file)
+    table = array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
+    file = Tempfile.new("rails.eol_website.#{table}")
+    begin
+      write_local_csv(file, array, options)
+      puts "Wrote to #{file.path} in #{took = Time.delta_s(t)}"
+      cols = unless options[:replace]
+               c = array.first.members
+               c.delete(:id)
+               c
+             end
+      WebDb.import_csv(file.path, table, cols)
+    ensure
+      File.unlink(file)
+    end
   end
 
-  def write_local_csv(structs)
+  def write_local_csv(file, structs, options = {})
     table = structs.first.class.name.split(':').last.underscore.pluralize
-    file = Tempfile.new(table)
-    CSV.open(file, 'wb', encoding: 'ISO-8859-1') do |csv|
+    # CSV.open(file, 'wb', encoding: 'ISO-8859-1', col_sep: "\t") do |csv|
+    CSV.open(file, 'wb', col_sep: "\t") do |csv|
       structs.each do |struct|
-        csv << struct.to_a
+        # I hate MySQL serialization. Nulls are stored as \N (literally).
+        line = struct.to_a.map { |v| v.nil? ? '\\N' : v }
+        # NO ID specified if it's a first-time insert...
+        line.delete_at(struct.members.index(:id)) unless options[:replace]
+        csv << line
       end
     end
-    file
   end
 
   def get_rank(full_rank)

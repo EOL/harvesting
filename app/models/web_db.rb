@@ -43,8 +43,20 @@ class WebDb < ActiveRecord::Base
       connection.execute("DELETE FROM #{table} WHERE resource_id = #{resource_id}")
     end
 
-    def import_csv(file, table)
-      connection.execute("LOAD DATA #{Rails.env.development? ? 'LOCAL ' : ''}INFILE '#{file}' REPLACE INTO TABLE `#{table}`")
+    def import_csv(file, table, cols = nil)
+      q = ['LOAD DATA']
+      q << 'LOCAL' unless Rails.env.development?
+      q << "INFILE '#{file}'"
+      q << 'REPLACE ' unless cols
+      q << "INTO TABLE `#{table}`"
+      q << "(#{cols.join(',')})" if cols
+      begin
+        connection.execute(q.join(' '))
+      rescue => e
+        puts e.message
+        debugger
+        1
+      end
     end
 
     # TODO: IMPORTANT! Create the resource if it's not there. Ugh.
