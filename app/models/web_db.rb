@@ -1,8 +1,8 @@
 # For connecting to the website Database.
 class WebDb < ActiveRecord::Base
   self.abstract_class = true
-  cfg = YAML.load_file(File.join(Rails.root, 'config', 'database.yml'))[Rails.env.to_s]
-  cfg['database'] = "eol_#{Rails.env}"
+  cfg = ActiveRecord::Base.configurations[Rails.env]
+  cfg['database'] = "eol_#{Rails.env}" # TODO: We really shouldn't enforce this here in this class. Put it in secrets.
   establish_connection cfg
 
   # TODO: it would be nice to sanitize all of the SQL.... but we're assuming things are "safe" as we're only running it
