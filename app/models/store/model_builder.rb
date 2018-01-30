@@ -253,16 +253,18 @@ module Store
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon] && parent
-        return log_warning("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a parentMeasurementID #{parent}")
+        return log_warning("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a "\
+                           "parentMeasurementID #{parent}")
       end
       if !@models[:trait][:of_taxon] && parent.blank? && occurrence.blank?
         puts @models[:trait].inspect
-        return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent and NO occurrence ID.")
+        return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent "\
+                           'and NO occurrence ID.')
       end
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:trait, TraitsReference)
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?
-      debugger if occ_meta # YOU WERE HERE
+      debugger if occ_meta # YOU WERE HERE ... too long ago to remember why, though. (?) Sigh.
       predicate = @models[:trait].delete(:predicate)
       predicate_term = find_or_create_term(predicate, type: 'predicate')
       @models[:trait][:predicate_term_id] = predicate_term.id

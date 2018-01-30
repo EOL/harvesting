@@ -1,4 +1,5 @@
-# Publish to the website database as quick as you can, please.
+# Publish to the website database as quick as you can, please. NOTE: We will NOT publish Terms or traits in this code.
+# We'll keep that a pull, since this codebase doesn't understand TraitBank/neo4j.
 class Publisher
   attr_accessor :resource, :nodes, :nodes_by_pk, :identifiers_by_node_pk
 
@@ -19,8 +20,14 @@ class Publisher
     @nodes_by_pk = {}
     @identifiers_by_node_pk = {}
     @ancestors_by_node_pk = {}
+    @sci_names_by_node_pk = {}
+    @taxonomic_statuses = {}
     @ranks = {}
     @types = %w[node identifier scientific_name node_ancestor vernacular medium image_info page_content]
+    @same_sci_name_attributes =
+      %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
+         authorship publication remarks parse_quality year hybrid surrogate virus]
+    @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
   end
 
   def reset_nodes
@@ -44,6 +51,7 @@ class Publisher
     t = Time.now
     load_hashes
     puts "Loaded new data in #{took = Time.delta_s(t)}"
+    # TODO: Ensure nothing ended up with node_id = 0 (sci names, at least...)
   end
 
   def build_structs
@@ -61,12 +69,13 @@ class Publisher
     @web_resource_id = WebDb.resource_id(@resource)
   end
 
+  # TODO: REPLAAAAAAAAAAAAAAAAAAAAAAAAAAACE MEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!! TEMP TEMP TEMP
   def slurp_nodes
-    # TODO: REPLAAAAAAAAAAAAAAAAAAAAAAAAAAACE MEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!! TEMP TEMP TEMP
-    @nodes = @resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors)
-    @nodes.find_in_batches(batch_size: 10_000) do
-    # @nodes = @resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors).limit(100)
-    # @nodes.each do
+    # TODO: vernaculars, media, refs, articles, links.
+    @nodes = @resource.nodes.published.includes(:identifiers, :node_ancestors, scientific_names: [:dataset])
+                      .limit(100) # <-- For testing only.
+    # @nodes.find_in_batches(batch_size: 10_000) do
+    @nodes.each do
       nodes_to_hashes
     end
   end
@@ -77,17 +86,16 @@ class Publisher
       node_to_struct(node)
       build_identifiers(node)
       build_ancestors(node)
-      # TODO: scientific_names, etc...
+      build_scientific_names(node)
+      # TODO: vernaculars, media, refs, articles, links.
+      # NOTE: We will NOT import Terms or traits in this code. We'll keep that a pull, since this codebase doesn't
+      # understand TraitBank/neo4j.
     end
   end
 
   def node_to_struct(node)
-    same_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk landmark source_url]
     web_node = Struct::WebNode.new
-    same_attributes.each do |field|
-      web_node[field] = clean_values(node[field])
-    end
-    now = Time.now.to_s(:db)
+    copy_fields(@same_node_attributes, node, web_node)
     web_node.resource_id = @web_resource_id
     web_node.canonical_form = clean_values(node.safe_canonical)
     web_node.scientific_name = clean_values(node.safe_scientific)
@@ -96,10 +104,23 @@ class Publisher
     web_node.is_hidden = 0
     web_node.created_at = now
     web_node.updated_at = now
+    web_node.landmark = Node.landmarks[node.landmark] # NOTE: we are RELYING on the enum being the same, here!
     @nodes_by_pk[node.resource_pk] = web_node
   end
 
-  def clean_values(val)
+  def copy_fields(fields, source, dest)
+    fields.each do |field|
+      val = source.attributes.key?(field) ? source[field] : source.send(field)
+      dest[field] = clean_values(val)
+    end
+  end
+
+  def now
+    Time.now.to_s(:db)
+  end
+
+  def clean_values(src)
+    val = src.dup
     val.gsub!("\t", '&nbsp;') if val.respond_to?(:gsub!) # Sorry, no tabs allowed.
     val = 1 if val.class == TrueClass
     val = 0 if val.class == FalseClass
@@ -129,6 +150,31 @@ class Publisher
     end
   end
 
+  def build_scientific_names(node)
+    node.scientific_names.each do |name_model|
+      @sci_names_by_node_pk[node.resource_pk] ||= []
+      @sci_names_by_node_pk[node.resource_pk] << build_scientific_name(node, name_model)
+    end
+  end
+
+  def build_scientific_name(node, name_model)
+    name_struct = Struct::WebScientificName.new
+    name_struct.node_id = 0 # We *should* loop back for this later.
+    name_struct.page_id = node.page_id
+    name_struct.canonical_form = clean_values(name_model.canonical_italicized)
+    name_struct.taxonomic_status_id = clean_values(get_taxonomic_status(name_model.taxonomic_status.try(:downcase)))
+    name_struct.is_preferred = clean_values(node.scientific_name_id == name_model.id)
+    name_struct.created_at = now
+    name_struct.updated_at = now
+    name_struct.resource_id = @web_resource_id
+    name_struct.node_resource_pk = clean_values(node.resource_pk)
+    # name_struct.source_reference = name_model. ...errr.... TODO: This is intended to move off of the node. Put it
+    # here!
+    name_struct.attribution = clean_values(name_model.attribution_html)
+    copy_fields(@same_sci_name_attributes, name_model, name_struct)
+    name_struct
+  end
+
   def remove_old_data
     @types.each do |type|
       table = type.pluralize
@@ -137,19 +183,12 @@ class Publisher
   end
 
   def load_hashes
-    t = Time.now
     load_hashes_from_array(@nodes_by_pk.values)
-    puts "Loaded nodes in #{took = Time.delta_s(t)}"
-    t = Time.now
     learn_node_ids
     propagate_node_ids
-    puts "Propagated node IDs in #{took = Time.delta_s(t)}"
-    t = Time.now
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
-    puts "Re-loaded nodes in #{took = Time.delta_s(t)}"
-    t = Time.now
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
-    puts "Loaded node ancestors in #{took = Time.delta_s(t)}"
+    load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
   end
 
   def count_children
@@ -173,7 +212,8 @@ class Publisher
 
   def propagate_node_ids
     @nodes_by_pk.each do |node_pk, node|
-      # TODO: the whole of node_ancestors... many of the relationships on the other models, like scientific_names...
+      # TODO: the whole of node_ancestors... many of the relationships on the other models, like vernaculars, media,
+      # refs, articles, links.
       unless @nodes_by_pk.key?(node.parent_resource_pk)
         puts "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
         next
@@ -186,6 +226,9 @@ class Publisher
           next
         end
         ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
+      end
+      @sci_names_by_node_pk[node_pk].compact.each do |name|
+        name.node_id = node.id
       end
     end
   end
