@@ -2,8 +2,11 @@
 class WebDb < ActiveRecord::Base
   self.abstract_class = true
   cfg = ActiveRecord::Base.configurations[Rails.env]
-  cfg['host'] = 'web_mysql' # Defined in docker-compose.yml links
-  cfg['database'] = "eol_#{Rails.env}" # TODO: We really shouldn't enforce this here in this class. Put it in secrets.
+  # TODO: pull from "web" namespace... and start using secrets in this codebase too... :\
+  cfg['database'] = Rails.application.secrets.db['name']
+  cfg['username'] = Rails.application.secrets.db['username']
+  cfg['password'] = Rails.application.secrets.db['password']
+  cfg['port']     = Rails.application.secrets.db['port']
   establish_connection cfg
 
   # TODO: it would be nice to sanitize all of the SQL.... but we're assuming things are "safe" as we're only running it
