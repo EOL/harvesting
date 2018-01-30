@@ -2,6 +2,7 @@
 class WebDb < ActiveRecord::Base
   self.abstract_class = true
   cfg = ActiveRecord::Base.configurations[Rails.env]
+  cfg['host'] = 'web_mysql' # Defined in docker-compose.yml links
   cfg['database'] = "eol_#{Rails.env}" # TODO: We really shouldn't enforce this here in this class. Put it in secrets.
   establish_connection cfg
 

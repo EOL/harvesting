@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   eol-repo-elasticsearch:
     image: elasticsearch
@@ -42,9 +42,9 @@ services:
       - eol-repo-elasticsearch:elasticsearch
       - eol-repo-memcached:memcached
       - eol-repo-mysql:mysql
+      - eol-backend-mysql:web_mysql
     env_file:
       - resources/staging.env
     ports:
        - 3001:3000
     network_mode: "bridge"
-
