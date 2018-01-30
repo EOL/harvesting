@@ -25,7 +25,7 @@ services:
     env_file:
       - resources/staging.env
     volumes:
-       - /data/eol-repo-mysql:/var/lib/mysql
+      - /data/eol-repo-mysql:/var/lib/mysql
     network_mode: "bridge"
   eol-repo-app:
     image: encoflife/eol-repo-app
@@ -34,6 +34,7 @@ services:
     volumes:
       - /data/eol-repo-app:/u/apps/harvester/public/data
       - ./bin/init.sh:/etc/my_init.d/init.sh
+      - ./resources/secrets.yml:/u/apps/secrets.yml
     depends_on:
       - eol-repo-elasticsearch
       - eol-repo-mysql
@@ -42,9 +43,8 @@ services:
       - eol-repo-elasticsearch:elasticsearch
       - eol-repo-memcached:memcached
       - eol-repo-mysql:mysql
-      - eol-backend-mysql:web_mysql
     env_file:
       - resources/staging.env
     ports:
-       - 3001:3000
+      - 3001:3000
     network_mode: "bridge"
