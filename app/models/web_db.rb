@@ -1,13 +1,13 @@
 # For connecting to the website Database.
 class WebDb < ActiveRecord::Base
   self.abstract_class = true
-  cfg = ActiveRecord::Base.configurations[Rails.env]
-  # TODO: pull from "web" namespace... and start using secrets in this codebase too... :\
-  cfg['database'] = Rails.application.secrets.db['name']
-  cfg['username'] = Rails.application.secrets.db['username']
-  cfg['password'] = Rails.application.secrets.db['password']
-  cfg['port']     = Rails.application.secrets.db['port']
-  establish_connection cfg
+  #TMP cfg = ActiveRecord::Base.configurations[Rails.env]
+  #TMP # TODO: pull from "web" namespace... and start using secrets in this codebase too... :\
+  #TMP cfg['database'] = Rails.application.secrets.db['name']
+  #TMP cfg['username'] = Rails.application.secrets.db['username']
+  #TMP cfg['password'] = Rails.application.secrets.db['password']
+  #TMP cfg['port']     = Rails.application.secrets.db['port']
+  #TMP establish_connection cfg
 
   # TODO: it would be nice to sanitize all of the SQL.... but we're assuming things are "safe" as we're only running it
   # internally with trusted data.
