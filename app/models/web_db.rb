@@ -3,6 +3,7 @@ class WebDb < ActiveRecord::Base
   self.abstract_class = true
   cfg = ActiveRecord::Base.configurations[Rails.env]
   # TODO: pull from "web" namespace... and start using secrets in this codebase too... :\
+  cfg['host']     = Rails.application.secrets.db['host']
   cfg['database'] = Rails.application.secrets.db['name']
   cfg['username'] = Rails.application.secrets.db['username']
   cfg['password'] = Rails.application.secrets.db['password']
