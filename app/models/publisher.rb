@@ -15,18 +15,25 @@ class Publisher
 
   def initialize(options = {})
     @resource = options[:resource]
+    @root_url = Rails.application.secrets.repository.url || 'http://eol.org'
     @web_resource_id = nil
     reset_nodes
     @nodes_by_pk = {}
     @identifiers_by_node_pk = {}
     @ancestors_by_node_pk = {}
     @sci_names_by_node_pk = {}
+    @media_by_node_pk = {}
     @taxonomic_statuses = {}
     @ranks = {}
+    @licenses = {}
+    @languages = {}
     @types = %w[node identifier scientific_name node_ancestor vernacular medium image_info page_content]
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
+    @same_medium_attributes =
+      %i[guid resource_pk subclass format owner source_url name description unmodified_url base_url
+         source_page_url rights_statement usage_statement location_id bibliographic_citation_id]
     @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
   end
 
@@ -38,20 +45,18 @@ class Publisher
     build_structs
     build_ranks
     learn_resource_id
-    t = Time.now
-    slurp_nodes
-    puts "Slurped in #{took = Time.delta_s(t)}"
+    measure_time('Slurped all data') { slurp_nodes }
     reset_nodes # We no longer need it, free up the memory.
-    t = Time.now
-    count_children
-    puts "Counted children in #{took = Time.delta_s(t)}"
-    t = Time.now
-    remove_old_data
-    puts "Removed old data in #{took = Time.delta_s(t)}"
-    t = Time.now
-    load_hashes
-    puts "Loaded new data in #{took = Time.delta_s(t)}"
+    measure_time('Counted all children') { count_children }
+    measure_time('Removed old data') { remove_old_data }
+    measure_time('Loaded new data') { load_hashes }
     # TODO: Ensure nothing ended up with node_id = 0 (sci names, at least...)
+  end
+
+  def measure_time(what, &_block)
+    t = Time.now
+    yield
+    puts "#{what} in #{Time.delta_s(t)}"
   end
 
   def build_structs
@@ -71,11 +76,14 @@ class Publisher
 
   # TODO: REPLAAAAAAAAAAAAAAAAAAAAAAAAAAACE MEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!! TEMP TEMP TEMP
   def slurp_nodes
-    # TODO: vernaculars, media, refs, articles, links.
-    @nodes = @resource.nodes.published.includes(:identifiers, :node_ancestors, scientific_names: [:dataset])
+    # TODO: vernaculars, refs, articles, links, image_info.
+    # TODO: ensure that all of the associations are only pulling in published results. :S
+    @nodes = @resource.nodes.published
+                      .includes(:identifiers, :node_ancestors,
+                                scientific_names: [:dataset], media: %i[node license language])
                       .limit(100) # <-- For testing only.
-    # @nodes.find_in_batches(batch_size: 10_000) do
-    @nodes.each do
+    # @nodes.find_in_batches(batch_size: 10_000) do  # <-- For production.
+    @nodes.each do # <-- For testing only.
       nodes_to_hashes
     end
   end
@@ -87,7 +95,8 @@ class Publisher
       build_identifiers(node)
       build_ancestors(node)
       build_scientific_names(node)
-      # TODO: vernaculars, media, refs, articles, links.
+      build_media(node)
+      # TODO: vernaculars, refs, articles, links, image_info.
       # NOTE: We will NOT import Terms or traits in this code. We'll keep that a pull, since this codebase doesn't
       # understand TraitBank/neo4j.
     end
@@ -175,6 +184,33 @@ class Publisher
     name_struct
   end
 
+  def build_media(node)
+    node.media.each do |medium|
+      @media_by_node_pk[node.resource_pk] ||= []
+      @media_by_node_pk[node.resource_pk] << build_medium(node, medium)
+    end
+  end
+
+  def build_medium(node, medium)
+    web_medium = Struct::WebMedium.new
+    web_medium.node_id = 0 # We *should* loop back for this later.
+    web_medium.page_id = node.page_id
+    # TODO: subclass, format are enum?
+    # TODO: ImageInfo from medium.sizes
+    copy_fields(@same_medium_attributes, medium, web_medium)
+    web_medium.created_at = now
+    web_medium.updated_at = now
+    web_medium.resource_id = @web_resource_id
+    web_medium.name = clean_values(medium.name_verbatim) if medium.name.blank?
+    web_medium.description = clean_values(medium.description_verbatim) if medium.description.blank?
+    if medium.base_url.nil? # The image has not been downloaded.
+      web_medium.base_url = "#{@root_url}/#{medium.default_base_url}"
+    end
+    web_medium.license_id = get_license(medium.license.try(:source_url))
+    web_medium.language_id = get_language(medium.language)
+    web_medium
+  end
+
   def remove_old_data
     @types.each do |type|
       table = type.pluralize
@@ -186,9 +222,11 @@ class Publisher
     load_hashes_from_array(@nodes_by_pk.values)
     learn_node_ids
     propagate_node_ids
+    # TODO: other relationships, like vernaculars, refs, articles, links, image_info.
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
+    load_hashes_from_array(@media_by_node_pk.values.flatten)
   end
 
   def count_children
@@ -212,8 +250,7 @@ class Publisher
 
   def propagate_node_ids
     @nodes_by_pk.each do |node_pk, node|
-      # TODO: the whole of node_ancestors... many of the relationships on the other models, like vernaculars, media,
-      # refs, articles, links.
+      # TODO: ...many of the relationships on the other models, like vernaculars, refs, articles, links, image_info.
       unless @nodes_by_pk.key?(node.parent_resource_pk)
         puts "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
         next
@@ -222,14 +259,20 @@ class Publisher
       @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
         ancestor.node_id = node.id
         unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
-          puts "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
+          puts "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE JUST TESTING!"
           next
         end
         ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
       end
-      @sci_names_by_node_pk[node_pk].compact.each do |name|
-        name.node_id = node.id
-      end
+      # Simpler propagation of node ID only:
+      set_node_ids(@sci_names_by_node_pk, node_pk, node.id)
+      set_node_ids(@media_by_node_pk, node_pk, node.id)
+    end
+  end
+
+  def set_node_ids(hash, node_pk, node_id)
+    hash[node_pk].compact.each do |struct|
+      struct.node_id = node_id
     end
   end
 
@@ -239,7 +282,7 @@ class Publisher
     file = Tempfile.new("rails.eol_website.#{table}")
     begin
       write_local_csv(file, array, options)
-      puts "Wrote to #{file.path} in #{took = Time.delta_s(t)}"
+      puts "Wrote to #{file.path} in #{Time.delta_s(t)}"
       cols = unless options[:replace]
                c = array.first.members
                c.delete(:id)
@@ -252,8 +295,6 @@ class Publisher
   end
 
   def write_local_csv(file, structs, options = {})
-    table = structs.first.class.name.split(':').last.underscore.pluralize
-    # CSV.open(file, 'wb', encoding: 'ISO-8859-1', col_sep: "\t") do |csv|
     CSV.open(file, 'wb', col_sep: "\t") do |csv|
       structs.each do |struct|
         # I hate MySQL serialization. Nulls are stored as \N (literally).
@@ -265,12 +306,29 @@ class Publisher
     end
   end
 
+  # TODO: we need to get a warning if any of these get_* methods creates one. :S Recommend we pull in the last resource
+  # harvest and log to that harvest_log.
   def get_rank(full_rank)
     return nil if full_rank.nil?
     rank = full_rank.downcase
     return nil if rank.blank?
     return @ranks[rank] if @ranks.key?(rank)
-    @ranks[rank] = WebDb.raw_create_rank(rank)
+    @ranks[rank] = WebDb.raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
+  end
+
+  def get_license(url)
+    return nil if url.nil?
+    license = url.downcase
+    return nil if license.blank?
+    return @licenses[license] if @licenses.key?(license)
+    # NOTE: passing int case-sensitive name... and a bogus name.
+    @licenses[license] = WebDb.raw_create('licenses', source_url: url, name: url)
+  end
+
+  def get_language(language)
+    return nil if language.blank?
+    return @languages[language.id] if @languages.key?(language.id)
+    @languages[language.id] = WebDb.raw_create('languages', code: language.code, group: language.group_code)
   end
 
   def get_taxonomic_status(full_name)
