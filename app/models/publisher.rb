@@ -15,6 +15,7 @@ class Publisher
 
   def initialize(options = {})
     @resource = options[:resource]
+    @logger = @resource.harvests.completed.last
     @root_url = Rails.application.secrets.repository.url || 'http://eol.org'
     @web_resource_id = nil
     reset_nodes
@@ -32,7 +33,7 @@ class Publisher
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
     @same_medium_attributes =
-      %i[guid resource_pk subclass format owner source_url name description unmodified_url base_url
+      %i[guid resource_pk owner source_url name description unmodified_url base_url
          source_page_url rights_statement usage_statement location_id bibliographic_citation_id]
     @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
   end
@@ -195,7 +196,8 @@ class Publisher
     web_medium = Struct::WebMedium.new
     web_medium.node_id = 0 # We *should* loop back for this later.
     web_medium.page_id = node.page_id
-    # TODO: subclass, format are enum?
+    web_medium.subclass = Medium.subclasses[medium.subclass]
+    web_medium.format = Medium.formats[medium.format]
     # TODO: ImageInfo from medium.sizes
     copy_fields(@same_medium_attributes, medium, web_medium)
     web_medium.created_at = now
@@ -306,13 +308,12 @@ class Publisher
     end
   end
 
-  # TODO: we need to get a warning if any of these get_* methods creates one. :S Recommend we pull in the last resource
-  # harvest and log to that harvest_log.
   def get_rank(full_rank)
     return nil if full_rank.nil?
     rank = full_rank.downcase
     return nil if rank.blank?
     return @ranks[rank] if @ranks.key?(rank)
+    log_warn("Encountered new rank, please assign it to a preferred rank: #{rank}")
     @ranks[rank] = WebDb.raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
   end
 
@@ -321,6 +322,7 @@ class Publisher
     license = url.downcase
     return nil if license.blank?
     return @licenses[license] if @licenses.key?(license)
+    log_warn("Encountered new license, please find a logo URL and give it a name: #{url}")
     # NOTE: passing int case-sensitive name... and a bogus name.
     @licenses[license] = WebDb.raw_create('licenses', source_url: url, name: url)
   end
@@ -328,6 +330,7 @@ class Publisher
   def get_language(language)
     return nil if language.blank?
     return @languages[language.id] if @languages.key?(language.id)
+    log_warn("Encountered new language, please assign it to a language group and give it a name: #{language}")
     @languages[language.id] = WebDb.raw_create('languages', code: language.code, group: language.group_code)
   end
 
@@ -336,6 +339,11 @@ class Publisher
     name = full_name.downcase
     return nil if name.blank?
     return @taxonomic_statuses[name] if @taxonomic_statuses.key?(name)
+    log_warn("Encountered new taxonomic status, please assign set its alternative/preferred/problematic/megeable: #{name}")
     @taxonomic_statuses[name] = WebDb.raw_create('taxonomic_statuses', name: name)
+  end
+
+  def log_warn(message)
+    @logger.log(message, cat: :warns)
   end
 end

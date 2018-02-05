@@ -12,7 +12,8 @@ class Medium < ActiveRecord::Base
   has_many :media_references, inverse_of: :medium
   has_many :references, through: :media_references
 
-  enum subclass: [:image, :video, :sound, :map_image ]
+  # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
+  enum subclass: [:image, :video, :sound, :map_image, :js_map ]
   enum format: [:jpg, :youtube, :flash, :vimeo, :mp3, :ogg, :wav, :mp4]
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
