@@ -16,7 +16,7 @@ class Publisher
   def initialize(options = {})
     @resource = options[:resource]
     @logger = @resource.harvests.completed.last
-    @root_url = Rails.application.secrets.repository.url || 'http://eol.org'
+    @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
     @web_resource_id = nil
     reset_nodes
     @nodes_by_pk = {}
@@ -192,9 +192,10 @@ class Publisher
     end
   end
 
+  # NOTE: media will not be visible until the website runs
+  # MediaContentCreator.by_resource(@resource, Publishing::PubLog.new(@resource))
   def build_medium(node, medium)
     web_medium = Struct::WebMedium.new
-    web_medium.node_id = 0 # We *should* loop back for this later.
     web_medium.page_id = node.page_id
     web_medium.subclass = Medium.subclasses[medium.subclass]
     web_medium.format = Medium.formats[medium.format]
@@ -279,17 +280,18 @@ class Publisher
   end
 
   def load_hashes_from_array(array, options = {})
+    return nil if array.empty?
     t = Time.now
     table = array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
     file = Tempfile.new("rails.eol_website.#{table}")
+    cols = unless options[:replace]
+             c = array.first.members
+             c.delete(:id)
+             c
+           end
     begin
       write_local_csv(file, array, options)
       puts "Wrote to #{file.path} in #{Time.delta_s(t)}"
-      cols = unless options[:replace]
-               c = array.first.members
-               c.delete(:id)
-               c
-             end
       WebDb.import_csv(file.path, table, cols)
     ensure
       File.unlink(file)
@@ -324,7 +326,7 @@ class Publisher
     return @licenses[license] if @licenses.key?(license)
     log_warn("Encountered new license, please find a logo URL and give it a name: #{url}")
     # NOTE: passing int case-sensitive name... and a bogus name.
-    @licenses[license] = WebDb.raw_create('licenses', source_url: url, name: url)
+    @licenses[license] = WebDb.raw_create('licenses', source_url: url, name: url, created_at: now, updated_at: now)
   end
 
   def get_language(language)

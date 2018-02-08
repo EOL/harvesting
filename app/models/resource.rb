@@ -94,6 +94,10 @@ class Resource < ActiveRecord::Base
     ResourceHarvester.new(self).start
   end
 
+  def publish
+    Publisher.by_resource(self)
+  end
+
   def resume_instance
     @resume_instance ||= ResourceHarvester.new(self)
     @resume_instance.prep_resume
