@@ -10,8 +10,13 @@ class WebDb < ActiveRecord::Base
   cfg['password'] = Rails.application.secrets.db['password']
   cfg['port']     = Rails.application.secrets.db['port']
   establish_connection cfg
+  @page_columns_to_update =
+    %w[id updated_at media_count articles_count links_count maps_count nodes_count
+       vernaculars_count scientific_names_count referents_count]
 
   class << self
+    attr_reader :page_columns_to_update
+    
     def now
       Time.now.to_s(:db)
     end
@@ -115,6 +120,19 @@ class WebDb < ActiveRecord::Base
     def find_by_repo_id(table, id)
       rows = connection.exec_query("SELECT id FROM `#{table}` WHERE repository_id = #{id} LIMIT 1").rows
       rows.empty? ? nil : rows[0][0]
+    end
+
+    def pages_to_update(page_ids)
+      all_pages = []
+      page_ids.in_groups_of(5_000, false) do |group|
+        all_pages += existing_pages(page_ids)
+      end
+      all_pages.compact
+    end
+
+    def existing_pages(page_ids)
+      connection.exec_query("SELECT #{page_columns_to_update.join(",")} FROM "\
+        "pages WHERE id IN (#{page_ids.join(',')})").rows
     end
   end
 end
