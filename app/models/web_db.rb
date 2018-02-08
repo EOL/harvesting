@@ -16,7 +16,7 @@ class WebDb < ActiveRecord::Base
 
   class << self
     attr_reader :page_columns_to_update
-    
+
     def now
       Time.now.to_s(:db)
     end
@@ -29,7 +29,7 @@ class WebDb < ActiveRecord::Base
 
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
-      connection.exec_insert("INSERT INTO #{table} (#{hash.keys.join(', ')}) VALUES (#{vals.join(',')})", 'SQL', vals)
+      connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
       WebDb.connection.last_inserted_id(table)
     end
 
@@ -59,6 +59,25 @@ class WebDb < ActiveRecord::Base
 
     def remove_resource_data(table, resource_id)
       connection.execute("DELETE FROM #{table} WHERE resource_id = #{resource_id}")
+    end
+
+    def create_temp_pages_table(id)
+      table = "temp_pages_#{id}"
+      connection.execute("CREATE TEMPORARY TABLE #{table} LIKE pages")
+      table
+    end
+
+    def load_pages_from_temp(temp_table)
+      updates = page_columns_to_update[1..-1].map { |col| "`#{col}` = VALUES(`#{col}`)" }
+      q = ['INSERT INTO pages']
+      q << "(#{page_columns_to_update.join(',')})"
+      q << "SELECT #{page_columns_to_update.join(',')} FROM #{temp_table}"
+      q << "ON DUPLICATE KEY UPDATE #{updates.join(', ')}"
+      connection.execute(q.join(' '))
+    end
+
+    def drop_temp_pages_table(temp_table)
+      connection.execute("DROP TEMPORARY TABLE #{temp_table}")
     end
 
     def import_csv(file, table, cols = nil)
@@ -131,7 +150,7 @@ class WebDb < ActiveRecord::Base
     end
 
     def existing_pages(page_ids)
-      connection.exec_query("SELECT #{page_columns_to_update.join(",")} FROM "\
+      connection.exec_query("SELECT * FROM "\
         "pages WHERE id IN (#{page_ids.join(',')})").rows
     end
   end

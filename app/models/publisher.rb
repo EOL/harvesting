@@ -63,7 +63,7 @@ class Publisher
   def measure_time(what, &_block)
     t = Time.now
     yield
-    puts "#{what} in #{Time.delta_s(t)}"
+    log_warn "#{what} in #{Time.delta_s(t)}"
   end
 
   def build_structs
@@ -86,8 +86,9 @@ class Publisher
     # TODO: add relationships for refs, articles, links, image_info.
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
-                      .includes(:identifiers, :node_ancestors, :vernaculars,
-                                scientific_names: [:dataset], media: %i[node license language])
+                      .includes(:identifiers, :node_ancestors,
+                                vernaculars: [:language], scientific_names: [:dataset],
+                                media: %i[node license language])
     if testing
       nodes_to_hashes(@nodes.limit(100))
     else
@@ -148,19 +149,32 @@ class Publisher
   def build_page(node)
     if @pages.key?(node.page_id)
       @pages[node.page_id].nodes_count += 1
+      @pages[node.page_id].media_count += node.media.count
+      @pages[node.page_id].vernaculars_count += node.vernaculars.count
+      @pages[node.page_id].scientific_names_count += node.scientific_names.count
+      # TODO: add counts for articles, links, maps, and refs
     else
       @pages[node.page_id] = Struct::WebPage.new
       t = now
       @pages[node.page_id].created_at = t
       @pages[node.page_id].updated_at = t
-      @pages[node.page_id].media_count = 0
-      @pages[node.page_id].articles_count = 0
-      @pages[node.page_id].links_count = 0
-      @pages[node.page_id].maps_count = 0
+      @pages[node.page_id].media_count = node.media.count
       @pages[node.page_id].nodes_count = 1 # This one, silly!
-      @pages[node.page_id].vernaculars_count = 0
-      @pages[node.page_id].scientific_names_count = 0
-      @pages[node.page_id].referents_count = 0
+      @pages[node.page_id].vernaculars_count = node.vernaculars.count
+      @pages[node.page_id].scientific_names_count = node.scientific_names.count
+      # TODO: all of these 0s should be populated, once we have the associations included:
+      @pages[node.page_id].articles_count = 0 # TODO
+      @pages[node.page_id].links_count = 0 # TODO
+      @pages[node.page_id].maps_count = 0 # TODO
+      @pages[node.page_id].referents_count = 0 # TODO
+      # These are NOT used by our code, but are required by the database (and thus we avoid inserting nulls):
+      @pages[node.page_id].page_contents_count = 0
+      @pages[node.page_id].data_count = 0
+      @pages[node.page_id].species_count = 0
+      @pages[node.page_id].is_extinct = 0
+      @pages[node.page_id].is_marine = 0
+      @pages[node.page_id].has_checked_extinct = 0
+      @pages[node.page_id].has_checked_marine = 0
     end
   end
 
@@ -199,7 +213,7 @@ class Publisher
     name_struct.node_id = 0 # We *should* loop back for this later.
     name_struct.page_id = node.page_id
     name_struct.canonical_form = clean_values(name_model.canonical_italicized)
-    name_struct.taxonomic_status_id = clean_values(get_taxonomic_status(name_model.taxonomic_status.try(:downcase)))
+    name_struct.taxonomic_status_id = get_taxonomic_status(name_model.taxonomic_status.try(:downcase))
     name_struct.is_preferred = clean_values(node.scientific_name_id == name_model.id)
     name_struct.created_at = now
     name_struct.updated_at = now
@@ -255,9 +269,14 @@ class Publisher
     web_vern = Struct::WebVernacular.new
     web_vern.page_id = node.page_id
     web_vern.language_id = get_language(vernacular.language)
-    web_vern.is_preferred_by_resource = get_language(vernacular.is_preferred)
-    web_vern.string = get_language(vernacular.verbatim)
+    web_vern.created_at = now
+    web_vern.updated_at = now
+    web_vern.is_preferred = 0 # This will be fixed by the code mentioned above, run on the website.
+    web_vern.trust = 0
+    web_vern.is_preferred_by_resource = clean_values(vernacular.is_preferred || false)
+    web_vern.string = clean_values(vernacular.verbatim)
     copy_fields(@same_vernacular_attributes, vernacular, web_vern)
+    web_vern
   end
 
   def remove_old_data
@@ -301,29 +320,19 @@ class Publisher
 
   def propagate_node_ids
     @nodes_by_pk.each do |node_pk, node|
-      # TODO: ...many of the relationships on the other models, like refs, articles, links, image_info.
-      unless @nodes_by_pk.key?(node.parent_resource_pk)
-        puts "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
-        next
-      end
-      node.parent_id = @nodes_by_pk[node.parent_resource_pk].id
-      @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
-        ancestor.node_id = node.id
-        unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
-          puts "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE JUST TESTING!"
-          next
-        end
-        ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
-      end
       # Simpler propagation of node ID only:
       set_node_ids(@sci_names_by_node_pk, node_pk, node.id)
-      set_node_ids(@media_by_node_pk, node_pk, node.id)
+      # NOTE: Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here.
+      # set_node_ids(@media_by_node_pk, node_pk, node.id)
       set_node_ids(@vernaculars_by_node_pk, node_pk, node.id)
+      # TODO: ...refs, articles, links, image_infos.
       update_page(node)
+      update_parents_and_ancestors(node_pk, node)
     end
   end
 
   def set_node_ids(hash, node_pk, node_id)
+    return unless hash.key?(node_pk) # Not all nodes have all relationships available, of course. Avoids nil error.
     hash[node_pk].compact.each do |struct|
       struct.node_id = node_id
     end
@@ -331,44 +340,54 @@ class Publisher
 
   def update_page(node)
     @pages[node.page_id].native_node_id = node.id # NOTE this does NOT get used if the page already exists!
-    @pages[node.page_id].media_count += node.media.size
-    @pages[node.page_id].articles_count += node.articles.size
-    # TODO: all of these:
-    # @pages[node.page_id].links_count += node.links.size
-    # @pages[node.page_id].maps_count += node.maps.size
-    @pages[node.page_id].vernaculars_count += node.vernaculars.size
-    @pages[node.page_id].scientific_names_count += node.scientific_names.size
-    # @pages[node.page_id].referents_count += node.referents.size
+  end
+
+  def update_parents_and_ancestors(node_pk, node)
+    return if node.parent_resource_pk.blank?
+    unless @nodes_by_pk.key?(node.parent_resource_pk)
+      log_warn "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
+      return
+    end
+    node.parent_id = @nodes_by_pk[node.parent_resource_pk].id
+    @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
+      ancestor.node_id = node.id
+      unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
+        log_warn "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE JUST TESTING!"
+        return
+      end
+      ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
+    end
   end
 
   def load_pages
-    cols = WebDb.page_columns_to_update
-    existing_pages = update_page_counts(WebDb.pages_to_update(@pages.keys), cols)
-    load_from_array(existing_pages, 'pages', cols, replace: true)
-    new_page_ids = @pages.keys - (existing_pages.map { |p| p[0] })
-    load_hashes_from_array(new_page_ids.map { |id| @pages[id] })
+    update_page_counts(WebDb.pages_to_update(@pages.keys))
+    temp_table = WebDb.create_temp_pages_table(@resource.id)
+    begin
+      load_hashes_from_array(@pages.values, table: temp_table, replace: true)
+      WebDb.load_pages_from_temp(temp_table)
+    ensure
+      WebDb.drop_temp_pages_table(temp_table)
+    end
   end
 
-  def update_page_counts(pages, cols)
+  def update_page_counts(pages)
     col = {}
-    cols.each_with_index { |name, i| col[name] = i }
+    Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
     pages.each do |page|
-      id = page[0] # Yes, I "should" do this "properly" with col['id'], but it MUST be the 0th column, so save the work.
-      page[col['updated_at']] = @pages[id].updated_at.to_s(:db)
-      page[col['media_count']] += @pages[id].media_count
-      # TODO: these...
-      # page[col['articles_count']] += @pages[id].articles_count
-      # page[col['links_count']] += @pages[id].links_count
-      # page[col['maps_count']] += @pages[id].maps_count
-      page[col['nodes_count']] += @pages[id].nodes_count
-      page[col['vernaculars_count']] += @pages[id].vernaculars_count
-      page[col['scientific_names_count']] += @pages[id].scientific_names_count
+      id = page[0] # ID MUST be the 0th column
+      @pages[id].media_count += page[col[:media_count]]
+      @pages[id].articles_count += page[col[:articles_count]]
+      @pages[id].links_count += page[col[:links_count]]
+      @pages[id].maps_count += page[col[:maps_count]]
+      @pages[id].nodes_count += page[col[:nodes_count]]
+      @pages[id].vernaculars_count += page[col[:vernaculars_count]]
+      @pages[id].scientific_names_count += page[col[:scientific_names_count]]
     end
   end
 
   def load_hashes_from_array(array, options = {})
     return nil if array.empty?
-    table = array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
+    table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
     cols = unless options[:replace]
              c = array.first.members
              c.delete(:id)
@@ -383,7 +402,7 @@ class Publisher
     file = Tempfile.new("rails.eol_website.#{table}")
     begin
       write_local_csv(file, array, options)
-      puts "Wrote to #{file.path} in #{Time.delta_s(t)}"
+      log_warn "Wrote to #{file.path} in #{Time.delta_s(t)}"
       WebDb.import_csv(file.path, table, cols)
     ensure
       File.unlink(file)
@@ -429,11 +448,11 @@ class Publisher
   end
 
   def get_taxonomic_status(full_name)
-    return nil if full_name.nil?
-    name = full_name.downcase
-    return nil if name.blank?
+    name = full_name&.downcase
+    name = 'accepted' if name.blank? # Empty taxonomic_statuses are NOT allowed; this is the default assumption.
     return @taxonomic_statuses[name] if @taxonomic_statuses.key?(name)
-    log_warn("Encountered new taxonomic status, please assign set its alternative/preferred/problematic/megeable: #{name}")
+    log_warn('Encountered new taxonomic status, please assign set its '\
+             "alternative/preferred/problematic/mergeable: #{name}")
     @taxonomic_statuses[name] = WebDb.raw_create('taxonomic_statuses', name: name)
   end
 
