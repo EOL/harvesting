@@ -1,17 +1,5 @@
 version: '3.0'
 services:
-  eol-repo-elasticsearch:
-    image: elasticsearch
-    container_name: eol-repo-elasticsearch
-    restart: always
-    environment:
-      - TZ=America/New_York
-      - ES_JAVA_OPTS=-Xms512m -Xmx30g
-    volumes:
-      - /data/eol-repo-elasticsearch/data:/usr/share/elasticsearch/data
-    # network_mode: "bridge"
-    networks:
-      - docker_eolnet
   eol-repo-memcached:
     image: memcached
     container_name: eol-repo-memcached
