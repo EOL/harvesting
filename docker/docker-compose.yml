@@ -54,6 +54,6 @@ services:
     # network_mode: "bridge"
     networks:
       - web_eolnet
-  networks:
-    web_eolnet:
-      external: true
+networks:
+  web_eolnet:
+    external: true
