@@ -1,5 +1,16 @@
 version: '3.0'
 services:
+  eol-repo-elasticsearch:
+    image: elasticsearch
+    container_name: eol-repo-elasticsearch
+    restart: always
+    environment:
+      - TZ=America/New_York
+      - ES_JAVA_OPTS=-Xms512m -Xmx30g
+    volumes:
+      - /data/eol-repo-elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - docker_eolnet
   eol-repo-memcached:
     image: memcached
     container_name: eol-repo-memcached
@@ -28,15 +39,18 @@ services:
       - ./bin/init.sh:/etc/my_init.d/init.sh
       - ./resources/secrets.yml:/u/apps/secrets.yml
     depends_on:
+      - eol-repo-elasticsearch
       - eol-repo-mysql
       - eol-repo-memcached
     links:
+      - eol-repo-elasticsearch:elasticsearch
       - eol-repo-memcached:memcached
       - eol-repo-mysql:mysql
     env_file:
       - resources/staging.env
     ports:
       - 3001:3000
+    # network_mode: "bridge"
     networks:
       - docker_eolnet
 networks:
