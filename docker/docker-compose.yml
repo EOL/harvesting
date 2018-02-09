@@ -50,7 +50,6 @@ services:
       - resources/staging.env
     ports:
       - 3001:3000
-    # network_mode: "bridge"
     networks:
       - docker_eolnet
 networks:
