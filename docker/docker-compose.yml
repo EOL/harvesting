@@ -1,4 +1,4 @@
-version: '3'
+version: '3.0'
 services:
   eol-repo-elasticsearch:
     image: elasticsearch
@@ -9,7 +9,9 @@ services:
       - ES_JAVA_OPTS=-Xms512m -Xmx30g
     volumes:
       - /data/eol-repo-elasticsearch/data:/usr/share/elasticsearch/data
-    network_mode: "bridge"
+    # network_mode: "bridge"
+    networks:
+      - web_eolnet
   eol-repo-memcached:
     image: memcached
     container_name: eol-repo-memcached
@@ -26,7 +28,9 @@ services:
       - resources/staging.env
     volumes:
       - /data/eol-repo-mysql:/var/lib/mysql
-    network_mode: "bridge"
+    # network_mode: "bridge"
+    networks:
+      - web_eolnet
   eol-repo-app:
     image: encoflife/eol-repo-app
     container_name: eol-repo-app
@@ -47,4 +51,9 @@ services:
       - resources/staging.env
     ports:
       - 3001:3000
-    network_mode: "bridge"
+    # network_mode: "bridge"
+    networks:
+      - web_eolnet
+  networks:
+    web_eolnet:
+      external: true
