@@ -142,6 +142,11 @@ class WebDb < ActiveRecord::Base
       rows.empty? ? nil : rows[0][0]
     end
 
+    def any_nodes?(id)
+      rows = connection.exec_query("SELECT id FROM nodes WHERE resource_id = #{id} LIMIT 1").rows
+      rows.empty? ? nil : rows[0][0]
+    end
+
     def pages_to_update(page_ids)
       all_pages = []
       page_ids.in_groups_of(5_000, false) do |group|

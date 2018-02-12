@@ -43,24 +43,29 @@ class Publisher
   end
 
   def reset_nodes
+    count = @nodes&.size
     @nodes = {}
+    count || 0
   end
 
   def by_resource
-    build_structs
-    build_ranks
-    build_languages
-    build_licenses
-    build_taxonomic_statuses
-    learn_resource_id
-    measure_time('Slurped all data') { slurp_nodes }
-    reset_nodes # We no longer need it, free up the memory.
-    measure_time('Counted all children') { count_children }
-    measure_time('Removed old data') { remove_old_data }
-    measure_time('Loaded new data') { load_hashes }
-    # TODO: Create missing pages! Yuck.
-    # TODO: Throw warnings for any objects that ended up with node_id = 0 (sci names, vernaculars at least...) ...maybe
-    # we shouldn't even include them in the DB.
+    count = 0
+    measure_time('OVERALL PUBLISHING') do
+      learn_resource_id
+      abort_if_republishing
+      build_structs
+      build_ranks
+      build_languages
+      build_licenses
+      build_taxonomic_statuses
+      measure_time('Slurped all data') { slurp_nodes }
+      count = reset_nodes # We no longer need it, free up the memory.
+      measure_time('Counted all children') { count_children }
+      measure_time('Loaded new data') { load_hashes }
+      # TODO: Throw warnings for any objects that ended up with node_id = 0 (sci names, vernaculars at least...)
+      # ...maybe we shouldn't even include them in the DB.
+    end
+    puts "Done. #{count} nodes published."
   end
 
   def measure_time(what, &_block)
@@ -296,19 +301,10 @@ class Publisher
     web_vern
   end
 
-  # TODO: this will screw up *_count fields on the pages table, sadly. :\ We COULD go through each and update the
-  # counts, but that would be pretty expensive for something we shouldn't really be doing that often. I'll consider it
-  # later. PROBABLY not worth it; probably best to just create a big "rebuild counts" task on the web end that updates
-  # the entire table after doing counts. Yeah. Note that this ALSO leaves potential "zombie" pages, too. Rare, but worth
-  # checking eventually.
-  def remove_old_data
-    node_ids = WebDb.map_ids('nodes', 'page_id', resource_id: @web_resource_id)
-    @types.each do |type|
-      table = type.pluralize
-      WebDb.remove_resource_data(table, @web_resource_id)
-    end
-    # Take the node_ids and ... do ... something to the pages that
-    NO ... force the user to delete the resource on the web side. All of that work needs to be done. :S
+  # TODO: We should have some kind of API call to automate this. :|  ...Or should we? Security is challenging.
+  def abort_if_republishing
+    raise "ERROR: you MUST Resource.find(#{@web_resource_id}).remove_content on the website before running this." if
+      WebDb.any_nodes?(@web_resource_id)
   end
 
   def load_hashes
@@ -364,6 +360,7 @@ class Publisher
   end
 
   def update_page(node)
+    # puts "Page #{node.page_id} changing native node id from #{@pages[node.page_id].native_node_id} to #{node.id}"
     @pages[node.page_id].native_node_id = node.id # TODO: is this safe? Don't want to trample a node from DWH.
   end
 
@@ -400,7 +397,7 @@ class Publisher
     Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
     pages.each do |page|
       id = page[0] # ID MUST be the 0th column
-      @pages[id].native_node_id += page[col[:native_node_id]]
+      @pages[id].native_node_id = page[col[:native_node_id]]
       @pages[id].media_count += page[col[:media_count]]
       @pages[id].articles_count += page[col[:articles_count]]
       @pages[id].links_count += page[col[:links_count]]
