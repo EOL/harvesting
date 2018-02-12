@@ -12,7 +12,7 @@ class WebDb < ActiveRecord::Base
   establish_connection cfg
   @page_columns_to_update =
     %w[id updated_at media_count articles_count links_count maps_count nodes_count
-       vernaculars_count scientific_names_count referents_count]
+       vernaculars_count scientific_names_count referents_count native_node_id]
 
   class << self
     attr_reader :page_columns_to_update
@@ -43,13 +43,15 @@ class WebDb < ActiveRecord::Base
 
     # Ranks need to be updated as soon as they are inserted, argh...
     def raw_create_rank(name)
-      id = raw_create('ranks', { name: name })
+      id = raw_create('ranks', name: name)
       connection.exec_update("UPDATE ranks SET treat_as = #{id} WHERE ID = #{id}", 'SQL', [id, id])
       id
     end
 
-    def map_ids(table, field)
-      response = connection.exec_query("SELECT id, #{field} FROM #{table}")
+    def map_ids(table, field, options = {})
+      response = connection.exec_query(
+        "SELECT id, #{field} FROM #{table} #{"WHERE resource_id = #{options[:resource_id]}" if options[:resource_id]}"
+      )
       map = {}
       response.rows.each do |row|
         map[row[1]] = row[0]
@@ -70,8 +72,7 @@ class WebDb < ActiveRecord::Base
     def load_pages_from_temp(temp_table)
       updates = page_columns_to_update[1..-1].map { |col| "`#{col}` = VALUES(`#{col}`)" }
       q = ['INSERT INTO pages']
-      q << "(#{page_columns_to_update.join(',')})"
-      q << "SELECT #{page_columns_to_update.join(',')} FROM #{temp_table}"
+      q << "SELECT * FROM #{temp_table}"
       q << "ON DUPLICATE KEY UPDATE #{updates.join(', ')}"
       connection.execute(q.join(' '))
     end

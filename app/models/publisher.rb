@@ -49,6 +49,9 @@ class Publisher
   def by_resource
     build_structs
     build_ranks
+    build_languages
+    build_licenses
+    build_taxonomic_statuses
     learn_resource_id
     measure_time('Slurped all data') { slurp_nodes }
     reset_nodes # We no longer need it, free up the memory.
@@ -75,6 +78,18 @@ class Publisher
 
   def build_ranks
     @ranks = WebDb.map_ids('ranks', 'name')
+  end
+
+  def build_languages
+    @languages = WebDb.map_ids('languages', 'code')
+  end
+
+  def build_licenses
+    @licenses = WebDb.map_ids('licenses', 'source_url')
+  end
+
+  def build_taxonomic_statuses
+    @taxonomic_statuses = WebDb.map_ids('taxonomic_statuses', 'name')
   end
 
   def learn_resource_id
@@ -155,6 +170,7 @@ class Publisher
       # TODO: add counts for articles, links, maps, and refs
     else
       @pages[node.page_id] = Struct::WebPage.new
+      @pages[node.page_id].id = node.page_id
       t = now
       @pages[node.page_id].created_at = t
       @pages[node.page_id].updated_at = t
@@ -257,7 +273,7 @@ class Publisher
     if medium.base_url.nil? # The image has not been downloaded.
       web_medium.base_url = "#{@root_url}/#{medium.default_base_url}"
     end
-    web_medium.license_id = get_license(medium.license.try(:source_url))
+    web_medium.license_id = get_license(medium.license&.source_url)
     web_medium.language_id = get_language(medium.language)
     web_medium
   end
@@ -268,6 +284,7 @@ class Publisher
   def build_vernacular(node, vernacular)
     web_vern = Struct::WebVernacular.new
     web_vern.page_id = node.page_id
+    web_vern.resource_id = @web_resource_id
     web_vern.language_id = get_language(vernacular.language)
     web_vern.created_at = now
     web_vern.updated_at = now
@@ -279,11 +296,19 @@ class Publisher
     web_vern
   end
 
+  # TODO: this will screw up *_count fields on the pages table, sadly. :\ We COULD go through each and update the
+  # counts, but that would be pretty expensive for something we shouldn't really be doing that often. I'll consider it
+  # later. PROBABLY not worth it; probably best to just create a big "rebuild counts" task on the web end that updates
+  # the entire table after doing counts. Yeah. Note that this ALSO leaves potential "zombie" pages, too. Rare, but worth
+  # checking eventually.
   def remove_old_data
+    node_ids = WebDb.map_ids('nodes', 'page_id', resource_id: @web_resource_id)
     @types.each do |type|
       table = type.pluralize
-      WebDb.remove_resource_data(table, @resource.id)
+      WebDb.remove_resource_data(table, @web_resource_id)
     end
+    # Take the node_ids and ... do ... something to the pages that
+    NO ... force the user to delete the resource on the web side. All of that work needs to be done. :S
   end
 
   def load_hashes
@@ -312,7 +337,7 @@ class Publisher
   end
 
   def learn_node_ids
-    id_map = WebDb.map_ids('nodes', 'resource_pk')
+    id_map = WebDb.map_ids('nodes', 'resource_pk', resource_id: @web_resource_id)
     @nodes_by_pk.each_value do |node|
       node.id = id_map[node.resource_pk]
     end
@@ -339,7 +364,7 @@ class Publisher
   end
 
   def update_page(node)
-    @pages[node.page_id].native_node_id = node.id # NOTE this does NOT get used if the page already exists!
+    @pages[node.page_id].native_node_id = node.id # TODO: is this safe? Don't want to trample a node from DWH.
   end
 
   def update_parents_and_ancestors(node_pk, node)
@@ -375,6 +400,7 @@ class Publisher
     Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
     pages.each do |page|
       id = page[0] # ID MUST be the 0th column
+      @pages[id].native_node_id += page[col[:native_node_id]]
       @pages[id].media_count += page[col[:media_count]]
       @pages[id].articles_count += page[col[:articles_count]]
       @pages[id].links_count += page[col[:links_count]]
@@ -442,9 +468,9 @@ class Publisher
 
   def get_language(language)
     return nil if language.blank?
-    return @languages[language.id] if @languages.key?(language.id)
+    return @languages[language.code] if @languages.key?(language.code)
     log_warn("Encountered new language, please assign it to a language group and give it a name: #{language}")
-    @languages[language.id] = WebDb.raw_create('languages', code: language.code, group: language.group_code)
+    @languages[language.code] = WebDb.raw_create('languages', code: language.code, group: language.group_code)
   end
 
   def get_taxonomic_status(full_name)
