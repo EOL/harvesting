@@ -49,9 +49,10 @@ class WebDb < ActiveRecord::Base
     end
 
     def map_ids(table, field, options = {})
-      response = connection.exec_query(
-        "SELECT id, #{field} FROM #{table} #{"WHERE resource_id = #{options[:resource_id]}" if options[:resource_id]}"
-      )
+      q = "SELECT id, #{field} FROM #{table}"
+      q += "WHERE resource_id = #{options[:resource_id]}" if options[:resource_id]
+      q += "ORDER BY id DESC LIMIT #{options[:limit]}" if options[:limit]
+      response = connection.exec_query(q)
       map = {}
       response.rows.each do |row|
         map[row[1]] = row[0]

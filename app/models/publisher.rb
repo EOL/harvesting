@@ -20,32 +20,42 @@ class Publisher
     @web_resource_id = nil
     reset_nodes
     @has_media = false
-    @nodes_by_pk = {}
     @pages = {}
+    @referents = {} # This will store ALL of the referents (the acutal text), and will persist over batches.
+    @stored_refs = {} # This will store ref keys that we're already loaded, so we don't do it twice... [sigh]
+    @bib_cits = {} # This will store ALL of the bibliographic_citations (the acutal text), and will persist.
+    @stored_bib_cits = {} # This will store bib_cit keys that we're already loaded, so we don't do it twice.
+    @locs = {} # This will store ALL of the locations (the acutal values), and will persist.
+    @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
+    @limit = 10_000
+    reset_vars
+  end
+
+  def reset_vars
+    @nodes_by_pk = {}
     @identifiers_by_node_pk = {}
     @ancestors_by_node_pk = {}
     @sci_names_by_node_pk = {}
     @media_by_node_pk = {}
     @vernaculars_by_node_pk = {}
     @articles_by_node_pk = {}
-    # Oh boy. Here we go...
-    @refs_by_node_pk = {}
-    @refs_by_article_pk = {}
-    @refs_by_medium_pk = {}
-    @bit_cits_by_article_pk = {}
-    @bit_cits_by_medium_pk = {}
-    @locs_by_article_pk = {}
-    @locs_by_medium_pk = {}
-    # TODO: all the other hashes, like links, image_info
+    @references = {} # This will store all of the associations in a 2D array [class_name][pk]
+    @type_pks = {
+      'Node' => 'resource_pk',
+      'Article' => 'resource_pk',
+      'Medium' => 'resource_pk',
+      'ScientificName' => 'verbatim'
+    }
+    # : all the other hashes, like links, image_info
     @taxonomic_statuses = {}
     @ranks = {}
     @licenses = {}
     @languages = {}
-    @types = %w[node identifier scientific_name node_ancestor vernacular medium image_info page_content]
+    @types = %w[node identifier scientific_name node_ancestor vernacular medium image_info page_content referent
+                reference]
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
-    # TODO: location (on articles and media); bibliographic_citation (on Articles and Media)
     # TODO: Stylesheet and Javascript. ...We don't need them yet, sooo...
     @same_article_attributes = %i[guid resource_pk owner source_url name body source_url]
     @same_medium_attributes =
@@ -83,7 +93,7 @@ class Publisher
       # ...maybe we shouldn't even include them in the DB.
     end
     if @has_media
-      puts "You MUST run this on the website now:"
+      puts 'You MUST run this on the website now:'
       puts "r = Resource.find(#{@web_resource_id}); MediaContentCreator.by_resource(r, Publishing::PubLog.new(r))"
     end
     puts "Done. #{count} nodes published."
@@ -134,11 +144,12 @@ class Publisher
     if testing
       nodes_to_hashes(@nodes.limit(100))
     else
-      @nodes.find_in_batches(batch_size: 10_000) { |nodes| nodes_to_hashes(nodes) }
+      @nodes.find_in_batches(batch_size: @limit) { |nodes| nodes_to_hashes(nodes) }
     end
   end
 
   def nodes_to_hashes(nodes)
+    reset_vars
     nodes.each do |node|
       build_page(node)
       next if @nodes_by_pk.key?(node.resource_pk)
@@ -168,7 +179,7 @@ class Publisher
     web_node.updated_at = now
     web_node.landmark = Node.landmarks[node.landmark] # NOTE: we are RELYING on the enum being the same, here!
     @nodes_by_pk[node.resource_pk] = web_node
-    add_refs(@refs_by_node_pk, node.resource_pk, node.references)
+    add_refs(web_node, 'Node', 'resource_pk', node.references)
   end
 
   def copy_fields(fields, source, dest)
@@ -178,11 +189,16 @@ class Publisher
     end
   end
 
-  def add_refs(hash, pk, refs)
+  def add_refs(object, pk_field, type, refs)
     refs.each do |ref|
-      hash[pk] ||= []
-      t = now
-      hash[pk] << WebReference.new(body: ref.body, created_at: t, updated_at: t, resource_id: @web_resource_id)
+      @references[type] ||= {}
+      @references[type][object[pk_field]] ||= []
+      @references[type][object[pk_field]] << ref.id
+      unless @referents.key?(ref.id)
+        t = now
+        @referents[ref.id] =
+          WebReferent.new(body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
+      end
     end
   end
 
@@ -197,25 +213,27 @@ class Publisher
   def build_page(node)
     if @pages.key?(node.page_id)
       @pages[node.page_id].nodes_count += 1
-      @pages[node.page_id].media_count += node.media.count
-      @pages[node.page_id].vernaculars_count += node.vernaculars.count
-      @pages[node.page_id].scientific_names_count += node.scientific_names.count
-      # TODO: add counts for articles, links, maps, and refs
+      @pages[node.page_id].media_count += node.media.size
+      @pages[node.page_id].vernaculars_count += node.vernaculars.size
+      @pages[node.page_id].scientific_names_count += node.scientific_names.size
+      @pages[node.page_id].articles_count += node.articles.size
+      @pages[node.page_id].referents_count += node.references.size
+      # TODO: add counts for links, maps
     else
       @pages[node.page_id] = Struct::WebPage.new
       @pages[node.page_id].id = node.page_id
       t = now
       @pages[node.page_id].created_at = t
       @pages[node.page_id].updated_at = t
-      @pages[node.page_id].media_count = node.media.count
+      @pages[node.page_id].media_count = node.media.size
       @pages[node.page_id].nodes_count = 1 # This one, silly!
-      @pages[node.page_id].vernaculars_count = node.vernaculars.count
-      @pages[node.page_id].scientific_names_count = node.scientific_names.count
+      @pages[node.page_id].vernaculars_count = node.vernaculars.size
+      @pages[node.page_id].scientific_names_count = node.scientific_names.size
+      @pages[node.page_id].articles_count = node.articles.size
+      @pages[node.page_id].referents_count = node.references.size
       # TODO: all of these 0s should be populated, once we have the associations included:
-      @pages[node.page_id].articles_count = 0 # TODO
       @pages[node.page_id].links_count = 0 # TODO
       @pages[node.page_id].maps_count = 0 # TODO
-      @pages[node.page_id].referents_count = 0 # TODO
       # These are NOT used by our code, but are required by the database (and thus we avoid inserting nulls):
       @pages[node.page_id].page_contents_count = 0
       @pages[node.page_id].data_count = 0
@@ -253,8 +271,9 @@ class Publisher
   def build_scientific_names(node)
     node.scientific_names.each do |name_model|
       @sci_names_by_node_pk[node.resource_pk] ||= []
-      @sci_names_by_node_pk[node.resource_pk] << build_scientific_name(node, name_model)
-      add_refs(@refs_by_sci_name_pk, name_model.resource_pk, name_model.references)
+      web_sci_name = build_scientific_name(node, name_model)
+      @sci_names_by_node_pk[node.resource_pk] << web_sci_name
+      add_refs(web_sci_name, 'ScientificName', 'verbatim', name_model.references)
     end
   end
 
@@ -279,16 +298,18 @@ class Publisher
   def build_media(node)
     node.media.each do |medium|
       @media_by_node_pk[node.resource_pk] ||= []
-      @media_by_node_pk[node.resource_pk] << build_medium(node, medium)
-      add_refs(@media_by_node_pk, medium.resource_pk, medium.references)
+      web_medium = build_medium(node, medium)
+      @media_by_node_pk[node.resource_pk] << web_medium
+      add_refs(web_medium, 'Medium', 'resource_pk', medium.references)
     end
   end
 
   def build_articles(node)
     node.media.each do |article|
       @articles_by_node_pk[node.resource_pk] ||= []
-      @articles_by_node_pk[node.resource_pk] << build_article(node, article)
-      add_refs(@media_by_node_pk, article.resource_pk, article.references)
+      web_article = build_article(node, article)
+      @articles_by_node_pk[node.resource_pk] << web_article
+      add_refs(web_article, 'Article', 'resource_pk', article.references)
     end
   end
 
@@ -299,7 +320,6 @@ class Publisher
     end
   end
 
-  # TODO: add refs
   def build_medium(node, medium)
     @has_media ||= true
     web_medium = Struct::WebMedium.new
@@ -321,11 +341,9 @@ class Publisher
     web_medium
   end
 
-  # TODO: add refs
-  # NOTE: articles will not be visible until the website runs
-  # TODOContentCreator.by_resource(@resource, Publishing::PubLog.new(@resource))
+  # NOTE: articles will not be visible until the website runs the same code as for build_medium (q.v.)
   def build_article(node, article)
-    @has_articles ||= true
+    @has_media ||= true
     web_article = Struct::WebArticle.new
     web_article.page_id = node.page_id
     copy_fields(@same_article_attributes, article, web_article)
@@ -362,17 +380,45 @@ class Publisher
   end
 
   def load_hashes
+    load_hashes_from_array(new_bib_cits_only)
+    learn_new_bib_cits
+    load_hashes_from_array(new_locs_only)
+    learn_new_locs
     load_hashes_from_array(@nodes_by_pk.values)
     learn_node_ids
     propagate_node_ids
-    # TODO: other relationships, like refs, links, image_info.
+    # TODO: other relationships, like links, image_info.
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
     load_hashes_from_array(@media_by_node_pk.values.flatten)
     load_hashes_from_array(@articles_by_node_pk.values.flatten)
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
+    load_hashes_from_array(new_refs_only)
+    learn_new_refs
+    build_references
     load_pages
+  end
+
+  def new_refs_only
+    new_objects_only(@referents, @stored_refs)
+  end
+
+  def new_bib_cits_only
+    new_objects_only(@bib_cits, @stored_bib_cits)
+  end
+
+  def new_locs_only
+    new_objects_only(@locs, @stored_locs)
+  end
+
+  def new_objects_only(source, stored)
+    unstored = []
+    source.each do |key, ref|
+      unstored << ref unless stored.key?(key)
+      stored[key] = true
+    end
+    unstored
   end
 
   def count_children
@@ -387,11 +433,55 @@ class Publisher
     end
   end
 
+  def learn_new_refs
+    learn_new_things('referents', 'body', @referents)
+  end
+
+  def learn_new_bib_cits
+    learn_new_things('bibliographic_citations', 'body', @referents)
+  end
+
+  def learn_new_locs
+    learn_new_things('bibliographic_citations', 'body', @referents)
+  end
+
+  def learn_new_things(table, field, hash)
+    # NOTE: this is a little expensive, since we don't technically need ALL of them EVERY time, but... simpler:
+    id_map = WebDb.map_ids(table, field, resource_id: @web_resource_id)
+    hash.each_value do |ref|
+      ref.id = id_map[ref[field]]
+    end
+    id_map = nil # I just want to explicitly GC this, even though it's out of scope, 'cause it could be huge.
+  end
+
   def learn_node_ids
     id_map = WebDb.map_ids('nodes', 'resource_pk', resource_id: @web_resource_id)
     @nodes_by_pk.each_value do |node|
       node.id = id_map[node.resource_pk]
     end
+  end
+
+  def build_references
+    @web_refs = []
+    @references.each do |type, hash|
+      field = @type_pks[type]
+      id_map = WebDb.map_ids(type.underscore.pluralize, field, resource_id: @web_resource_id, limit: @limit)
+      hash.each do |key, referents|
+        unless id_map.key?(key)
+          log_warn("MISSING ID: Could not build a reference for #{type} with #{field}=#{key} (missing ID)")
+          next
+        end
+        referents.each do |ref_id|
+          web_ref = WebReference.new
+          web_ref.parent_id = id_map[key]
+          web_ref.referent_id = @referents[ref_id].id
+          web_ref.parent_type = type
+          web_ref.resource_id = @web_resource_id
+          @web_refs << web_ref
+        end
+      end
+    end
+    load_hashes_from_array(@web_refs)
   end
 
   # NOTE: Articles and Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here.
