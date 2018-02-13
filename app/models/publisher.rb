@@ -19,6 +19,7 @@ class Publisher
     @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
     @web_resource_id = nil
     reset_nodes
+    @has_media = false
     @nodes_by_pk = {}
     @pages = {}
     @identifiers_by_node_pk = {}
@@ -26,7 +27,16 @@ class Publisher
     @sci_names_by_node_pk = {}
     @media_by_node_pk = {}
     @vernaculars_by_node_pk = {}
-    # TODO: all the other hashes, like refs, links, articles, image_info
+    @articles_by_node_pk = {}
+    # Oh boy. Here we go...
+    @refs_by_node_pk = {}
+    @refs_by_article_pk = {}
+    @refs_by_medium_pk = {}
+    @bit_cits_by_article_pk = {}
+    @bit_cits_by_medium_pk = {}
+    @locs_by_article_pk = {}
+    @locs_by_medium_pk = {}
+    # TODO: all the other hashes, like links, image_info
     @taxonomic_statuses = {}
     @ranks = {}
     @licenses = {}
@@ -35,11 +45,18 @@ class Publisher
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
+    # TODO: location (on articles and media); bibliographic_citation (on Articles and Media)
+    # TODO: Stylesheet and Javascript. ...We don't need them yet, sooo...
+    @same_article_attributes = %i[guid resource_pk owner source_url name body source_url]
     @same_medium_attributes =
       %i[guid resource_pk owner source_url name description unmodified_url base_url
-         source_page_url rights_statement usage_statement location_id bibliographic_citation_id]
+         source_page_url rights_statement usage_statement]
     @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
     @same_vernacular_attributes = %i[node_resource_pk locality remarks source]
+  end
+
+  def now
+    Time.now.to_s(:db)
   end
 
   def reset_nodes
@@ -64,6 +81,10 @@ class Publisher
       measure_time('Loaded new data') { load_hashes }
       # TODO: Throw warnings for any objects that ended up with node_id = 0 (sci names, vernaculars at least...)
       # ...maybe we shouldn't even include them in the DB.
+    end
+    if @has_media
+      puts "You MUST run this on the website now:"
+      puts "r = Resource.find(#{@web_resource_id}); MediaContentCreator.by_resource(r, Publishing::PubLog.new(r))"
     end
     puts "Done. #{count} nodes published."
   end
@@ -103,12 +124,13 @@ class Publisher
 
   def slurp_nodes
     testing = false
-    # TODO: add relationships for refs, articles, links, image_info.
+    # TODO: add relationships for links, image_info.
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
-                      .includes(:identifiers, :node_ancestors,
+                      .includes(:identifiers, :node_ancestors, :references,
                                 vernaculars: [:language], scientific_names: [:dataset],
-                                media: %i[node license language])
+                                media: %i[node license language references bibliographic_citation location],
+                                articles: %i[node license language references bibliographic_citation location])
     if testing
       nodes_to_hashes(@nodes.limit(100))
     else
@@ -126,7 +148,8 @@ class Publisher
       build_scientific_names(node)
       build_media(node)
       build_vernaculars(node)
-      # TODO: refs, articles, links, image_info.
+      build_articles(node)
+      # TODO: links, image_info.
       # NOTE: We will NOT import Terms or traits in this code. We'll keep that a pull, since this codebase doesn't
       # understand TraitBank/neo4j.
     end
@@ -145,6 +168,7 @@ class Publisher
     web_node.updated_at = now
     web_node.landmark = Node.landmarks[node.landmark] # NOTE: we are RELYING on the enum being the same, here!
     @nodes_by_pk[node.resource_pk] = web_node
+    add_refs(@refs_by_node_pk, node.resource_pk, node.references)
   end
 
   def copy_fields(fields, source, dest)
@@ -154,8 +178,12 @@ class Publisher
     end
   end
 
-  def now
-    Time.now.to_s(:db)
+  def add_refs(hash, pk, refs)
+    refs.each do |ref|
+      hash[pk] ||= []
+      t = now
+      hash[pk] << WebReference.new(body: ref.body, created_at: t, updated_at: t, resource_id: @web_resource_id)
+    end
   end
 
   def clean_values(src)
@@ -226,6 +254,7 @@ class Publisher
     node.scientific_names.each do |name_model|
       @sci_names_by_node_pk[node.resource_pk] ||= []
       @sci_names_by_node_pk[node.resource_pk] << build_scientific_name(node, name_model)
+      add_refs(@refs_by_sci_name_pk, name_model.resource_pk, name_model.references)
     end
   end
 
@@ -251,6 +280,15 @@ class Publisher
     node.media.each do |medium|
       @media_by_node_pk[node.resource_pk] ||= []
       @media_by_node_pk[node.resource_pk] << build_medium(node, medium)
+      add_refs(@media_by_node_pk, medium.resource_pk, medium.references)
+    end
+  end
+
+  def build_articles(node)
+    node.media.each do |article|
+      @articles_by_node_pk[node.resource_pk] ||= []
+      @articles_by_node_pk[node.resource_pk] << build_article(node, article)
+      add_refs(@media_by_node_pk, article.resource_pk, article.references)
     end
   end
 
@@ -261,9 +299,9 @@ class Publisher
     end
   end
 
-  # NOTE: media will not be visible until the website runs
-  # MediaContentCreator.by_resource(@resource, Publishing::PubLog.new(@resource))
+  # TODO: add refs
   def build_medium(node, medium)
+    @has_media ||= true
     web_medium = Struct::WebMedium.new
     web_medium.page_id = node.page_id
     web_medium.subclass = Medium.subclasses[medium.subclass]
@@ -281,6 +319,22 @@ class Publisher
     web_medium.license_id = get_license(medium.license&.source_url)
     web_medium.language_id = get_language(medium.language)
     web_medium
+  end
+
+  # TODO: add refs
+  # NOTE: articles will not be visible until the website runs
+  # TODOContentCreator.by_resource(@resource, Publishing::PubLog.new(@resource))
+  def build_article(node, article)
+    @has_articles ||= true
+    web_article = Struct::WebArticle.new
+    web_article.page_id = node.page_id
+    copy_fields(@same_article_attributes, article, web_article)
+    web_article.created_at = now
+    web_article.updated_at = now
+    web_article.resource_id = @web_resource_id
+    web_article.license_id = get_license(article.license&.source_url)
+    web_article.language_id = get_language(article.language)
+    web_article
   end
 
   # NOTE: vernaculars will not be preferred until the website runs
@@ -311,11 +365,12 @@ class Publisher
     load_hashes_from_array(@nodes_by_pk.values)
     learn_node_ids
     propagate_node_ids
-    # TODO: other relationships, like refs, articles, links, image_info.
+    # TODO: other relationships, like refs, links, image_info.
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
     load_hashes_from_array(@media_by_node_pk.values.flatten)
+    load_hashes_from_array(@articles_by_node_pk.values.flatten)
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
     load_pages
   end
@@ -339,14 +394,13 @@ class Publisher
     end
   end
 
+  # NOTE: Articles and Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here.
   def propagate_node_ids
     @nodes_by_pk.each do |node_pk, node|
       # Simpler propagation of node ID only:
       set_node_ids(@sci_names_by_node_pk, node_pk, node.id)
-      # NOTE: Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here.
-      # set_node_ids(@media_by_node_pk, node_pk, node.id)
       set_node_ids(@vernaculars_by_node_pk, node_pk, node.id)
-      # TODO: ...refs, articles, links, image_infos.
+      # TODO: ...refs, links, image_infos.
       update_page(node)
       update_parents_and_ancestors(node_pk, node)
     end
