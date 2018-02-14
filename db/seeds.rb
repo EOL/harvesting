@@ -633,7 +633,7 @@ Resource.quick_define(
   abbr: 'mam_inter',
   type: :csv,
   field_sep: ",",
-  line_sep: "\r\n",
+  line_sep: "\n",
   pk_url: 'http://some.cool.url/with/a/path/to_$PK.html',
   base_dir: Rails.public_path.join('data', 'mam_inter'),
   partner: eol_attrs,

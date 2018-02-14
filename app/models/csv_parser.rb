@@ -3,7 +3,7 @@ require 'csv'
 # is derived from.
 class CsvParser
 
-  attr_accessor :diff, :path_to_file
+  attr_accessor :diff, :path_to_file, :row_sep
 
   def initialize(path_to_file, options = {})
     @header_lines = options[:header_lines] || 1
@@ -32,6 +32,9 @@ class CsvParser
       elsif @row_sep == "\r\n"
         puts "WARNING: Re-reading #{@path_to_file} with CR insteead of CRLF."
         @row_sep = "\r"
+      elsif @row_sep == "\r"
+        puts "WARNING: Re-reading #{@path_to_file} with LF insteead of CR."
+        @row_sep = "\n"
       else
         debugger
         raise e

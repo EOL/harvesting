@@ -415,9 +415,9 @@ class ResourceHarvester
     resolve_references(TraitsReference, 'trait')
 
     log_info('Assocs to occurrences...')
-    propagate_id(Assoc, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
+    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
                         set: 'occurrence_id', with: 'id')
-    propagate_id(Assoc, fk: 'target_occurrence_resource_pk', other: 'occurrences.resource_pk',
+    propagate_id(Assoc, fk: 'target_occurrence_resource_fk', other: 'occurrences.resource_pk',
                         set: 'target_occurrence_id', with: 'id')
     # Assoc to nodes (through occurrences)
     log_info('Assocs to nodes...')
@@ -426,11 +426,11 @@ class ResourceHarvester
                         set: 'target_node_id', with: 'node_id')
     # Assoc to sex term:
     log_info('Assoc to sex term...')
-    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
+    propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
                         set: 'sex_term_id', with: 'sex_term_id')
     # Assoc to lifestage term:
     log_info('Assoc to lifestage term...')
-    propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
+    propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
                         set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaAssoc to assocs:
     # TODO: this is not handled during harvest, yet.
@@ -578,6 +578,10 @@ class ResourceHarvester
         @file = @format.file
         @formats[fid][:parser] = @format.file_parser
         @formats[fid][:headers] = @formats[fid][:parser].headers
+        # If we made it here, the file is parse-able, so we should save the row_sep/line_sep, if different (so we don't
+        # have to re-try it in the future):
+        @format.update_attribute(:line_sep, @formats[fid][:parser].row_sep) if
+          @formats[fid][:parser].row_sep != @format.line_sep
       end
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]

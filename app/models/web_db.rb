@@ -157,8 +157,7 @@ class WebDb < ActiveRecord::Base
     end
 
     def existing_pages(page_ids)
-      connection.exec_query("SELECT * FROM "\
-        "pages WHERE id IN (#{page_ids.join(',')})").rows
+      connection.exec_query("SELECT * FROM pages WHERE id IN (#{page_ids.compact.join(',')})").rows
     end
   end
 end

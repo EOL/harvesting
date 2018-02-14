@@ -391,23 +391,36 @@ class Publisher
   end
 
   def load_hashes
-    load_hashes_from_array(new_bib_cits_only)
+    new_bcs = new_bib_cits_only
+    puts "Loading #{new_bcs.size} bibliographic citations:"
+    load_hashes_from_array(new_bcs)
     learn_new_bib_cits
     propagate_bib_cits
-    load_hashes_from_array(new_locs_only)
+    new_locs = new_locs_only
+    puts "Loading #{new_locs.size} locations:"
+    load_hashes_from_array(new_locs)
     learn_new_locs
     propagate_locs
+    puts "Loading #{@nodes_by_pk.size} nodes:"
     load_hashes_from_array(@nodes_by_pk.values)
     learn_node_ids
     propagate_node_ids
-    # TODO: other relationships, like links, image_info.
+    puts "Re-loading #{@nodes_by_pk.size} nodes:"
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
+    puts "Loading #{@ancestors_by_node_pk.size} ancestors:"
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
+    puts "Loading #{@sci_names_by_node_pk.size} scientific names:"
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
+    puts "Loading #{@media_by_node_pk.size} media:"
     load_hashes_from_array(@media_by_node_pk.values.flatten)
+    puts "Loading #{@articles_by_node_pk.size} articles:"
     load_hashes_from_array(@articles_by_node_pk.values.flatten)
+    puts "Loading #{@vernaculars_by_node_pk.size} vernaculars:"
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
-    load_hashes_from_array(new_refs_only)
+    # TODO: other relationships, like links, image_info.
+    new_refs = new_refs_only
+    puts "Loading #{new_refs.size} references:"
+    load_hashes_from_array(new_refs)
     learn_new_refs
     build_references
     load_pages
@@ -537,7 +550,7 @@ class Publisher
   end
 
   def update_page(node)
-    puts "Page #{node.page_id} changing native node id from #{@pages[node.page_id].native_node_id} to #{node.id}"
+    # puts "Page #{node.page_id} changing native node id from #{@pages[node.page_id].native_node_id} to #{node.id}"
     @pages[node.page_id].native_node_id = node.id # TODO: is this safe? Don't want to trample a node from DWH.
   end
 
@@ -574,8 +587,11 @@ class Publisher
     Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
     pages.each do |page|
       id = page[0] # ID MUST be the 0th column
-      puts "Page #{id} setting native node id to #{page[col[:native_node_id]]}"
-      @pages[id].native_node_id = page[col[:native_node_id]]
+      native_node_id = page[col[:native_node_id]]
+      if native_node_id
+        # puts "Page #{id} update native node id from #{@pages[id].native_node_id} to #{native_node_id}"
+        @pages[id].native_node_id = native_node_id
+      end
       @pages[id].media_count += page[col[:media_count]]
       @pages[id].articles_count += page[col[:articles_count]]
       @pages[id].links_count += page[col[:links_count]]
@@ -606,7 +622,8 @@ class Publisher
       log_warn "Wrote to #{file.path} in #{Time.delta_s(t)}"
       WebDb.import_csv(file.path, table, cols)
     ensure
-      File.unlink(file)
+      puts "NOT REMOVING FILE: #{file.path}"
+      # File.unlink(file)
     end
   end
 
