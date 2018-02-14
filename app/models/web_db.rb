@@ -22,7 +22,7 @@ class WebDb < ActiveRecord::Base
     end
 
     def columns(table)
-      response = connection.exec_query("DESCRIBE #{table}")
+      response = connection.exec_query("DESCRIBE `#{table}`")
       names = response.rows.map(&:first)
       names.map(&:to_sym)
     end
@@ -50,8 +50,8 @@ class WebDb < ActiveRecord::Base
 
     def map_ids(table, field, options = {})
       q = "SELECT id, #{field} FROM #{table}"
-      q += "WHERE resource_id = #{options[:resource_id]}" if options[:resource_id]
-      q += "ORDER BY id DESC LIMIT #{options[:limit]}" if options[:limit]
+      q += " WHERE resource_id = #{options[:resource_id]}" if options[:resource_id]
+      q += " ORDER BY id DESC LIMIT #{options[:limit]}" if options[:limit]
       response = connection.exec_query(q)
       map = {}
       response.rows.each do |row|

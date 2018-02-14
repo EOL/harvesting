@@ -9,6 +9,7 @@ class Node < ActiveRecord::Base
   belongs_to :scientific_name, inverse_of: :nodes
 
   has_many :scientific_names, inverse_of: :node, dependent: :delete_all
+  has_many :articles, inverse_of: :node, dependent: :delete_all
   has_many :media, inverse_of: :node, dependent: :delete_all
   has_many :vernaculars, inverse_of: :node, dependent: :delete_all
   has_many :occurrences, inverse_of: :node, dependent: :delete_all

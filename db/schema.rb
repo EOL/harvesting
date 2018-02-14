@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180104202615) do
+ActiveRecord::Schema.define(version: 20180214173412) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -44,6 +44,8 @@ ActiveRecord::Schema.define(version: 20180104202615) do
     t.integer  "removed_by_harvest_id",     limit: 4
     t.datetime "created_at",                              null: false
     t.datetime "updated_at",                              null: false
+    t.integer  "node_id",                   limit: 4
+    t.string   "node_resource_pk",          limit: 255
   end
 
   add_index "articles", ["guid"], name: "index_articles_on_guid", using: :btree

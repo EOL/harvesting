@@ -51,7 +51,7 @@ class Publisher
     @ranks = {}
     @licenses = {}
     @languages = {}
-    @types = %w[node identifier scientific_name node_ancestor vernacular medium image_info page_content referent
+    @types = %w[node identifier scientific_name node_ancestor vernacular article medium image_info page_content referent
                 reference]
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
@@ -194,12 +194,21 @@ class Publisher
       @references[type] ||= {}
       @references[type][object[pk_field]] ||= []
       @references[type][object[pk_field]] << ref.id
-      unless @referents.key?(ref.id)
-        t = now
-        @referents[ref.id] =
-          WebReferent.new(body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
-      end
+      next if @referents.key?(ref.id)
+      t = now
+      @referents[ref.id] =
+        WebReferent.new(body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
     end
+  end
+
+  def add_bib_cit(object, citation)
+    return if citation.nil?
+    # NOTE: THIS ID IS WRONG! This is the *harv_db* ID. We're going to update it later, we're using this as a bridge.
+    object.bibliographic_citation_id = citation.id
+    return if @bib_cits.key?(citation.id)
+    t = now
+    @bib_cits[citation.id] =
+      WebReferent.new(body: clean_values(citation.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
   end
 
   def clean_values(src)
@@ -301,15 +310,17 @@ class Publisher
       web_medium = build_medium(node, medium)
       @media_by_node_pk[node.resource_pk] << web_medium
       add_refs(web_medium, 'Medium', 'resource_pk', medium.references)
+      add_bib_cit(web_medium, medium.bibliographic_citation)
     end
   end
 
   def build_articles(node)
-    node.media.each do |article|
+    node.articles.each do |article|
       @articles_by_node_pk[node.resource_pk] ||= []
       web_article = build_article(node, article)
       @articles_by_node_pk[node.resource_pk] << web_article
       add_refs(web_article, 'Article', 'resource_pk', article.references)
+      add_bib_cit(web_article, article.bibliographic_citation)
     end
   end
 
@@ -382,8 +393,10 @@ class Publisher
   def load_hashes
     load_hashes_from_array(new_bib_cits_only)
     learn_new_bib_cits
+    propagate_bib_cits
     load_hashes_from_array(new_locs_only)
     learn_new_locs
+    propagate_locs
     load_hashes_from_array(@nodes_by_pk.values)
     learn_node_ids
     propagate_node_ids
@@ -442,7 +455,8 @@ class Publisher
   end
 
   def learn_new_locs
-    learn_new_things('bibliographic_citations', 'body', @referents)
+    # TODO: this may not work. I'm not sure "location" is unique enough. It will be tricky to do something else, though.
+    learn_new_things('locations', 'location', @referents)
   end
 
   def learn_new_things(table, field, hash)
@@ -484,15 +498,34 @@ class Publisher
     load_hashes_from_array(@web_refs)
   end
 
-  # NOTE: Articles and Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here.
+  # NOTE: Articles and Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here for them.
   def propagate_node_ids
     @nodes_by_pk.each do |node_pk, node|
       # Simpler propagation of node ID only:
       set_node_ids(@sci_names_by_node_pk, node_pk, node.id)
       set_node_ids(@vernaculars_by_node_pk, node_pk, node.id)
-      # TODO: ...refs, links, image_infos.
+      # TODO: links, image_infos.
       update_page(node)
       update_parents_and_ancestors(node_pk, node)
+    end
+  end
+
+  def propagate_bib_cits
+    propagate_field_to_hash(@media_by_node_pk, :bibliographic_citation_id, @bib_cits)
+    propagate_field_to_hash(@articles_by_node_pk, :bibliographic_citation_id, @bib_cits)
+  end
+
+  def propagate_locs
+    propagate_field_to_hash(@media_by_node_pk, :location_id, @locs)
+    propagate_field_to_hash(@articles_by_node_pk, :location_id, @locs)
+  end
+
+  def propagate_field_to_hash(hash, field, source_hash)
+    hash.each_value do |set|
+      set.each do |member|
+        next if member[field].nil?
+        member[field] = source_hash[member[field]].id
+      end
     end
   end
 
@@ -504,7 +537,7 @@ class Publisher
   end
 
   def update_page(node)
-    # puts "Page #{node.page_id} changing native node id from #{@pages[node.page_id].native_node_id} to #{node.id}"
+    puts "Page #{node.page_id} changing native node id from #{@pages[node.page_id].native_node_id} to #{node.id}"
     @pages[node.page_id].native_node_id = node.id # TODO: is this safe? Don't want to trample a node from DWH.
   end
 
@@ -518,8 +551,8 @@ class Publisher
     @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
       ancestor.node_id = node.id
       unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
-        log_warn "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE JUST TESTING!"
-        return
+        log_warn "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE TESTING!"
+        next
       end
       ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
     end
@@ -541,6 +574,7 @@ class Publisher
     Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
     pages.each do |page|
       id = page[0] # ID MUST be the 0th column
+      puts "Page #{id} setting native node id to #{page[col[:native_node_id]]}"
       @pages[id].native_node_id = page[col[:native_node_id]]
       @pages[id].media_count += page[col[:media_count]]
       @pages[id].articles_count += page[col[:articles_count]]
