@@ -10,12 +10,21 @@ class WebDb < ActiveRecord::Base
   cfg['password'] = Rails.application.secrets.db['password']
   cfg['port']     = Rails.application.secrets.db['port']
   establish_connection cfg
+  @types = %w[referent node identifier scientific_name node_ancestor vernacular article medium image_info page_content
+              reference]
   @page_columns_to_update =
     %w[id updated_at media_count articles_count links_count maps_count nodes_count
        vernaculars_count scientific_names_count referents_count native_node_id]
 
   class << self
-    attr_reader :page_columns_to_update
+    attr_reader :page_columns_to_update, :types
+
+    def build_structs
+      (@types + ['page']).each do |type|
+        attributes = WebDb.columns(type.pluralize)
+        Struct.new("Web#{type.camelize}", *attributes)
+      end
+    end
 
     def now
       Time.now.to_s(:db)

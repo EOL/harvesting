@@ -7,6 +7,17 @@ class Publisher
     new(resource: resource_in).by_resource
   end
 
+  # TODO: YOU WERE HERE. 1) DONE. 2) add a harv_db_id to all of the WebDb.types tables. 3) Extract the code from this
+  # class that does NOT deal with WRITING the files. ...Basically anything that puts things into the remote database. 4)
+  # Change the file-writes to the public/data directory. 5) Add actions (or find the routes for) serving those files
+  # directly to the remote end. 6) Re-write publishing to pull those files over, read them directly into the database in
+  # the right order, assign ids, propagate them, and reindex as required. 7) (or sooner) add code to populate the
+  # harv_db_id with the IDs. :) 8) Call this class code as part of a normal harvest. 9) Probably include some way to
+  # view these files from the UI. 10) Pages. Deal with pages. 11) allow more nulls in WebDb. Too much work as-is. 12)
+  # Publisher really needs to start sending emails when it stops. Harvester too. NOTE: after writing the data to a table
+  # in the WebDB, you should immediately slurp the resulting IDs up into memory and map them using the harv_db_id as a
+  # key, so you can set relationships in the following tables.
+
   def self.first
     publisher = new(resource: Resource.first)
     publisher.by_resource
@@ -51,15 +62,13 @@ class Publisher
     @ranks = {}
     @licenses = {}
     @languages = {}
-    @types = %w[node identifier scientific_name node_ancestor vernacular article medium image_info page_content referent
-                reference]
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
     # TODO: Stylesheet and Javascript. ...We don't need them yet, sooo...
-    @same_article_attributes = %i[guid resource_pk owner source_url name body source_url]
+    @same_article_attributes = %i[guid resource_pk source_url name body source_url]
     @same_medium_attributes =
-      %i[guid resource_pk owner source_url name description unmodified_url base_url
+      %i[guid resource_pk source_url name description unmodified_url base_url
          source_page_url rights_statement usage_statement]
     @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
     @same_vernacular_attributes = %i[node_resource_pk locality remarks source]
@@ -80,7 +89,7 @@ class Publisher
     measure_time('OVERALL PUBLISHING') do
       learn_resource_id
       abort_if_republishing
-      build_structs
+      WebDB.build_structs
       build_ranks
       build_languages
       build_licenses
@@ -103,13 +112,6 @@ class Publisher
     t = Time.now
     yield
     log_warn "#{what} in #{Time.delta_s(t)}"
-  end
-
-  def build_structs
-    (@types + ['page']).each do |type|
-      attributes = WebDb.columns(type.pluralize)
-      Struct.new("Web#{type.camelize}", *attributes)
-    end
   end
 
   def build_ranks
@@ -337,6 +339,7 @@ class Publisher
     web_medium.page_id = node.page_id
     web_medium.subclass = Medium.subclasses[medium.subclass]
     web_medium.format = Medium.formats[medium.format]
+    web_medium.owner = get_owner(medium)
     # TODO: ImageInfo from medium.sizes
     copy_fields(@same_medium_attributes, medium, web_medium)
     web_medium.created_at = now
@@ -357,6 +360,7 @@ class Publisher
     @has_media ||= true
     web_article = Struct::WebArticle.new
     web_article.page_id = node.page_id
+    web_article.owner = get_owner(article)
     copy_fields(@same_article_attributes, article, web_article)
     web_article.created_at = now
     web_article.updated_at = now
@@ -364,6 +368,12 @@ class Publisher
     web_article.license_id = get_license(article.license&.source_url)
     web_article.language_id = get_language(article.language)
     web_article
+  end
+
+  def get_owner(object)
+    # TODO: certain types of license allow an empty owner.
+    # TODO: if it's not one of those licenses, we should warn and ignore that record (during harvest)
+    object.owner || "licensed media from #{@resource.name} without owner"
   end
 
   # NOTE: vernaculars will not be preferred until the website runs
@@ -407,6 +417,8 @@ class Publisher
     propagate_node_ids
     puts "Re-loading #{@nodes_by_pk.size} nodes:"
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
+    puts "Loading #{@identifiers_by_node_pk.size} identifiers:"
+    load_hashes_from_array(@identifiers_by_node_pk.values, replace: true)
     puts "Loading #{@ancestors_by_node_pk.size} ancestors:"
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
     puts "Loading #{@sci_names_by_node_pk.size} scientific names:"
