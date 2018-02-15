@@ -41,7 +41,7 @@ class DropDir
       abbr = options[:abbr]
       ext = options[:ext]
       (basename, abbr, ext) = DropDir.parse_name(file) unless basename && abbr && ext
-      dir = Rails.public_path.join('data', abbr)
+      dir = Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
       FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
       if ext.casecmp('.tgz').zero?
         untgz(file, dir)

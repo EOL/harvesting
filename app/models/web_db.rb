@@ -15,13 +15,77 @@ class WebDb < ActiveRecord::Base
   @page_columns_to_update =
     %w[id updated_at media_count articles_count links_count maps_count nodes_count
        vernaculars_count scientific_names_count referents_count native_node_id]
+  @ranks = {}
+  @licenses = {}
+  @languages = {}
+  @taxonomic_statuses = {}
 
   class << self
-    attr_reader :page_columns_to_update, :types
+    attr_reader :page_columns_to_update, :types, :ranks, :licenses, :languages, :taxonomic_statuses
+
+    def init
+      build_structs
+      build_ranks
+      build_languages
+      build_licenses
+      build_taxonomic_statuses
+    end
+
+    def build_ranks
+      @ranks = map_ids('ranks', 'name')
+    end
+
+    def build_languages
+      @languages = map_ids('languages', 'code')
+    end
+
+    def build_licenses
+      @licenses = map_ids('licenses', 'source_url')
+    end
+
+    def build_taxonomic_statuses
+      @taxonomic_statuses = map_ids('taxonomic_statuses', 'name')
+    end
+
+    def rank(full_rank)
+      return nil if full_rank.nil?
+      rank = full_rank.downcase
+      return nil if rank.blank?
+      return @ranks[rank] if @ranks.key?(rank)
+      log_warn("Encountered new rank, please assign it to a preferred rank: #{rank}")
+      @ranks[rank] = raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
+    end
+
+    def license(url)
+      return nil if url.nil?
+      license = url.downcase
+      return nil if license.blank?
+      return @licenses[license] if @licenses.key?(license)
+      log_warn("Encountered new license, please find a logo URL and give it a name: #{url}")
+      # NOTE: passing int case-sensitive name... and a bogus name.
+      @licenses[license] = raw_create('licenses', source_url: url, name: url, created_at: Time.now.to_s(:db),
+                                                        updated_at: Time.now.to_s(:db))
+    end
+
+    def language(language)
+      return nil if language.blank?
+      return @languages[language.code] if @languages.key?(language.code)
+      log_warn("Encountered new language, please assign it to a language group and give it a name: #{language}")
+      @languages[language.code] = raw_create('languages', code: language.code, group: language.group_code)
+    end
+
+    def taxonomic_status(full_name)
+      name = full_name&.downcase
+      name = 'accepted' if name.blank? # Empty taxonomic_statuses are NOT allowed; this is the default assumption.
+      return @taxonomic_statuses[name] if @taxonomic_statuses.key?(name)
+      log_warn('Encountered new taxonomic status, please assign set its '\
+               "alternative/preferred/problematic/mergeable: #{name}")
+      @taxonomic_statuses[name] = raw_create('taxonomic_statuses', name: name)
+    end
 
     def build_structs
       (@types + ['page']).each do |type|
-        attributes = WebDb.columns(type.pluralize)
+        attributes = columns(type.pluralize)
         Struct.new("Web#{type.camelize}", *attributes)
       end
     end
@@ -39,7 +103,7 @@ class WebDb < ActiveRecord::Base
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
       connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
-      WebDb.connection.last_inserted_id(table)
+      connection.last_inserted_id(table)
     end
 
     def quote_value(val)
@@ -91,7 +155,8 @@ class WebDb < ActiveRecord::Base
       connection.execute("DROP TEMPORARY TABLE #{temp_table}")
     end
 
-    def import_csv(file, table, cols = nil)
+    def import_csv(resource, table, cols = nil)
+      file = resource.publish_table_path(table)
       q = ['LOAD DATA']
       q << 'LOCAL' unless Rails.env.development?
       q << "INFILE '#{file}'"

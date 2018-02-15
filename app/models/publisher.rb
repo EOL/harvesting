@@ -7,16 +7,16 @@ class Publisher
     new(resource: resource_in).by_resource
   end
 
-  # TODO: YOU WERE HERE. 1) DONE. 2) add a harv_db_id to all of the WebDb.types tables. 3) Extract the code from this
-  # class that does NOT deal with WRITING the files. ...Basically anything that puts things into the remote database. 4)
-  # Change the file-writes to the public/data directory. 5) Add actions (or find the routes for) serving those files
-  # directly to the remote end. 6) Re-write publishing to pull those files over, read them directly into the database in
-  # the right order, assign ids, propagate them, and reindex as required. 7) (or sooner) add code to populate the
-  # harv_db_id with the IDs. :) 8) Call this class code as part of a normal harvest. 9) Probably include some way to
-  # view these files from the UI. 10) Pages. Deal with pages. 11) allow more nulls in WebDb. Too much work as-is. 12)
-  # Publisher really needs to start sending emails when it stops. Harvester too. NOTE: after writing the data to a table
-  # in the WebDB, you should immediately slurp the resulting IDs up into memory and map them using the harv_db_id as a
-  # key, so you can set relationships in the following tables.
+  # TODO: YOU WERE HERE. 1) DONE. 2) DONE. 3) Extract the code from this class that does NOT deal with WRITING the
+  # files. ...Basically anything that puts things into the remote database. 4) Change the file-writes to the public/data
+  # directory. 5) Add actions (or find the routes for) serving those files directly to the remote end. 6) Re-write
+  # publishing to pull those files over, read them directly into the database in the right order, assign ids, propagate
+  # them, and reindex as required. 7) (or sooner) add code to populate the harv_db_id with the IDs. :) 8) Call this
+  # class code as part of a normal harvest. 9) Probably include some way to view these files from the UI. 10) Pages.
+  # Deal with pages. 11) allow more nulls in WebDb. Too much work as-is. 12) Publisher really needs to start sending
+  # emails when it stops. Harvester too. NOTE: after writing the data to a table in the WebDB, you should immediately
+  # slurp the resulting IDs up into memory and map them using the harv_db_id as a key, so you can set relationships in
+  # the following tables.
 
   def self.first
     publisher = new(resource: Resource.first)
@@ -48,20 +48,16 @@ class Publisher
     @ancestors_by_node_pk = {}
     @sci_names_by_node_pk = {}
     @media_by_node_pk = {}
+    @image_info_by_node_pk = {}
     @vernaculars_by_node_pk = {}
     @articles_by_node_pk = {}
-    @references = {} # This will store all of the associations in a 2D array [class_name][pk]
     @type_pks = {
       'Node' => 'resource_pk',
       'Article' => 'resource_pk',
       'Medium' => 'resource_pk',
       'ScientificName' => 'verbatim'
     }
-    # : all the other hashes, like links, image_info
-    @taxonomic_statuses = {}
-    @ranks = {}
-    @licenses = {}
-    @languages = {}
+    # : all the other hashes, like links
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
@@ -72,10 +68,6 @@ class Publisher
          source_page_url rights_statement usage_statement]
     @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
     @same_vernacular_attributes = %i[node_resource_pk locality remarks source]
-  end
-
-  def now
-    Time.now.to_s(:db)
   end
 
   def reset_nodes
@@ -89,11 +81,7 @@ class Publisher
     measure_time('OVERALL PUBLISHING') do
       learn_resource_id
       abort_if_republishing
-      WebDB.build_structs
-      build_ranks
-      build_languages
-      build_licenses
-      build_taxonomic_statuses
+      WebDb.init
       measure_time('Slurped all data') { slurp_nodes }
       count = reset_nodes # We no longer need it, free up the memory.
       measure_time('Counted all children') { count_children }
@@ -102,10 +90,10 @@ class Publisher
       # ...maybe we shouldn't even include them in the DB.
     end
     if @has_media
-      puts 'You MUST run this on the website now:'
-      puts "r = Resource.find(#{@web_resource_id}); MediaContentCreator.by_resource(r, Publishing::PubLog.new(r))"
+      log('You MUST run this on the website now:')
+      log("r = Resource.find(#{@web_resource_id}); MediaContentCreator.by_resource(r, Publishing::PubLog.new(r))")
     end
-    puts "Done. #{count} nodes published."
+    log("Done. #{count} nodes published.")
   end
 
   def measure_time(what, &_block)
@@ -114,29 +102,13 @@ class Publisher
     log_warn "#{what} in #{Time.delta_s(t)}"
   end
 
-  def build_ranks
-    @ranks = WebDb.map_ids('ranks', 'name')
-  end
-
-  def build_languages
-    @languages = WebDb.map_ids('languages', 'code')
-  end
-
-  def build_licenses
-    @licenses = WebDb.map_ids('licenses', 'source_url')
-  end
-
-  def build_taxonomic_statuses
-    @taxonomic_statuses = WebDb.map_ids('taxonomic_statuses', 'name')
-  end
-
   def learn_resource_id
     @web_resource_id = WebDb.resource_id(@resource)
   end
 
   def slurp_nodes
     testing = false
-    # TODO: add relationships for links, image_info.
+    # TODO: add relationships for links
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
                       .includes(:identifiers, :node_ancestors, :references,
@@ -162,7 +134,7 @@ class Publisher
       build_media(node)
       build_vernaculars(node)
       build_articles(node)
-      # TODO: links, image_info.
+      # TODO: links
       # NOTE: We will NOT import Terms or traits in this code. We'll keep that a pull, since this codebase doesn't
       # understand TraitBank/neo4j.
     end
@@ -172,13 +144,14 @@ class Publisher
     web_node = Struct::WebNode.new
     copy_fields(@same_node_attributes, node, web_node)
     web_node.resource_id = @web_resource_id
+    web_node.harv_db_id = node.id
     web_node.canonical_form = clean_values(node.safe_canonical)
     web_node.scientific_name = clean_values(node.safe_scientific)
     web_node.has_breadcrumb = clean_values(!node.no_landmark?)
-    web_node.rank_id = get_rank(node.rank)
+    web_node.rank_id = WebDb.rank(node.rank)
     web_node.is_hidden = 0
-    web_node.created_at = now
-    web_node.updated_at = now
+    web_node.created_at = Time.now.to_s(:db)
+    web_node.updated_at = Time.now.to_s(:db)
     web_node.landmark = Node.landmarks[node.landmark] # NOTE: we are RELYING on the enum being the same, here!
     @nodes_by_pk[node.resource_pk] = web_node
     add_refs(web_node, 'Node', 'resource_pk', node.references)
@@ -191,15 +164,14 @@ class Publisher
     end
   end
 
-  def add_refs(object, pk_field, type, refs)
+  def add_refs(object, klass, type, refs)
     refs.each do |ref|
-      @references[type] ||= {}
-      @references[type][object[pk_field]] ||= []
-      @references[type][object[pk_field]] << ref.id
       next if @referents.key?(ref.id)
-      t = now
-      @referents[ref.id] =
-        WebReferent.new(body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
+      t = Time.now.to_s(:db)
+      @referents[ref.id] = Struct::WebReferent.new(
+        body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id,
+        parent_type: object.class.name, parent_id: object.id # NOTE: this is a HARV DB ID and should be replaced later.
+      )
     end
   end
 
@@ -208,7 +180,7 @@ class Publisher
     # NOTE: THIS ID IS WRONG! This is the *harv_db* ID. We're going to update it later, we're using this as a bridge.
     object.bibliographic_citation_id = citation.id
     return if @bib_cits.key?(citation.id)
-    t = now
+    t = Time.now.to_s(:db)
     @bib_cits[citation.id] =
       WebReferent.new(body: clean_values(citation.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
   end
@@ -233,7 +205,7 @@ class Publisher
     else
       @pages[node.page_id] = Struct::WebPage.new
       @pages[node.page_id].id = node.page_id
-      t = now
+      t = Time.now.to_s(:db)
       @pages[node.page_id].created_at = t
       @pages[node.page_id].updated_at = t
       @pages[node.page_id].media_count = node.media.size
@@ -261,7 +233,9 @@ class Publisher
       @identifiers_by_node_pk[node.resource_pk] ||= []
       web_id = Struct::WebIdentifier.new
       web_id.resource_id = @web_resource_id
+      web_id.harv_db_id = ider.id
       web_id.node_resource_pk = node.resource_pk
+      web_id.node_id = ider.node_id # NOTE: this is a HARV DB ID. We will convert it later.
       web_id.identifier = ider.identifier
       @identifiers_by_node_pk[node.resource_pk] << web_id
     end
@@ -272,6 +246,9 @@ class Publisher
       @ancestors_by_node_pk[node.resource_pk] ||= []
       anc = Struct::WebNodeAncestor.new
       anc.resource_id = @web_resource_id
+      anc.harv_db_id = nodan.id # TODO: I'm not sure this is required?
+      anc.node_id = nodan.node_id # NOTE: this is a HARV DB ID. We will convert it later.
+      anc.ancestor_id = nodan.ancestor_id # NOTE: this is a HARV DB ID. We will convert it later.
       anc.node_resource_pk = node.resource_pk
       anc.ancestor_resource_pk = nodan.ancestor_fk
       anc.depth = nodan.depth
@@ -290,13 +267,14 @@ class Publisher
 
   def build_scientific_name(node, name_model)
     name_struct = Struct::WebScientificName.new
-    name_struct.node_id = 0 # We *should* loop back for this later.
+    name_struct.node_id = node.id # NOTE: this is a HARV DB ID. We will convert it later.
     name_struct.page_id = node.page_id
+    name_struct.harv_db_id = name_model.id
     name_struct.canonical_form = clean_values(name_model.canonical_italicized)
-    name_struct.taxonomic_status_id = get_taxonomic_status(name_model.taxonomic_status.try(:downcase))
+    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status.try(:downcase))
     name_struct.is_preferred = clean_values(node.scientific_name_id == name_model.id)
-    name_struct.created_at = now
-    name_struct.updated_at = now
+    name_struct.created_at = Time.now.to_s(:db)
+    name_struct.updated_at = Time.now.to_s(:db)
     name_struct.resource_id = @web_resource_id
     name_struct.node_resource_pk = clean_values(node.resource_pk)
     # name_struct.source_reference = name_model. ...errr.... TODO: This is intended to move off of the node. Put it
@@ -313,6 +291,8 @@ class Publisher
       @media_by_node_pk[node.resource_pk] << web_medium
       add_refs(web_medium, 'Medium', 'resource_pk', medium.references)
       add_bib_cit(web_medium, medium.bibliographic_citation)
+      @image_info_by_node_pk[node.resource_pk] ||= []
+      @image_info_by_node_pk[node.resource_pk] << build_image_info(medium)
     end
   end
 
@@ -333,25 +313,48 @@ class Publisher
     end
   end
 
+  def build_image_info(medium)
+    ii = Struct::ImageInfo.new
+    ii.resource_id = @web_resource_id
+    ii.medium_id = medium.id # NOTE this is a HARV DB ID, and needs to be replaced.
+    ii.original_size = "#{medium.w}x#{medium.h}"
+    unless medium.sizes.blank?
+      # e.g.: {"88x88"=>"88x88", "98x68"=>"98x65", "580x360"=>"540x360", "130x130"=>"130x130", "260x190"=>"260x173"}
+      sizes = JSON.parse(medium.sizes)
+      ii.large_size = sizes['580x360']
+      ii.medium_size = sizes['260x190']
+      ii.small_size = sizes['98x68']
+    end
+    ii.crop_x = medium.crop_x_pct
+    ii.crop_y = medium.crop_y_pct
+    ii.crop_w = medium.crop_w_pct
+    t = Time.now.to_s(:db)
+    ii.created_at = t
+    ii.updated_at = t
+    ii.resource_pk = medium.resource_pk
+    # ii.harv_db_id = medium.id # TODO: this is not really needed, as II isn't a harv DB model. :|
+  end
+
   def build_medium(node, medium)
     @has_media ||= true
-    web_medium = Struct::WebMedium.new
+
     web_medium.page_id = node.page_id
+    web_medium.harv_db_id = medium.id
     web_medium.subclass = Medium.subclasses[medium.subclass]
     web_medium.format = Medium.formats[medium.format]
     web_medium.owner = get_owner(medium)
     # TODO: ImageInfo from medium.sizes
     copy_fields(@same_medium_attributes, medium, web_medium)
-    web_medium.created_at = now
-    web_medium.updated_at = now
+    web_medium.created_at = Time.now.to_s(:db)
+    web_medium.updated_at = Time.now.to_s(:db)
     web_medium.resource_id = @web_resource_id
     web_medium.name = clean_values(medium.name_verbatim) if medium.name.blank?
     web_medium.description = clean_values(medium.description_verbatim) if medium.description.blank?
     if medium.base_url.nil? # The image has not been downloaded.
       web_medium.base_url = "#{@root_url}/#{medium.default_base_url}"
     end
-    web_medium.license_id = get_license(medium.license&.source_url)
-    web_medium.language_id = get_language(medium.language)
+    web_medium.license_id = WebDb.license(medium.license&.source_url)
+    web_medium.language_id = WebDb.language(medium.language)
     web_medium
   end
 
@@ -360,13 +363,14 @@ class Publisher
     @has_media ||= true
     web_article = Struct::WebArticle.new
     web_article.page_id = node.page_id
+    web_article.harv_db_id = article.id
     web_article.owner = get_owner(article)
     copy_fields(@same_article_attributes, article, web_article)
-    web_article.created_at = now
-    web_article.updated_at = now
+    web_article.created_at = Time.now.to_s(:db)
+    web_article.updated_at = Time.now.to_s(:db)
     web_article.resource_id = @web_resource_id
-    web_article.license_id = get_license(article.license&.source_url)
-    web_article.language_id = get_language(article.language)
+    web_article.license_id = WebDb.license(article.license&.source_url)
+    web_article.language_id = WebDb.language(article.language)
     web_article
   end
 
@@ -381,11 +385,13 @@ class Publisher
   #   'AND vernaculars.resource_id = ?', true, @resource.id]).update_all(is_preferred: true)
   def build_vernacular(node, vernacular)
     web_vern = Struct::WebVernacular.new
+    web_vern.node_id = node.id # NOTE: this is a HARV DB ID. We will convert it later.
     web_vern.page_id = node.page_id
+    web_vern.harv_db_id = vernacular.id
     web_vern.resource_id = @web_resource_id
     web_vern.language_id = get_language(vernacular.language)
-    web_vern.created_at = now
-    web_vern.updated_at = now
+    web_vern.created_at = Time.now.to_s(:db)
+    web_vern.updated_at = Time.now.to_s(:db)
     web_vern.is_preferred = 0 # This will be fixed by the code mentioned above, run on the website.
     web_vern.trust = 0
     web_vern.is_preferred_by_resource = clean_values(vernacular.is_preferred || false)
@@ -402,40 +408,42 @@ class Publisher
 
   def load_hashes
     new_bcs = new_bib_cits_only
-    puts "Loading #{new_bcs.size} bibliographic citations:"
+    log("Loading #{new_bcs.size} bibliographic citations:")
     load_hashes_from_array(new_bcs)
-    learn_new_bib_cits
-    propagate_bib_cits
+    # learn_new_bib_cits
+    # propagate_bib_cits
     new_locs = new_locs_only
-    puts "Loading #{new_locs.size} locations:"
+    log("Loading #{new_locs.size} locations:")
     load_hashes_from_array(new_locs)
-    learn_new_locs
-    propagate_locs
-    puts "Loading #{@nodes_by_pk.size} nodes:"
+    # learn_new_locs
+    # propagate_locs
+    log("Loading #{@nodes_by_pk.size} nodes:")
     load_hashes_from_array(@nodes_by_pk.values)
-    learn_node_ids
-    propagate_node_ids
-    puts "Re-loading #{@nodes_by_pk.size} nodes:"
+    # learn_node_ids
+    # propagate_node_ids
+    log("Re-loading #{@nodes_by_pk.size} nodes:")
     load_hashes_from_array(@nodes_by_pk.values, replace: true)
-    puts "Loading #{@identifiers_by_node_pk.size} identifiers:"
+    log("Loading #{@identifiers_by_node_pk.size} identifiers:")
     load_hashes_from_array(@identifiers_by_node_pk.values, replace: true)
-    puts "Loading #{@ancestors_by_node_pk.size} ancestors:"
+    log("Loading #{@ancestors_by_node_pk.size} ancestors:")
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
-    puts "Loading #{@sci_names_by_node_pk.size} scientific names:"
+    log("Loading #{@sci_names_by_node_pk.size} scientific names:")
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
-    puts "Loading #{@media_by_node_pk.size} media:"
+    log("Loading #{@media_by_node_pk.size} media:")
     load_hashes_from_array(@media_by_node_pk.values.flatten)
-    puts "Loading #{@articles_by_node_pk.size} articles:"
+    log("Loading #{@image_info_by_node_pk.size} image infos:")
+    load_hashes_from_array(@image_info_by_node_pk.values.flatten)
+    log("Loading #{@articles_by_node_pk.size} articles:")
     load_hashes_from_array(@articles_by_node_pk.values.flatten)
-    puts "Loading #{@vernaculars_by_node_pk.size} vernaculars:"
+    log("Loading #{@vernaculars_by_node_pk.size} vernaculars:")
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
-    # TODO: other relationships, like links, image_info.
+    # TODO: other relationships, like links.
     new_refs = new_refs_only
-    puts "Loading #{new_refs.size} references:"
+    log("Loading #{new_refs.size} references:")
     load_hashes_from_array(new_refs)
-    learn_new_refs
-    build_references
-    load_pages
+    # learn_new_refs
+    # build_references
+    # TODO: Gah! Deal with pages....  load_pages
   end
 
   def new_refs_only
@@ -471,176 +479,140 @@ class Publisher
     end
   end
 
-  def learn_new_refs
-    learn_new_things('referents', 'body', @referents)
-  end
-
-  def learn_new_bib_cits
-    learn_new_things('bibliographic_citations', 'body', @referents)
-  end
-
-  def learn_new_locs
-    # TODO: this may not work. I'm not sure "location" is unique enough. It will be tricky to do something else, though.
-    learn_new_things('locations', 'location', @referents)
-  end
-
-  def learn_new_things(table, field, hash)
-    # NOTE: this is a little expensive, since we don't technically need ALL of them EVERY time, but... simpler:
-    id_map = WebDb.map_ids(table, field, resource_id: @web_resource_id)
-    hash.each_value do |ref|
-      ref.id = id_map[ref[field]]
-    end
-    id_map = nil # I just want to explicitly GC this, even though it's out of scope, 'cause it could be huge.
-  end
-
-  def learn_node_ids
-    id_map = WebDb.map_ids('nodes', 'resource_pk', resource_id: @web_resource_id)
-    @nodes_by_pk.each_value do |node|
-      node.id = id_map[node.resource_pk]
-    end
-  end
-
-  def build_references
-    @web_refs = []
-    @references.each do |type, hash|
-      field = @type_pks[type]
-      id_map = WebDb.map_ids(type.underscore.pluralize, field, resource_id: @web_resource_id, limit: @limit)
-      hash.each do |key, referents|
-        unless id_map.key?(key)
-          log_warn("MISSING ID: Could not build a reference for #{type} with #{field}=#{key} (missing ID)")
-          next
-        end
-        referents.each do |ref_id|
-          web_ref = WebReference.new
-          web_ref.parent_id = id_map[key]
-          web_ref.referent_id = @referents[ref_id].id
-          web_ref.parent_type = type
-          web_ref.resource_id = @web_resource_id
-          @web_refs << web_ref
-        end
-      end
-    end
-    load_hashes_from_array(@web_refs)
-  end
+  # def learn_new_refs
+  #   learn_new_things('referents', 'body', @referents)
+  # end
+  #
+  # def learn_new_bib_cits
+  #   learn_new_things('bibliographic_citations', 'body', @referents)
+  # end
+  #
+  # def learn_new_locs
+  #   # TODO: this may not work. I'm not sure "location" is unique enough. It will be tricky to do something else, though.
+  #   learn_new_things('locations', 'location', @referents)
+  # end
+  #
+  # def learn_new_things(table, field, hash)
+  #   # NOTE: this is a little expensive, since we don't technically need ALL of them EVERY time, but... simpler:
+  #   id_map = WebDb.map_ids(table, field, resource_id: @web_resource_id)
+  #   hash.each_value do |ref|
+  #     ref.id = id_map[ref[field]]
+  #   end
+  #   id_map = nil # I just want to explicitly GC this, even though it's out of scope, 'cause it could be huge.
+  # end
+  #
+  # def learn_node_ids
+  #   id_map = WebDb.map_ids('nodes', 'resource_pk', resource_id: @web_resource_id)
+  #   @nodes_by_pk.each_value do |node|
+  #     node.id = id_map[node.resource_pk]
+  #   end
+  # end
 
   # NOTE: Articles and Media actually don't relate to nodes in the webdb; only to pages. Nothing to do here for them.
-  def propagate_node_ids
-    @nodes_by_pk.each do |node_pk, node|
-      # Simpler propagation of node ID only:
-      set_node_ids(@sci_names_by_node_pk, node_pk, node.id)
-      set_node_ids(@vernaculars_by_node_pk, node_pk, node.id)
-      # TODO: links, image_infos.
-      update_page(node)
-      update_parents_and_ancestors(node_pk, node)
-    end
-  end
+  # def propagate_node_ids
+  #   @nodes_by_pk.each do |node_pk, node|
+  #     # Simpler propagation of node ID only:
+  #     set_node_ids(@sci_names_by_node_pk, node_pk, node.id)
+  #     set_node_ids(@vernaculars_by_node_pk, node_pk, node.id)
+  #     # TODO: links
+  #     update_page(node)
+  #     update_parents_and_ancestors(node_pk, node)
+  #   end
+  # end
+  #
+  # def propagate_bib_cits
+  #   propagate_field_to_hash(@media_by_node_pk, :bibliographic_citation_id, @bib_cits)
+  #   propagate_field_to_hash(@articles_by_node_pk, :bibliographic_citation_id, @bib_cits)
+  # end
+  #
+  # def propagate_locs
+  #   propagate_field_to_hash(@media_by_node_pk, :location_id, @locs)
+  #   propagate_field_to_hash(@articles_by_node_pk, :location_id, @locs)
+  # end
+  #
+  # def propagate_field_to_hash(hash, field, source_hash)
+  #   hash.each_value do |set|
+  #     set.each do |member|
+  #       next if member[field].nil?
+  #       member[field] = source_hash[member[field]].id
+  #     end
+  #   end
+  # end
 
-  def propagate_bib_cits
-    propagate_field_to_hash(@media_by_node_pk, :bibliographic_citation_id, @bib_cits)
-    propagate_field_to_hash(@articles_by_node_pk, :bibliographic_citation_id, @bib_cits)
-  end
+  # def set_node_ids(hash, node_pk, node_id)
+  #   return unless hash.key?(node_pk) # Not all nodes have all relationships available, of course. Avoids nil error.
+  #   hash[node_pk].compact.each do |struct|
+  #     struct.node_id = node_id
+  #   end
+  # end
 
-  def propagate_locs
-    propagate_field_to_hash(@media_by_node_pk, :location_id, @locs)
-    propagate_field_to_hash(@articles_by_node_pk, :location_id, @locs)
-  end
+  # def update_page(node)
+  #   @pages[node.page_id].native_node_id = node.id # TODO: is this safe? Don't want to trample a node from DWH.
+  # end
 
-  def propagate_field_to_hash(hash, field, source_hash)
-    hash.each_value do |set|
-      set.each do |member|
-        next if member[field].nil?
-        member[field] = source_hash[member[field]].id
-      end
-    end
-  end
+  # def update_parents_and_ancestors(node_pk, node)
+  #   return if node.parent_resource_pk.blank?
+  #   unless @nodes_by_pk.key?(node.parent_resource_pk)
+  #     log_warn "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
+  #     return
+  #   end
+  #   node.parent_id = @nodes_by_pk[node.parent_resource_pk].id
+  #   @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
+  #     ancestor.node_id = node.id
+  #     unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
+  #       log_warn "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE TESTING!"
+  #       next
+  #     end
+  #     ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
+  #   end
+  # end
 
-  def set_node_ids(hash, node_pk, node_id)
-    return unless hash.key?(node_pk) # Not all nodes have all relationships available, of course. Avoids nil error.
-    hash[node_pk].compact.each do |struct|
-      struct.node_id = node_id
-    end
-  end
+  # def load_pages
+  #   update_page_counts(WebDb.pages_to_update(@pages.keys))
+  #   temp_table = WebDb.create_temp_pages_table(@resource.id)
+  #   begin
+  #     load_hashes_from_array(@pages.values, table: temp_table, replace: true)
+  #     WebDb.load_pages_from_temp(temp_table)
+  #   ensure
+  #     WebDb.drop_temp_pages_table(temp_table)
+  #   end
+  # end
 
-  def update_page(node)
-    # puts "Page #{node.page_id} changing native node id from #{@pages[node.page_id].native_node_id} to #{node.id}"
-    @pages[node.page_id].native_node_id = node.id # TODO: is this safe? Don't want to trample a node from DWH.
-  end
-
-  def update_parents_and_ancestors(node_pk, node)
-    return if node.parent_resource_pk.blank?
-    unless @nodes_by_pk.key?(node.parent_resource_pk)
-      log_warn "WARNING: missing parent with res_pk: #{node.parent_resource_pk} ... I HOPE YOU ARE JUST TESTING!"
-      return
-    end
-    node.parent_id = @nodes_by_pk[node.parent_resource_pk].id
-    @ancestors_by_node_pk[node_pk].compact.each do |ancestor|
-      ancestor.node_id = node.id
-      unless @nodes_by_pk.key?(ancestor.ancestor_resource_pk)
-        log_warn "WARNING: missing ancestor with res_pk: #{ancestor.ancestor_resource_pk} ...I HOPE YOU ARE TESTING!"
-        next
-      end
-      ancestor.ancestor_id = @nodes_by_pk[ancestor.ancestor_resource_pk].id
-    end
-  end
-
-  def load_pages
-    update_page_counts(WebDb.pages_to_update(@pages.keys))
-    temp_table = WebDb.create_temp_pages_table(@resource.id)
-    begin
-      load_hashes_from_array(@pages.values, table: temp_table, replace: true)
-      WebDb.load_pages_from_temp(temp_table)
-    ensure
-      WebDb.drop_temp_pages_table(temp_table)
-    end
-  end
-
-  def update_page_counts(pages)
-    col = {}
-    Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
-    pages.each do |page|
-      id = page[0] # ID MUST be the 0th column
-      native_node_id = page[col[:native_node_id]]
-      if native_node_id
-        # puts "Page #{id} update native node id from #{@pages[id].native_node_id} to #{native_node_id}"
-        @pages[id].native_node_id = native_node_id
-      end
-      @pages[id].media_count += page[col[:media_count]]
-      @pages[id].articles_count += page[col[:articles_count]]
-      @pages[id].links_count += page[col[:links_count]]
-      @pages[id].maps_count += page[col[:maps_count]]
-      @pages[id].nodes_count += page[col[:nodes_count]]
-      @pages[id].vernaculars_count += page[col[:vernaculars_count]]
-      @pages[id].scientific_names_count += page[col[:scientific_names_count]]
-    end
-  end
+  # def update_page_counts(pages)
+  #   col = {}
+  #   Struct::WebPage.members.each_with_index { |name, i| col[name] = i }
+  #   pages.each do |page|
+  #     id = page[0] # ID MUST be the 0th column
+  #     native_node_id = page[col[:native_node_id]]
+  #     @pages[id].native_node_id = native_node_id if native_node_id
+  #     @pages[id].media_count += page[col[:media_count]]
+  #     @pages[id].articles_count += page[col[:articles_count]]
+  #     @pages[id].links_count += page[col[:links_count]]
+  #     @pages[id].maps_count += page[col[:maps_count]]
+  #     @pages[id].nodes_count += page[col[:nodes_count]]
+  #     @pages[id].vernaculars_count += page[col[:vernaculars_count]]
+  #     @pages[id].scientific_names_count += page[col[:scientific_names_count]]
+  #   end
+  # end
 
   def load_hashes_from_array(array, options = {})
     return nil if array.empty?
     table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
-    cols = unless options[:replace]
-             c = array.first.members
-             c.delete(:id)
-             c
-           end
-    load_from_array(array, table, cols, options)
+    write_local_csv(table, array, options)
+    # TEMP: I'm going to remove this from here and do it on the other end!
+    # cols = unless options[:replace]
+    #          c = array.first.members
+    #          c.delete(:id)
+    #          c
+    #        end
+    # WebDb.import_csv(@resource, table, cols)
   end
 
-  def load_from_array(array, table, cols, options = {})
-    return nil if array.empty?
-    t = Time.now
-    file = Tempfile.new("rails.eol_website.#{table}")
-    begin
-      write_local_csv(file, array, options)
-      log_warn "Wrote to #{file.path} in #{Time.delta_s(t)}"
-      WebDb.import_csv(file.path, table, cols)
-    ensure
-      puts "NOT REMOVING FILE: #{file.path}"
-      # File.unlink(file)
-    end
-  end
-
-  def write_local_csv(file, structs, options = {})
-    CSV.open(file, 'wb', col_sep: "\t") do |csv|
+  def write_local_csv(table, structs, options = {})
+    file = @resource.publish_table_path(table)
+    FileUtils.touch(file)
+    # NOTE: this *appends* to the file.
+    CSV.open(file, 'ab', col_sep: "\t") do |csv|
       structs.each do |struct|
         # I hate MySQL serialization. Nulls are stored as \N (literally).
         line = struct.to_a.map { |v| v.nil? ? '\\N' : v }
@@ -649,41 +621,11 @@ class Publisher
         csv << line
       end
     end
+    log("WROTE: #{file}")
   end
 
-  def get_rank(full_rank)
-    return nil if full_rank.nil?
-    rank = full_rank.downcase
-    return nil if rank.blank?
-    return @ranks[rank] if @ranks.key?(rank)
-    log_warn("Encountered new rank, please assign it to a preferred rank: #{rank}")
-    @ranks[rank] = WebDb.raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
-  end
-
-  def get_license(url)
-    return nil if url.nil?
-    license = url.downcase
-    return nil if license.blank?
-    return @licenses[license] if @licenses.key?(license)
-    log_warn("Encountered new license, please find a logo URL and give it a name: #{url}")
-    # NOTE: passing int case-sensitive name... and a bogus name.
-    @licenses[license] = WebDb.raw_create('licenses', source_url: url, name: url, created_at: now, updated_at: now)
-  end
-
-  def get_language(language)
-    return nil if language.blank?
-    return @languages[language.code] if @languages.key?(language.code)
-    log_warn("Encountered new language, please assign it to a language group and give it a name: #{language}")
-    @languages[language.code] = WebDb.raw_create('languages', code: language.code, group: language.group_code)
-  end
-
-  def get_taxonomic_status(full_name)
-    name = full_name&.downcase
-    name = 'accepted' if name.blank? # Empty taxonomic_statuses are NOT allowed; this is the default assumption.
-    return @taxonomic_statuses[name] if @taxonomic_statuses.key?(name)
-    log_warn('Encountered new taxonomic status, please assign set its '\
-             "alternative/preferred/problematic/mergeable: #{name}")
-    @taxonomic_statuses[name] = WebDb.raw_create('taxonomic_statuses', name: name)
+  def log(message)
+    @logger.log(message, cat: :infos)
   end
 
   def log_warn(message)
