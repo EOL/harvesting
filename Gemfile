@@ -46,6 +46,8 @@ gem 'therubyracer'
 gem 'turbolinks'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier'
+# Use Unicorn as the app server
+gem 'unicorn'
 # Our own crontab. Read https://github.com/javan/whenever foe details.
 gem 'whenever', :require => false
 

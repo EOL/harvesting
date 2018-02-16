@@ -120,6 +120,7 @@ GEM
       activerecord
       kaminari-core (= 1.1.1)
     kaminari-core (1.1.1)
+    kgio (2.11.2)
     libv8 (3.16.14.19)
     loofah (2.1.1)
       crass (~> 1.0.2)
@@ -176,6 +177,7 @@ GEM
       activesupport (= 4.2.10)
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
+    raindrops (0.19.0)
     rake (12.3.0)
     rb-fsevent (0.10.2)
     rb-inotify (0.9.10)
@@ -248,6 +250,9 @@ GEM
       thread_safe (~> 0.1)
     uglifier (3.2.0)
       execjs (>= 0.3.0, < 3)
+    unicorn (5.4.0)
+      kgio (~> 2.6)
+      raindrops (~> 0.7)
     web-console (3.3.0)
       activemodel (>= 4.2)
       debug_inspector
@@ -287,6 +292,7 @@ DEPENDENCIES
   therubyracer
   turbolinks
   uglifier
+  unicorn
   web-console
   whenever
 
