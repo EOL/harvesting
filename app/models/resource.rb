@@ -81,7 +81,7 @@ class Resource < ActiveRecord::Base
   end
 
   def publish_table_path(table)
-    path.join("publish_#{table}.csv")
+    path.join("publish_#{table}.tsv")
   end
 
   def path

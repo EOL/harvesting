@@ -1,7 +1,7 @@
 # Publish to the website database as quick as you can, please. NOTE: We will NOT publish Terms or traits in this code.
 # We'll keep that a pull, since this codebase doesn't understand TraitBank/neo4j.
 class Publisher
-  attr_accessor :resource, :nodes, :nodes_by_pk, :identifiers_by_node_pk
+  attr_accessor :resource
 
   def self.by_resource(resource_in)
     new(resource: resource_in).by_resource
@@ -29,7 +29,7 @@ class Publisher
     @logger = @resource.harvests.completed.last
     @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
     @web_resource_id = nil
-    reset_nodes
+    @nodes = {}
     @has_media = false
     @pages = {}
     @referents = {} # This will store ALL of the referents (the acutal text), and will persist over batches.
@@ -38,7 +38,7 @@ class Publisher
     @stored_bib_cits = {} # This will store bib_cit keys that we're already loaded, so we don't do it twice.
     @locs = {} # This will store ALL of the locations (the acutal values), and will persist.
     @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
-    @limit = 10_000
+    @limit = 1_000 # TODO: 10K probably wiser.
     reset_vars
   end
 
@@ -70,22 +70,13 @@ class Publisher
     @same_vernacular_attributes = %i[node_resource_pk locality remarks source]
   end
 
-  def reset_nodes
-    count = @nodes&.size
-    @nodes = {}
-    count || 0
-  end
-
   def by_resource
     count = 0
     measure_time('OVERALL PUBLISHING') do
       learn_resource_id
-      abort_if_republishing
+      # abort_if_republishing
       WebDb.init
-      measure_time('Slurped all data') { slurp_nodes }
-      count = reset_nodes # We no longer need it, free up the memory.
-      measure_time('Counted all children') { count_children }
-      measure_time('Loaded new data') { load_hashes }
+      slurp_nodes
       # TODO: Throw warnings for any objects that ended up with node_id = 0 (sci names, vernaculars at least...)
       # ...maybe we shouldn't even include them in the DB.
     end
@@ -93,7 +84,7 @@ class Publisher
       log('You MUST run this on the website now:')
       log("r = Resource.find(#{@web_resource_id}); MediaContentCreator.by_resource(r, Publishing::PubLog.new(r))")
     end
-    log("Done. #{count} nodes published.")
+    log('Done. Check your files.')
   end
 
   def measure_time(what, &_block)
@@ -118,12 +109,16 @@ class Publisher
     if testing
       nodes_to_hashes(@nodes.limit(100))
     else
-      @nodes.find_in_batches(batch_size: @limit) { |nodes| nodes_to_hashes(nodes) }
+      @nodes.find_in_batches(batch_size: @limit) do |nodes|
+        reset_vars
+        measure_time('Studied nodes') { nodes_to_hashes(nodes) }
+        measure_time('Counted all children') { count_children }
+        measure_time('Loaded new data') { load_hashes }
+      end
     end
   end
 
   def nodes_to_hashes(nodes)
-    reset_vars
     nodes.each do |node|
       build_page(node)
       next if @nodes_by_pk.key?(node.resource_pk)
@@ -144,6 +139,7 @@ class Publisher
     web_node = Struct::WebNode.new
     copy_fields(@same_node_attributes, node, web_node)
     web_node.resource_id = @web_resource_id
+    web_node.parent_id = node.parent_id # NOTE this is a HARV DB ID. We need to update it.
     web_node.harv_db_id = node.id
     web_node.canonical_form = clean_values(node.safe_canonical)
     web_node.scientific_name = clean_values(node.safe_scientific)
@@ -181,8 +177,21 @@ class Publisher
     object.bibliographic_citation_id = citation.id
     return if @bib_cits.key?(citation.id)
     t = Time.now.to_s(:db)
-    @bib_cits[citation.id] =
-      WebReferent.new(body: clean_values(citation.body), created_at: t, updated_at: t, resource_id: @web_resource_id)
+    @bib_cits[citation.id] = Struct::WebBibliographicCitation.new(
+      body: clean_values(citation.body), created_at: t, updated_at: t, resource_id: @web_resource_id
+    )
+  end
+
+  def add_loc(object, loc)
+    return if loc.nil?
+    # NOTE: THIS ID IS WRONG! This is the *harv_db* ID. We're going to update it later, we're using this as a bridge.
+    object.location_id = loc.id
+    return if @locs.key?(loc.id)
+    literal = "#{loc.lat_literal} #{loc.long_literal} #{loc.alt_literal} #{loc.locality}"
+    @locs[loc.id] = Struct::WebLocation.new(
+      location: literal, longitude: loc.long, latitude: loc.lat, altitude: loc.alt, spatial_location: loc.locality,
+      resource_id: @web_resource_id
+    )
   end
 
   def clean_values(src)
@@ -291,6 +300,7 @@ class Publisher
       @media_by_node_pk[node.resource_pk] << web_medium
       add_refs(web_medium, 'Medium', 'resource_pk', medium.references)
       add_bib_cit(web_medium, medium.bibliographic_citation)
+      add_loc(web_medium, medium.location)
       @image_info_by_node_pk[node.resource_pk] ||= []
       @image_info_by_node_pk[node.resource_pk] << build_image_info(medium)
     end
@@ -303,6 +313,7 @@ class Publisher
       @articles_by_node_pk[node.resource_pk] << web_article
       add_refs(web_article, 'Article', 'resource_pk', article.references)
       add_bib_cit(web_article, article.bibliographic_citation)
+      add_locs(web_article, article.location)
     end
   end
 
@@ -314,7 +325,7 @@ class Publisher
   end
 
   def build_image_info(medium)
-    ii = Struct::ImageInfo.new
+    ii = Struct::WebImageInfo.new
     ii.resource_id = @web_resource_id
     ii.medium_id = medium.id # NOTE this is a HARV DB ID, and needs to be replaced.
     ii.original_size = "#{medium.w}x#{medium.h}"
@@ -333,11 +344,12 @@ class Publisher
     ii.updated_at = t
     ii.resource_pk = medium.resource_pk
     # ii.harv_db_id = medium.id # TODO: this is not really needed, as II isn't a harv DB model. :|
+    ii
   end
 
   def build_medium(node, medium)
     @has_media ||= true
-
+    web_medium = Struct::WebMedium.new
     web_medium.page_id = node.page_id
     web_medium.harv_db_id = medium.id
     web_medium.subclass = Medium.subclasses[medium.subclass]
@@ -389,7 +401,7 @@ class Publisher
     web_vern.page_id = node.page_id
     web_vern.harv_db_id = vernacular.id
     web_vern.resource_id = @web_resource_id
-    web_vern.language_id = get_language(vernacular.language)
+    web_vern.language_id = WebDb.language(vernacular.language)
     web_vern.created_at = Time.now.to_s(:db)
     web_vern.updated_at = Time.now.to_s(:db)
     web_vern.is_preferred = 0 # This will be fixed by the code mentioned above, run on the website.
@@ -401,49 +413,46 @@ class Publisher
   end
 
   # TODO: We should have some kind of API call to automate this. :|  ...Or should we? Security is challenging.
-  def abort_if_republishing
-    raise "ERROR: you MUST Resource.find(#{@web_resource_id}).remove_content on the website before running this." if
-      WebDb.any_nodes?(@web_resource_id)
-  end
+  # def abort_if_republishing
+  #   raise "ERROR: you MUST Resource.find(#{@web_resource_id}).remove_content on the website before running this." if
+  #     WebDb.any_nodes?(@web_resource_id)
+  # end
 
   def load_hashes
+    remove_existing_pub_files
     new_bcs = new_bib_cits_only
-    log("Loading #{new_bcs.size} bibliographic citations:")
     load_hashes_from_array(new_bcs)
+    new_locs = new_locs_only
+    load_hashes_from_array(new_locs)
+    load_hashes_from_array(@nodes_by_pk.values)
     # learn_new_bib_cits
     # propagate_bib_cits
-    new_locs = new_locs_only
-    log("Loading #{new_locs.size} locations:")
-    load_hashes_from_array(new_locs)
     # learn_new_locs
     # propagate_locs
-    log("Loading #{@nodes_by_pk.size} nodes:")
-    load_hashes_from_array(@nodes_by_pk.values)
     # learn_node_ids
     # propagate_node_ids
-    log("Re-loading #{@nodes_by_pk.size} nodes:")
-    load_hashes_from_array(@nodes_by_pk.values, replace: true)
-    log("Loading #{@identifiers_by_node_pk.size} identifiers:")
-    load_hashes_from_array(@identifiers_by_node_pk.values, replace: true)
-    log("Loading #{@ancestors_by_node_pk.size} ancestors:")
+    # log("Re-loading #{@nodes_by_pk.size} nodes:")
+    # load_hashes_from_array(@nodes_by_pk.values, replace: true)
+    load_hashes_from_array(@identifiers_by_node_pk.values.flatten)
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
-    log("Loading #{@sci_names_by_node_pk.size} scientific names:")
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
-    log("Loading #{@media_by_node_pk.size} media:")
     load_hashes_from_array(@media_by_node_pk.values.flatten)
-    log("Loading #{@image_info_by_node_pk.size} image infos:")
     load_hashes_from_array(@image_info_by_node_pk.values.flatten)
-    log("Loading #{@articles_by_node_pk.size} articles:")
     load_hashes_from_array(@articles_by_node_pk.values.flatten)
-    log("Loading #{@vernaculars_by_node_pk.size} vernaculars:")
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
     # TODO: other relationships, like links.
     new_refs = new_refs_only
-    log("Loading #{new_refs.size} references:")
     load_hashes_from_array(new_refs)
     # learn_new_refs
     # build_references
     # TODO: Gah! Deal with pages....  load_pages
+  end
+
+  def remove_existing_pub_files
+    WebDb.types.each do |type|
+      file = @resource.publish_table_path(type.pluralize)
+      File.unlink(file) if File.exist?(file)
+    end
   end
 
   def new_refs_only
@@ -598,6 +607,7 @@ class Publisher
   def load_hashes_from_array(array, options = {})
     return nil if array.empty?
     table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
+    log("Loading #{array.size} #{table}:")
     write_local_csv(table, array, options)
     # TEMP: I'm going to remove this from here and do it on the other end!
     # cols = unless options[:replace]
@@ -621,7 +631,7 @@ class Publisher
         csv << line
       end
     end
-    log("WROTE: #{file}")
+    log("WROTE: (#{structs.size} lines) #{file}")
   end
 
   def log(message)
