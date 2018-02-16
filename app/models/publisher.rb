@@ -38,7 +38,7 @@ class Publisher
     @stored_bib_cits = {} # This will store bib_cit keys that we're already loaded, so we don't do it twice.
     @locs = {} # This will store ALL of the locations (the acutal values), and will persist.
     @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
-    @limit = 1_000 # TODO: 10K probably wiser.
+    @limit = 10_000
     reset_vars
   end
 
