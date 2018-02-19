@@ -111,7 +111,7 @@ class Publisher
       @nodes.find_in_batches(batch_size: @limit) do |nodes|
         reset_vars
         measure_time('Studied nodes') { nodes_to_hashes(nodes) }
-        measure_time('Counted all children') { count_children }
+        count_children # No need to time this, it's super-fast (about a 20th of a second in production)
         measure_time('Loaded new data') { load_hashes }
       end
     end

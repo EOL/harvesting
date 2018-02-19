@@ -162,13 +162,7 @@ class WebDb < ActiveRecord::Base
       q << 'REPLACE ' unless cols
       q << "INTO TABLE `#{table}`"
       q << "(#{cols.join(',')})" if cols
-      begin
-        connection.execute(q.join(' '))
-      rescue => e
-        puts e.message
-        debugger
-        1
-      end
+      connection.execute(q.join(' '))
     end
 
     def resource_id(resource)
