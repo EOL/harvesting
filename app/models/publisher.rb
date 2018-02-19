@@ -7,16 +7,13 @@ class Publisher
     new(resource: resource_in).by_resource
   end
 
-  # TODO: YOU WERE HERE. 1) DONE. 2) DONE. 3) Extract the code from this class that does NOT deal with WRITING the
-  # files. ...Basically anything that puts things into the remote database. 4) Change the file-writes to the public/data
-  # directory. 5) Add actions (or find the routes for) serving those files directly to the remote end. 6) Re-write
-  # publishing to pull those files over, read them directly into the database in the right order, assign ids, propagate
-  # them, and reindex as required. 7) (or sooner) add code to populate the harv_db_id with the IDs. :) 8) Call this
-  # class code as part of a normal harvest. 9) Probably include some way to view these files from the UI. 10) Pages.
-  # Deal with pages. 11) allow more nulls in WebDb. Too much work as-is. 12) Publisher really needs to start sending
-  # emails when it stops. Harvester too. NOTE: after writing the data to a table in the WebDB, you should immediately
-  # slurp the resulting IDs up into memory and map them using the harv_db_id as a key, so you can set relationships in
-  # the following tables.
+  # TODO: YOU WERE HERE. References are mucked up. ...I've just edited them here to store both referents (with a
+  # native_node_id) and references (where the referent_is that id, and the partent_id is the native_node_id of the
+  # parent). But I don't have the code here to fix that on the web end. 8) Call this class code as part of a normal
+  # harvest. 9) Probably include some way to view these files from the UI. 10) Pages. Deal with pages. 11) allow more
+  # nulls in WebDb. Too much work as-is. 12) Publisher really needs to start sending emails when it stops. Harvester
+  # too. NOTE: after writing the data to a table in the WebDB, you should immediately slurp the resulting IDs up into
+  # memory and map them using the harv_db_id as a key, so you can set relationships in the following tables.
 
   def self.first
     publisher = new(resource: Resource.first)
@@ -32,6 +29,7 @@ class Publisher
     @nodes = {}
     @has_media = false
     @pages = {}
+    @references = []
     @referents = {} # This will store ALL of the referents (the acutal text), and will persist over batches.
     @stored_refs = {} # This will store ref keys that we're already loaded, so we don't do it twice... [sigh]
     @bib_cits = {} # This will store ALL of the bibliographic_citations (the acutal text), and will persist.
@@ -51,6 +49,7 @@ class Publisher
     @image_info_by_node_pk = {}
     @vernaculars_by_node_pk = {}
     @articles_by_node_pk = {}
+    @references = [] # Don't need to store these, as they are just a join.
     @type_pks = {
       'Node' => 'resource_pk',
       'Article' => 'resource_pk',
@@ -165,8 +164,11 @@ class Publisher
       next if @referents.key?(ref.id)
       t = Time.now.to_s(:db)
       @referents[ref.id] = Struct::WebReferent.new(
-        body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id,
-        parent_type: object.class.name, parent_id: object.id # NOTE: this is a HARV DB ID and should be replaced later.
+        body: clean_values(ref.body), created_at: t, updated_at: t, resource_id: @web_resource_id, harv_db_id: ref.id
+      )
+      @references << Struct::WebReference.new(
+        parent_type: object.class.name, parent_id: object.id, # NOTE: this is a HARV DB ID and should be replaced later.
+        resource_id: @web_resource_id, referent_id: ref.id # NOTE: this is also a harv ID, and will need to be replaced.
       )
     end
   end
@@ -440,10 +442,11 @@ class Publisher
     load_hashes_from_array(@image_info_by_node_pk.values.flatten)
     load_hashes_from_array(@articles_by_node_pk.values.flatten)
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
+    load_hashes_from_array(@references)
     # TODO: other relationships, like links.
-    new_refs = new_refs_only
-    load_hashes_from_array(new_refs)
-    # learn_new_refs
+    new_referents = new_referents_only
+    load_hashes_from_array(new_referents)
+    # learn_new_referents
     # build_references
     # TODO: Gah! Deal with pages....  load_pages
   end
@@ -455,7 +458,7 @@ class Publisher
     end
   end
 
-  def new_refs_only
+  def new_referents_only
     new_objects_only(@referents, @stored_refs)
   end
 
@@ -488,7 +491,7 @@ class Publisher
     end
   end
 
-  # def learn_new_refs
+  # def learn_new_referents
   #   learn_new_things('referents', 'body', @referents)
   # end
   #
