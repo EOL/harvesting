@@ -42,7 +42,7 @@ class Resource
     def create_resource(noko)
       name = strip_string(noko.css('h1').first.text)
       # Lots of names are super-lame. In those cases, let's just re-use the partner name:
-      name = strip_string(noko.css('.breadcrumb li a')[-2].text) if name.match?(/^Resource\b/)
+      name = strip_string(noko.css('.breadcrumb li a')[-2].text) if name.match?(/^Resource/)
       abbr = abbreviate(name)
       desc = noko.css('.prose p,blockquote').map(&:text).map { |txt| strip_string(txt) }.join("\n")
       @resource = Resource.create(name: name, abbr: abbr, description: desc, notes: 'auto-harvested, requires editing.',
