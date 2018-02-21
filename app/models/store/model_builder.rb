@@ -263,8 +263,9 @@ module Store
       end
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:trait, TraitsReference)
+      @models[:trait][:of_taxon] = true unless @models[:trait].key?(:of_taxon)
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?
-      debugger if occ_meta # YOU WERE HERE ... too long ago to remember why, though. (?) Sigh.
+      debugger if occ_meta # Ahhh, this is occurrence metadata, which I've never tested before... now you have a test!
       predicate = @models[:trait].delete(:predicate)
       predicate_term = find_or_create_term(predicate, type: 'predicate')
       @models[:trait][:predicate_term_id] = predicate_term.id
