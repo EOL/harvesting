@@ -171,9 +171,12 @@ class Publisher
     object.bibliographic_citation_id = citation.id
     return if @bib_cits.key?(citation.id)
     t = Time.now.to_s(:db)
-    @bib_cits[citation.id] = Struct::WebBibliographicCitation.new(
-      body: clean_values(citation.body), created_at: t, updated_at: t, resource_id: @web_resource_id
-    )
+    bc = Struct::WebBibliographicCitation.new
+    bc.body = clean_values(citation.body)
+    bc.created_at = t
+    bc.updated_at = t
+    bc.resource_id = @web_resource_id
+    @bib_cits[citation.id] = bc
   end
 
   def add_loc(object, loc)
@@ -182,10 +185,14 @@ class Publisher
     object.location_id = loc.id
     return if @locs.key?(loc.id)
     literal = "#{loc.lat_literal} #{loc.long_literal} #{loc.alt_literal} #{loc.locality}"
-    @locs[loc.id] = Struct::WebLocation.new(
-      location: literal, longitude: loc.long, latitude: loc.lat, altitude: loc.alt, spatial_location: loc.locality,
-      resource_id: @web_resource_id
-    )
+    loc_struct = Struct::WebLocation.new
+    loc_struct.location = literal
+    loc_struct.longitude = loc.long
+    loc_struct.latitude = loc.lat
+    loc_struct.altitude = loc.alt
+    loc_struct.spatial_location = loc.locality
+    loc_struct.resource_id = @web_resource_id
+    @locs[loc.id] = loc_struct
   end
 
   def clean_values(src)

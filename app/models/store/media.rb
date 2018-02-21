@@ -73,7 +73,10 @@ module Store
     end
 
     def to_section(field, val)
-      # TODO ... argh.
+      # TODO ... argh. The values are a controlled vocabulary, which we may edit in the future, but not for MVP. It's
+      # drawn from a couple of sources and contains some homegrown terms also. It's documented at
+      # http://eol.org/info/toc_subjects. The URI for the field is http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/CVterm
+      # ...We will allow multiple values via a semicolon-delimited field.
     end
 
     def to_bibliographic_citation(field, val)
@@ -97,11 +100,13 @@ module Store
       @models[:medium][:description] = sanitize(val)
     end
 
+    # http://rs.tdwg.org/ac/terms/accessURI (where to fetch the media file)
     def to_media_source_url(field, val)
       @models[:medium] ||= {}
       @models[:medium][:source_url] = val
     end
 
+    # http://rs.tdwg.org/ac/terms/furtherInformationURL (where the link accompanying the media object should point)
     def to_media_source_page_url(field, val)
       @models[:medium] ||= {}
       @models[:medium][:source_page_url] = val
@@ -148,6 +153,11 @@ module Store
       @models[:location][:long_literal] = val
     end
 
+    # http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated <-- Measurement location
+    # http://purl.org/dc/terms/spatial <-- Spatial location
+    # The distinction is usually explained with the example of a photographer on a mountain, with a telephoto lens,
+    # photographing a mountain goat on the neighboring mountain. The first field is the location of the camera. The
+    # second, the location of the goat.
     def to_media_locality(field, val)
       @models[:location] ||= {}
       @models[:location][:locality] = val

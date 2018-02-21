@@ -100,7 +100,12 @@ class Node < ActiveRecord::Base
   end
 
   def all_authors
-    scientific_names.used_for_merges.flat_map(&:authors) if scientific_names
+    names = if scientific_names.loaded?
+      scientific_names.select { |sn| sn.is_used_for_merges? }
+    else
+      scientific_names.used_for_merges
+    end
+    names.flat_map(&:authors) if scientific_names
   end
 
   def ancestors
