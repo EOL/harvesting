@@ -111,7 +111,7 @@ class Format < ActiveRecord::Base
   end
 
   def file_parser
-    raise "File missing!" unless File.exist?(file)
+    raise "File missing: #{file}" unless File.exist?(file)
     parser =
       if excel?
         ExcelParser.new(file, sheet: sheet, header_lines: header_lines, data_begins_on_line: data_begins_on_line)

@@ -46,7 +46,7 @@ class WebDb < ActiveRecord::Base
       @taxonomic_statuses = map_ids('taxonomic_statuses', 'name')
     end
 
-    def rank(full_rank)
+    def rank(full_rank, logger)
       return nil if full_rank.nil?
       rank = full_rank.downcase
       return nil if rank.blank?
@@ -55,7 +55,7 @@ class WebDb < ActiveRecord::Base
       @ranks[rank] = raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
     end
 
-    def license(url)
+    def license(url, logger)
       return nil if url.nil?
       license = url.downcase
       return nil if license.blank?
@@ -63,17 +63,17 @@ class WebDb < ActiveRecord::Base
       log_warn("Encountered new license, please find a logo URL and give it a name: #{url}")
       # NOTE: passing int case-sensitive name... and a bogus name.
       @licenses[license] = raw_create('licenses', source_url: url, name: url, created_at: Time.now.to_s(:db),
-                                                        updated_at: Time.now.to_s(:db))
+                                                  updated_at: Time.now.to_s(:db))
     end
 
-    def language(language)
+    def language(language, logger)
       return nil if language.blank?
       return @languages[language.code] if @languages.key?(language.code)
       log_warn("Encountered new language, please assign it to a language group and give it a name: #{language}")
       @languages[language.code] = raw_create('languages', code: language.code, group: language.group_code)
     end
 
-    def taxonomic_status(full_name)
+    def taxonomic_status(full_name, logger)
       name = full_name&.downcase
       name = 'accepted' if name.blank? # Empty taxonomic_statuses are NOT allowed; this is the default assumption.
       return @taxonomic_statuses[name] if @taxonomic_statuses.key?(name)

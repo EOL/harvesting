@@ -2,7 +2,7 @@ class Harvest < ActiveRecord::Base
   belongs_to :resource, inverse_of: :harvests
   has_many :formats, inverse_of: :harvest, dependent: :destroy # NOTE: a few more deletes off of this one.
   has_many :hlogs, inverse_of: :harvest # destroyed via formats
-  has_many :nodes, inverse_of: :harvest # NOTE: see #destroy_nodes_content...
+  has_many :nodes, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :scientific_names, through: :nodes, source: 'scientific_names'
   has_many :occurrences, inverse_of: :harvest # destroyed via nodes
   has_many :occurrence_metadata, inverse_of: :harvest, dependent: :delete_all
@@ -15,7 +15,7 @@ class Harvest < ActiveRecord::Base
   has_many :identifiers, inverse_of: :harvest # destroyed via nodes
   has_many :media, inverse_of: :harvest # destroyed via nodes
 
-  before_destroy :destroy_nodes_content
+  before_destroy :remove_content
 
   delegate :resume, to: :resource
 
@@ -77,19 +77,15 @@ class Harvest < ActiveRecord::Base
     hlogs << Hlog.create!(hash.merge(format: options[:format]))
   end
 
-  def destroy_nodes_content
+  def remove_content
+    # Because node.destroy does all of this work but MUCH less efficiently, we fake it all here:
+    [ScientificName, Medium, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference, NodesReference,
+     Reference].each do |klass|
+       klass.where(harvest_id: id).delete_all
+     end
     nodes.pluck(:id).in_groups_of(5_000, false) do |batch|
-      ScientificName.where(node_id: batch).delete_all
-      Medium.where(node_id: batch).delete_all # This one is QUITE slow.
-      Vernacular.where(node_id: batch).delete_all
-      Occurrence.where(node_id: batch).delete_all
-      Trait.where(node_id: batch).delete_all
-      Assoc.where(node_id: batch).delete_all
-      Identifier.where(node_id: batch).delete_all
-      ref_ids = NodesReference.where(node_id: batch).pluck(:reference_id)
-      Reference.where(id: ref_ids).delete_all
-      NodesReference.where(node_id: batch).delete_all
       NodeAncestor.where(node_id: batch).delete_all
     end
+    Node.where(harvest_id: id).delete_all
   end
 end

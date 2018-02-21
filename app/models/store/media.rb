@@ -72,6 +72,14 @@ module Store
       @models[:medium][:format] = type
     end
 
+    def to_section(field, val)
+      # TODO ... argh.
+    end
+
+    def to_bibliographic_citation(field, val)
+      # TODO ... argh.
+    end
+
     def to_media_name(field, val)
       @models[:medium] ||= {}
       @models[:medium][:name_verbatim] = val
@@ -87,11 +95,6 @@ module Store
       @models[:medium] ||= {}
       @models[:medium][:description_verbatim] = val
       @models[:medium][:description] = sanitize(val)
-    end
-
-    def to_media_source_url(field, val)
-      @models[:medium] ||= {}
-      @models[:medium][:source_url] = val
     end
 
     def to_media_source_url(field, val)

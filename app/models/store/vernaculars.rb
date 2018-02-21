@@ -29,7 +29,7 @@ module Store
 
     def to_vernaculars_source(field, val)
       @models[:vernacular] ||= {}
-      @models[:vernacular][:source] = val
+      @models[:vernacular][:source] = val # TODO: I actually think this is supposed to be a reference ID, but I'm not sure.
     end
   end
 end

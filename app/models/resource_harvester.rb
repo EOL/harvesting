@@ -265,6 +265,7 @@ class ResourceHarvester
             field = fields[header]
             next if row[header].blank?
             next if field.to_ignored?
+            raise "NO HANDLER FOR '#{field.mapping}'!" unless self.respond_to?(field.mapping)
             # NOTE: that these methods are defined in the Store::* mixins:
             send(field.mapping, field, row[header])
           end
@@ -377,6 +378,7 @@ class ResourceHarvester
     propagate_id(Vernacular, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # And identifiers to nodes:
     propagate_id(Identifier, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    resolve_references(NodesReference, 'node')
   end
 
   def resolve_media_keys
@@ -564,8 +566,10 @@ class ResourceHarvester
     # TODO: (LOW-PRIO)...
   end
 
-  # send notifications and finish up the instance:
+  # TODO: this is a LOUSY place to put the publishing, but it's a real pain to add new steps to harvesting. I'll do it
+  # eventually, but not now.
   def complete_harvest_instance
+    Publisher.by_resource(@resource, logger: @harvest)
     @harvest.complete
   end
 
