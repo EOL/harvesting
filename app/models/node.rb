@@ -56,6 +56,12 @@ class Node < ActiveRecord::Base
     @native_virus ||= where(resource_id: 1, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
   end
 
+  def self.remove_indexes(filter)
+    Node.where(filter).each do |node|
+      Node.searchkick_index.remove(node)
+    end
+  end
+
   # json.ancestors node.
 
   # id: 1,

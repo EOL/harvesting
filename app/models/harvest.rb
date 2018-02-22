@@ -86,6 +86,7 @@ class Harvest < ActiveRecord::Base
     nodes.pluck(:id).in_groups_of(5_000, false) do |batch|
       NodeAncestor.where(node_id: batch).delete_all
     end
+    Node.remove_indexes(harvest_id: id)
     Node.where(harvest_id: id).delete_all
   end
 end
