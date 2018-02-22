@@ -67,6 +67,7 @@ class Publisher
       learn_resource_id
       WebDb.init
       slurp_nodes
+      finish_traits_files
     end
     log('Done. Check your files:')
     @files.each { |file| log(file.to_s) }
@@ -115,9 +116,8 @@ class Publisher
       build_vernaculars(node)
       build_articles(node)
       # TODO: links
-      # NOTE: We will NOT import Terms or traits in this code. We'll keep that a pull, since this codebase doesn't
-      # understand TraitBank/neo4j.
     end
+    build_traits(nodes)
   end
 
   def node_to_struct(node)
@@ -387,6 +387,85 @@ class Publisher
     web_article
   end
 
+  def build_traits(nodes)
+    return unless Trait.where(node_id: nodes.map(&:id)).any?
+    # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
+    simple_meta_fields = %i[predicate_term object_term]
+    meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
+    property_fields = meta_fields + %i[sex_term lifestage_term references]
+    traits =
+      Trait.primary.published.matched.where(node_id: nodes.map(&:id))
+           .includes(property_fields,
+                     children: meta_fields,
+                     occurrence: { occurrence_metadata: simple_meta_fields },
+                     node: :scientific_name,
+                     meta_traits: meta_fields)
+    filename = @resource.publish_table_path('traits')
+    unless File.exist?(filename)
+      FileUtils.touch(filename)
+      File.open(filename, 'a') { |file| file.write('[') }
+      @files << filename
+    end
+    json = Jbuilder.new { |j| j.traits(traits.reject { |t| t.node.page_id.nil? }) }.target!
+    # File.open(filename, 'a') { |file| file.write(json) }
+    meta_rows << %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
+                    statistical_method source]
+
+  end
+
+  # NOTE: This order is deterministic and conflated with WebDB's app/models/publishing/pub_traits.rb ... if you change
+  # one, you must change the other.
+  def build_trait(trait)
+    @traits <<
+      ["R#{resource_id}-PK#{id}", # eol_pk
+       node.page_id, # page_id
+       node.scientific_name.italicized, # scientific_name
+       resource_pk, # resource_pk
+       predicate_term.uri, # predicate
+       sex_term.try(:uri), # sex
+       lifestage_term.try(:uri), # lifestage
+       statistical_method_term.try(:uri), # statistical_method
+       source, # source
+       nil, # object_page_id
+       nil, # target_scientific_name
+       object_term.try(:uri), # value_uri
+       literal, # literal
+       measurement, # measurement
+       units_term.try(:uri)] # units
+    (trait.meta_traits + trait.references + trait.children + trait.occurrence.occurrence_metadata).compact.each do |meta|
+      meta_array = []
+      meta_array << "#{meta.class.name}-#{meta.id}" # eol_pk
+      meta_array << "R#{resource_id}-PK#{id}" # trait_eol_pk
+      if meta.is_a?(Reference)
+        # TODO: we should probably make this URI configurable:
+        meta_array << 'http://eol.org/schema/reference/referenceID' # predicate
+        body = meta.body || ''
+        body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
+        body += " #{meta.doi}" unless meta.doi.blank?
+        meta_array << body # literal
+        meta_array += [nil, nil, nil, nil, nil, nil, nil] # Nothing else on references.
+      else
+        meta_array << meta.predicate_term.try(:uri) # predicate
+        meta_array << meta.literal # literal
+        meta_array << meta.measurement if meta.respond_to?(:measurement) # measurement
+        meta_array << meta.object_term.try(:uri) # value_uri
+        meta_array << meta.units_term.try(:uri) if meta.respond_to?(:units_term) # units
+        meta_array << meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term # sex
+        meta_array << meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term # lifestage
+        meta_array << meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term) # statistical_method
+        meta_array << meta.source if meta.respond_to?(:source) # source
+      end
+      @metadata << meta_array
+    end
+  end
+
+  def finish_traits_files
+    %i[traits associations].each do |type|
+      filename = @resource.publish_table_path(type)
+      File.open(filename, 'a') { |file| file.write(']') } if File.exist?(filename)
+    end
+  end
+
   def get_owner(object)
     # TODO: certain types of license allow an empty owner.
     # TODO: if it's not one of those licenses, we should warn and ignore that record (during harvest)
@@ -447,6 +526,10 @@ class Publisher
   def remove_existing_pub_files
     WebDb.types.each do |type|
       file = @resource.publish_table_path(type.pluralize)
+      File.unlink(file) if File.exist?(file)
+    end
+    %i[traits associations].each do |type|
+      file = @resource.publish_table_path(type)
       File.unlink(file) if File.exist?(file)
     end
   end

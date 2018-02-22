@@ -14,7 +14,7 @@ class TraitsController < ApplicationController
                          meta_traits: meta_fields)
     )
     respond_to do |fmt|
-      fmt.json {}
+      fmt.json { render 'index', traits: @traits }
     end
   end
 end
