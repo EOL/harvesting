@@ -5,7 +5,7 @@ class Resource < ActiveRecord::Base
   has_many :formats, inverse_of: :resource, dependent: :destroy
   has_many :harvests, inverse_of: :resource, dependent: :destroy # NOTE: this destroy takes care of the rest.
   has_many :scientific_names, inverse_of: :resource
-  has_many :nodes, inverse_of: :resource
+  has_many :nodes, inverse_of: :resource, dependent: :destroy
   has_many :vernaculars, inverse_of: :resource
   has_many :articles, inverse_of: :resource
   has_many :media, inverse_of: :resource
@@ -160,8 +160,8 @@ class Resource < ActiveRecord::Base
   # NOTE: keeps formats, of course.
   def remove_content
     harvests.each { |h| h.destroy }
+    # NOTE: DO NOT (!!) attempt to remove all the nodes this way. Searchkick needs to reindex them as they are destroyed!
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
-    Node.where(resource_id: id).delete_all
     ScientificName.where(resource_id: id).delete_all
     Vernacular.where(resource_id: id).delete_all
     Article.where(resource_id: id).delete_all
@@ -172,5 +172,10 @@ class Resource < ActiveRecord::Base
     MetaAssoc.where(resource_id: id).delete_all
     Identifier.where(resource_id: id).delete_all
     Reference.where(resource_id: id).delete_all
+    if Delayed::Job.count > 100_000
+      puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
+    else
+      Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_all
+    end
   end
 end
