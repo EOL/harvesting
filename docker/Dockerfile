@@ -17,10 +17,9 @@ RUN cd /u/tmp && wget https://github.com/GlobalNamesArchitecture/gnparser/releas
     && unzip gnparser-0.4.2.zip && mv gnparser-0.4.2 /u/apps/gnparser && rm -f /usr/local/bin/gnparser \
     && ln -s /u/apps/gnparser/bin/gnparser /usr/local/bin && rm -rf /u/tmp
 
-# Configuration 
-RUN /bin/bash -l -c 'cd /u/apps/harvester/ && bundle' 
+# Configuration
+RUN /bin/bash -l -c 'cd /u/apps/harvester/ && bundle'
 ADD bin/init.sh /etc/my_init.d/
-
 
 # Cleanup
 RUN rm -rf /tmp/* /var/tmp/* /usr/local/src/*
