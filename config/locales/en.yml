@@ -3,7 +3,7 @@ en:
   active_record:
     attributes:
       resource:
-        opendata_url: "URL of OpenData resource (NOT the file, the resource page)"
+        opendata_url: "TODO: this didn't work: URL of OpenData resource (NOT the file, the resource page)"
   are_you_sure: "Are you sure? This action cannot be undone."
   boolean:
     true: "True"
@@ -195,7 +195,7 @@ en:
         zero: "No recent failures. (Yay!)"
         one: "Recent failure:"
         other: "Recent failures:"
-      from_url_header: "Import Resource from OpenData:"
+      from_url_header: "Import from OpenData:"
       harvest_jobs:
         zero: "No pending harvests."
         one: "One pending harvest."
