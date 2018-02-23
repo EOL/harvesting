@@ -1,5 +1,9 @@
 # Keep this alphabetical.
 en:
+  active_record:
+    attributes:
+      resource:
+        opendata_url: "URL of OpenData resource (NOT the file, the resource page)"
   are_you_sure: "Are you sure? This action cannot be undone."
   boolean:
     true: "True"
