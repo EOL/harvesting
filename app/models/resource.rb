@@ -88,6 +88,10 @@ class Resource < ActiveRecord::Base
     Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
   end
 
+  def move_files(to)
+    formats.each { |fmt| fmt.update_attribute(:get_from, fmt.get_from.sub(%r{data/[^/]+/}, "data/#{to}/")) }
+  end
+
   def re_read_xml
     where = formats.any? ? File.dirname(formats.first.get_from) : path
     Resource.from_xml(where, self)
