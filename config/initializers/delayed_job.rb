@@ -7,6 +7,11 @@ Delayed::Worker.queue_attributes = {
 Delayed::Worker.max_run_time = 7.days # Yes, really. We watch the long-running jobs pretty closely.
 Delayed::Worker.max_attempts = 2
 
+# Because of https://github.com/collectiveidea/delayed_job_active_record/issues/63
+Delayed::Backend::ActiveRecord.configure do |config|
+  config.reserve_sql_strategy = :default_sql
+end
+
 # NOTE: If you add another one of these, you should really move them to a jobs folder.
 HarvestJob = Struct.new(:resource_id) do
   def perform
