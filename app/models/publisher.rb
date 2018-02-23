@@ -67,7 +67,7 @@ class Publisher
       learn_resource_id
       WebDb.init
       slurp_nodes
-      finish_traits_files
+      # TODO: YOU WERE HERE: finish_traits_files
     end
     log('Done. Check your files:')
     @files.each { |file| log(file.to_s) }
@@ -117,7 +117,7 @@ class Publisher
       build_articles(node)
       # TODO: links
     end
-    build_traits(nodes)
+    # TODO: YOU WERE HERE build_traits(nodes)
   end
 
   def node_to_struct(node)
