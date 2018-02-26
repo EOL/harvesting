@@ -103,7 +103,13 @@ class Medium < ActiveRecord::Base
       raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
     end
     begin
-      image = Image.read(raw.to_io).first # NOTE: #first because no animations are supported!
+      # NOTE: #first because no animations are supported!
+      image = if raw.respond_to?(:to_io)
+                Image.read(raw.to_io).first
+              else
+                raw.rewind
+                Image.from_blob(raw.read).first
+              end
     rescue Magick::ImageMagickError => e
       mess = "Couldn't parse image #{get_url} for Medium ##{id} (#{e.message})"
       Delayed::Worker.logger.error(mess)

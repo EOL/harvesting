@@ -22,4 +22,52 @@ class Trait < ActiveRecord::Base
   scope :primary, -> { where(of_taxon: true) }
   scope :matched, -> { where('node_id IS NOT NULL') }
   scope :unmatched, -> { where('node_id IS NULL') }
+
+  def metadata
+    (meta_traits + references + children + occurrence.occurrence_metadata).compact
+  end
+
+  def eol_pk
+    "R#{resource_id}-PK#{id}"
+  end
+
+  def page_id
+    node.page_id
+  end
+
+  def scientific_name
+    node.scientific_name.italicized
+  end
+
+  def predicate
+    predicate_term.uri
+  end
+
+  def sex
+    sex_term&.uri
+  end
+
+  def lifestage
+    lifestage_term&.uri
+  end
+
+  def statistical_method
+    statistical_method_term&.uri
+  end
+
+  def object_page_id
+    nil
+  end
+
+  def target_scientific_name
+    nil
+  end
+
+  def value_uri
+    object_term&.uri
+  end
+
+  def units
+    units_term&.uri
+  end
 end

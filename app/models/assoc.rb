@@ -16,4 +16,60 @@ class Assoc < ActiveRecord::Base
   has_many :references, through: :assocs_references
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
+
+  def metadata
+    (meta_assocs + references + occurrence.occurrence_metadata).compact
+  end
+
+  def eol_pk
+    "R#{resource_id}-PK#{id}"
+  end
+
+  def page_id
+    node.page_id
+  end
+
+  def scientific_name
+    node.scientific_name.italicized
+  end
+
+  def predicate
+    predicate_term.uri
+  end
+
+  def sex
+    sex_term&.uri
+  end
+
+  def lifestage
+    lifestage_term&.uri
+  end
+
+  def statistical_method
+    statistical_method_term&.uri
+  end
+
+  def object_page_id
+    target_node.page_id
+  end
+
+  def target_scientific_name
+    target_node.scientific_name.italicized
+  end
+
+  def value_uri
+    nil
+  end
+
+  def literal
+    nil
+  end
+
+  def measurement
+    nil
+  end
+
+  def units
+    nil
+  end
 end

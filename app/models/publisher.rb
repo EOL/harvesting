@@ -389,6 +389,10 @@ class Publisher
 
   def build_traits(nodes)
     return unless Trait.where(node_id: nodes.map(&:id)).any?
+    trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method source
+                     object_page_id target_scientific_name value_uri literal measurement units]
+    meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
+                    statistical_method source]
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     simple_meta_fields = %i[predicate_term object_term]
     meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
@@ -400,63 +404,77 @@ class Publisher
                      occurrence: { occurrence_metadata: simple_meta_fields },
                      node: :scientific_name,
                      meta_traits: meta_fields)
+    assocs +=
+      Assoc.primary.published.matched.where(node_id: nodes.map(&:id))
+           .includes(property_fields,
+                     children: meta_fields,
+                     occurrence: { occurrence_metadata: simple_meta_fields },
+                     node: :scientific_name, target_node: :scientific_name,
+                     meta_assocs: meta_fields)
+
     filename = @resource.publish_table_path('traits')
+    meta_file = @resource.publish_table_path('metadata')
     unless File.exist?(filename)
       FileUtils.touch(filename)
-      File.open(filename, 'a') { |file| file.write('[') }
+      File.open(filename, 'w') { |file| file.write("[#{trait_heads.join(',')}\n") }
       @files << filename
     end
-    json = Jbuilder.new { |j| j.traits(traits.reject { |t| t.node.page_id.nil? }) }.target!
-    # File.open(filename, 'a') { |file| file.write(json) }
-    meta_rows << %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
-                    statistical_method source]
-
+    unless File.exist?(meta_file)
+      FileUtils.touch(meta_file)
+      File.open(meta_file, 'w') { |file| file.write("[#{meta_heads.join(',')}\n") }
+      @files << meta_file
+    end
+    CSV.open(filename, 'ab') do |csv|
+      traits.each do |trait|
+        csv << trait_heads.map { |field| trait.send(field) }
+      end
+      assocs.each do |assoc|
+        csv << trait_heads.map { |field| assoc.send(field) }
+      end
+    end
+    CSV.open(meta_file, 'ab') do |csv|
+      traits.each do |trait|
+        trait.metadata.each do |meta|
+          csv << meta_heads.map { |field| build_meta(meta, trait) }
+        end
+      end
+      assocs.each do |assoc|
+        assoc.metadata.each do |meta|
+          csv << meta_heads.map { |field| build_meta(meta, assoc) }
+        end
+      end
+    end
   end
 
-  # NOTE: This order is deterministic and conflated with WebDB's app/models/publishing/pub_traits.rb ... if you change
-  # one, you must change the other.
-  def build_trait(trait)
-    @traits <<
-      ["R#{resource_id}-PK#{id}", # eol_pk
-       node.page_id, # page_id
-       node.scientific_name.italicized, # scientific_name
-       resource_pk, # resource_pk
-       predicate_term.uri, # predicate
-       sex_term.try(:uri), # sex
-       lifestage_term.try(:uri), # lifestage
-       statistical_method_term.try(:uri), # statistical_method
-       source, # source
-       nil, # object_page_id
-       nil, # target_scientific_name
-       object_term.try(:uri), # value_uri
-       literal, # literal
-       measurement, # measurement
-       units_term.try(:uri)] # units
-    (trait.meta_traits + trait.references + trait.children + trait.occurrence.occurrence_metadata).compact.each do |meta|
-      meta_array = []
-      meta_array << "#{meta.class.name}-#{meta.id}" # eol_pk
-      meta_array << "R#{resource_id}-PK#{id}" # trait_eol_pk
-      if meta.is_a?(Reference)
-        # TODO: we should probably make this URI configurable:
-        meta_array << 'http://eol.org/schema/reference/referenceID' # predicate
-        body = meta.body || ''
-        body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
-        body += " #{meta.doi}" unless meta.doi.blank?
-        meta_array << body # literal
-        meta_array += [nil, nil, nil, nil, nil, nil, nil] # Nothing else on references.
-      else
-        meta_array << meta.predicate_term.try(:uri) # predicate
-        meta_array << meta.literal # literal
-        meta_array << meta.measurement if meta.respond_to?(:measurement) # measurement
-        meta_array << meta.object_term.try(:uri) # value_uri
-        meta_array << meta.units_term.try(:uri) if meta.respond_to?(:units_term) # units
-        meta_array << meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term # sex
-        meta_array << meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term # lifestage
-        meta_array << meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term) # statistical_method
-        meta_array << meta.source if meta.respond_to?(:source) # source
-      end
-      @metadata << meta_array
+  def build_meta(meta, trait)
+    meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
+                    statistical_method source]
+    predicate = nil
+    literal = nil
+    if meta.is_a?(Reference)
+      # TODO: we should probably make this URI configurable:
+      predicate = 'http://eol.org/schema/reference/referenceID'
+      body = meta.body || ''
+      body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
+      body += " #{meta.doi}" unless meta.doi.blank?
+      literal = body
+    else
+      predicate = meta.predicate_term&.uri
+      literal = meta.literal
     end
+
+    [ "#{meta.class.name}-#{meta.id}",
+      trait.eol_pk,
+      predicate,
+      literal,
+      meta.respond_to?(:measurement) ? meta.measurement : nil,
+      meta.respond_to?(:units_term) ? meta.object_term&.uri : nil,
+      meta.respond_to?(:units_term) ? meta.units_term&.uri : nil,
+      meta.respond_to?(:sex_term) ? meta.sex_term&.uri : nil,
+      meta.respond_to?(:lifestage_term) ? meta.lifestage_term&.uri : nil,
+      meta.respond_to?(:statistical_method_term) ? meta.statistical_method_term&.uri : nil,
+      meta.respond_to?(:source) ? meta.source : nil
+    ]
   end
 
   def finish_traits_files
