@@ -14,6 +14,8 @@ class Harvest < ActiveRecord::Base
   has_many :assoc_traits, inverse_of: :harvest, dependent: :delete_all
   has_many :identifiers, inverse_of: :harvest # destroyed via nodes
   has_many :media, inverse_of: :harvest # destroyed via nodes
+  has_many :articles, inverse_of: :harvest # destroyed via nodes
+  has_many :vernaculars, inverse_of: :harvest # destroyed via nodes
 
   before_destroy :remove_content
 
@@ -79,7 +81,7 @@ class Harvest < ActiveRecord::Base
 
   def remove_content
     # Because node.destroy does all of this work but MUCH less efficiently, we fake it all here:
-    [ScientificName, Medium, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference, NodesReference,
+    [ScientificName, Medium, Article, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference, NodesReference,
      Reference].each do |klass|
        klass.where(harvest_id: id).delete_all
      end

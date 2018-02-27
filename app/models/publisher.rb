@@ -1,5 +1,4 @@
-# Publish to the website database as quick as you can, please. NOTE: We will NOT publish Terms or traits in this code.
-# We'll keep that a pull, since this codebase doesn't understand TraitBank/neo4j.
+# Publish to the website database as quick as you can, please. NOTE: We will NOT publish Terms in this code.
 class Publisher
   attr_accessor :resource
 
@@ -29,6 +28,11 @@ class Publisher
     @locs = {} # This will store ALL of the locations (the acutal values), and will persist.
     @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
     @limit = 10_000
+    @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method source
+                      object_page_id target_scientific_name value_uri literal measurement units]
+    @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
+                     statistical_method source]
+
     reset_vars
   end
 
@@ -67,7 +71,6 @@ class Publisher
       learn_resource_id
       WebDb.init
       slurp_nodes
-      # TODO: YOU WERE HERE: finish_traits_files
     end
     log('Done. Check your files:')
     @files.each { |file| log(file.to_s) }
@@ -93,13 +96,16 @@ class Publisher
                                 media: %i[node license language references bibliographic_citation location],
                                 articles: %i[node license language references bibliographic_citation location])
     if testing
-      nodes_to_hashes(@nodes.limit(100))
+      nodes = @nodes.limit(100)
+      nodes_to_hashes(nodes)
+      build_traits(nodes)
     else
       @nodes.find_in_batches(batch_size: @limit) do |nodes|
         reset_vars
         measure_time('Studied nodes') { nodes_to_hashes(nodes) }
         count_children # No need to time this, it's super-fast (about a 20th of a second in production)
         measure_time('Loaded new data') { load_hashes }
+        measure_time('Built traits') { build_traits(nodes) }
       end
     end
   end
@@ -117,7 +123,6 @@ class Publisher
       build_articles(node)
       # TODO: links
     end
-    # TODO: YOU WERE HERE build_traits(nodes)
   end
 
   def node_to_struct(node)
@@ -389,10 +394,7 @@ class Publisher
 
   def build_traits(nodes)
     return unless Trait.where(node_id: nodes.map(&:id)).any?
-    trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method source
-                     object_page_id target_scientific_name value_uri literal measurement units]
-    meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
-                    statistical_method source]
+    log("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     simple_meta_fields = %i[predicate_term object_term]
     meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
@@ -404,51 +406,53 @@ class Publisher
                      occurrence: { occurrence_metadata: simple_meta_fields },
                      node: :scientific_name,
                      meta_traits: meta_fields)
-    assocs +=
-      Assoc.primary.published.matched.where(node_id: nodes.map(&:id))
-           .includes(property_fields,
-                     children: meta_fields,
+    log("#{traits.size} Traits (filtered)...")
+    assocs =
+      Assoc.published.where(node_id: nodes.map(&:id))
+           .includes(:predicate_term, :sex_term, :lifestage_term, :references,
                      occurrence: { occurrence_metadata: simple_meta_fields },
                      node: :scientific_name, target_node: :scientific_name,
                      meta_assocs: meta_fields)
 
+    log("#{assocs.size} Associations (filtered)...")
     filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
-    unless File.exist?(filename)
-      FileUtils.touch(filename)
-      File.open(filename, 'w') { |file| file.write("[#{trait_heads.join(',')}\n") }
-      @files << filename
-    end
-    unless File.exist?(meta_file)
-      FileUtils.touch(meta_file)
-      File.open(meta_file, 'w') { |file| file.write("[#{meta_heads.join(',')}\n") }
-      @files << meta_file
-    end
+    start_traits_file(filename, @trait_heads)
+    start_traits_file(meta_file, @meta_heads)
     CSV.open(filename, 'ab') do |csv|
       traits.each do |trait|
-        csv << trait_heads.map { |field| trait.send(field) }
+        csv << @trait_heads.map { |field| trait.send(field) }
       end
       assocs.each do |assoc|
-        csv << trait_heads.map { |field| assoc.send(field) }
+        csv << @trait_heads.map { |field| assoc.send(field) }
       end
     end
     CSV.open(meta_file, 'ab') do |csv|
-      traits.each do |trait|
-        trait.metadata.each do |meta|
-          csv << meta_heads.map { |field| build_meta(meta, trait) }
-        end
-      end
-      assocs.each do |assoc|
-        assoc.metadata.each do |meta|
-          csv << meta_heads.map { |field| build_meta(meta, assoc) }
-        end
-      end
+      add_meta_to_csv(traits, csv)
+      add_meta_to_csv(assocs, csv)
     end
   end
 
+  def start_traits_file(filename, heads)
+    unless File.exist?(filename)
+      FileUtils.touch(filename)
+      File.open(filename, 'w') { |file| file.write(heads.join(',') + "\n") }
+      @files << filename
+    end
+  end
+
+  def add_meta_to_csv(traits, csv)
+    count = 0
+    traits.each do |trait|
+      trait.metadata.each do |meta|
+        count += 1
+        csv << @meta_heads.map { |field| build_meta(meta, trait) }
+      end
+    end
+    log("#{count} metadata added.")
+  end
+
   def build_meta(meta, trait)
-    meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
-                    statistical_method source]
     predicate = nil
     literal = nil
     if meta.is_a?(Reference)
@@ -462,7 +466,7 @@ class Publisher
       predicate = meta.predicate_term&.uri
       literal = meta.literal
     end
-
+    # q.v.: @meta_heads for order, here:
     [ "#{meta.class.name}-#{meta.id}",
       trait.eol_pk,
       predicate,
@@ -475,13 +479,6 @@ class Publisher
       meta.respond_to?(:statistical_method_term) ? meta.statistical_method_term&.uri : nil,
       meta.respond_to?(:source) ? meta.source : nil
     ]
-  end
-
-  def finish_traits_files
-    %i[traits associations].each do |type|
-      filename = @resource.publish_table_path(type)
-      File.open(filename, 'a') { |file| file.write(']') } if File.exist?(filename)
-    end
   end
 
   def get_owner(object)
@@ -546,7 +543,7 @@ class Publisher
       file = @resource.publish_table_path(type.pluralize)
       File.unlink(file) if File.exist?(file)
     end
-    %i[traits associations].each do |type|
+    %i[traits metadata].each do |type|
       file = @resource.publish_table_path(type)
       File.unlink(file) if File.exist?(file)
     end
