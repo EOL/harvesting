@@ -100,6 +100,7 @@ class Publisher
       nodes_to_hashes(nodes)
       build_traits(nodes)
     else
+      remove_existing_pub_files
       @nodes.find_in_batches(batch_size: @limit) do |nodes|
         reset_vars
         measure_time('Studied nodes') { nodes_to_hashes(nodes) }
@@ -508,7 +509,6 @@ class Publisher
   end
 
   def load_hashes
-    remove_existing_pub_files
     new_bcs = new_bib_cits_only
     load_hashes_from_array(new_bcs)
     new_locs = new_locs_only
