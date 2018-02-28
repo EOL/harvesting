@@ -73,7 +73,11 @@ class Publisher
       slurp_nodes
     end
     log('Done. Check your files:')
-    @files.each { |file| log(file.to_s) }
+    @files.each do |file|
+      sizes = `wc -l #{file}`
+      size = sizes.strip.split.first.to_i
+      log("(#{size} lines) #{file.to_s}")
+    end
   end
 
   def measure_time(what, &_block)
