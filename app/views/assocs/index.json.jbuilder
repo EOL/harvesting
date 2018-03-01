@@ -1,6 +1,6 @@
 json.total_pages @assocs.total_pages
 json.current_page @assocs.current_page
-json.assocs @assocs do |assoc|
+json.assocs @assocs.select { |a| a.node && a.target_node } do |assoc|
   json.page_id assoc.node.page_id
   json.scientific_name assoc.node.scientific_name.italicized
   json.object_page_id assoc.target_node.page_id
