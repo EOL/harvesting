@@ -451,7 +451,7 @@ class Publisher
     traits.each do |trait|
       trait.metadata.each do |meta|
         count += 1
-        csv << @meta_heads.map { |field| build_meta(meta, trait) }
+        csv << build_meta(meta, trait)
       end
     end
     log("#{count} metadata added.")
