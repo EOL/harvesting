@@ -30,6 +30,13 @@ class ResourcesController < ApplicationController
     redirect_to @resource
   end
 
+  def re_create_tsv
+    @resource = Resource.find(params[:resource_id])
+    @resource.delay(queue: 'harvest').publish
+    flash[:notice] = t('resources.flash.re_create_tsv_enqueued')
+    redirect_to @resource
+  end
+
   def re_read_xml
     @resource = Resource.find(params[:resource_id])
     @resource.re_read_xml

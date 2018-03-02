@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   resources :resources do
     get :harvest
     get :re_read_xml
+    get :re_create_tsv
     resources :formats, except: [:destroy]
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]

@@ -174,6 +174,7 @@ en:
       back: "back to all resources"
       harvest: "harvest"
       re_read_xml: "re-read XML"
+      re_create_tsv: "re-create TSV"
       show_all: "Include un-harvested"
     create:
       action: "create a new resource"
@@ -189,6 +190,7 @@ en:
         other: "Added harvest job to the queue, with %{count} jobs ahead of it."
       imported: "Created a new resource from opendata.eol.org!"
       re_read_xml: "Formats updated to latest version of meta.xml file."
+      re_create_tsv_enqueued: "The publishing TSV files will be re-created in the background."
       updated: "Saved changes to <a href=%{path}>%{name}</a>"
     index:
       failures:
