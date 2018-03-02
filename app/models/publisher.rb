@@ -398,11 +398,13 @@ class Publisher
   end
 
   def build_traits(nodes)
-    return unless Trait.where(node_id: nodes.map(&:id)).any?
+    return unless Trait.where(node_id: nodes.map(&:id)).any? ||
+                  Assoc.where(node_id: nodes.map(&:id)).any?
     log("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     simple_meta_fields = %i[predicate_term object_term]
     meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
+    assoc_meta_fields = simple_meta_fields + %i[units_term]
     property_fields = meta_fields + %i[sex_term lifestage_term references]
     traits =
       Trait.primary.published.matched.where(node_id: nodes.map(&:id))
@@ -417,7 +419,7 @@ class Publisher
            .includes(:predicate_term, :sex_term, :lifestage_term, :references,
                      occurrence: { occurrence_metadata: simple_meta_fields },
                      node: :scientific_name, target_node: :scientific_name,
-                     meta_assocs: meta_fields)
+                     meta_assocs: assoc_meta_fields)
 
     log("#{assocs.size} Associations (filtered)...")
     filename = @resource.publish_table_path('traits')
@@ -428,7 +430,8 @@ class Publisher
       traits.each do |trait|
         csv << @trait_heads.map { |field| trait.send(field) }
       end
-      assocs.each do |assoc|
+      # Skip associations that don't have BOTH nodes defined (they are meaningless):
+      assocs.select { |a| a.node && a.target_node }.each do |assoc|
         csv << @trait_heads.map { |field| assoc.send(field) }
       end
     end

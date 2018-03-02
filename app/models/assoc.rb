@@ -46,7 +46,7 @@ class Assoc < ActiveRecord::Base
   end
 
   def statistical_method
-    statistical_method_term&.uri
+    nil
   end
 
   def object_page_id
