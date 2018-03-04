@@ -74,15 +74,15 @@ class ResourceHarvester
         # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
         elsif Harvest.where(resource_id: @resource.id).running.count > 1
           harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
-          raise Exception.new("MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
+          raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
         end
         fast_forward = false
         @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
-        self.send(stage)
+        send(stage)
       end
     rescue => e
       if @harvest
-        log_err(e)
+        log_err("#{e} at #{@format} #{@file}:#{@line_num} ")
         @harvest.update_attribute(:failed_at, Time.now)
       end
     ensure
@@ -106,62 +106,78 @@ class ResourceHarvester
     @harvest.update_attribute(:fetched_at, Time.now)
   end
 
+  # TODO: Clean the code for the next few methods. This was pretty sloppy.
+
   def validate_each_file
-    # TODO ... this should check ID consistentcy too...
+    # TODO: this should check ID consistentcy too...
     # @harvest.update_attribute(:consistency_checked_at, Time.now)
-    # TODO: I don't think the mkdirs do not belong here. I wasn't sure where would be best. TODO: really the dir names
+    # TODO: I don't think the mkdirs belong here. I wasn't sure where would be best. TODO: really the dir names
     # here (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join('converted_csv')) unless
       Dir.exist?(Rails.public_path.join('converted_csv'))
     @harvest.log_call
     each_format do
       fields = {}
-      expected_by_file = @headers.dup
-      @format.fields.each_with_index do |field, i|
-        raise(Exceptions::ColumnMissing.new("#{@format.represents}: #{field.expected_header}")) if @headers[i].nil?
-        unless field.expected_header == @headers[i]
-          raise(Exceptions::ColumnMismatch.new("#{@format.represents} expected '#{field.expected_header}' as column #{i}, but got "\
-            "'#{@headers[i]}'"))
-        end
-        fields[@headers[i]] = field
-        expected_by_file.delete(@headers[i])
-      end
-      debugger if expected_by_file.size.positive?
-      raise(Exceptions::ColumnUnmatched.new("#{@format.represents}: #{expected_by_file.join(',')}")) if expected_by_file.size.positive?
+      expected_by_file = check_each_column
+      raise(Exceptions::ColumnUnmatched, "TOO MANY COLUMNS: #{@format.represents}: #{expected_by_file.join(',')}") if
+        expected_by_file.size.positive?
       @file = @format.converted_csv_path
       CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
-        @parser.rows_as_hashes do |row, line|
-          @line_num = line
-          csv_row = []
-          @headers.each do |header|
-            check = fields[header]
-            next unless check
-            val = row[header]
-            if val.blank?
-              unless check.can_be_empty?
-                log_err(Exceptions::ColumnEmpty.new("Illegal empty value for #{@format.represents}/#{header} "\
-                  "on line #{@line_num}"))
-                end
-            end
-            if check.must_be_integers?
-              unless row[header].match?(/\a[\d,]+\z/m)
-                log_err(Exceptions::ColumnNonInteger.new("Illegal non-integer for #{@format.represents}/#{header} "\
-                  "on line #{@line_num}, got #{val}"))
-              end
-            elsif check.must_know_uris?
-              unless uri_exists?(val)
-                log_err(Exceptions::ColumnUnknownUri.new("Illegal unknown URI <#{val}> for "\
-                  "#{@format.represents}/#{header} on line #{@line_num}"))
-              end
-            end
-            csv_row << val
-          end
-          csv << csv_row
-        end
+        validate_csv(csv, fields)
       end
       @converted[@format.id] = true
     end
     @harvest.update_attribute(:validated_at, Time.now)
+  end
+
+  def check_each_column
+    expected_by_file = @headers.dup
+    @format.fields.each_with_index do |field, i|
+      raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
+        @headers[i].nil?
+      unless field.expected_header == @headers[i]
+        raise(Exceptions::ColumnMismatch, "COLUMN MISMATCH: #{@format.represents} expected "\
+          "'#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'")
+      end
+      fields[@headers[i]] = field
+      expected_by_file.delete(@headers[i])
+    end
+    expected_by_file
+  end
+
+  def validate_csv(csv, fields)
+    @parser.rows_as_hashes do |row, line|
+      @line_num = line
+      csv_row = []
+      @headers.each do |header|
+        chek_header(csv_row, fields, row, header)
+      end
+      csv << csv_row
+    end
+  end
+
+  def check_header(csv_row, fields, row, header)
+    check = fields[header]
+    next unless check
+    val = row[header]
+    if val.blank?
+      unless check.can_be_empty?
+        log_err(Exceptions::ColumnEmpty.new("Illegal empty value for #{@format.represents}/#{header} "\
+          "on line #{@line_num}"))
+      end
+    end
+    if check.must_be_integers?
+      unless row[header].match?(/\a[\d,]+\z/m)
+        log_err(Exceptions::ColumnNonInteger.new("Illegal non-integer for #{@format.represents}/#{header} "\
+          "on line #{@line_num}, got #{val}"))
+      end
+    elsif check.must_know_uris?
+      unless uri_exists?(val)
+        log_err(Exceptions::ColumnUnknownUri.new("Illegal unknown URI <#{val}> for "\
+          "#{@format.represents}/#{header} on line #{@line_num}"))
+      end
+    end
+    csv_row << val
   end
 
   def convert_to_csv
@@ -485,18 +501,24 @@ class ResourceHarvester
   end
 
   def log_err(e)
-    puts "ERROR: #{e.message}"
-    @harvest.log("ERROR: #{e.message}", e: e, cat: :errors)
     # custom exceptions have no backtrace, for some reason:
     if e.backtrace # rubocop:disable Style/SafeNavigation
-      e.backtrace.each do |trace|
+      e.backtrace.reverse.each_with_index do |trace, i|
         break if trace.match?(/\bpry\b/)
         break if trace.match?(/\delayed_job.rb\b/)
         break if trace.match?(/\bbundler\b/)
         break if trace.match?(/^script/)
+        break if trace.match?(/^ruby/)
+        break if i > 9
+        trace.gsub!(/^.*\/gems\//, 'gem:') # Remove ruby version stuff...
+        trace.gsub!(/^.*\/ruby\//, 'ruby:') # Remove ruby version stuff...
+        trace.gsub!(/^.*\/harvester\//, './') # Remove website path..
         @harvest.log(trace, cat: :errors)
       end
     end
+    message = e.message.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1') # No need for hex memory address!
+    puts "ERROR: #{message}"
+    @harvest.log("ERROR: #{message}", e: e, cat: :errors)
     @harvest.update_attribute(:failed_at, Time.now)
     raise e
   end
