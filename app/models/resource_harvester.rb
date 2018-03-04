@@ -82,7 +82,7 @@ class ResourceHarvester
       end
     rescue => e
       if @harvest
-        log_err("#{e} at #{@format} #{@file}:#{@line_num} ")
+        log_err(Exception.new("#{e} at #{@format} #{@file}:#{@line_num}"))
         @harvest.update_attribute(:failed_at, Time.now)
       end
     ensure
@@ -117,8 +117,9 @@ class ResourceHarvester
       Dir.exist?(Rails.public_path.join('converted_csv'))
     @harvest.log_call
     each_format do
-      fields = {}
-      expected_by_file = check_each_column
+      col_checks = check_each_column
+      expected_by_file = col_checks[:expected]
+      fields = col_checks[:fields]
       raise(Exceptions::ColumnUnmatched, "TOO MANY COLUMNS: #{@format.represents}: #{expected_by_file.join(',')}") if
         expected_by_file.size.positive?
       @file = @format.converted_csv_path
@@ -131,6 +132,7 @@ class ResourceHarvester
   end
 
   def check_each_column
+    fields = {}
     expected_by_file = @headers.dup
     @format.fields.each_with_index do |field, i|
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
@@ -142,7 +144,7 @@ class ResourceHarvester
       fields[@headers[i]] = field
       expected_by_file.delete(@headers[i])
     end
-    expected_by_file
+    { expected: expected_by_file, fields: fields }
   end
 
   def validate_csv(csv, fields)
@@ -150,7 +152,7 @@ class ResourceHarvester
       @line_num = line
       csv_row = []
       @headers.each do |header|
-        chek_header(csv_row, fields, row, header)
+        check_header(csv_row, fields, row, header)
       end
       csv << csv_row
     end
@@ -158,7 +160,7 @@ class ResourceHarvester
 
   def check_header(csv_row, fields, row, header)
     check = fields[header]
-    next unless check
+    return unless check
     val = row[header]
     if val.blank?
       unless check.can_be_empty?
