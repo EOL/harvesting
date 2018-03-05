@@ -224,6 +224,7 @@ module Store
 
     def build_occurrence
       @models[:occurrence][:harvest_id] = @harvest.id
+      @models[:occurrence][:resource_id] = @resource.id
       meta = @models[:occurrence].delete(:meta) || {}
       if @models[:occurrence][:sex]
         sex = @models[:occurrence].delete(:sex)
@@ -297,7 +298,8 @@ module Store
         klass = MetaTrait
         if !@models[:trait][:of_taxon] && parent.blank?
           klass = OccurrenceMetadatum
-          datum.delete(:source) # TODO: handle this...
+          datum[:resource_pk] = "meta_#{@models[:trait][:resource_pk]}"
+          datum[:occurrence_resource_pk] = @models[:trait][:occurrence_resource_pk]
         end
         prepare_model_for_store(klass, datum)
       end

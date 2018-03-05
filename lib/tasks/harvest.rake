@@ -5,7 +5,13 @@ namespace :harvest do
 
   task undo: :environment do
     harvest = Harvest.last
-    raise 'ABORTING: Harvest is more than 24 hours old; do it manually.' if harvest.created_at < 1.day.ago
+    resource = harvest.resource
+    identifier = "Harvest##{harvest.id} for #{resource.name} (##{resource.id} #{resource.abbr})"
+    raise "ABORTING: #{identifier} is more than 24 hours old, are you sure? FORCE=1 if so." if
+      harvest.created_at < 1.day.ago && !ENV.key?('FORCE')
+    puts "About to destroy #{identifier}..."
+    puts 'YOU HAVE THREE SECONDS TO CANCEL...'
+    sleep(3)
     harvest.destroy
   end
 end

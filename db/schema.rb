@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180214173412) do
+ActiveRecord::Schema.define(version: 20180305154055) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -516,6 +516,7 @@ ActiveRecord::Schema.define(version: 20180214173412) do
     t.string  "resource_pk",                limit: 255
     t.string  "measurement",                limit: 255
     t.string  "occurrence_resource_pk",     limit: 255
+    t.text    "source",                     limit: 65535
   end
 
   add_index "occurrence_metadata", ["harvest_id", "occurrence_resource_pk"], name: "index_occurrence_metadata_on_harvest_id_and_occurrence_resourc", using: :btree
@@ -529,6 +530,7 @@ ActiveRecord::Schema.define(version: 20180214173412) do
     t.string  "node_resource_pk",  limit: 255, null: false
     t.string  "sex_term_id",       limit: 255
     t.string  "lifestage_term_id", limit: 255
+    t.integer "resource_id",       limit: 4
   end
 
   add_index "occurrences", ["harvest_id", "node_resource_pk"], name: "index_occurrences_on_harvest_id_and_node_resource_pk", using: :btree
