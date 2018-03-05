@@ -171,6 +171,7 @@ class Resource < ActiveRecord::Base
     Medium.where(resource_id: id).delete_all
     Trait.where(resource_id: id).delete_all
     MetaTrait.where(resource_id: id).delete_all
+    OccurrenceMetadatum.where(resource_id: id).delete_all
     Assoc.where(resource_id: id).delete_all
     MetaAssoc.where(resource_id: id).delete_all
     Identifier.where(resource_id: id).delete_all

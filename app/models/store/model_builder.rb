@@ -264,8 +264,9 @@ module Store
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:trait, TraitsReference)
       @models[:trait][:of_taxon] = true unless @models[:trait].key?(:of_taxon)
-      occ_meta = !@models[:trait][:of_taxon] && parent.blank?
-      debugger if occ_meta # Ahhh, this is occurrence metadata, which I've never tested before... now you have a test!
+      # Example of occurrence metadata: Leptonychotes weddellii from PanTHERia. Should have metadata of body mass of
+      # 368000 grams on its basal metabolic rate of 113712 mL/hr O2.
+      occ_meta = !@models[:trait][:of_taxon] && parent.blank?  # Convenience flag to denote occurrence metadata.
       predicate = @models[:trait].delete(:predicate)
       predicate_term = find_or_create_term(predicate, type: 'predicate')
       @models[:trait][:predicate_term_id] = predicate_term.id
@@ -318,7 +319,7 @@ module Store
         datum[:predicate_term_id] = predicate_term.id
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
-        datum[:trait_resource_pk] = trait.resource_pk
+        datum[:trait_resource_pk] = assoc.resource_pk
         datum = convert_meta_value(datum, value)
         prepare_model_for_store(MetaAssoc, datum)
       end
