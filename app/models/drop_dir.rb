@@ -20,7 +20,7 @@ class DropDir
       elsif File.exist?("#{dir}/meta.xml")
         resource = Resource.from_xml(dir)
         Rails.logger.info("DropDir: will harvest resource #{resource.name} (#{resource.id})")
-        resource.enqueue
+        resource.enqueue_harvest
         true
       else
         # TODO: we can assume it's an Excel and write a .from_excel method much like .from_xml...

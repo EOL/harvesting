@@ -26,3 +26,31 @@ HarvestJob = Struct.new(:resource_id) do
     1
   end
 end
+
+ReHarvestJob = Struct.new(:resource_id) do
+  def perform
+    Resource.find(resource_id).re_harvest
+  end
+
+  def queue_name
+    'harvest'
+  end
+
+  def max_attempts
+    1
+  end
+end
+
+ResumeHarvestJob = Struct.new(:resource_id) do
+  def perform
+    Resource.find(resource_id).resume
+  end
+
+  def queue_name
+    'harvest'
+  end
+
+  def max_attempts
+    1
+  end
+end

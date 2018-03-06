@@ -97,12 +97,27 @@ class Resource < ActiveRecord::Base
     Resource.from_xml(where, self)
   end
 
-  def enqueue
+  def enqueue_harvest
     harvest_pending!
     Delayed::Job.enqueue(HarvestJob.new(id))
   end
 
+  def enqueue_re_harvest
+    harvest_pending!
+    Delayed::Job.enqueue(ReHarvestJob.new(id))
+  end
+
+  def enqueue_resume_harvest
+    harvest_pending!
+    Delayed::Job.enqueue(ResumeHarvestJob.new(id))
+  end
+
   def harvest
+    ResourceHarvester.new(self).start
+  end
+
+  def re_harvest
+    harvests.each(&:destroy)
     ResourceHarvester.new(self).start
   end
 

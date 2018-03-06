@@ -8,7 +8,12 @@
     = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
 
 .ui.button
-  = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+  - if @resource.harvests.completed.any?
+    = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
+  - elsif @resource.harvests.any?
+    = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
+  - else
+    = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
 .ui.button
   = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
 .ui.button

@@ -14,6 +14,12 @@ namespace :harvest do
     sleep(3)
     harvest.destroy
   end
+
+  desc 'Re-Harvest the resource identified by ENV var: ID or ABBR. (Destroys old harvests)'
+  task redo: :environment do
+    resource = ENV['ID'] ? Resource.find(ENV['ID']) : Resource.find_by_abbr(ENV['ABBR'])
+    resource.re_harvest
+  end
 end
 
 desc 'Harvest the resource identified by ENV var: ID or ABBR.'

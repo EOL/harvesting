@@ -14,18 +14,31 @@ class ResourcesController < ApplicationController
     @formats = Format.where(resource_id: @resource.id).abstract
     respond_to do |fmt|
       fmt.html do
-        @root_nodes = @resource.nodes.published.root.order("canonical, resource_pk").page(params[:page] || 1)
+        @root_nodes = @resource.nodes.published.root.order('canonical, resource_pk').page(params[:page] || 1)
                                .per(params[:per] || 10)
       end
       # TODO: add the "since" param...
-      fmt.json { }
+      fmt.json {}
     end
   end
 
   def harvest
+    enqueue_harvest
+  end
+
+  def re_harvest
+    enqueue_harvest(:re)
+  end
+
+  def resume_harvest
+    enqueue_harvest(:resume)
+  end
+
+  def enqueue_harvest(type = '')
     @resource = Resource.find(params[:resource_id])
     count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count
-    @resource.enqueue
+    type = "#{type}_" unless type.blank?
+    @resource.send("enqueue_#{type}harvest")
     flash[:notice] = t('resources.flash.harvest_enqueued', count: count)
     redirect_to @resource
   end
@@ -73,12 +86,11 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
 
     if @resource.update(resource_params)
-      flash[:notice] = I18n.t("resources.flash.updated", name: @resource.name,
-        path: resource_path(@resource))
+      flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
       redirect_to @resource
     else
       # TODO: some kind of hint as to the problem, in a flash...
-      render "edit"
+      render 'edit'
     end
   end
 
@@ -86,15 +98,15 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
     name = @resource.name
     @resource.destroy
-    flash[:notice] = I18n.t("resources.flash.destroyed", name: name)
+    flash[:notice] = I18n.t('resources.flash.destroyed', name: name)
     redirect_to resources_path
   end
 
-private
+  private
 
   def resource_params
-    params.require(:resource).permit(:name, :abbr, :pk_url, :opendata_url,
-      :min_days_between_harvests, :harvest_day_of_month, :harvest_months_json,
-      :auto_publish, :not_trusted, :might_have_duplicate_taxa)
+    params.require(:resource)
+          .permit(:name, :abbr, :pk_url, :opendata_url, :min_days_between_harvests, :harvest_day_of_month,
+                  :harvest_months_json, :auto_publish, :not_trusted, :might_have_duplicate_taxa)
   end
 end

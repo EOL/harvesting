@@ -80,7 +80,7 @@ class Resource
       if File.exist?("#{dir}/meta.xml")
         Resource.from_xml(dir, @resource)
         log("...Will harvest resource #{@resource.name} (#{@resource.id})")
-        @resource.enqueue
+        @resource.enqueue_harvest
       else
         fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
       end
