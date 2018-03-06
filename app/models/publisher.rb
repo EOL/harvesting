@@ -29,7 +29,8 @@ class Publisher
     @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
     @limit = 10_000
     @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method source
-                      object_page_id target_scientific_name value_uri literal measurement units]
+                      object_page_id target_scientific_name value_uri literal measurement units normal_measurement
+                      normal_units_uri]
     @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
                      statistical_method source]
 
@@ -410,14 +411,14 @@ class Publisher
       Trait.primary.published.matched.where(node_id: nodes.map(&:id))
            .includes(property_fields,
                      children: meta_fields,
-                     occurrence: { occurrence_metadata: simple_meta_fields },
+                     occurrence: { occurrence_metadata: meta_fields },
                      node: :scientific_name,
                      meta_traits: meta_fields)
     log("#{traits.size} Traits (filtered)...")
     assocs =
       Assoc.published.where(node_id: nodes.map(&:id))
            .includes(:predicate_term, :sex_term, :lifestage_term, :references,
-                     occurrence: { occurrence_metadata: simple_meta_fields },
+                     occurrence: { occurrence_metadata: meta_fields },
                      node: :scientific_name, target_node: :scientific_name,
                      meta_assocs: assoc_meta_fields)
 
@@ -480,7 +481,7 @@ class Publisher
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
-      meta.respond_to?(:units_term) ? meta.object_term&.uri : nil,
+      meta.respond_to?(:object_term) ? meta.object_term&.uri : nil,
       meta.respond_to?(:units_term) ? meta.units_term&.uri : nil,
       meta.respond_to?(:sex_term) ? meta.sex_term&.uri : nil,
       meta.respond_to?(:lifestage_term) ? meta.lifestage_term&.uri : nil,

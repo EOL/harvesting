@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180305154055) do
+ActiveRecord::Schema.define(version: 20180305205301) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -721,6 +721,8 @@ ActiveRecord::Schema.define(version: 20180305154055) do
     t.datetime "created_at",                               null: false
     t.datetime "updated_at",                               null: false
     t.integer  "occurrence_id",              limit: 4
+    t.string   "normal_units_uri",           limit: 255
+    t.string   "normal_measurement",         limit: 255
   end
 
   add_index "traits", ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk", using: :btree

@@ -70,4 +70,28 @@ class Trait < ActiveRecord::Base
   def units
     units_term&.uri
   end
+
+  def convert_measurement
+    return unless measurement
+    num = measurement_to_num
+    if num.is_a?(Numeric) && units_term && !units_term.uri.blank?
+      (n_val, n_unit) = UnitConversions.convert(num, units_term.uri)
+      update_attributes(normal_measurement: n_val, normal_units_uri: n_unit)
+    elsif units_term && !units_term.uri.blank?
+      update_attributes(normal_measurement: num, normal_units_uri: units_term.uri)
+    else
+      update_attributes(normal_measurement: num, normal_units_uri: '')
+    end
+    save
+  end
+
+  def measurement_to_num
+    Integer(measurement)
+  rescue ArgumentError, TypeError
+    begin
+      Float(measurement)
+    rescue ArgumentError, TypeError
+      measurement
+    end
+  end
 end

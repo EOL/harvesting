@@ -576,7 +576,7 @@ class ResourceHarvester
   end
 
   def normalize_units
-    # TODO: later...
+    @harvest.convert_trait_units
     @harvest.update_attribute(:units_normalized_at, Time.now)
   end
 

@@ -46,6 +46,10 @@ class Harvest < ActiveRecord::Base
     Medium.download_and_resize(media.missing)
   end
 
+  def convert_trait_units
+    traits.where('measurement IS NOT NULL AND units_term_id IS NOT NULL').find_each(&:convert_measurement)
+  end
+
   def complete
     update_attribute(:completed_at, Time.now)
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)

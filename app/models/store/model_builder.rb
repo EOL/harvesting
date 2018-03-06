@@ -427,14 +427,9 @@ module Store
         removed_by_harvest(klass, key, model[key])
       end
       @new[klass] ||= []
-      begin
-        new_model = klass.send(:new, model)
-        @new[klass] << new_model
-        new_model
-      rescue => e
-        debugger
-        puts "oopsie."
-      end
+      new_model = klass.send(:new, model)
+      @new[klass] << new_model
+      new_model
     end
 
     # TODO: extract to Store::Storage

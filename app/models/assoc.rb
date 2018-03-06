@@ -72,4 +72,12 @@ class Assoc < ActiveRecord::Base
   def units
     nil
   end
+
+  def normal_units_uri
+    nil
+  end
+
+  def normal_measurement
+    nil
+  end
 end
