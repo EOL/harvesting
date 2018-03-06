@@ -134,6 +134,13 @@ class Resource::FromMetaXml
         end
       sep = YAML.safe_load(%(---\n"#{file_config['fieldsTerminatedBy']}"\n))
       lines = YAML.safe_load(%(---\n"#{file_config['linesTerminatedBy']}"\n))
+      file_path = file_config_file.gsub(' ', '\\ ')
+      # Need to check for those stupid \r line endings that mac editors can use:
+      cr_count = `grep -o $'\\r' #{file_path} | wc -l`.chomp.to_i
+      lf_count = `grep -o $'\\n' #{file_path} | wc -l`.chomp.to_i
+      lines = "\r" if lf_count <= 1 && cr_count > 1
+      lines = "\n" if cr_count <= 1 && lf_count > 1
+      # (otherwise, trust what the XML file said ... we just USUALLY can't. Ugh.)
       fmt = Format.create!(
         resource_id: @resource.id,
         harvest_id: nil,
@@ -146,7 +153,7 @@ class Resource::FromMetaXml
         line_sep: lines,
         utf8: file_config['encoding'] =~ /^UTF/
       )
-      headers = `head -n #{file_config['ignoreHeaderLines']} #{file_config_file.gsub(' ', '\\ ')}`.split(sep)
+      headers = `cat #{file_path} | tr "\r" "\n" | head -n #{file_config['ignoreHeaderLines']}`.split(sep)
       headers.last.chomp!
       fields = []
       file_config.css('field').each do |field|

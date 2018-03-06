@@ -24,6 +24,10 @@
     .item
       %strong= "Abbreviation:"
       = @resource.abbr
+  - unless @resource.opendata_url.blank?
+    .item
+      %strong= "OpenData URL:"
+      = link_to(@resource.opendata_url.sub(%r{^.*/}, ''), @resource.opendata_url)
   .item
     %strong= "Minimum Days Between Harvests:"
     = @resource.min_days_between_harvests
