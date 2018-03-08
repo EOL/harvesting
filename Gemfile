@@ -23,6 +23,8 @@ gem 'jbuilder'
 gem 'jquery-rails'
 # Pagination!
 gem 'kaminari'
+# Helps lock processes safely (maybe not REALLY needed for our purposes, but I feel safer with it):
+gem 'lockfile'
 # Use mysql as the database for Active Record
 gem 'mysql2'
 # Debugging:

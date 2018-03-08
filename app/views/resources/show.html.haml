@@ -7,17 +7,24 @@
     •
     = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
 
-.ui.button
-  - if @resource.harvests.completed.any?
-    = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
-  - elsif @resource.harvests.any?
-    = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
-  - else
-    = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
-.ui.button
-  = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
-.ui.button
-  = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
+- if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
+  = t("resources.actions.harvest_in_queue")
+- else
+  .ui.button
+    - if @resource.harvests.completed.any?
+      = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
+      - if @resource.opendata_url
+        .ui.button
+          = link_to(t("resources.actions.re_download_opendata_harvest"),
+            resource_re_download_opendata_harvest_path(@resource))
+    - elsif @resource.harvests.any?
+      = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
+    - else
+      = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+  .ui.button
+    = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
+  .ui.button
+    = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
 
 .ui.list
   - unless @resource.abbr.blank?
@@ -95,6 +102,8 @@
         - if fmt.excel?
           = ", sheet ##{fmt.sheet}"
         = "(#{fmt.fields.size} fields)"
+        - lines = `wc -l #{fmt.get_from.gsub(/(\s)/, "\\\1")}`.split.first
+        = "(#{lines} lines)"
 .ui.section
   = link_to(t("resources.show.add_format"), new_resource_format_path(@resource))
 %h2= "Harvests"

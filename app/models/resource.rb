@@ -80,6 +80,40 @@ class Resource < ActiveRecord::Base
     resource
   end
 
+  def lockfile_name
+    "#{path}/harvest.lock"
+  end
+
+  # NOTE: why no #locked? ...Because it's not quite that simple. I
+  def lockfile_exists?
+    File.exist?(lockfile_name)
+  end
+
+  def rm_lockfile
+    File.unlink(lockfile_name) if lockfile_exists?
+  end
+
+  def lock
+    raise "Resource #{id} locked!" if lockfile_exists?
+    lockfile = Lockfile.new(lockfile_name, timeout: 0.01)
+    begin
+      lockfile.lock
+      yield
+    ensure
+      lockfile.unlock
+      rm_lockfile
+    end
+  end
+
+  def any_files_changed?
+    return true if harvests.completed.blank?
+    last_harvest = harvests.completed.last.created_at
+    formats.each do |fmt|
+      return true if File.mtime(fmt.get_from) > last_harvest
+    end
+    false
+  end
+
   def publish_table_path(table)
     path.join("publish_#{table}.tsv")
   end
@@ -97,6 +131,12 @@ class Resource < ActiveRecord::Base
     Resource.from_xml(where, self)
   end
 
+  def re_download_opendata_and_harvest
+    Resource::FromOpenData.reload(self)
+    # TODO: Change this to something nicer, once we can handle deltas.
+    re_harvest
+  end
+
   def enqueue_harvest
     harvest_pending!
     Delayed::Job.enqueue(HarvestJob.new(id))
@@ -110,6 +150,11 @@ class Resource < ActiveRecord::Base
   def enqueue_resume_harvest
     harvest_pending!
     Delayed::Job.enqueue(ResumeHarvestJob.new(id))
+  end
+
+  def enqueue_re_download_opendata_harvest
+    harvest_pending!
+    Delayed::Job.enqueue(ReDownloadOpendataHarvestJob.new(id))
   end
 
   def harvest

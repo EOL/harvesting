@@ -34,6 +34,10 @@ class ResourcesController < ApplicationController
     enqueue_harvest(:resume)
   end
 
+  def re_download_opendata_harvest
+    enqueue_harvest(:re_download_opendata)
+  end
+
   def enqueue_harvest(type = '')
     @resource = Resource.find(params[:resource_id])
     count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count

@@ -4,7 +4,11 @@ class Resource
       new(url).parse
     end
 
-    def initialize(url)
+    def self.reload(resource)
+      new(resource.opendata_url, resource).parse
+    end
+
+    def initialize(url, resource = nil)
       # E.g.: https://opendata.eol.org/dataset/anage/resource/2af10fa0-db2a-4908-bc85-505f691419dd
       @url = url
       @partner = nil
@@ -67,22 +71,28 @@ class Resource
         wikipedia: 'wiki'
       }
       @stopwords = %w[a about all are an and be by do know or of on out for in is the this to was with what]
+      @resource = resource
+      @partner = resource.partner if @resource
     end
 
     def parse
       noko = noko_parse(@url)
-      create_resource(noko)
-      get_partner_info(noko.css('.breadcrumb li a')[-2])
-      @resource.fake_partner if @partner.nil?
+      create_resource(noko) unless @resource
+      get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
       file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
+      already_exists = File.exist?("#{@resource.path}/meta.xml")
       dir = DropDir.unpack_file(file)
-      # TODO: Find Excel and write a .from_excel method much like .from_xml...
-      if File.exist?("#{dir}/meta.xml")
-        Resource.from_xml(dir, @resource)
-        log("...Will harvest resource #{@resource.name} (#{@resource.id})")
-        @resource.enqueue_harvest
+      if already_exists
+        log('...Resource already exists; new data is now in place. You may harvest it.')
       else
-        fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
+        # TODO: Find Excel and write a .from_excel method much like .from_xml...
+        if File.exist?("#{dir}/meta.xml")
+          Resource.from_xml(dir, @resource)
+          log("...Will harvest resource #{@resource.name} (#{@resource.id})")
+          @resource.enqueue_harvest
+        else
+          fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
+        end
       end
       @resource
     end
@@ -123,6 +133,7 @@ class Resource
         description: partner_description,
         auto_publish: false
       )
+      @resource.fake_partner unless @partner # (it may have failed)
       @resource.update_attribute(:partner_id, @partner.id)
     end
 
@@ -148,17 +159,17 @@ class Resource
 
     def abbreviate(name)
       return name if name.size < 8
-      words = name.split.map { |n| n.downcase }
+      words = name.split.map(&:downcase)
       words.delete_if { |w| @stopwords.include?(w) }
       words.map do |word|
         sym = word.to_sym
         @abbreviations.key?(sym) ? @abbreviations[sym] : word
       end
       abbr = if words.size > 4
-        words.map { |w| w.first }.join[0..15]
-      else
-        name[0..15]
-      end
+               words.map(&:first).join[0..15]
+             else
+               name[0..15]
+             end
       abbr.gsub(/\s+/, '_')[0..15]
     end
 

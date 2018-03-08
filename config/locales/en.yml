@@ -173,8 +173,10 @@ en:
     actions:
       back: "back to all resources"
       harvest: "harvest"
+      harvest_in_queue: "currently harvesting, wait..."
       re_harvest: "re-harvest"
       resume_harvest: "resume harvest"
+      re_download_opendata_harvest: "Re-download OpenData and harvest"
       re_harvest_confirm: "Are you sure? This will delete all current data before re-trying!"
       re_read_xml: "re-read XML"
       re_create_tsv: "re-create TSV"

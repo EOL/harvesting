@@ -54,3 +54,17 @@ ResumeHarvestJob = Struct.new(:resource_id) do
     1
   end
 end
+
+ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
+  def perform
+    Resource.find(resource_id).re_download_opendata_and_harvest
+  end
+
+  def queue_name
+    'harvest'
+  end
+
+  def max_attempts
+    1
+  end
+end

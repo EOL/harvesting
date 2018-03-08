@@ -65,30 +65,37 @@ class ResourceHarvester
   def start
     @start_time = Time.now
     Searchkick.disable_callbacks
-    begin
-      fast_forward = @harvest && !@harvest.stage.nil?
-      steps = Harvest.stages.each_key do |stage|
-        if fast_forward && harvest.stage != stage
-          @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
-          next
-        # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
-        elsif Harvest.where(resource_id: @resource.id).running.count > 1
-          harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
-          raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
+    @resource.lock do
+      begin
+        fast_forward = @harvest && !@harvest.stage.nil?
+        Harvest.stages.each_key do |stage|
+          if fast_forward && harvest.stage != stage
+            @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
+            next
+          # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
+          elsif Harvest.where(resource_id: @resource.id).running.count > 1
+            harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
+            raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
+          end
+          fast_forward = false
+          @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
+          send(stage)
         end
-        fast_forward = false
-        @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
-        send(stage)
+      rescue Lockfile::TimeoutLockError => e
+        if @harvest
+          log_err(Exception.new('Already running!'))
+          @harvest.update_attribute(:failed_at, Time.now)
+        end
+      rescue => e
+        if @harvest
+          log_err(e)
+          @harvest.update_attribute(:failed_at, Time.now)
+        end
+      ensure
+        Searchkick.enable_callbacks
+        took = Time.delta_s(@start_time)
+        @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id}), took #{took}", cat: :ends) if @harvest
       end
-    rescue => e
-      if @harvest
-        log_err(Exception.new("#{e} at #{@format} #{@file}:#{@line_num}"))
-        @harvest.update_attribute(:failed_at, Time.now)
-      end
-    ensure
-      Searchkick.enable_callbacks
-      took = Time.delta_s(@start_time)
-      @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id}), took #{took}", cat: :ends) if @harvest
     end
   end
 
@@ -100,6 +107,9 @@ class ResourceHarvester
 
   # grab the file from each format
   def fetch_files
+    unless @resource.any_files_changed?
+      raise 'No files have changed!'
+    end
     # TODO: we should compress the files.
     # https://stackoverflow.com/questions/9204423/how-to-unzip-a-file-in-ruby-on-rails
     Harvest::Fetcher.fetch_format_files(@harvest)
@@ -164,19 +174,19 @@ class ResourceHarvester
     val = row[header]
     if val.blank?
       unless check.can_be_empty?
-        log_err(Exceptions::ColumnEmpty.new("Illegal empty value for #{@format.represents}/#{header} "\
-          "on line #{@line_num}"))
+        raise(Exceptions::ColumnEmpty, "Illegal empty value for #{@format.represents}/#{header} "\
+          "on line #{@line_num}")
       end
     end
     if check.must_be_integers?
       unless row[header].match?(/\a[\d,]+\z/m)
-        log_err(Exceptions::ColumnNonInteger.new("Illegal non-integer for #{@format.represents}/#{header} "\
-          "on line #{@line_num}, got #{val}"))
+        raise(Exceptions::ColumnNonInteger, "Illegal non-integer for #{@format.represents}/#{header} "\
+          "on line #{@line_num}, got #{val}")
       end
     elsif check.must_know_uris?
       unless uri_exists?(val)
-        log_err(Exceptions::ColumnUnknownUri.new("Illegal unknown URI <#{val}> for "\
-          "#{@format.represents}/#{header} on line #{@line_num}"))
+        raise(Exceptions::ColumnUnknownUri, "Illegal unknown URI <#{val}> for "\
+          "#{@format.represents}/#{header} on line #{@line_num}")
       end
     end
     csv_row << val
@@ -292,16 +302,11 @@ class ResourceHarvester
           debugger
           raise e
         end
-        begin
-          # NOTE: see Store::ModelBuilder mixin for the methods called here:
-          # (Why? Composition.)
-          if @diff == :removed
-            destroy_for_fmt
-          else # new or changed
-            build_models
-          end
-        rescue => e
-          log_err(e)
+        # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
+        if @diff == :removed
+          destroy_for_fmt
+        else # new or changed
+          build_models
         end
       end
       log_warning('There were no differences in this file!') unless any_diff
@@ -519,8 +524,9 @@ class ResourceHarvester
       end
     end
     message = e.message.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1') # No need for hex memory address!
-    puts "ERROR: #{message}"
-    @harvest.log("ERROR: #{message}", e: e, cat: :errors)
+    summary = "ERROR: #{message} on #{@format} #{@file}:#{@line_num}"
+    puts summary
+    @harvest.log(summary, e: e, cat: :errors)
     @harvest.update_attribute(:failed_at, Time.now)
     raise e
   end
