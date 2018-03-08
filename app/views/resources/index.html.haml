@@ -1,4 +1,5 @@
 %h1= t("resources.index.header")
+%h3= t("resources.index.jobs_header")
 %p
   .ui.label
     %i.inbox.icon
@@ -6,6 +7,25 @@
   .ui.label
     %i.image.icon
     = t("resources.index.media_jobs", count: Delayed::Job.where(queue: 'media', locked_at: nil).count)
+- jobs = Delayed::Job.where(queue: 'harvest').limit(10)
+%h4= t("resources.index.harvest_jobs_header", count: jobs.size)
+- if jobs.any?
+  .ui.horizontal.bulleted.list
+    - jobs.each do |job|
+      - handler = YAML::load(job.handler)
+      - type = job.handler.sub(/\n.*$/m, '').sub(/^.*:/, '')
+      -# TODO: yes, this doesn't belong here. Controller, maybe?
+      - known_types = {'ReDownloadOpendataHarvestJob' => 're-download and reharvest',
+        'HarvestJob' => '',
+        'ReHarvestJob' => 're-harvest',
+        'ResumeHarvestJob' => 'resume harvest' }
+      - type = known_types[type] if known_types.key?(type)
+      .item
+        - if handler.is_a?(Struct) && handler.respond_to?(:resource_id) && (resource = Resource.find(handler.resource_id) rescue nil)
+          = link_to(resource.abbr, resource)
+        - else
+          = t("resources.index.unknown_harvest_job")
+        = "(#{type})" unless type.blank?
 %h2= t("resources.index.harvest_header")
 .ui.segment
   - hlog = Hlog.non_download.last

@@ -203,12 +203,17 @@ en:
         one: "Recent failure:"
         other: "Recent failures:"
       from_url_header: "Import from OpenData:"
+      jobs_header: "Jobs:"
+      harvest_jobs_header:
+        zero: "No Pending Harvests."
+        one: "Pending Harvest:"
+        other: "%{count} Pending Harvests:"
       harvest_jobs:
         zero: "No pending harvests."
         one: "One pending harvest."
         other: "%{count} pending harvests."
       header: "Resource Harvesting Control Panel"
-      harvest_header: "Harvests:"
+      harvest_header: "Log Summary:"
       list_header: "The Resources:"
       media_jobs:
         zero: "No pending media downloads."
