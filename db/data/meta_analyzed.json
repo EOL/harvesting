@@ -669,4 +669,10 @@
 "represents":"to_refs_part",
 "submapping":null,
 "is_unique":false,
+"is_required":false},
+{"term":"http://eol.org/schema/EOLid",
+"for_format":"nodes",
+"represents":"to_nodes_page_id",
+"submapping":null,
+"is_unique":false,
 "is_required":false}]
