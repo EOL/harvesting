@@ -733,7 +733,7 @@ class Publisher
         csv << line
       end
     end
-    @files[filename] = true
+    @files[file] = true
   end
 
   def log(message)
