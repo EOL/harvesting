@@ -1,6 +1,4 @@
-- name = @node.canonical
-- name = "ID: #{@node.resource_pk}" if name.blank?
-%h1= @node.canonical
+%h1= @node.title
 %ul
   %li
     %strong= t('nodes.fields.resource')
@@ -24,7 +22,7 @@
     - if pk = @node.parent_resource_pk
       - if @node.parent
         %strong= t('nodes.fields.parent')
-        = link_to(@node.parent.canonical, @node.parent)
+        = link_to(@node.parent.title, @node.parent)
       - else
         %strong= t('nodes.fields.parent_missing', pk: pk)
     - else
@@ -60,13 +58,13 @@
           .ui.list
             .item
               .header= t('nodes.fields.italicized')
-              = name.try(:italicized).try(:html_safe)
+              = name&.italicized&.html_safe
             .item
               .header= t('nodes.fields.normalized')
-              = name.try(:normalized)
+              = name&.normalized
             .item
               .header= t('nodes.fields.canonical')
-              = @node.try(:canonical)
+              = @node&.canonical
             .item
               .header= t('nodes.fields.authors')
               - if name.authors
@@ -101,7 +99,7 @@
 - else
   %ul
     - @node.children.published.each do |child|
-      %li= link_to(child.canonical, child)
+      %li= link_to(child.title, child)
 
 %h2= t('nodes.headers.media')
 - if @node.media.published.empty?

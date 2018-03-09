@@ -89,6 +89,10 @@ class Node < ActiveRecord::Base
           include: { identifiers: {}, scientific_name: { only: %i[normalized verbatim canonical] } })
   end
 
+  def title
+    canonical.blank? ? "ID: #{resource_pk}" : canonical
+  end
+
   def safe_canonical
     scientific_name&.canonical || "Unamed clade #{resource_pk}"
   end
