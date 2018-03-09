@@ -132,9 +132,10 @@ class Resource < ActiveRecord::Base
   end
 
   def re_download_opendata_and_harvest
+    harvests.destroy_all
     Resource::FromOpenData.reload(self)
     # TODO: Change this to something nicer, once we can handle deltas.
-    re_harvest
+    harvest
   end
 
   def enqueue_harvest
@@ -162,12 +163,21 @@ class Resource < ActiveRecord::Base
   end
 
   def re_harvest
-    harvests.each(&:destroy)
-    ResourceHarvester.new(self).start
+    harvests.destroy_all
+    harvest
   end
 
   def publish
     Publisher.by_resource(self)
+  end
+
+  def parse_names
+    required_harvest = harvests.last
+    raise 'Harvest the resource, fisrt' if required_harvest.nil?
+    harvest.log('Resource requested #parse_names (directly)', cat: :starts)
+    NameParser.for_harvest(required_harvest)
+    harvest.log('Resource completed direct #parse_names', cat: :ends)
+    required_harvest.complete!
   end
 
   def resume_instance
