@@ -13,17 +13,17 @@
   - if @resource.harvests.completed.any?
     .ui.button
       = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
-    - if @resource.opendata_url
-      .ui.button
-        = link_to(t("resources.actions.re_download_opendata_harvest"),
-          resource_re_download_opendata_harvest_path(@resource),
-          data: { confirm: t("resources.actions.re_download_confirm") })
   - elsif @resource.harvests.any?
     .ui.button
       = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
   - else
     .ui.button
       = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+  - if @resource.opendata_url
+    .ui.button
+      = link_to(t("resources.actions.re_download_opendata_harvest"),
+        resource_re_download_opendata_harvest_path(@resource),
+        data: { confirm: t("resources.actions.re_download_confirm") })
   .ui.button
     = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
   .ui.button
