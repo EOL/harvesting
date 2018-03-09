@@ -18,7 +18,7 @@ class Publisher
     raise 'No completed harvests!' unless @logger
     @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
     @web_resource_id = nil
-    @files = []
+    @files = {}
     @nodes = {}
     @pages = {}
     @referents = {} # This will store ALL of the referents (the acutal text), and will persist over batches.
@@ -74,7 +74,7 @@ class Publisher
       slurp_nodes
     end
     log('Done. Check your files:')
-    @files.each do |file|
+    @files.each_key do |file|
       sizes = `wc -l #{file}`
       size = sizes.strip.split.first.to_i
       log("(#{size} lines) #{file.to_s}")
@@ -446,7 +446,7 @@ class Publisher
     unless File.exist?(filename)
       FileUtils.touch(filename)
       File.open(filename, 'w') { |file| file.write(heads.join(',') + "\n") }
-      @files << filename
+      @files[filename] = true
     end
   end
 
@@ -733,7 +733,7 @@ class Publisher
         csv << line
       end
     end
-    @files << file
+    @files[filename] = true
   end
 
   def log(message)
