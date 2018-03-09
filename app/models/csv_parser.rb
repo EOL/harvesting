@@ -57,7 +57,7 @@ class CsvParser
       break if i >= (@header_lines + offset)
       row.each_with_index do |cell, j|
         headers[j] ||= []
-        headers[j] << cell.tr("\r", ' ').tr("\n", ' ')
+        headers[j] << cell&.tr("\r", ' ')&.tr("\n", ' ')
       end
     end
     @headers = []

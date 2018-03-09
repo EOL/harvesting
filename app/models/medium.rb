@@ -67,7 +67,7 @@ class Medium < ActiveRecord::Base
   end
 
   def basename
-    "#{resource_id}.#{resource_pk.tr('^-_A-Za-z0-9', '_')}"
+    "#{resource_id}.#{resource_pk&.tr('^-_A-Za-z0-9', '_')}"
   end
 
   def download_and_resize

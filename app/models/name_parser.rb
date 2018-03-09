@@ -160,7 +160,7 @@ class NameParser
     attributes.merge(
       normalized: norm,
       canonical: canon,
-      authorship: authorships.flat_map { |a| a[:authors].blank? ? [] : a[:authors].map { |n| n.tr(';', '|') } }.join('; '),
+      authorship: authorships.flat_map { |a| a[:authors].blank? ? [] : a[:authors].map { |n| n&.tr(';', '|') } }.join('; '),
       warnings: warns,
       parse_quality: quality,
       year: authorships.map { |a| a[:year] }.compact.sort.first # Yeeesh! We take the earliest year (we only get one!)

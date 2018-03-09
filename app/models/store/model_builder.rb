@@ -344,7 +344,7 @@ module Store
         instance[:object_term_id] = object_term.id
       end
       # NOTE we have to check both for units AND for a numeric value to see if it's "numeric"
-      if instance[:units] || (!Float(value.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
+      if instance[:units] || (!Float(value&.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
         units = instance.delete(:units)
         if units&.match?(URI::ABS_URI)
           units_term = find_or_create_term(units, type: 'units')
@@ -352,7 +352,7 @@ module Store
         elsif !units.blank?
           log_warning("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
         end
-        instance[:measurement] = value.tr(',', '')
+        instance[:measurement] = value&.tr(',', '')
         # NOTE: We are handling unit normalization at the publishing layer for now.
       else
         # TODO: really, we want a robust map of literal values to reasonable URIs, but that should be "filtered".
