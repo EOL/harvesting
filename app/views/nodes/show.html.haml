@@ -11,7 +11,10 @@
     = link_to(@node.page_id, "http://eol.org/pages/#{@node.page_id}")
   %li
     %strong= t('nodes.fields.matching_log')
-    = @node.matching_log.html_safe
+    - if @node.matching_log
+      = @node.matching_log.html_safe
+    - else
+      = "[Empty. Was this harvested prior to Mar 9 2018?]"
   %li
     %strong= t('nodes.fields.ancestors')
     = @node.node_ancestors.map { |na| link_to(na.ancestor.name, na.ancestor) + " <sub>#{na.ancestor.landmark}</sub>".html_safe }.join(' &rarr; ').html_safe
