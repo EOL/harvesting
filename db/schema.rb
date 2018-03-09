@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180305205301) do
+ActiveRecord::Schema.define(version: 20180308202615) do
 
   create_table "agents", force: :cascade do |t|
     t.integer "harvest_id",  limit: 4
@@ -465,13 +465,13 @@ ActiveRecord::Schema.define(version: 20180305205301) do
   add_index "node_ancestors", ["resource_id"], name: "index_node_ancestors_on_resource_id", using: :btree
 
   create_table "nodes", force: :cascade do |t|
-    t.integer  "resource_id",               limit: 4,                   null: false
-    t.integer  "harvest_id",                limit: 4,                   null: false
+    t.integer  "resource_id",               limit: 4,                     null: false
+    t.integer  "harvest_id",                limit: 4,                     null: false
     t.integer  "page_id",                   limit: 4
     t.integer  "parent_id",                 limit: 4
     t.integer  "scientific_name_id",        limit: 4
     t.integer  "removed_by_harvest_id",     limit: 4
-    t.integer  "landmark",                  limit: 4,   default: 0
+    t.integer  "landmark",                  limit: 4,     default: 0
     t.string   "canonical",                 limit: 255
     t.string   "taxonomic_status_verbatim", limit: 255
     t.string   "resource_pk",               limit: 255
@@ -479,9 +479,10 @@ ActiveRecord::Schema.define(version: 20180305205301) do
     t.string   "further_information_url",   limit: 255
     t.string   "rank",                      limit: 255
     t.string   "rank_verbatim",             limit: 255
-    t.boolean  "in_unmapped_area",                      default: false
+    t.boolean  "in_unmapped_area",                        default: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.text     "matching_log",              limit: 65535
   end
 
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree

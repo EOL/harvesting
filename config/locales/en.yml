@@ -147,6 +147,7 @@ en:
       preferred_name: "This is the PREFERRED name"
       resource: "From resource:"
       resource_pk: "ID Used by Resource:"
+      matching_log: "Names Matching Notes:"
       name_parse_quality: "Parse quality:"
       name_rank_verbatim: "Rank (verbatim from resource):"
       name_taxonomic_status: "Taxonomic Status:"

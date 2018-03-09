@@ -6,7 +6,9 @@ Rails.application.routes.draw do
   end
   resources :harvests
   resources :media, only: [:show]
-  resources :nodes, only: [:show]
+  resources :nodes, only: [:show] do
+    get :search, on: :collection
+  end
   # Required for "association" links (e.g.: in the media view)
   resources :licenses, only: [:show]
   resources :languages, only: [:show]

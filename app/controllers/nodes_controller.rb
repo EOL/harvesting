@@ -19,4 +19,8 @@ class NodesController < ApplicationController
   def show
     @node = Node.find(params[:id])
   end
+
+  def search
+    @results = Node.search('*', where: { canonical: params[:q] })
+  end
 end

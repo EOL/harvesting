@@ -26,6 +26,13 @@
         - else
           = t("resources.index.unknown_harvest_job")
         = "(#{type})" unless type.blank?
+%h2 Nodes Search
+.ui.segment
+  = form_tag('nodes/search', method: 'get', class: "ui search") do
+    .ui.icon.input
+      = text_field_tag(:q, nil, placeholder: 'Search...')
+      %i.search.icon
+    = submit_tag('Search', class: "ui button")
 %h2= t("resources.index.harvest_header")
 .ui.segment
   - hlog = Hlog.non_download.last

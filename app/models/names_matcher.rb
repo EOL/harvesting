@@ -103,7 +103,7 @@ class NamesMatcher
     if node.canonical.blank?
       @harvest.log("cannot match node with blank canonical: Node##{node.id}", cat: :warns)
     elsif node.needs_to_be_mapped?
-      if node.parent_id.nil? || node.parent_id == 0 # NOTE: nil is preferred; 0 is "old school"
+      if node.parent_id.nil? || node.parent_id.zero? # NOTE: nil is preferred; 0 is "old school"
         @in_unmapped_area = true
         @ancestors = []
       end
@@ -126,21 +126,20 @@ class NamesMatcher
                   # NOTE: If the node has been flagged (by gnparser) as a virus, then it may ONLY match other viruses.
                   Node.native_virus
                 else
-                  matched_ancestor(node, opts[:ancestor_depth])
+                  matched_ancestor(opts[:ancestor_depth])
                 end
     map_unflagged_node(node, opts)
   end
 
-  def matched_ancestor(node, depth)
+  def matched_ancestor(depth)
     i = 0
     @ancestors.reverse.each do |ancestor|
-      unless ancestor.page_id.nil? || ancestor.in_unmapped_area?
-        if i >= depth
-          @in_unmapped_area = false
-          return ancestor
-        end
-        i += 1
+      next if  ancestor.page_id.nil? || ancestor.in_unmapped_area?
+      if i >= depth
+        @in_unmapped_area = false
+        return ancestor
       end
+      i += 1
     end
     nil
   end
@@ -152,16 +151,16 @@ class NamesMatcher
       'Plantae' => 281,
       'Chromista' => 3352,
       'Fungi' => 5559,
-      'Protozoa' => 4651,
+      'Protozoa' => 4651
     }
     # COMMON KINGDOMS (much easier/faster to hard-code these!):
     if common_exceptions.key?(node.scientific_name.canonical)
-      return save_match(node, common_exceptions[node.scientific_name.canonical])
+      return save_match(node, common_exceptions[node.scientific_name.canonical], 'common kingdom match')
     end
     results = send(@strategies[opts[:strategy]], node.scientific_name)
-    return save_match(node, results.first[:page_id]) if results.total_count == 1
+    return save_match(node, results.first[:page_id], 'single hit') if results.total_count == 1
     return more_than_one_match(node, results, opts) if results.total_count > 1
-    return unmapped(node, 'virus', opts) if node.scientific_name.virus?
+    return unmapped(node, 'virus') if node.scientific_name.virus?
     opts[:strategy] += 1
     # NOTE: mmmmmaybe we want to do a sanity check here and abort if the name is
     # just NOT in the database at all, and NOT go through all of the strategies.
@@ -174,10 +173,10 @@ class NamesMatcher
     if @strategies[opts[:strategy]].nil? # We've tried everything at this ancestor depth.
       opts[:ancestor_depth] ||= 1
       opts[:ancestor_depth] += 1
-      next_ancestor = matched_ancestor(node, opts[:ancestor_depth])
+      next_ancestor = matched_ancestor(opts[:ancestor_depth])
       # Too far! We must stop:
       if opts[:ancestor_depth] > @max_ancestor_depth || next_ancestor.nil? || next_ancestor == @ancestor
-        return unmapped(node, "no results (depth: #{opts[:ancestor_depth]}).", opts)
+        return unmapped(node, "no results (depth: #{opts[:ancestor_depth]}).")
       end
       @ancestor = next_ancestor
       opts[:strategy] = @first_non_author_strategy_index
@@ -186,7 +185,7 @@ class NamesMatcher
   end
 
   def more_than_one_match(node, matching_nodes, opts = {})
-    puts ".. Oh fun! #{matching_nodes.total_count} matches for \"#{node.canonical}\" via #{@strategies[opts[:strategy]]}"
+    logs = ["#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"]
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
@@ -195,12 +194,13 @@ class NamesMatcher
       scores[matching_node][:score] = 0
       # NOTE: we are unsure of how effective this is; we really need to pay # attention to how this performs.
       if scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
-        puts ".. IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}"
+        logs << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
+          "of #{@ancestors.size}"
         scores[matching_node][:matching_ancestors] = 0
         # This is just a warning, since it won't match, but might be worth investigating, since it's *possible* we're
         # skipping a better match.
-        @harvest.log("insufficient ancestry matches for node #{node.id} vs node #{matching_node.id} ; matches " \
-          "#{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}", cat: :names_matches)
+        logs << "insufficient ancestry matches vs node #{matching_node.id} ; matches " \
+          "#{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}"
       else
         scores[matching_node][:score] =
           scores[matching_node][:matching_children] * @child_match_weight +
@@ -220,35 +220,36 @@ class NamesMatcher
       end
     end
     simple_scores = {}
-    if top_scores = scores.sort_by { |k,v| 0 - v[:score] }
+    if (top_scores = scores.sort_by { |_, v| 0 - v[:score] })
       top_scores[0..4].reverse.each { |k, v| simple_scores[k.id] = v }
     end
     if best_score.zero?
-      unmapped(node, "best score was 0: #{simple_scores.inspect}")
+      logs << "best score was 0: #{simple_scores.inspect}"
+      unmapped(node, logs.join('; '))
     elsif tie
-      message = "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
+      logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
         "#{best_match.canonical} = #{scores[best_match].inspect} "\
         "VS #{tie.canonical} = #{scores[tie].inspect}"
-      unmapped(node, message, cat: :warns)
+      unmapped(node, logs.join('; '))
     else
-      @harvest.log("Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
-        "#{simple_scores.inspect}", cat: :names_matches)
-      save_match(node, best_match['page_id'])
+      logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
+        "#{simple_scores.inspect}"
+      save_match(node, best_match['page_id'], logs.join('; '))
     end
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
   end
 
-  def save_match(node, page_id)
-    node.assign_attributes(page_id: page_id)
+  def save_match(node, page_id, log = nil)
+    node.assign_attributes(page_id: page_id, matching_log: log)
     @node_updates << node
     true # Just avoiding a large return value.
   end
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
-  def unmapped(node, message, opts = {})
+  def unmapped(node, message)
     @unmatched << "#{node.canonical} (##{node.id})"
     @in_unmapped_area = false if @resource.id == 1 # NOTE: DWH is resource ID 1, and is always "mapped"
-    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area)
+    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: message)
     @node_updates << node
     true # Just avoiding a large return value.
   end
@@ -256,7 +257,7 @@ class NamesMatcher
   def update_nodes
     @harvest.log_call
     return if @node_updates.empty?
-    Node.import!(@node_updates, on_duplicate_key_update: [:page_id, :in_unmapped_area])
+    Node.import!(@node_updates, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
     true # Just avoiding a large return value.
   end
 
@@ -279,10 +280,12 @@ class NamesMatcher
 
   def log_unmatched
     return if @unmatched.blank?
-    if @unmatched.size > 100
-      @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. First 50: #{@unmatched[0..50].join('; ')}", cat: :names_matches)
+    if @unmatched.size > 10
+      @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. "\
+        "First 10: #{@unmatched[0..9].join('; ')}", cat: :names_matches)
     else
-      @harvest.log("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}", cat: :names_matches)
+      @harvest.log("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}",
+                   cat: :names_matches)
     end
   end
 end

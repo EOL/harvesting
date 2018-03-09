@@ -1,0 +1,6 @@
+%h1 Search Results
+.ui.list
+  - @results.each do |node|
+    .item
+      = link_to(node.canonical, node)
+      = "(#{node.resource.name})"
