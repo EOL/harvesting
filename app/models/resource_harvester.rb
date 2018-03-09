@@ -199,6 +199,7 @@ class ResourceHarvester
         @file = @format.converted_csv_path
         CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
           @parser.rows_as_hashes do |row, line|
+            @line_num = line
             csv_row = []
             # Un-quote cells; we use a special quote char:
             line.map! { |cell| cell =~ /^".*"$/ ? cell.sub(/^"/, '').sub(/"$/, '') : cell  }
@@ -524,7 +525,7 @@ class ResourceHarvester
       end
     end
     message = e.message.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1') # No need for hex memory address!
-    summary = "ERROR: #{message} on #{@format} #{@file}:#{@line_num}"
+    summary = "ERROR: #{message} on #{@format.represents} #{@file}:#{@line_num}"
     puts summary
     @harvest.log(summary, e: e, cat: :errors)
     @harvest.update_attribute(:failed_at, Time.now)

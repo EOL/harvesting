@@ -36,7 +36,6 @@ class CsvParser
         puts "WARNING: Re-reading #{@path_to_file} with LF insteead of CR."
         @row_sep = "\n"
       else
-        debugger
         raise e
       end
       retry
