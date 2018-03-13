@@ -1,10 +1,10 @@
 %strong= "#{link_to(l(harv.created_at, format: :short), harv)}:".html_safe
-- if harv.completed_at
-  %strong Completed:
-  = "#{l(harv.completed_at, format: :short)}"
-- elsif harv.failed_at
+- if harv.failed_at
   %strong Failed:
   = "#{l(harv.failed_at, format: :short)}"
+- elsif harv.completed_at
+  %strong Completed:
+  = "#{l(harv.completed_at, format: :short)}"
 - elsif harv.indexed_at
   %strong Indexed:
   = #{l(harv.indexed_at, format: :short)}"
@@ -39,6 +39,6 @@
   %strong Fetched:
   = l(harv.fetched_at, format: :short)
 - else
-  \...just started...
+  = harv.stage
 - if harv.time_in_minutes
   = "(took #{harv.time_in_minutes} minutes)"

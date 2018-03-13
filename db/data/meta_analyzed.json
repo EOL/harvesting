@@ -681,5 +681,11 @@
   "represents":"to_nodes_accepted_name_fk",
   "submapping":null,
   "is_unique":false,
-  "is_required":false}
+  "is_required":false},
+{"term":"http://rs.tdwg.org/ac/terms/furtherInformationURL",
+"for_format":"nodes",
+"represents":"to_nodes_further_information_url",
+"submapping":null,
+"is_unique":false,
+"is_required":false}
 ]

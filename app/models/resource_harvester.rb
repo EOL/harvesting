@@ -84,12 +84,10 @@ class ResourceHarvester
       rescue Lockfile::TimeoutLockError => e
         if @harvest
           log_err(Exception.new('Already running!'))
-          @harvest.update_attribute(:failed_at, Time.now)
         end
       rescue => e
         if @harvest
           log_err(e)
-          @harvest.update_attribute(:failed_at, Time.now)
         end
       ensure
         Searchkick.enable_callbacks
@@ -300,7 +298,6 @@ class ResourceHarvester
           end
         rescue => e
           log_info "Failed to parse row #{@line_num}..."
-          debugger
           raise e
         end
         # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
@@ -342,38 +339,27 @@ class ResourceHarvester
   def store_new
     @new.each do |klass, models|
       log_info "Storing #{models.size} #{klass.name.pluralize}"
-      begin
-        # Grouping them might not be necssary, but it sure makes debugging easier...
-        group_size = 1000
-        g_count = 1
-        models.in_groups_of(group_size, false) do |group|
-          log_info "... #{g_count * group_size}" if (g_count % 10).zero?
-          g_count += 1
-          # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
-          # DB validations are adequate and we want to go faster:
-          klass.import! group, validate: false
-        end
-      rescue => e
-        debugger
-        1
+      # Grouping them might not be necssary, but it sure makes debugging easier...
+      group_size = 1000
+      g_count = 1
+      models.in_groups_of(group_size, false) do |group|
+        log_info "... #{g_count * group_size}" if (g_count % 10).zero?
+        g_count += 1
+        # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
+        # DB validations are adequate and we want to go faster:
+        klass.import! group, validate: false
       end
     end
     @harvest.update_attribute(:stored_at, Time.now)
   end
 
-  # TODO - extract to Store::Storage
+  # TODO: extract to Store::Storage
   def mark_old
     @old.each do |klass, by_keys|
       log_info("Marking old #{klass.name}") unless by_keys.empty?
       by_keys.each do |key, pks|
         pks.in_groups_of(1000, false) do |group|
-          begin
-            klass.send(:where, { key => group, :resource_id => @resource.id }).
-              update_all(removed_by_harvest_id: @harvest.id)
-          rescue => e
-            debugger
-            2
-          end
+          klass.send(:where, key => group, :resource_id => @resource.id).update_all(removed_by_harvest_id: @harvest.id)
         end
       end
     end
@@ -509,10 +495,10 @@ class ResourceHarvester
   end
 
   def log_err(e)
+    puts "GENERAL ERROR"
     # custom exceptions have no backtrace, for some reason:
-    summary = "ERROR: #{e.message&.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1')}"
-    @harvest.log(summary, e: e, cat: :errors, line: @line_num, format: @format)
-    @harvest.update_attribute(:failed_at, Time.now)
+    @harvest.log('', e: e, cat: :errors, line: @line_num, format: @format)
+    @harvest.fail
     raise e
   end
 

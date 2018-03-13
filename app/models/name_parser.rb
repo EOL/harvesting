@@ -32,7 +32,6 @@ class NameParser
             updates << @names[result['verbatim']]
           rescue => e
             @harvest.log("error reading line #{i}", cat: :errors)
-            debugger if Rails.env.development?
             raise(e)
           end
         end

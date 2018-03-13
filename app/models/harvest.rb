@@ -50,6 +50,11 @@ class Harvest < ActiveRecord::Base
     traits.where('measurement IS NOT NULL AND units_term_id IS NOT NULL').find_each(&:convert_measurement)
   end
 
+  def fail
+    now = Time.now
+    update_attributes(failed_at: now, completed_at: now)
+  end
+
   def complete
     update_attribute(:completed_at, Time.now)
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
@@ -72,21 +77,24 @@ class Harvest < ActiveRecord::Base
     backtrace = []
     message ||= ''
     if options[:e] && options[:e]&.backtrace # rubocop:disable Style/SafeNavigation
-      options[:e].backtrace.reverse.each_with_index do |trace, i|
-        break if trace.match?(/\bpry\b/)
-        break if trace.match?(/\delayed_job.rb\b/)
-        break if trace.match?(/\bbundler\b/)
-        break if trace.match?(/^script/)
-        break if trace.match?(/^ruby/)
-        break if i > 9
-        trace.gsub!(/^.*\/gems\//, 'gem:') # Remove ruby version stuff...
-        trace.gsub!(/^.*\/ruby\//, 'ruby:') # Remove ruby version stuff...
-        trace.gsub!(/^.*\/harvester\//, './') # Remove website path..
+      lines_shown = 0
+      options[:e].backtrace.each do |trace|
+        next if trace.match?(/\bpry\b/)
+        next if trace.match?(/\delayed_job.rb\b/)
+        next if trace.match?(/\bbundler\b/)
+        next if trace.match?(/\bscript\b/)
+        next if trace.match?(/\bruby\b/)
+        next if trace.match?(/\bgems\b/)
+        next if trace.match?(/\b\.rbenv\b/)
+        break if lines_shown > 5
+        trace.gsub!(%r{#{Rails.root}}, '.') # Remove website path..
         backtrace << trace
+        lines_shown += 1
       end
+      message += '; ' unless message.blank?
+      message += "ERROR: #{options[:e]&.message&.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1')}" # No need for hex memory address!
     end
-    message += '; ' unless message.blank?
-    message += "ERROR: #{options[:e]&.message&.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1')}" # No need for hex memory address!
+    options[:format] = nil if options[:format].is_a?(String) # Sometimes it's "none" or the like.
     hash = {
       harvest: self,
       category: options[:cat],
@@ -97,6 +105,7 @@ class Harvest < ActiveRecord::Base
     }
     # TODO: we should be able to configure whether this outputs to STDOUT:
     puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
+    puts "-- #{backtrace.join("\n")}"
     STDOUT.flush
     hlogs << Hlog.create!(hash.merge(format: options[:format]))
   end

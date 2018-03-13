@@ -115,24 +115,19 @@ module Store
           # DUPES_OK   raise "ILLEGAL DUPLICATE: #{ancestry_joined}->#{sci_name}"
           # DUPES_OK end
         else # New ancestry...
-          begin
-            model =
-              if @diff == :new
-                model = { harvest_id: @harvest.id, resource_id: @resource.id, rank_verbatim: rank,
-                          parent_resource_pk: prev, resource_pk: ancestor_pk }
-                prepare_model_for_store(Node, model)
-                name = { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
-                         verbatim: ancestor_pk, taxonomic_status_verbatim: 'HARVEST ANCESTOR' }
-                prepare_model_for_store(ScientificName, name)
-              else
-                # NOTE: This will happen less often, so I'm allowing DB call; if this becomes problematic, we can
-                # (of course) cache these...
-                Node.find_by_resource_pk(ancestor_pk)
-              end
-          rescue => e
-            debugger
-            puts "phoey!"
-          end
+          model =
+            if @diff == :new
+              model = { harvest_id: @harvest.id, resource_id: @resource.id, rank_verbatim: rank,
+                        parent_resource_pk: prev, resource_pk: ancestor_pk }
+              prepare_model_for_store(Node, model)
+              name = { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
+                       verbatim: ancestor_pk, taxonomic_status_verbatim: 'HARVEST ANCESTOR' }
+              prepare_model_for_store(ScientificName, name)
+            else
+              # NOTE: This will happen less often, so I'm allowing DB call; if this becomes problematic, we can
+              # (of course) cache these...
+              Node.find_by_resource_pk(ancestor_pk)
+            end
           # DUPES_OK @nodes_by_ancestry[ancestry_joined] ||= [] # Remember that we don't need to do this again.
           # DUPES_OK @nodes_by_ancestry[ancestry_joined] << sci_name
           @nodes_by_ancestry[ancestry_joined] = true
@@ -171,8 +166,8 @@ module Store
     def build_medium
       # TODO: handle this later:
       return if @models[:medium][:is_article]
-      debugger unless @models[:medium][:resource_pk]
-      debugger unless @models[:medium][:node_resource_pk]
+      raise 'MISSING IDENTIFIER FOR MEDIUM!' unless @models[:medium][:resource_pk]
+      raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
       @models[:medium][:harvest_id] = @harvest.id
       @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
