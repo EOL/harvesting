@@ -62,5 +62,11 @@ module Store
       @models[:trait][:meta] ||= {}
       @models[:trait][:meta][field.submapping] = val
     end
+
+    def to_traits_attributions_fk(field, val)
+      @models[:trait] ||= {}
+      @models[:trait][:attributions] ||= []
+      @models[:trait][:attributions] << val
+    end
   end
 end

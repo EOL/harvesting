@@ -133,6 +133,12 @@ module Store
       @models[:medium][:ref_fks] = val
     end
 
+    def to_media_attributions_fk(field, val)
+      @models[:medium] ||= {}
+      @models[:medium][:attributions] ||= []
+      @models[:medium][:attributions] << val
+    end
+
     def to_media_lat(field, val)
       @models[:location] ||= {}
       @models[:location][:lat] = val

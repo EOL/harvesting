@@ -29,7 +29,7 @@ module Store
       build_assoc if @models[:assoc]
       build_attribution if @models[:attribution]
       build_ref if @models[:reference]
-      # TODO: still need to build agent, attribution, article, js_map, link, map, sound, video
+      # TODO: still need to build article, js_map (?), link, map, sound, video
     end
 
     def build_licenses
@@ -165,7 +165,7 @@ module Store
     # NOTE: this can and should fail if there was no node PK or if it's unmatched:
     def build_medium
       # TODO: handle this later:
-      return if @models[:medium][:is_article]
+      raise 'ARTICLES UNSUPPORTED' if @models[:medium][:is_article]
       raise 'MISSING IDENTIFIER FOR MEDIUM!' unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
@@ -176,6 +176,7 @@ module Store
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
       build_references(:medium, MediaReference)
+      build_attributions(Medium, @models[:medium])
 
       # TODO: there are some other normalizations and checks we should do here.
       prepare_model_for_store(Medium, @models[:medium])
@@ -282,6 +283,7 @@ module Store
       klass = OccurrenceMetadatum if occ_meta
       @models[:trait].delete(:of_taxon) if occ_meta
       @models[:trait].delete(:source) if occ_meta # TODO: we should allow (and show) this. :S
+      build_attributions(Trait, @models[:trait])
       trait = prepare_model_for_store(klass, @models[:trait])
       meta.each do |key, value|
         datum = {}
@@ -310,6 +312,7 @@ module Store
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:assoc, AssocsReference)
+      build_attributions(Assoc, @models[:assoc])
       assoc = prepare_model_for_store(Assoc, @models[:assoc])
       meta.each do |key, value|
         datum = {}
@@ -336,11 +339,30 @@ module Store
     def build_attribution
       @models[:attribution][:resource_id] ||= @resource.id
       @models[:attribution][:harvest_id] ||= @harvest.id
-      @models[:attribution][:resource_pk]
-      @models[:attribution][:name]
-      @models[:attribution][:role]
-      @models[:attribution][:email]
-      @models[:attribution][:url]
+      @models[:attribution][:role] = symbolize(@models[:attribution][:role])
+      if (other_info = @models[:attribution].delete(:other_info))
+        @models[:attribution][:other_info] = other_info.to_json
+      end
+      prepare_model_for_store(Attribution, @models[:attribution])
+    end
+
+    def build_attributions(klass, model)
+      return if model[:attributions].blank?
+      model[:attributions].each do |fk|
+        content_attribution = {
+          content_type: klass.to_s,
+          content_resource_fk: model[:resource_pk],
+          attribution_resource_fk: fk,
+          resource_id: @resource.id,
+          harvest_id: @harvest.id
+        }
+        prepare_model_for_store(ContentAttribution, content_attribution)
+      end
+      model.delete[:attributions]
+    end
+
+    def symbolize(str)
+      str.downcase.gsub(/\W+/, '_').underscore.gsub(/_+$/, '').gsub(/^_+/, '').gsub(/_+/, '_')
     end
 
     def convert_trait_value(instance)
@@ -390,7 +412,8 @@ module Store
           uri: uri, name: name, definition: I18n.t('terms.auto_created'),
           comment: "Auto-added during harvest ##{@harvest.id}. A human needs to edit this.",
           attribution: @resource.name, is_hidden_from_overview: true,
-          is_hidden_from_glossary: true)
+          is_hidden_from_glossary: true
+        )
         # TODO: This isn't necessarily a problem with the measurements file; it could be the occurrences. :S
         log_warning("Created #{options[:type] || '(unspecified type of)'} term for #{uri}!")
       end

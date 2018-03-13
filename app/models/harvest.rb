@@ -113,7 +113,7 @@ class Harvest < ActiveRecord::Base
   def remove_content
     # Because node.destroy does all of this work but MUCH less efficiently, we fake it all here:
     [ScientificName, Medium, Article, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference, NodesReference,
-     Reference].each do |klass|
+     Reference, ContentAttribution, Attribution].each do |klass|
        klass.where(harvest_id: id).delete_all
      end
     nodes.pluck(:id).in_groups_of(5_000, false) do |batch|

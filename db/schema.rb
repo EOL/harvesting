@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180313174710) do
+ActiveRecord::Schema.define(version: 20180313182745) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -146,13 +146,19 @@ ActiveRecord::Schema.define(version: 20180313174710) do
   end
 
   create_table "content_attributions", force: :cascade do |t|
-    t.integer "attribution_id", limit: 4,   null: false
-    t.integer "content_id",     limit: 4,   null: false
-    t.string  "content_type",   limit: 255, null: false
+    t.integer "attribution_id",          limit: 4,   null: false
+    t.integer "content_id",              limit: 4,   null: false
+    t.string  "content_type",            limit: 255, null: false
+    t.string  "content_resource_fk",     limit: 255, null: false
+    t.string  "attribution_resource_fk", limit: 255, null: false
+    t.integer "resource_id",             limit: 4,   null: false
+    t.integer "harvest_id",              limit: 4,   null: false
   end
 
   add_index "content_attributions", ["attribution_id"], name: "index_content_attributions_on_attribution_id", using: :btree
+  add_index "content_attributions", ["attribution_resource_fk", "harvest_id"], name: "by_harvest_attribution_resource_fk", using: :btree
   add_index "content_attributions", ["content_type", "content_id"], name: "index_content_attributions_on_content_type_and_content_id", using: :btree
+  add_index "content_attributions", ["content_type", "content_resource_fk", "harvest_id"], name: "by_harvest_content_resource_fk", using: :btree
 
   create_table "data_references", force: :cascade do |t|
     t.integer "reference_id", limit: 4,   null: false
