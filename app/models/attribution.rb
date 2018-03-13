@@ -1,7 +1,6 @@
-# AKA an "agent" ... this is a person or organization that receives credit for some content. TODO: I errantly created an
-# agents table that virtually duplicates this one. I'm going to keep it (because we may decide it's needed), but we
-# should re-think how these are all handled.
+# AKA an "agent" ... this is a person or organization that receives credit for some content. I apologize for changing
+# the name, but, as represented (with a role attached), these really are *attributions*, not "agents". Someday perhaps
+# we'll abstract the two, but not now.
 class Attribution < ActiveRecord::Base
-  belongs_to :role, inverse_of: :attributions
-  has_many :attributions_contents, inverse_of: :attribution
+  has_many :content_attributions, inverse_of: :attribution
 end

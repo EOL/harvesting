@@ -24,5 +24,11 @@ module Store
       @models[:attribution] ||= {}
       @models[:attribution][:url] = val
     end
+
+    def to_attributions_other(field, val)
+      @models[:attribution] ||= {}
+      @models[:attribution][:other_info] ||= {}
+      @models[:attribution][:other_info][field.submapping] = val
+    end
   end
 end

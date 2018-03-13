@@ -16,9 +16,11 @@ class Resource
         america: 'am',
         american: 'am',
         arctic: 'arc',
+        archaebacteria: 'arc',
         atlas: 'atl',
         australia: 'aus',
         australian: 'aus',
+        bacteria: 'bac',
         biology: 'bio',
         catalog: 'cat',
         checklist: 'chk',
@@ -28,9 +30,12 @@ class Resource
         database: 'db',
         distribution: 'dist',
         diversity: 'div',
+        east: 'e',
         ecology: 'eco',
         ecological: 'eco',
         encyclopedia: 'enc',
+        eubacteria: 'eub',
+        fungi: 'fun',
         habitat: 'hab',
         harvard: 'hvd',
         hierarchy: 'hier',
@@ -39,22 +44,29 @@ class Resource
         interactions: 'int',
         journal: 'j',
         living: 'liv',
+        mammal: 'mam',
+        mammals: 'mam',
         marine: 'mar',
         measurements: 'meas',
         national: 'ntl',
         naturalist: 'nat',
         nature: 'nat',
+        north: 'n',
         ocean: 'oc',
         oceans: 'oc',
         oceanic: 'oc',
         pictures: 'pics',
         plant: 'pl',
         plants: 'pl',
+        protist: 'prot',
+        protista: 'prot',
+        protists: 'prot',
         public: 'pub',
         record: 'rec',
         records: 'rec',
         register: 'reg',
         smithsonian: 'si',
+        south: 's',
         species: 'sp',
         states: 's',
         structured: 'struct',
@@ -68,9 +80,10 @@ class Resource
         video: 'vid',
         videos: 'vid',
         wikimedia: 'wiki',
-        wikipedia: 'wiki'
+        wikipedia: 'wiki',
+        west: 'w'
       }
-      @stopwords = %w[a about all are an and be by do know or of on out for in is the this to was with what]
+      @stopwords = %w[a about all are an and be by do know or of on out for in is the this to was with what excel dwc dwca]
       @resource = resource
       @partner = resource.partner if @resource
     end
@@ -154,19 +167,21 @@ class Resource
     end
 
     def strip_string(str)
-      str.gsub(/\s*\(\d+\)\s*/m, '').gsub(/\W+/m, ' ').gsub(/^\s+/m, '').gsub(/\s+$/m, '')
+      str.gsub(/\s*\(\d+\)\s*/m, ' ').gsub(/\W+/m, ' ').gsub(/^\s+/m, '').gsub(/\s+$/m, '')
     end
 
     def abbreviate(name)
       return name if name.size < 8
       words = name.split.map(&:downcase)
       words.delete_if { |w| @stopwords.include?(w) }
-      words.map do |word|
+      words = words.map do |word|
         sym = word.to_sym
         @abbreviations.key?(sym) ? @abbreviations[sym] : word
       end
       abbr = if words.size > 4
                words.map(&:first).join[0..15]
+             elsif words.size > 1
+               words.join('_')[0..15]
              else
                name[0..15]
              end
