@@ -27,6 +27,7 @@ module Store
       build_occurrence if @models[:occurrence]
       build_trait if @models[:trait]
       build_assoc if @models[:assoc]
+      build_attribution if @models[:attribution]
       build_ref if @models[:reference]
       # TODO: still need to build agent, attribution, article, js_map, link, map, sound, video
     end
@@ -335,6 +336,16 @@ module Store
         @models[:reference][:body].blank? && @models[:reference][:parts]
       @models[:reference].delete(:parts)
       prepare_model_for_store(Reference, @models[:reference])
+    end
+
+    def build_attribution
+      @models[:attribution][:resource_id] ||= @resource.id
+      @models[:attribution][:harvest_id] ||= @harvest.id
+      @models[:attribution][:resource_pk]
+      @models[:attribution][:name]
+      @models[:attribution][:role]
+      @models[:attribution][:email]
+      @models[:attribution][:url]
     end
 
     def convert_trait_value(instance)
