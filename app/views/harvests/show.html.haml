@@ -95,6 +95,12 @@
         = log.created_at.strftime('%H:%M:%S')
         )
         = log.message
+        - if log.format?
+          = "(for #{log.format.represents})"
         - if log.line?
           = "(on line #{log.line})"
+        - if log.backtrace?
+          .ui.list
+            - log.backtrace..split("\n").each do |line|
+              .item= line
   = paginate(@logs)

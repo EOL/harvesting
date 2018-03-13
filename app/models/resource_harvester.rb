@@ -510,24 +510,8 @@ class ResourceHarvester
 
   def log_err(e)
     # custom exceptions have no backtrace, for some reason:
-    if e.backtrace # rubocop:disable Style/SafeNavigation
-      e.backtrace.reverse.each_with_index do |trace, i|
-        break if trace.match?(/\bpry\b/)
-        break if trace.match?(/\delayed_job.rb\b/)
-        break if trace.match?(/\bbundler\b/)
-        break if trace.match?(/^script/)
-        break if trace.match?(/^ruby/)
-        break if i > 9
-        trace.gsub!(/^.*\/gems\//, 'gem:') # Remove ruby version stuff...
-        trace.gsub!(/^.*\/ruby\//, 'ruby:') # Remove ruby version stuff...
-        trace.gsub!(/^.*\/harvester\//, './') # Remove website path..
-        @harvest.log(trace, cat: :errors)
-      end
-    end
-    message = e.message.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1') # No need for hex memory address!
-    summary = "ERROR: #{message} on #{@format.represents} #{@file}:#{@line_num}"
-    puts summary
-    @harvest.log(summary, e: e, cat: :errors)
+    summary = "ERROR: #{e.message&.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1')}"
+    @harvest.log(summary, e: e, cat: :errors, line: @line_num, format: @format)
     @harvest.update_attribute(:failed_at, Time.now)
     raise e
   end

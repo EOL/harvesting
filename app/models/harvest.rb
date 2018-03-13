@@ -69,12 +69,30 @@ class Harvest < ActiveRecord::Base
   # Reminder: errors warns infos progs loops starts ends counts queries commands names_matches
   def log(message, options = {})
     options[:cat] ||= :infos
-    trace = options[:e] ? options[:e].backtrace&.join("\n") || options[:e].class : nil
+    backtrace = []
+    message ||= ''
+    if options[:e] && options[:e]&.backtrace # rubocop:disable Style/SafeNavigation
+      options[:e].backtrace.reverse.each_with_index do |trace, i|
+        break if trace.match?(/\bpry\b/)
+        break if trace.match?(/\delayed_job.rb\b/)
+        break if trace.match?(/\bbundler\b/)
+        break if trace.match?(/^script/)
+        break if trace.match?(/^ruby/)
+        break if i > 9
+        trace.gsub!(/^.*\/gems\//, 'gem:') # Remove ruby version stuff...
+        trace.gsub!(/^.*\/ruby\//, 'ruby:') # Remove ruby version stuff...
+        trace.gsub!(/^.*\/harvester\//, './') # Remove website path..
+        backtrace << trace
+      end
+    end
+    message += '; ' unless message.blank?
+    message += "ERROR: #{options[:e]&.message&.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1')}" # No need for hex memory address!
     hash = {
       harvest: self,
       category: options[:cat],
       message: message[0..65_534], # Truncates really long messages, alas...
-      backtrace: trace,
+      backtrace: backtrace.join("\n"),
+      format: options[:format],
       line: options[:line]
     }
     # TODO: we should be able to configure whether this outputs to STDOUT:
