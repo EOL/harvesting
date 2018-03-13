@@ -11,19 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180308202615) do
-
-  create_table "agents", force: :cascade do |t|
-    t.integer "harvest_id",  limit: 4
-    t.string  "resource_pk", limit: 255,   null: false
-    t.string  "full_name",   limit: 255
-    t.string  "role",        limit: 255
-    t.string  "email",       limit: 255
-    t.string  "uri",         limit: 255
-    t.text    "other_info",  limit: 65535
-  end
-
-  add_index "agents", ["harvest_id"], name: "index_agents_on_harvest_id", using: :btree
+ActiveRecord::Schema.define(version: 20180313174710) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -39,7 +27,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.integer  "bibliographic_citation_id", limit: 4
     t.text     "owner",                     limit: 65535, null: false
     t.string   "name",                      limit: 255
-    t.string   "source_url",                limit: 255
+    t.string   "source_url",                limit: 2083
     t.text     "body",                      limit: 65535, null: false
     t.integer  "removed_by_harvest_id",     limit: 4
     t.datetime "created_at",                              null: false
@@ -140,31 +128,31 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.string   "resource_pk",           limit: 255,   null: false
     t.string   "name",                  limit: 255
     t.string   "email",                 limit: 255
-    t.text     "value",                 limit: 65535, null: false
     t.integer  "removed_by_harvest_id", limit: 4
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
+    t.text     "other_info",            limit: 65535
+    t.string   "role",                  limit: 255
+    t.string   "url",                   limit: 2083
   end
 
   add_index "attributions", ["harvest_id", "resource_pk"], name: "index_attributions_on_harvest_id_and_resource_pk", using: :btree
   add_index "attributions", ["harvest_id"], name: "index_attributions_on_harvest_id", using: :btree
-
-  create_table "attributions_contents", force: :cascade do |t|
-    t.integer "attribution_id", limit: 4,   null: false
-    t.integer "content_id",     limit: 4,   null: false
-    t.string  "content_type",   limit: 255, null: false
-    t.integer "role_id",        limit: 4,   null: false
-  end
-
-  add_index "attributions_contents", ["attribution_id"], name: "index_attributions_contents_on_attribution_id", using: :btree
-  add_index "attributions_contents", ["content_type", "content_id"], name: "index_attributions_contents_on_content_type_and_content_id", using: :btree
-  add_index "attributions_contents", ["role_id"], name: "index_attributions_contents_on_role_id", using: :btree
 
   create_table "bibliographic_citations", force: :cascade do |t|
     t.text     "body",       limit: 65535
     t.datetime "created_at",               null: false
     t.datetime "updated_at",               null: false
   end
+
+  create_table "content_attributions", force: :cascade do |t|
+    t.integer "attribution_id", limit: 4,   null: false
+    t.integer "content_id",     limit: 4,   null: false
+    t.string  "content_type",   limit: 255, null: false
+  end
+
+  add_index "content_attributions", ["attribution_id"], name: "index_content_attributions_on_attribution_id", using: :btree
+  add_index "content_attributions", ["content_type", "content_id"], name: "index_content_attributions_on_content_type_and_content_id", using: :btree
 
   create_table "data_references", force: :cascade do |t|
     t.integer "reference_id", limit: 4,   null: false
@@ -285,12 +273,12 @@ ActiveRecord::Schema.define(version: 20180308202615) do
   end
 
   create_table "licenses", force: :cascade do |t|
-    t.string   "name",                      limit: 255,                 null: false
-    t.string   "source_url",                limit: 255
-    t.string   "icon_url",                  limit: 255
-    t.boolean  "can_be_chosen_by_partners",             default: false, null: false
-    t.datetime "created_at",                                            null: false
-    t.datetime "updated_at",                                            null: false
+    t.string   "name",                      limit: 255,                  null: false
+    t.string   "source_url",                limit: 2083
+    t.string   "icon_url",                  limit: 2083
+    t.boolean  "can_be_chosen_by_partners",              default: false, null: false
+    t.datetime "created_at",                                             null: false
+    t.datetime "updated_at",                                             null: false
   end
 
   create_table "links", force: :cascade do |t|
@@ -301,7 +289,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.integer  "harvest_id",             limit: 4,     null: false
     t.integer  "language_id",            limit: 4
     t.string   "name",                   limit: 255
-    t.string   "source_url",             limit: 255
+    t.string   "source_url",             limit: 2083
     t.text     "description",            limit: 65535, null: false
     t.integer  "removed_by_harvest_id",  limit: 4
     t.datetime "created_at",                           null: false
@@ -335,12 +323,12 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.string   "guid",                      limit: 255,               null: false
     t.string   "resource_pk",               limit: 255,               null: false
     t.string   "node_resource_pk",          limit: 255,               null: false
-    t.string   "unmodified_url",            limit: 255
+    t.string   "unmodified_url",            limit: 2083
     t.string   "name_verbatim",             limit: 255
     t.string   "name",                      limit: 255
-    t.string   "source_page_url",           limit: 255
-    t.string   "source_url",                limit: 255
-    t.string   "base_url",                  limit: 255
+    t.string   "source_page_url",           limit: 2083
+    t.string   "source_url",                limit: 2083
+    t.string   "base_url",                  limit: 2083
     t.string   "rights_statement",          limit: 255
     t.string   "usage_statement",           limit: 255
     t.string   "sizes",                     limit: 255
@@ -476,7 +464,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.string   "taxonomic_status_verbatim", limit: 255
     t.string   "resource_pk",               limit: 255
     t.string   "parent_resource_pk",        limit: 255
-    t.string   "further_information_url",   limit: 255
+    t.string   "further_information_url",   limit: 2083
     t.string   "rank",                      limit: 255
     t.string   "rank_verbatim",             limit: 255
     t.boolean  "in_unmapped_area",                        default: false
@@ -546,7 +534,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.string   "name",         limit: 255,                   null: false
     t.string   "abbr",         limit: 16
     t.string   "short_name",   limit: 32,    default: "",    null: false
-    t.string   "homepage_url", limit: 255,   default: "",    null: false
+    t.string   "homepage_url", limit: 2083,  default: "",    null: false
     t.text     "description",  limit: 65535,                 null: false
     t.string   "links_json",   limit: 255,   default: "{}",  null: false
     t.boolean  "auto_publish",               default: false, null: false
@@ -565,7 +553,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.integer  "resource_id",           limit: 4,     null: false
     t.integer  "harvest_id",            limit: 4,     null: false
     t.string   "resource_pk",           limit: 255,   null: false
-    t.string   "url",                   limit: 255
+    t.string   "url",                   limit: 2083
     t.string   "doi",                   limit: 255
     t.integer  "removed_by_harvest_id", limit: 4
     t.datetime "created_at",                          null: false
@@ -584,7 +572,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.string   "harvest_months_json",       limit: 255,   default: "[]",  null: false
     t.string   "name",                      limit: 255,                   null: false
     t.string   "abbr",                      limit: 16
-    t.string   "pk_url",                    limit: 255,   default: "$PK", null: false
+    t.string   "pk_url",                    limit: 2083,  default: "$PK", null: false
     t.boolean  "auto_publish",                            default: false, null: false
     t.boolean  "not_trusted",                             default: false, null: false
     t.boolean  "hold_harvesting",                         default: false, null: false
@@ -603,16 +591,10 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.integer  "dataset_license_id",        limit: 4
     t.string   "dataset_rights_holder",     limit: 255
     t.string   "dataset_rights_statement",  limit: 255
-    t.string   "opendata_url",              limit: 255
+    t.string   "opendata_url",              limit: 2083
   end
 
   add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree
-
-  create_table "roles", force: :cascade do |t|
-    t.string   "name",       limit: 255, null: false
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
-  end
 
   create_table "scientific_names", force: :cascade do |t|
     t.integer  "resource_id",               limit: 4,                    null: false
@@ -689,7 +671,7 @@ ActiveRecord::Schema.define(version: 20180308202615) do
     t.boolean  "is_hidden_from_glossary",                default: false
     t.datetime "created_at",                                             null: false
     t.datetime "updated_at",                                             null: false
-    t.text     "ontology_information_url", limit: 65535
+    t.string   "ontology_information_url", limit: 2083
     t.text     "ontology_source_url",      limit: 65535
     t.boolean  "is_text_only"
     t.boolean  "is_verbatim_only"
