@@ -29,6 +29,8 @@ Rails.application.routes.draw do
     resources :vernaculars, only: [:index]
   end
   resources :terms do
+    get :new_bulk, on: :collection
+    post :bulk_import, on: :collection
     get :search, on: :collection
   end
 end
