@@ -1,0 +1,13 @@
+%h1.ui.header= t("terms.bulk_import.header")
+.ui.segment
+  %h5.ui.header= t("terms.bulk_import.used_for_header")
+  .ui.list
+    - Term.used_fors.each do |name, id|
+      .item
+        %b= "#{id}:"
+        = name
+  %h5.ui.header= t("terms.bulk_import.position_note")
+= form_tag(bulk_import_terms_path, class: "ui form") do
+  .field
+    = text_area_tag(:terms, %Q{{"uri":"...",\n"name":"....",\n"definition":"..",\n"comment":"",\n"attribution":"",\n"exclude_from_exemplars":true,\n"hide_from_glossary":true,\n"ontology_information_url":null,\n"ontology_source_url":null,\n"value_is_text":false,\n"value_is_verbatim":false,\n"position":#{Term.maximum(:position) + 1},\n"type":1}, { ... another one ... }})
+  = submit_tag('Import', class: "ui button")

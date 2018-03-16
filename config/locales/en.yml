@@ -248,10 +248,15 @@ en:
   terms:
     actions:
       back: "back to all terms"
+      bulk_import: "bulk import..."
       by_position: "by position"
       by_alpha: "by name"
       create: "new term"
     auto_created: "automatically added during harvest"
+    bulk_import:
+      header: "Bulk Import of Terms"
+      used_for_header: "Type IDs:"
+      position_note: "Yes, the first 'position' you see is the next one to use. Increment from there!"
     edit:
       header: "Editing %{uri}"
     flash:

@@ -13,6 +13,27 @@ class TermsController < ApplicationController
     render :index
   end
 
+  def new_bulk
+  end
+
+  def bulk_import
+    flash[notice] =
+      begin
+        terms = params[:terms]
+        terms.sub!(/, { ... another one ... }/m, '')
+        terms = "[#{terms}" unless terms.match?(/^\[/)
+        terms = "#{terms}]" unless terms.match?(/]$/)
+        json = JSON.parse(terms)
+        id = Term.last.id
+        Term.from_json(json)
+        "Created #{Term.last.id - id} term(s). (Note that updated terms aren't included in this count; "\
+          'they probably updated if you are seeing this.)'
+      rescue => e
+        e.message
+      end
+    redirect_to terms_path
+  end
+
   def show
     @term = Term.find(params[:id])
   end

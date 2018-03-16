@@ -6,6 +6,7 @@
         = link_to(t("terms.actions.by_alpha"), terms_path, class: 'item')
       - else
         = link_to(t("terms.actions.by_position"), terms_path(by_position: true), class: 'item')
+      = link_to(t("terms.actions.bulk_import"), new_bulk_terms_path(), class: 'item')
   .sub.header
     .ui.horizontal.list
       .item= link_to(t("terms.actions.create"), new_term_path, class: 'ui button')
