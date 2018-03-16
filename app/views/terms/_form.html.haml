@@ -1,0 +1,15 @@
+= simple_form_for @term do |f|
+  .fields
+    = f.input :name, wrapper_html: { class: 'four wide' }
+    = f.input :used_for
+    = f.input :is_hidden_from_overview, wrapper_html: { class: 'three wide' }
+    = f.input :is_hidden_from_glossary, wrapper_html: { class: 'three wide' }
+    = f.input :is_text_only, wrapper_html: { class: 'three wide' }
+    = f.input :is_verbatim_only, wrapper_html: { class: 'three wide' }
+  = f.input :uri
+  = f.input :definition
+  = f.input :comment
+  = f.input :attribution
+  = f.input :ontology_information_url
+  = f.input :ontology_source_url
+  = f.button :submit

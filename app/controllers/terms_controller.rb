@@ -1,7 +1,16 @@
 class TermsController < ApplicationController
   def index
     params[:per_page] ||= 50
-    @terms = prep_for_api(Term.order([:name, :uri]), updated: true)
+    @terms = prep_for_api(Term.order(params[:by_position] ? :position : %i[name uri]), updated: true)
+  end
+
+  def search
+    params[:per_page] ||= 50
+    terms = Term.order(params[:by_position] ? :position : %i[name uri])
+    terms = terms.where(['name LIKE ?', "%#{params[:name]}%"]) if params[:name]
+    terms = terms.where(['uri LIKE ?', "%#{params[:uri]}%"]) if params[:uri]
+    @terms = prep_for_api(terms, updated: true)
+    render :index
   end
 
   def show

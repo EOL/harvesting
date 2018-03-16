@@ -13,6 +13,8 @@ gem 'delayed_job', '~> 4.1.4'
 gem 'delayed_job_active_record'
 # Dalli store:
 gem 'dalli'
+# Enums with simple_form:
+gem 'enum_help'
 # Because ERB is just plain silly compared to Haml:
 gem 'haml-rails'
 # To aid in converting language codes:

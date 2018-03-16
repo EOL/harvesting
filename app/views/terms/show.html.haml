@@ -1,0 +1,53 @@
+%h1.ui.header
+  = @term.name
+  .sub.header
+    .ui.horizontal.bulleted.link.list
+      = link_to(t("terms.actions.back"), terms_path, class: 'item')
+      = link_to(t("edit"), edit_term_path(@term), class: 'item')
+      = link_to(t("delete"), @term, method: :delete, class: 'item', data: { confirm: t("are_you_sure") })
+
+.ui.list
+  .item
+    %b
+      URI:
+    = @term.uri
+  .item
+    %b
+      Position:
+    = @term.position
+  .item
+    %b
+      Definition:
+    = @term.definition
+  .item
+    %b
+      Comment:
+    = @term.comment
+  .item
+    %b
+      Attribution:
+    = @term.attribution
+  .item
+    %b
+      Ontology Information URL:
+    = @term.ontology_information_url
+  .item
+    %b
+      Ontology Source URL:
+    = @term.ontology_source_url
+  .item
+    %b
+      Used for:
+    = @term.used_for
+  .item
+    %b
+      Hidden:
+    = 'from overview' if @term.is_hidden_from_overview
+    = 'from glossary' if @term.is_hidden_from_glossary
+    = 'no' if !@term.is_hidden_from_glossary && !@term.is_hidden_from_overview
+  .item
+    %b
+      Restrictions:
+    = 'text only' if @term.is_text_only
+    = 'verbatim only' if @term.is_verbatim_only
+    = 'none' if !@term.is_verbatim_only && !@term.is_text_only

@@ -1,11 +1,36 @@
-%h1= t("terms.headers.index")
-.ui.list
-= paginate(@terms)
-- @terms.each do |term|
-  .item
-    - name = term.name
-    - name = t("terms.name_blank") if term.name.blank?
-    = link_to(name, term)
-    (
-    = link_to(term.uri, term)
-    )
+%h1.ui.header
+  = t("terms.headers.index")
+  .sub.header
+    .ui.horizontal.bulleted.link.list
+      - if params[:by_position]
+        = link_to(t("terms.actions.by_alpha"), terms_path, class: 'item')
+      - else
+        = link_to(t("terms.actions.by_position"), terms_path(by_position: true), class: 'item')
+  .sub.header
+    .ui.horizontal.list
+      .item= link_to(t("terms.actions.create"), new_term_path, class: 'ui button')
+      .item
+        = form_tag(search_terms_path, method: 'get', class: "ui search") do
+          .ui.icon.input
+            = text_field_tag(:name, params[:name], placeholder: 'Name...')
+            %i.search.icon
+          .ui.icon.input
+            = text_field_tag(:uri, params[:uri], placeholder: 'URI...')
+            %i.search.icon
+          = submit_tag('Search', class: "ui button")
+
+.ui.segments
+  .ui.segment
+    = paginate(@terms)
+  .ui.segment
+    .ui.list
+      - @terms.each do |term|
+        .item
+          - name = term.name
+          - name = t("terms.name_blank") if term.name.blank?
+          = link_to(name, term)
+          (
+          = link_to(term.uri, term)
+          )
+  .ui.segment
+    = paginate(@terms)

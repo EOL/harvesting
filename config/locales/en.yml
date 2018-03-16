@@ -246,7 +246,14 @@ en:
       traits: "traits"
       vernaculars: "vernaculars"
   terms:
+    actions:
+      back: "back to all terms"
+      by_position: "by position"
+      by_alpha: "by name"
+      create: "new term"
     auto_created: "automatically added during harvest"
+    edit:
+      header: "Editing %{uri}"
     flash:
       created: "Added term <a href='%{path}'>%{name}</a>"
       edited: "Updated term <a href='%{path}'>%{name}</a>"
@@ -254,3 +261,5 @@ en:
     headers:
       index: "All URI Definitions"
     name_blank: "NAME MISSING!"
+    new:
+      header: "Creating New Term"

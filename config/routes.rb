@@ -28,5 +28,7 @@ Rails.application.routes.draw do
     resources :assocs, only: [:index]
     resources :vernaculars, only: [:index]
   end
-  resources :terms
+  resources :terms do
+    get :search, on: :collection
+  end
 end
