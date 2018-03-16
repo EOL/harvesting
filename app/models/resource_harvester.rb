@@ -1,6 +1,8 @@
-# NOTE: you probably want to look at the .store method.
 class ResourceHarvester
   attr_accessor :resource, :harvest, :format, :line_num, :diff, :file, :parser, :headers
+
+  # TODO: ignore headers, if there aren't any
+  # TODO: skip lines where the identifier is missing.
 
   class << self
     def by_id(id)
@@ -125,11 +127,17 @@ class ResourceHarvester
       Dir.exist?(Rails.public_path.join('converted_csv'))
     @harvest.log_call
     each_format do
-      col_checks = check_each_column
-      expected_by_file = col_checks[:expected]
-      fields = col_checks[:fields]
-      raise(Exceptions::ColumnUnmatched, "TOO MANY COLUMNS: #{@format.represents}: #{expected_by_file.join(',')}") if
-        expected_by_file.size.positive?
+      fields = nil # scope.
+      if @format.header_lines.positive?
+        col_checks = check_each_column
+        expected_by_file = col_checks[:expected]
+        fields = col_checks[:fields]
+        raise(Exceptions::ColumnUnmatched, "TOO MANY COLUMNS: #{@format.represents}: #{expected_by_file.join(',')}") if
+          expected_by_file.size.positive?
+      else
+        fields = {}
+        @format.fields.each { |f| fields[f.expected_header] = f }
+      end
       @file = @format.converted_csv_path
       CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
         validate_csv(csv, fields)
@@ -260,7 +268,11 @@ class ResourceHarvester
     diff = @format.diff.to_s.gsub(' ', '\\ ')
     csv = @format.converted_csv_path.to_s.gsub(' ', '\\ ')
     run_cmd("echo \"0a\" > #{diff}")
-    run_cmd("tail -n +#{@format.data_begins_on_line} #{csv} >> #{diff}")
+    if @format.data_begins_on_line.zero?
+      run_cmd("cat #{csv} >> #{diff}")
+    else
+      run_cmd("tail -n +#{@format.data_begins_on_line} #{csv} >> #{diff}")
+    end
     run_cmd("echo \".\" >> #{diff}")
   end
 

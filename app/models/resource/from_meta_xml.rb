@@ -78,7 +78,6 @@ class Resource::FromMetaXml
     formats = []
     file_configs.each do |file_config|
       file_config_name = file_config.css('location').text
-      raise "No headers: #{file_config_name.downcase} #{filename}" if file_config['ignoreHeaderLines'].to_i.zero?
       file_config_file = "#{@path}/#{file_config_name}"
       unless File.exist?(file_config_file)
         puts "!! SKIPPING missing file: #{file_config_file}"
@@ -153,8 +152,11 @@ class Resource::FromMetaXml
         line_sep: lines,
         utf8: file_config['encoding'] =~ /^UTF/
       )
-      headers = `cat #{file_path} | tr "\r" "\n" | head -n #{file_config['ignoreHeaderLines']}`.split(sep)
-      headers.last.chomp!
+      headers = nil
+      unless file_config['ignoreHeaderLines'].to_i.zero?
+        headers = `cat #{file_path} | tr "\r" "\n" | head -n #{file_config['ignoreHeaderLines']}`.split(sep)
+        headers.last.chomp!
+      end
       fields = []
       file_config.css('field').each do |field|
         assumption = MetaXmlField.where(term: field['term'], for_format: reps)&.first
@@ -162,7 +164,7 @@ class Resource::FromMetaXml
         a_submap = nil if a_submap == '0'
         mapping_name = assumption&.represents || :to_ignored
         index = field['index'].to_i
-        header_name = headers[index]
+        header_name = headers ? headers[index] : field['term'].split('/').last
         if mapping_name == 'to_nodes_ancestor'
           a_submap = header_name.downcase
         end

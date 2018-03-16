@@ -93,7 +93,7 @@ class Resource
       create_resource(noko) unless @resource
       get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
       file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
-      already_exists = File.exist?("#{@resource.path}/meta.xml")
+      already_exists = File.exist?("#{@resource.path}/meta.xml") && @resource.formats.any?
       dir = DropDir.unpack_file(file)
       if already_exists
         log('...Resource already exists; new data is now in place. You may harvest it.')

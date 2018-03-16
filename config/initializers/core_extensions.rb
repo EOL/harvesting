@@ -14,11 +14,14 @@ class ActiveRecord::Base
         min = where(filter_field => filter).minimum(:id)
         if min.nil?
           # If there's more than zero rows, min should not be nil. If there were zero rows, nothing to do:
-          return if where(filter_field => filter).count.positive?
+          return if where(filter_field => filter).count.zero?
         end
         max = where(filter_field => filter).maximum(:id)
       else
         min = minimum(:id)
+        if min.nil?
+          return if count.zero?
+        end
         max = maximum(:id)
       end
       fk = options[:fk]

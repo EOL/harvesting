@@ -11,7 +11,7 @@ class CsvParser
     @col_sep = options[:field_sep] || ','
     @row_sep = options[:line_sep] || "\n"
     @path_to_file = path_to_file
-    @headers = nil
+    @headers = options[:headers]
   end
 
   def line_at_a_time

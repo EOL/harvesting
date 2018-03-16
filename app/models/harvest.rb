@@ -105,7 +105,7 @@ class Harvest < ActiveRecord::Base
     }
     # TODO: we should be able to configure whether this outputs to STDOUT:
     puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
-    puts "-- #{backtrace.join("\n")}"
+    puts "-- #{backtrace.join("\n")}" unless backtrace.blank?
     STDOUT.flush
     hlogs << Hlog.create!(hash.merge(format: options[:format]))
   end
