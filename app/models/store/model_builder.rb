@@ -88,7 +88,9 @@ module Store
       return if @synonym # Don't build a node for synonyms.
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
-      # TODO: find or build a rank, here, using @models[:node][:rank_verbatim]
+      unless @models[:node][:rank_verbatim].blank?
+        @models[:node][:rank] = clean_rank(verbatim) # NOTE: this is a (normalized) STRING, not an ID. q.v.
+      end
       build_references(:node, NodesReference)
       prepare_model_for_store(Node, @models[:node])
     end
@@ -447,6 +449,12 @@ module Store
         @languages_by_code[lang_code] = lang
         lang
       end
+    end
+
+    def clean_rank(verbatim)
+      @ranks ||= {}
+      return @ranks[verbatim] if @ranks.key?(verbatim)
+      @ranks[verbatim] = Rank.clean(verbatim)
     end
 
     # TODO: extract to Store::Storage

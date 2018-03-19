@@ -1,13 +1,46 @@
+# http://beta-repo.eol.org/nodes/1367350
+# http://beta-repo.eol.org/nodes/2732271
+# http://beta-repo.eol.org/nodes/3046079
+# http://beta-repo.eol.org/nodes/3077300
+# http://beta-repo.eol.org/nodes/3190398
+# http://beta-repo.eol.org/nodes/3889294
+# http://beta-repo.eol.org/nodes/4590106
+# http://beta-repo.eol.org/nodes/4818899
+# http://beta-repo.eol.org/nodes/4914502
+# http://beta-repo.eol.org/nodes/5331812
+#
+# These should all have matched to the dynamic hierarchy because there is only one Liriodendron tulipifera in the DH,
+# they all are perfect canonical matches, and there are no fatally conflicting ancestry data (i.e., none of them is a
+# child of Metazoa, for example). Also, a whole bunch of them have family information which is a perfect match to the DH
+# family.
+#
+# If new_node_rank=species compare only to dhierarchy_nodes with rank species, subspecies and other infraspecific ranks.
+# If new_node_rank=genus compare only to dhierarchy_nodes with rank genus.
+# If new_node_rank=family compare only to dhierarchy_nodes with rank family.
+# If new_node_kingdom=animal, animals, metazoa, ..., compare only to dhierarchy_nodes that are descendents of animalia.
 class NamesMatcher
-  def self.for_harvest(harvest)
-    new(harvest).start
+  def self.for_harvest(harvest, options = {})
+    new(harvest, options).start
   end
 
-  def initialize(harvest)
+  def self.explain_node(node, options = {})
+    harvest = node.resource.create_harvest_instance # Perhaps heavy-handed, but... simpler.
+    results = []
+    begin
+      results = new(harvest, options).explain_node(node)
+    ensure
+      harvest.complete
+    end
+    results
+  end
+
+  def initialize(harvest, options = {})
     @harvest = harvest
     @resource = @harvest.resource
-    @root_nodes = @resource.nodes.published.includes(:scientific_name).where(harvest_id: @harvest.id).root
+    @root_nodes = []
     @node_updates = []
+    @explain = options[:explain]
+    @should_update = options.key?(:update) ? options[:update] : true
     @strategies = %i[
       match_canonical_and_authors_in_eol
       match_synonyms_and_authors_in_eol
@@ -44,7 +77,10 @@ class NamesMatcher
     how[:where][:is_hybrid] = true if name.hybrid?
     how[:includes] = [:scientific_name]
     how.delete(:where) if how[:where].empty?
-    Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
+    @harvest.log("Q: #{how.inspect}") if @explain
+    results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
+    @harvest.log("RESULTS (#{results.total_count}): #{results.hits.inspect}") if @explain
+    results
   end
 
   def match_canonical_and_authors_in_eol(name)
@@ -75,6 +111,7 @@ class NamesMatcher
   end
 
   def start
+    @root_nodes = @resource.nodes.published.includes(:scientific_name).where(harvest_id: @harvest.id).root
     @have_names = Harvest.completed.any?
     begin
       map_all_nodes_to_pages(@root_nodes)
@@ -99,18 +136,34 @@ class NamesMatcher
     end
   end
 
+  def explain_node(node)
+    @harvest.log_call
+    @explain = true
+    return if skip_blank_canonical(node)
+    @ancestors = node.node_ancestors.map(&:ancestor)
+    @in_unmapped_area = @ancestors.empty?
+    return @harvest.log("CANNOT MATCH NAMES. You haven't harvested the Dynamic Hierarchy.") unless Harvest.completed.any?
+    @have_names = true
+    map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
+    # update_nodes
+    @node_updates
+  end
+
+  def skip_blank_canonical(node)
+    return false unless node.canonical.blank?
+    @harvest.log("cannot match node with blank canonical: Node##{node.id}", cat: :warns)
+    true
+  end
+
   def map_if_needed(node)
-    if node.canonical.blank?
-      @harvest.log("cannot match node with blank canonical: Node##{node.id}", cat: :warns)
+    if skip_blank_canonical(node)
+      # Nothing more to do...
     elsif node.needs_to_be_mapped?
       if node.parent_id.nil? || node.parent_id.zero? # NOTE: nil is preferred; 0 is "old school"
         @in_unmapped_area = true
         @ancestors = []
       end
-      strategy = 0
-      # Skip scientific name searches if all we have is a canonical (really)
-      strategy = @first_non_author_strategy_index if node.scientific_name.authors.blank?
-      map_node(node, ancestor_depth: 0, strategy: strategy)
+      map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
     end
     return unless node.children.any?
     @ancestors.push(node)
@@ -118,9 +171,15 @@ class NamesMatcher
     @ancestors.pop
   end
 
+  def pick_first_strategy(node)
+    # Skip scientific name searches if all we have is a canonical (really)
+    return @first_non_author_strategy_index if node.scientific_name.authors.blank?
+    0
+  end
+
   def map_node(node, opts = {})
-    # NOTE: Surrogates never get matched in this version of the algorithm.
     return unmapped(node, 'first_import') unless @have_names
+    # NOTE: Surrogates never get matched in this version of the algorithm.
     return unmapped(node, 'surrogate') if node.scientific_name.surrogate?
     @ancestor = if node.scientific_name.virus?
                   # NOTE: If the node has been flagged (by gnparser) as a virus, then it may ONLY match other viruses.
@@ -134,7 +193,7 @@ class NamesMatcher
   def matched_ancestor(depth)
     i = 0
     @ancestors.reverse.each do |ancestor|
-      next if  ancestor.page_id.nil? || ancestor.in_unmapped_area?
+      next if ancestor.page_id.nil? || ancestor.in_unmapped_area?
       if i >= depth
         @in_unmapped_area = false
         return ancestor
@@ -158,7 +217,10 @@ class NamesMatcher
       return save_match(node, common_exceptions[node.scientific_name.canonical], 'common kingdom match')
     end
     results = send(@strategies[opts[:strategy]], node.scientific_name)
-    return save_match(node, results.first[:page_id], 'single hit') if results.total_count == 1
+    if results.total_count == 1
+      @node_updates << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
+      return save_match(node, results.first[:page_id], 'single hit')
+    end
     return more_than_one_match(node, results, opts) if results.total_count > 1
     return unmapped(node, 'virus') if node.scientific_name.virus?
     opts[:strategy] += 1
@@ -257,6 +319,10 @@ class NamesMatcher
   def update_nodes
     @harvest.log_call
     return if @node_updates.empty?
+    unless @should_update
+      @harvest.log('SKIPPPING UPDATE. (This was just an explain.)')
+      return
+    end
     Node.import!(@node_updates, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
     true # Just avoiding a large return value.
   end

@@ -1,6 +1,11 @@
+# NOTE: this is NOT a database model! We only store strings.
 class Rank
   class << self
-    attr_accessor :ordered, :unordered
+    attr_accessor :ordered, :unordered, :abbrs, :prefixes
+
+    def all
+      @ordered
+    end
 
     def add_prefixes(basenames)
       basenames.flat_map { |b| @prefixes.map { |p| p == '-' ? b : "#{p}#{b}" } }
@@ -16,6 +21,32 @@ class Rank
           0
         else
           scores[a] <=> scores[b]
+        end
+      end
+    end
+
+    def clean(verbatim)
+      cleaned = verbatim.downcase # We don't allow caps (at all); these are meant to be I18n symbols!
+      cleaned.sub!(/['".]/, '') # No quotes (of either variety. This implies possessives are removed, which is fine.)
+      cleaned.sub!(/\./, '') # No periods (we'll check abbreviations without them in a second)
+      words = []
+      cleaned.split.each do |word|
+        if (prefix = find_prefix(word))
+          word.sub!(/^#{prefix}/, '')
+          words << prefix
+        end
+        word = abbrs[word] if abbrs.key?(word)
+        words << word
+      end
+      cleaned = words.join
+      cleaned.gsub(/group$/, '_group')
+      cleaned
+    end
+
+    def find_prefix(word)
+      prefixes.each do |pref|
+        if word.match?(/^#{pref}/)
+          return pref
         end
       end
     end
@@ -38,9 +69,60 @@ class Rank
     form
   ]
 
+  @abbrs = {
+    'dom' => 'domain',
+    'domains' => 'domain',
+    'k' => 'kingdom',
+    'king' => 'kingdom',
+    'kin' => 'kingdom',
+    'kingdom' => 'kingdom',
+    'p' => 'phylum',
+    'ph' => 'phylum',
+    'phy' => 'phylum',
+    'phyl' => 'phylum',
+    'phyla' => 'phylum',
+    'phylums' => 'phylum',
+    'c' => 'class',
+    'cl' => 'class',
+    'cls' => 'class',
+    'classes' => 'class',
+    'co' => 'cohort',
+    'coh' => 'cohort',
+    'cohorts' => 'cohort',
+    'div' => 'division',
+    'divisions' => 'division',
+    'o' => 'order',
+    'ord' => 'order',
+    'orders' => 'order',
+    'f' => 'family',
+    'fam' => 'family',
+    'families' => 'family',
+    't' => 'tribe',
+    'tribes' => 'tribe',
+    'g' => 'genus',
+    'genuses' => 'genus',
+    'genera' => 'genus',
+    's' => 'species',
+    'sp' => 'species',
+    'v' => 'variety',
+    'varieties' => 'variety',
+    'for' => 'form',
+    'frm' => 'form',
+    'fm' => 'form',
+    'forms' => 'form',
+    'subsp' => 'subspecies',
+    'ss' => 'subspecies',
+    'sec' => 'section',
+    'sections' => 'section',
+    'ser' => 'series',
+    'cld' => 'clade',
+    'clades' => 'clade'
+  }
+
+
   @groups = 'paraphyletic group' + 'polyphyletic group'
 
-  @prefixes = %w[mega super epi - sub infra subter]
+  @prefixes = %w[mega super epi sub infra subter]
   @ordered = Rank.add_prefixes(@base_names)
   @unordered_base_names = %w[section series clade]
   @unordered = Rank.add_prefixes(@unordered_base_names)

@@ -28,8 +28,9 @@
     - else
       %strong= t('nodes.fields.parent_nil')
   %li
-    %strong= t('nodes.fields.name_rank_verbatim')
-    = @node.rank_verbatim
+    %strong= t('nodes.fields.rank]')
+    = @node.rank unless @node.rank.blank?
+    = "('#{@node.rank_verbatim}')"
   %li
     %strong= t('nodes.fields.landmark')
     = @node.landmark

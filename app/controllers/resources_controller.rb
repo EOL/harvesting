@@ -1,4 +1,13 @@
 class ResourcesController < ApplicationController
+  # See your environment config; this action should be ignored by logs.
+  def ping
+    if ActiveRecord::Base.connection.active?
+      render text: 'pong'
+    else
+      render status: 500
+    end
+  end
+  
   def index
     params[:per_page] ||= 50
     @resources = Resource.order(:name).includes([:partner])

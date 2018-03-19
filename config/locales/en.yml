@@ -149,7 +149,7 @@ en:
       resource_pk: "ID Used by Resource:"
       matching_log: "Names Matching Notes:"
       name_parse_quality: "Parse quality:"
-      name_rank_verbatim: "Rank (verbatim from resource):"
+      rank: "Rank (and verbatim from resource):"
       name_taxonomic_status: "Taxonomic Status:"
       name_taxonomic_status_verbatim: "Taxonomic Status (verbatim from resource):"
       name_verbatim: "Verbatim from resource:"

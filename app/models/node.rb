@@ -44,7 +44,7 @@ class Node < ActiveRecord::Base
       synonyms: scientific_names.map(&:canonical),
       synonym_authors: all_authors,
       canonical: canonical,
-      ancestor_page_ids: node_ancestors.map(&:ancestor).map(&:page_id).compact,
+      ancestor_page_ids: ancestor_page_ids,
       children: child_names,
       is_hybrid: scientific_name.try(:hybrid?),
       is_virus: scientific_name.try(:virus?),
@@ -87,6 +87,10 @@ class Node < ActiveRecord::Base
     super(only: %i[page_id parent_resource_pk in_unmapped_area resource_pk landmark rank],
           methods: %i[scientific_name source_url ancestors],
           include: { identifiers: {}, scientific_name: { only: %i[normalized verbatim canonical] } })
+  end
+
+  def ancestor_page_ids
+    node_ancestors.map { |na| na&.ancestor&.page_id }.compact
   end
 
   def title
