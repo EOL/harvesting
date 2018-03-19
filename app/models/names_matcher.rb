@@ -55,7 +55,7 @@ class NamesMatcher
     @child_match_weight = 1
     @ancestor_match_weight = 1
     @max_ancestor_depth = 2
-    # If fewer (or equal to) this many ancestors match, then we assume this is just a bad match (and we never allow it),
+    # If fewer than this many ancestors match, then we assume this is just a bad match (and we never allow it),
     # regardless of how much "better" it might look than others due to sheer numbers.
     @minimum_ancestry_match = {
       0 => 0,
@@ -63,6 +63,7 @@ class NamesMatcher
       5 => 2, 6 => 2, 7 => 2,
       8 => 3, 9 => 3
     }
+    # This says "if there are 10 or more ancestors, thirty percent or more must match."
     (10..250).each { |n| @minimum_ancestry_match[n] = (n * 0.3).ceil }
     @ancestors = []
     @unmatched = []
@@ -178,6 +179,7 @@ class NamesMatcher
   end
 
   def map_node(node, opts = {})
+    @logs = []
     return unmapped(node, 'first_import') unless @have_names
     # NOTE: Surrogates never get matched in this version of the algorithm.
     return unmapped(node, 'surrogate') if node.scientific_name.surrogate?
@@ -218,12 +220,13 @@ class NamesMatcher
     end
     results = send(@strategies[opts[:strategy]], node.scientific_name)
     if results.total_count == 1
-      @node_updates << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
+      @logs << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
       return save_match(node, results.first[:page_id], 'single hit')
     end
     return more_than_one_match(node, results, opts) if results.total_count > 1
     return unmapped(node, 'virus') if node.scientific_name.virus?
     opts[:strategy] += 1
+    @logs << @strategies[opts[:strategy]]
     # NOTE: mmmmmaybe we want to do a sanity check here and abort if the name is
     # just NOT in the database at all, and NOT go through all of the strategies.
 
@@ -247,21 +250,21 @@ class NamesMatcher
   end
 
   def more_than_one_match(node, matching_nodes, opts = {})
-    logs = ["#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"]
+    @logs << "#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
       scores[matching_node][:matching_children] = count_matches(matching_node.child_names, node.child_names)
       scores[matching_node][:matching_ancestors] = count_ancestors_with_page_ids_assigned
       scores[matching_node][:score] = 0
-      # NOTE: we are unsure of how effective this is; we really need to pay # attention to how this performs.
+      # NOTE: we are unsure of how effective this is; we really need to pay attention to how this performs.
       if scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
-        logs << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
+        @logs << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
           "of #{@ancestors.size}"
         scores[matching_node][:matching_ancestors] = 0
         # This is just a warning, since it won't match, but might be worth investigating, since it's *possible* we're
         # skipping a better match.
-        logs << "insufficient ancestry matches vs node #{matching_node.id} ; matches " \
+        @logs << "insufficient ancestry matches vs node #{matching_node.id} ; matches " \
           "#{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}"
       else
         scores[matching_node][:score] =
@@ -286,32 +289,34 @@ class NamesMatcher
       top_scores[0..4].reverse.each { |k, v| simple_scores[k.id] = v }
     end
     if best_score.zero?
-      logs << "best score was 0: #{simple_scores.inspect}"
-      unmapped(node, logs.join('; '))
+      @logs << "best score was 0: #{simple_scores.inspect}"
+      unmapped(node)
     elsif tie
-      logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
+      @logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
         "#{best_match.canonical} = #{scores[best_match].inspect} "\
         "VS #{tie.canonical} = #{scores[tie].inspect}"
-      unmapped(node, logs.join('; '))
+      unmapped(node)
     else
-      logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
+      @logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
         "#{simple_scores.inspect}"
-      save_match(node, best_match['page_id'], logs.join('; '))
+      save_match(node, best_match['page_id'])
     end
     # TODO: if two of the scores share the best match, it's not a match, skip it. ...but log that!
   end
 
-  def save_match(node, page_id, log = nil)
-    node.assign_attributes(page_id: page_id, matching_log: log)
+  def save_match(node, page_id, message = nil)
+    @logs << message if message
+    node.assign_attributes(page_id: page_id, matching_log: @logs.join('; '))
     @node_updates << node
     true # Just avoiding a large return value.
   end
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
-  def unmapped(node, message)
+  def unmapped(node, message = nil)
+    @logs << message if message
     @unmatched << "#{node.canonical} (##{node.id})"
     @in_unmapped_area = false if @resource.id == 1 # NOTE: DWH is resource ID 1, and is always "mapped"
-    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: message)
+    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: @logs.join('; '))
     @node_updates << node
     true # Just avoiding a large return value.
   end
