@@ -34,6 +34,28 @@ class Node < ActiveRecord::Base
   # https://github.com/EOL/eol_website/issues/5
   enum landmark: %i[no_landmark minimal abbreviated extended full]
 
+  class << self
+    def native_virus
+      @native_virus ||= where(resource_id: 1, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
+    end
+
+    def remove_indexes(filter)
+      Node.where(filter).each do |node|
+        Node.searchkick_index.remove(node)
+      end
+    end
+
+    def re_parse_ranks
+      Node.update_all(rank: nil)
+      while Node.where('rank IS NULL AND rank_verbatim IS NOT NULL').any? do
+        batch = Node.where('rank IS NULL AND rank_verbatim IS NOT NULL').select('id, rank_verbatim').limit(2000)
+        batch.map(&:rank_verbatim).uniq.each do |verbatim|
+          Node.where(rank_verbatim: verbatim).update_all(rank: Rank.clean(verbatim))
+        end
+      end
+    end
+  end
+
   # NOTE: special method used by Searchkick
   def search_data
     {
@@ -48,22 +70,13 @@ class Node < ActiveRecord::Base
       children: child_names,
       is_hybrid: scientific_name.try(:hybrid?),
       is_virus: scientific_name.try(:virus?),
-      is_surrogate: scientific_name.try(:surrogate?)
+      is_surrogate: scientific_name.try(:surrogate?),
+      rank: rank,
+      ancestor_ranks: ancestor_ranks
     }
   end
 
-  def self.native_virus
-    @native_virus ||= where(resource_id: 1, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
-  end
-
-  def self.remove_indexes(filter)
-    Node.where(filter).each do |node|
-      Node.searchkick_index.remove(node)
-    end
-  end
-
   # json.ancestors node.
-
   # id: 1,
   # resource_id: 1,
   # harvest_id: 1,
@@ -91,6 +104,10 @@ class Node < ActiveRecord::Base
 
   def ancestor_page_ids
     node_ancestors.map { |na| na&.ancestor&.page_id }.compact
+  end
+
+  def ancestor_ranks
+    node_ancestors.map { |na| na&.ancestor&.rank }.compact
   end
 
   def title

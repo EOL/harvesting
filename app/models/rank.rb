@@ -25,10 +25,13 @@ class Rank
       end
     end
 
-    def clean(verbatim)
+      def clean(verbatim)
       cleaned = verbatim.downcase # We don't allow caps (at all); these are meant to be I18n symbols!
-      cleaned.sub!(/['".]/, '') # No quotes (of either variety. This implies possessives are removed, which is fine.)
-      cleaned.sub!(/\./, '') # No periods (we'll check abbreviations without them in a second)
+      cleaned.sub!(/\s+/, ' ') # Normalize all spaces
+      cleaned.sub!(/[^ a-z]/, '') # remove all non-alpha characters, including ALL punctuation! Yes, really.
+      cleaned.sub!(/^\s/, '') # No starting space
+      cleaned.sub!(/\s$/, '') # No ending space
+      return '' unless verbatim.match?(/[a-z]/) # There are some wonky values; ignore them.
       words = []
       cleaned.split.each do |word|
         if (prefix = find_prefix(word))
@@ -39,7 +42,7 @@ class Rank
         words << word
       end
       cleaned = words.join
-      cleaned.gsub(/group$/, '_group')
+      cleaned.sub!(/group$/, '_group')
       cleaned
     end
 
@@ -49,6 +52,7 @@ class Rank
           return pref
         end
       end
+      nil
     end
   end
 
@@ -63,7 +67,8 @@ class Rank
     order
     family
     tribe
-    genus] + ["species group"] + %w[
+    genus
+  ] + ['species group'] + %w[
     species
     variety
     form
@@ -118,7 +123,6 @@ class Rank
     'cld' => 'clade',
     'clades' => 'clade'
   }
-
 
   @groups = 'paraphyletic group' + 'polyphyletic group'
 

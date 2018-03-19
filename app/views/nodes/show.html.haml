@@ -8,7 +8,8 @@
     = @node.resource_pk
   %li
     %strong= t('nodes.fields.page_id')
-    = link_to(@node.page_id, "http://eol.org/pages/#{@node.page_id}")
+    - base = Rails.application.secrets.host['url'] || 'http://eol.org'
+    = link_to(@node.page_id, "#{base}/pages/#{@node.page_id}")
   %li
     %strong= t('nodes.fields.matching_log')
     - if @node.matching_log
@@ -28,20 +29,30 @@
     - else
       %strong= t('nodes.fields.parent_nil')
   %li
-    %strong= t('nodes.fields.rank]')
-    = @node.rank unless @node.rank.blank?
-    = "('#{@node.rank_verbatim}')"
+    %strong= t('nodes.fields.rank')
+    - if @node.rank.blank?
+      (The field is blank. Was it harvested prior to Mar 20 2018?)
+    - else
+      = @node.rank
+  %li
+    %strong= t('nodes.fields.rank_verbatim')
+    = "'#{@node.rank_verbatim}'"
   %li
     %strong= t('nodes.fields.landmark')
-    = @node.landmark
+    - if @node.no_landmark?
+      (No landmark.)
+    - else
+      = @node.landmark
   %li
     %strong= t('nodes.fields.in_unmapped_area')
     = @node.in_unmapped_area? ? t('boolean.true') : t('boolean.false')
   %li
     %strong= t('nodes.fields.created')
     = l(@node.created_at, format: :short)
-    = t(:node_created_by_harvest,
-      date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
+    - if @node.harvest
+      = t(:node_created_by_harvest, date: link_to(l(@node.harvest.created_at, format: :short), @node.harvest)).html_safe
+    - else
+      (Whoa, there is no harvest associated with this node. Something is seriously wrong with it.)
 %h2= t('nodes.fields.scientific_names')
 .ui.cards
   - if !@node.scientific_names.any?
