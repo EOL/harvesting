@@ -27,8 +27,8 @@ class Rank
 
       def clean(verbatim)
       cleaned = verbatim.downcase # We don't allow caps (at all); these are meant to be I18n symbols!
-      cleaned.sub!(/\s+/, ' ') # Normalize all spaces
-      cleaned.sub!(/[^ a-z]/, '') # remove all non-alpha characters, including ALL punctuation! Yes, really.
+      cleaned.gsub!(/\s+/, ' ') # Normalize all spaces
+      cleaned.gsub!(/[^ a-z]/, '') # remove all non-alpha characters, including ALL punctuation! Yes, really.
       cleaned.sub!(/^\s/, '') # No starting space
       cleaned.sub!(/\s$/, '') # No ending space
       return '' unless verbatim.match?(/[a-z]/) # There are some wonky values; ignore them.
