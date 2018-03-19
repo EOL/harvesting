@@ -79,8 +79,10 @@ class NamesMatcher
     how[:includes] = [:scientific_name]
     how.delete(:where) if how[:where].empty?
     @harvest.log("Q: #{how.inspect}") if @explain
+    @logs << "Q: #{how.inspect}"
     results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
     @harvest.log("RESULTS (#{results.total_count}): #{results.hits.inspect}") if @explain
+    @logs << "RESULTS (#{results.total_count}): #{results.hits.inspect}"
     results
   end
 
@@ -138,7 +140,7 @@ class NamesMatcher
   end
 
   def explain_node(node)
-    @harvest.log_call
+    @harvest.log("LIMITED RUN: explaining the names-matching for node #{node.id}")
     @explain = true
     return if skip_blank_canonical(node)
     @ancestors = node.node_ancestors.map(&:ancestor)
@@ -196,6 +198,7 @@ class NamesMatcher
     i = 0
     @ancestors.reverse.each do |ancestor|
       next if ancestor.page_id.nil? || ancestor.in_unmapped_area?
+      next unless ancestor.is_on_page_in_dynamic_hierarchy?
       if i >= depth
         @in_unmapped_area = false
         return ancestor
@@ -218,6 +221,7 @@ class NamesMatcher
     if common_exceptions.key?(node.scientific_name.canonical)
       return save_match(node, common_exceptions[node.scientific_name.canonical], 'common kingdom match')
     end
+    @logs << @strategies[opts[:strategy]]
     results = send(@strategies[opts[:strategy]], node.scientific_name)
     if results.total_count == 1
       @logs << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
@@ -226,7 +230,6 @@ class NamesMatcher
     return more_than_one_match(node, results, opts) if results.total_count > 1
     return unmapped(node, 'virus') if node.scientific_name.virus?
     opts[:strategy] += 1
-    @logs << @strategies[opts[:strategy]]
     # NOTE: mmmmmaybe we want to do a sanity check here and abort if the name is
     # just NOT in the database at all, and NOT go through all of the strategies.
 

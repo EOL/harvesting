@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180313182745) do
+ActiveRecord::Schema.define(version: 20180319204101) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -459,27 +459,29 @@ ActiveRecord::Schema.define(version: 20180313182745) do
   add_index "node_ancestors", ["resource_id"], name: "index_node_ancestors_on_resource_id", using: :btree
 
   create_table "nodes", force: :cascade do |t|
-    t.integer  "resource_id",               limit: 4,                     null: false
-    t.integer  "harvest_id",                limit: 4,                     null: false
-    t.integer  "page_id",                   limit: 4
-    t.integer  "parent_id",                 limit: 4
-    t.integer  "scientific_name_id",        limit: 4
-    t.integer  "removed_by_harvest_id",     limit: 4
-    t.integer  "landmark",                  limit: 4,     default: 0
-    t.string   "canonical",                 limit: 255
-    t.string   "taxonomic_status_verbatim", limit: 255
-    t.string   "resource_pk",               limit: 255
-    t.string   "parent_resource_pk",        limit: 255
-    t.string   "further_information_url",   limit: 2083
-    t.string   "rank",                      limit: 255
-    t.string   "rank_verbatim",             limit: 255
-    t.boolean  "in_unmapped_area",                        default: false
+    t.integer  "resource_id",                     limit: 4,                     null: false
+    t.integer  "harvest_id",                      limit: 4,                     null: false
+    t.integer  "page_id",                         limit: 4
+    t.integer  "parent_id",                       limit: 4
+    t.integer  "scientific_name_id",              limit: 4
+    t.integer  "removed_by_harvest_id",           limit: 4
+    t.integer  "landmark",                        limit: 4,     default: 0
+    t.string   "canonical",                       limit: 255
+    t.string   "taxonomic_status_verbatim",       limit: 255
+    t.string   "resource_pk",                     limit: 255
+    t.string   "parent_resource_pk",              limit: 255
+    t.string   "further_information_url",         limit: 2083
+    t.string   "rank",                            limit: 255
+    t.string   "rank_verbatim",                   limit: 255
+    t.boolean  "in_unmapped_area",                              default: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.text     "matching_log",              limit: 65535
+    t.text     "matching_log",                    limit: 65535
+    t.boolean  "is_on_page_in_dynamic_hierarchy",               default: false
   end
 
   add_index "nodes", ["harvest_id"], name: "index_nodes_on_harvest_id", using: :btree
+  add_index "nodes", ["page_id"], name: "index_nodes_on_page_id", using: :btree
   add_index "nodes", ["parent_id"], name: "index_nodes_on_parent_id", using: :btree
   add_index "nodes", ["parent_resource_pk"], name: "index_nodes_on_parent_resource_pk", using: :btree
   add_index "nodes", ["resource_id"], name: "index_nodes_on_resource_id", using: :btree
