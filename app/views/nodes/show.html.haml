@@ -31,7 +31,10 @@
   %li
     %strong= t('nodes.fields.rank')
     - if @node.rank.blank?
-      (The field is blank. Was it harvested prior to Mar 20 2018?)
+      - if @node.rank_verbatim.blank? # Expected to be blank:
+        = "''"
+      - else # NOT expected:
+        (The field is blank. Was it harvested prior to Mar 20 2018?)
     - else
       = @node.rank
   %li
