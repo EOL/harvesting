@@ -1,4 +1,4 @@
-%h1= @node.title
+%h1= @node.scientific_name&.italicized&.html_safe || @node.title
 %ul
   %li
     %strong= t('nodes.fields.resource')
