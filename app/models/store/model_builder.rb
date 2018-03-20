@@ -89,7 +89,8 @@ module Store
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
       unless @models[:node][:rank_verbatim].blank?
-        @models[:node][:rank] = clean_rank(verbatim) # NOTE: this is a (normalized) STRING, not an ID. q.v.
+        # NOTE: #clean_rank creates a (normalized) STRING, not an ID. q.v.
+        @models[:node][:rank] = clean_rank(@models[:node][:rank_verbatim])
       end
       build_references(:node, NodesReference)
       prepare_model_for_store(Node, @models[:node])

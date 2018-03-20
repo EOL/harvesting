@@ -1,18 +1,4 @@
-# http://beta-repo.eol.org/nodes/1367350 duh
-# http://beta-repo.eol.org/nodes/2732271 check
-# http://beta-repo.eol.org/nodes/3046079 check
-# http://beta-repo.eol.org/nodes/3077300 check
-# http://beta-repo.eol.org/nodes/3190398 check
-# http://beta-repo.eol.org/nodes/3889294 check
-# http://beta-repo.eol.org/nodes/4590106 check
-# http://beta-repo.eol.org/nodes/4818899 check
-# http://beta-repo.eol.org/nodes/4914502 check
-# http://beta-repo.eol.org/nodes/5331812 check
-#
-# These should all have matched to the dynamic hierarchy because there is only one Liriodendron tulipifera in the DH,
-# they all are perfect canonical matches, and there are no fatally conflicting ancestry data (i.e., none of them is a
-# child of Metazoa, for example). Also, a whole bunch of them have family information which is a perfect match to the DH
-# family.
+# Ancestor matches at the family level should be weighed quite heavily.
 #
 # If new_node_rank=species compare only to dhierarchy_nodes with rank species, subspecies and other infraspecific ranks.
 # If new_node_rank=genus compare only to dhierarchy_nodes with rank genus.

@@ -39,8 +39,6 @@ class CsvParser
         raise e
       end
       retry
-    rescue => e
-      raise(e.class.new(e.message + " IN +#{i} #{@path_to_file}"))
     end
     true
   end
