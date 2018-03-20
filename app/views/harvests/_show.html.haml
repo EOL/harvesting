@@ -1,43 +1,43 @@
-%strong= "#{link_to(l(harv.created_at, format: :short), harv)}:".html_safe
+%strong= "#{link_to(l(harv.created_at.localtime, format: :short), harv)}:".html_safe
 - if harv.failed_at
   %strong Failed:
-  = "#{l(harv.failed_at, format: :short)}"
+  = "#{l(harv.failed_at.localtime, format: :short)}"
 - elsif harv.completed_at
   %strong Completed:
-  = "#{l(harv.completed_at, format: :short)}"
+  = "#{l(harv.completed_at.localtime, format: :short)}"
 - elsif harv.indexed_at
   %strong Indexed:
-  = #{l(harv.indexed_at, format: :short)}"
+  = #{l(harv.indexed_at.localtime, format: :short)}"
 - elsif harv.stored_at
   %strong Stored:
-  = l(harv.stored_at, format: :short)
+  = l(harv.stored_at.localtime, format: :short)
 - elsif harv.consistency_checked_at
   %strong Consistency Checked:
-  = l(harv.consistency_checked_at, format: :short)
+  = l(harv.consistency_checked_at.localtime, format: :short)
 - elsif harv.names_parsed_at
   %strong Names Parsed:
-  = l(harv.names_parsed_at, format: :short)
+  = l(harv.names_parsed_at.localtime, format: :short)
 - elsif harv.nodes_matched_at
   %strong Nodes Matched:
-  = l(harv.nodes_matched_at, format: :short)
+  = l(harv.nodes_matched_at.localtime, format: :short)
 - elsif harv.ancestry_built_at
   %strong Ancestry Built:
-  = l(harv.ancestry_built_at, format: :short)
+  = l(harv.ancestry_built_at.localtime, format: :short)
 - elsif harv.units_normalized_at
   %strong Units Normalized:
-  = l(harv.units_normalized_at, format: :short)
+  = l(harv.units_normalized_at.localtime, format: :short)
 - elsif harv.linked_at
   %strong Linked:
-  = l(harv.linked_at, format: :short)
+  = l(harv.linked_at.localtime, format: :short)
 - elsif harv.deltas_created_at
   %strong Deltas Created
-  = l(harv.deltas_created_at, format: :short)
+  = l(harv.deltas_created_at.localtime, format: :short)
 - elsif harv.validated_at
   %strong Validated:
-  = l(harv.validated_at, format: :short)
+  = l(harv.validated_at.localtime, format: :short)
 - elsif harv.fetched_at
   %strong Fetched:
-  = l(harv.fetched_at, format: :short)
+  = l(harv.fetched_at.localtime, format: :short)
 - else
   = harv.stage
 - if harv.time_in_minutes

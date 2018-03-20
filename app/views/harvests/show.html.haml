@@ -2,7 +2,7 @@
   Harvest for
   = link_to(@harvest.resource.name, @harvest.resource)
   Created
-  = l(@harvest.created_at, format: :short)
+  = l(@harvest.created_at.localtime, format: :short)
 .ui.negative.button
   = link_to(t("harvests.actions.destroy"), harvest_path(@harvest), method: :delete, style: 'color: white', data: { confirm: 'Are you SURE?' })
 
@@ -15,55 +15,55 @@
   - if @harvest.fetched_at
     .item
       %strong Fetched:
-      = l(@harvest.fetched_at, format: :short)
+      = l(@harvest.fetched_at.localtime, format: :short)
   - if @harvest.validated_at
     .item
       %strong Validated:
-      = l(@harvest.validated_at, format: :short)
+      = l(@harvest.validated_at.localtime, format: :short)
   - if @harvest.deltas_created_at
     .item
       %strong Deltas Created
-      = l(@harvest.deltas_created_at, format: :short)
+      = l(@harvest.deltas_created_at.localtime, format: :short)
   - if @harvest.linked_at
     .item
       %strong Linked:
-      = l(@harvest.linked_at, format: :short)
+      = l(@harvest.linked_at.localtime, format: :short)
   - if @harvest.units_normalized_at
     .item
       %strong Units Normalized:
-      = l(@harvest.units_normalized_at, format: :short)
+      = l(@harvest.units_normalized_at.localtime, format: :short)
   - if @harvest.ancestry_built_at
     .item
       %strong Ancestry Built:
-      = l(@harvest.ancestry_built_at, format: :short)
+      = l(@harvest.ancestry_built_at.localtime, format: :short)
   - if @harvest.nodes_matched_at
     .item
       %strong Nodes Matched:
-      = l(@harvest.nodes_matched_at, format: :short)
+      = l(@harvest.nodes_matched_at.localtime, format: :short)
   - if @harvest.names_parsed_at
     .item
       %strong Names Parsed:
-      = l(@harvest.names_parsed_at, format: :short)
+      = l(@harvest.names_parsed_at.localtime, format: :short)
   - if @harvest.consistency_checked_at
     .item
       %strong Consistency Checked:
-      = l(@harvest.consistency_checked_at, format: :short)
+      = l(@harvest.consistency_checked_at.localtime, format: :short)
   - if @harvest.stored_at
     .item
       %strong New Models Stored:
-      = l(@harvest.stored_at, format: :short)
+      = l(@harvest.stored_at.localtime, format: :short)
   - if @harvest.indexed_at
     .item
       %strong Indexed:
-      = l(@harvest.indexed_at, format: :short)
+      = l(@harvest.indexed_at.localtime, format: :short)
   - if @harvest.failed_at
     .item
       %strong Failed:
-      = l(@harvest.failed_at, format: :short)
+      = l(@harvest.failed_at.localtime, format: :short)
   - if @harvest.completed_at
     .item
       %strong Completed:
-      = l(@harvest.completed_at, format: :short)
+      = l(@harvest.completed_at.localtime, format: :short)
   - if @harvest.time_in_minutes
     .item
       %strong Time to Harvest:

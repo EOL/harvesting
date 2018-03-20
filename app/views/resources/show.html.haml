@@ -88,10 +88,10 @@
       = "An admin has set this resource to Force Harvest."
   .item
     %strong= "Created:"
-    = I18n.l @resource.created_at, format: :short
+    = I18n.l @resource.created_at.localtime, format: :short
   .item
     %strong= "Last Updated:"
-    = I18n.l @resource.updated_at, format: :short
+    = I18n.l @resource.updated_at.localtime, format: :short
 
 %h2= "Expected File Format Definitions"
 - if @formats.empty?

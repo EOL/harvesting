@@ -1,13 +1,13 @@
-# http://beta-repo.eol.org/nodes/1367350
-# http://beta-repo.eol.org/nodes/2732271
-# http://beta-repo.eol.org/nodes/3046079
-# http://beta-repo.eol.org/nodes/3077300
-# http://beta-repo.eol.org/nodes/3190398
-# http://beta-repo.eol.org/nodes/3889294
-# http://beta-repo.eol.org/nodes/4590106
-# http://beta-repo.eol.org/nodes/4818899
-# http://beta-repo.eol.org/nodes/4914502
-# http://beta-repo.eol.org/nodes/5331812
+# http://beta-repo.eol.org/nodes/1367350 duh
+# http://beta-repo.eol.org/nodes/2732271 check
+# http://beta-repo.eol.org/nodes/3046079 check
+# http://beta-repo.eol.org/nodes/3077300 check
+# http://beta-repo.eol.org/nodes/3190398 check
+# http://beta-repo.eol.org/nodes/3889294 check
+# http://beta-repo.eol.org/nodes/4590106 check
+# http://beta-repo.eol.org/nodes/4818899 check
+# http://beta-repo.eol.org/nodes/4914502 check
+# http://beta-repo.eol.org/nodes/5331812 check
 #
 # These should all have matched to the dynamic hierarchy because there is only one Liriodendron tulipifera in the DH,
 # they all are perfect canonical matches, and there are no fatally conflicting ancestry data (i.e., none of them is a
@@ -212,9 +212,10 @@ class NamesMatcher
     opts[:strategy] ||= 0
     common_exceptions = {
       'Animalia' => 1,
-      'Plantae' => 281,
       'Chromista' => 3352,
       'Fungi' => 5559,
+      'Metazoa' => 1,
+      'Plantae' => 281,
       'Protozoa' => 4651
     }
     # COMMON KINGDOMS (much easier/faster to hard-code these!):
