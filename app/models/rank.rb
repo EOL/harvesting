@@ -34,12 +34,15 @@ class Rank
       return '' unless verbatim.match?(/[a-z]/) # There are some wonky values; ignore them.
       words = []
       cleaned.split.each do |word|
+        prefix = nil
         if (prefix = find_prefix(word))
           word.sub!(/^#{prefix}/, '')
-          words << prefix
         end
         word = abbrs[word] if abbrs.key?(word)
-        words << word
+        unless word.blank?
+          words << prefix if prefix
+          words << word
+        end
       end
       cleaned = words.join
       cleaned.sub!(/group$/, '_group')
@@ -112,8 +115,10 @@ class Rank
     'genera' => 'genus',
     'genre' => 'genus',
     'gen' => 'genus',
+    'generic' => 'genus',
     's' => 'species',
     'sp' => 'species',
+    'specific' => 'species',
     'spesies' => 'species', # Known misspelling
     'espesye' => 'species', # Known misspelling (another lang, maybe?)
     'especie' => 'species', # Known misspelling (another lang, maybe?)
@@ -137,7 +142,10 @@ class Rank
     'cld' => 'clade',
     'clades' => 'clade',
     'unranked' => '',
-    'fsp' => 'forma_specialis' # Err... not sure we *care* about this one, but...
+    'fsp' => 'forma_specialis', # Err... not sure we *care* about this one, but...
+    # KNOWN JUNK NAMES:
+    'suprageneric' => '',
+    'specificname' => ''
   }
 
   @groups = 'paraphyletic group' + 'polyphyletic group'
