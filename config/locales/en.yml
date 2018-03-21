@@ -249,6 +249,9 @@ en:
       vernaculars: "vernaculars"
       downloaded_media_count: "downloaded"
       failed_downloaded_media_count: "failed"
+      downloaded_media_progress:
+        zero: "starting..."
+        other: "%{count}% downloaded"
   terms:
     actions:
       back: "back to all terms"
