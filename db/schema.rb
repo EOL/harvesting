@@ -600,8 +600,8 @@ ActiveRecord::Schema.define(version: 20180321190317) do
     t.string   "dataset_rights_holder",         limit: 255
     t.string   "dataset_rights_statement",      limit: 255
     t.string   "opendata_url",                  limit: 2083
-    t.integer  "downloaded_media_count",        limit: 4
-    t.integer  "failed_downloaded_media_count", limit: 4
+    t.integer  "downloaded_media_count",        limit: 4,     default: 0
+    t.integer  "failed_downloaded_media_count", limit: 4,     default: 0
   end
 
   add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree
