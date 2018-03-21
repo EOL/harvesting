@@ -145,7 +145,7 @@ class Medium < ActiveRecord::Base
       harvest.log("download_and_resize completed for Medium.find(#{id}) /#{base_url}.260x190.jpg", cat: :downloads)
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
-      resource.update_attribute('failed_downloaded_media_count = failed_downloaded_media_count + 1')
+      resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
       return nil
     end
   end
