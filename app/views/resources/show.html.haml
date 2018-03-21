@@ -156,7 +156,7 @@
 
 - if media_count.positive?
   .ui.segment
-    - pct = (@resource.downloaded_media_count / media_count.to_f) * 100
+    - pct = ((@resource.downloaded_media_count / media_count.to_f) * 100).ceil
     .ui.progress{ data: { percent: pct } }
       .bar
         .progress
