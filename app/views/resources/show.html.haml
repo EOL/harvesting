@@ -117,6 +117,7 @@
     - @resource.harvests.order(created_at: :desc).each do |harv|
       .item= render('harvests/show', harv: harv)
 %h2= "Content"
+- media_count = @resource.media.published.count
 .ui.segment
   .ui.tiny.statistics
     .statistic
@@ -129,7 +130,7 @@
       .value= @resource.identifiers.count
       .label= t("resources.stats.identifiers")
     .statistic
-      .value= @resource.media.published.count
+      .value= media_count
       .label= t("resources.stats.media")
     .statistic
       .value= @resource.references.published.count
@@ -152,6 +153,13 @@
     .statistic
       .value= @resource.failed_downloaded_media_count
       .label= t("resources.stats.failed_downloaded_media_count")
+
+- if media_count.positive?
+.ui.segment
+  .ui.progress{ data: { percent: (media_count / @resource.downloaded_media_count) }}
+    .bar
+      .progress
+  .label= t("resources.stats.downloaded_media_count")
 
 %h2= t(:resource_nodes_title)
 - unless @resource.nodes.published.empty?
