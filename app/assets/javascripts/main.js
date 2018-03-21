@@ -12,6 +12,7 @@ if(!EOL) {
           .closest('.message')
           .transition('fade');
       });
+    $('#progress').progress();
   };
 };
 
