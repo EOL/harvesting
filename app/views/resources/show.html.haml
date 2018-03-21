@@ -155,11 +155,11 @@
       .label= t("resources.stats.failed_downloaded_media_count")
 
 - if media_count.positive?
-.ui.segment
-  .ui.progress{ data: { percent: (media_count / @resource.downloaded_media_count) }}
-    .bar
-      .progress
-  .label= t("resources.stats.downloaded_media_count")
+  .ui.segment
+    .ui.progress{ data: { percent: (media_count / @resource.downloaded_media_count) } }
+      .bar
+        .progress
+    .label= t("resources.stats.downloaded_media_count")
 
 %h2= t(:resource_nodes_title)
 - unless @resource.nodes.published.empty?
