@@ -146,6 +146,7 @@ class Medium < ActiveRecord::Base
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute('failed_downloaded_media_count = failed_downloaded_media_count + 1')
+      raise e
     end
   end
 
