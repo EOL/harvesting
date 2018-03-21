@@ -24,7 +24,7 @@ class Medium < ActiveRecord::Base
     attr_accessor :sizes, :bucket_size
 
     def download_and_resize(images)
-      images.find_each { |img| Delayed::Job.enqueue(DownloadMediumJob.new(img.id)) }
+      images.pluck(&:id).each { |img_id| Delayed::Job.enqueue(DownloadMediumJob.new(img_id)) }
     end
   end
 
