@@ -92,7 +92,7 @@ class Medium < ActiveRecord::Base
         mess = "#{get_url} was empty. Medium.find(#{id}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
-        return nil
+        raise 'empty'
       end
       content_type = raw.content_type
       unless content_type.match?(/^image/i)
@@ -116,7 +116,7 @@ class Medium < ActiveRecord::Base
         mess = "Couldn't parse image #{get_url} for Medium ##{id} (#{e.message})"
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
-        return nil
+        raise 'unparsable'
       end
       d_time = Time.now
       orig_w = image.columns
@@ -146,7 +146,7 @@ class Medium < ActiveRecord::Base
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute('failed_downloaded_media_count = failed_downloaded_media_count + 1')
-      raise e
+      return nil
     end
   end
 
