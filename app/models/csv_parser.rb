@@ -19,6 +19,7 @@ class CsvParser
     return false unless File.exist?(@path_to_file)
     quote = '"'
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
+    tries = 0
     begin
       CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
         next if row.compact.empty?
@@ -26,6 +27,7 @@ class CsvParser
         i += 1
       end
     rescue CSV::MalformedCSVError => e
+      tries += 1
       if @row_sep == "\n"
         puts "WARNING: Re-reading #{@path_to_file} with CRLF insteead of LF."
         @row_sep = "\r\n"
@@ -38,7 +40,7 @@ class CsvParser
       else
         raise e
       end
-      retry
+      retry unless tries > 3
     end
     true
   end
