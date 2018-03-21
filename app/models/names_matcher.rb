@@ -1,3 +1,22 @@
+# This is *intended* to more or less match the rules expressed in
+# https://docs.google.com/document/d/1msiuXwd19R51GaA212Gl4fIYxL3uTG831eRozPTBE5Y ... though that document is treated
+# more as 'suggestions' than an actual algorithm (in the interests of speed and flexibility, not in disagreement)
+
+# It's worth mentioning that there are two "great filters" for names-matching. The first is the search itself, which is
+# necessarily exclusive. ...So if the search criteria say "match this ancestor," then any potential names matches that
+# DON'T match that ancestor won't even be *considered* and will not receive a score.
+
+# The second is the score itself. The first notable exception here is that if the search only returns a single result,
+# NO SCORE IS CALCULATED This is done both in the interest of time, but also because the INTENT is that, if there really
+# are exclusionary rules, they SHOULD be expressed IN THE SEARCH QUERY. That said, the score is based on a few rules,
+# and the matching_node that receives the highest score will be matched.
+
+# The next most important concept to undestand here is that there are several "strategies" for the search query itself,
+# from most- to least-strict, and each strategy is applied in turn and skipped only if it yields 0 results. So, for
+# example, the first strategy looks for an exact match to the scientific name including authority within the Dynamic
+# Hierarchy (DH) ONLY. If that search fails, it then tries exact scientific names with authority against DH synonyms...
+# and so on, I don't want to enumerate them here in the documentation, as the code itself is canonical, q.v.!
+
 class NamesMatcher
   def self.for_harvest(harvest, options = {})
     new(harvest, options).start
@@ -262,8 +281,7 @@ class NamesMatcher
       scores[matching_node][:matching_family] = family_matched?(matching_node)
       scores[matching_node][:score] = 0
       # NOTE: we are unsure of how effective this is; we really need to pay attention to how this performs.
-      if
-      elsif !scores[matching_node][:matching_family] &&
+      if !scores[matching_node][:matching_family] &&
          scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
         @logs << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
           "of #{@ancestors.size}"
