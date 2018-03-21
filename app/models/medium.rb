@@ -140,7 +140,7 @@ class Medium < ActiveRecord::Base
       unmodified_url = "#{default_base_url}.jpg"
       update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
                         unmodified_url: unmodified_url, base_url: default_base_url)
-      resource.update_attribute('downloaded_media_count = downloaded_media_count + 1')
+      resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
       image&.destroy! # Clear memory
       harvest.log("download_and_resize completed for Medium.find(#{id}) /#{base_url}.260x190.jpg", cat: :downloads)
     rescue => e
