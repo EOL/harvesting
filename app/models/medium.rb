@@ -95,7 +95,7 @@ class Medium < ActiveRecord::Base
         raise 'empty'
       end
       content_type = raw.content_type
-      unless content_type.match?(/^image/i)
+      unless content_type.match?(/^image/i) || content_type.match?(%r{application/octet-stream})
         # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
         # clearer.
         mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{id}) resource: #{resource.name} "\
