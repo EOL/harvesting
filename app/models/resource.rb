@@ -81,7 +81,11 @@ class Resource < ActiveRecord::Base
   end
 
   def undownloaded_media_count
-    Medium.where(resource_id: id, sizes: nil).count
+    media.where(sizes: nil).count
+  end
+
+  def fix_downloaded_media_count
+    update_attribute(:downloaded_media_count, media.where('sizes IS NOT NULL').count)
   end
 
   def lockfile_name
