@@ -1,9 +1,3 @@
-# Ancestor matches at the family level should be weighed quite heavily.
-#
-# If new_node_rank=species compare only to dhierarchy_nodes with rank species, subspecies and other infraspecific ranks.
-# If new_node_rank=genus compare only to dhierarchy_nodes with rank genus.
-# If new_node_rank=family compare only to dhierarchy_nodes with rank family.
-# If new_node_kingdom=animal, animals, metazoa, ..., compare only to dhierarchy_nodes that are descendents of animalia.
 class NamesMatcher
   def self.for_harvest(harvest, options = {})
     new(harvest, options).start
@@ -38,8 +32,8 @@ class NamesMatcher
     @first_non_author_strategy_index = @strategies.index { |a| a !~ /authors/ }
     # variables like these really should be CONFIGURABLE, not hard-coded, so we can change a text file on the server and
     # re-run something to try new values.
-    @child_match_weight = 1
-    @ancestor_match_weight = 1
+    @child_match_weight = 1.0
+    @ancestor_match_weight = 1.0
     @max_ancestor_depth = 2
     # If fewer than this many ancestors match, then we assume this is just a bad match (and we never allow it),
     # regardless of how much "better" it might look than others due to sheer numbers.
@@ -57,12 +51,29 @@ class NamesMatcher
     @in_unmapped_area = true
   end
 
-  def match(name, how)
+  def match(node, how)
     how[:where] ||= {}
-    how[:where][:canonical] = name.canonical
+    how[:where][:canonical] = node.scientific_name.canonical
     how[:where][:ancestor_page_ids] = @ancestor.page_id if @ancestor
-    how[:where][:is_hybrid] = true if name.hybrid?
+    # If the new node is within animalia, it MUST match an animal page:
+    if @ancestors.map(:page_id).include?(1)
+      if how[:where][:ancestor_page_ids] && how[:where][:ancestor_page_ids] != 1
+        how[:where][:ancestor_page_ids] = [1, how[:where][:ancestor_page_ids]]
+      else
+        how[:where][:ancestor_page_ids] = 1
+      end
+    end
+    how[:where][:is_hybrid] = true if node.scientific_name.hybrid?
+    # Families and genera may ONLY match at that specific rank:
+    if node.rank == 'family' || node.rank == 'genus'
+      how[:where][:rank] = node.rank
+    elsif node.rank == 'species' # TODO: Really? Or should it be { Rank.species_or_lower.include?(node.rank) }?
+      # If new_node_rank=species compare only to dhierarchy_nodes with rank species, subspecies and other infraspecific
+      # ranks.
+      how[:where][:rank] = Rank.species_or_lower
+    end
     how[:includes] = [:scientific_name]
+    how[:load] = false # Careful! Now you don't have models, you have a hash resembling one...
     how.delete(:where) if how[:where].empty?
     @harvest.log("Q: #{how.inspect}") if @explain
     @logs << "Q: #{how.inspect}"
@@ -72,31 +83,31 @@ class NamesMatcher
     results
   end
 
-  def match_canonical_and_authors_in_eol(name)
-    match(name, fields: [:canonical], where: { resource_id: 1, authors: name.authors })
+  def match_canonical_and_authors_in_eol(node)
+    match(node, fields: [:canonical], where: { resource_id: 1, authors: node.scientific_name.authors })
   end
 
-  def match_synonyms_and_authors_in_eol(name)
-    match(name, fields: [:synonyms], where: { resource_id: 1, synonym_authors: name.authors })
+  def match_synonyms_and_authors_in_eol(node)
+    match(node, fields: [:synonyms], where: { resource_id: 1, synonym_authors: node.scientific_name.authors })
   end
 
-  def match_synonyms_and_authors_from_partners(name)
-    where = { synonym_authors: name.authors }
+  def match_synonyms_and_authors_from_partners(node)
+    where = { synonym_authors: node.scientific_name.authors }
     where[:resource_id] = { not: @resource.id } unless @resource.might_have_duplicate_taxa
-    match(name, fields: [:synonyms], where: where)
+    match(node, fields: [:synonyms], where: where)
   end
 
-  def match_canonical_in_eol(name)
-    match(name, fields: [:canonical], where: { resource_id: 1 })
+  def match_canonical_in_eol(node)
+    match(node, fields: [:canonical], where: { resource_id: 1 })
   end
 
-  def match_synonyms_in_eol(name)
-    match(name, fields: [:synonyms], where: { resource_id: 1 })
+  def match_synonyms_in_eol(node)
+    match(node, fields: [:synonyms], where: { resource_id: 1 })
   end
 
   # TODO: some resources CAN match themselves...
-  def match_canonical_from_partners(name)
-    match(name, fields: [:canonical], where: { resource_id: { not: @resource.id } })
+  def match_canonical_from_partners(node)
+    match(node, fields: [:canonical], where: { resource_id: { not: @resource.id } })
   end
 
   def start
@@ -130,11 +141,10 @@ class NamesMatcher
     @explain = true
     return if skip_blank_canonical(node)
     @ancestors = node.node_ancestors.map(&:ancestor)
-    @in_unmapped_area = @ancestors.empty?
+    @in_unmapped_area = @ancestors.empty? || @ancestors.select(&:is_on_page_in_dynamic_hierarchy).empty?
     return @harvest.log("CANNOT MATCH NAMES. You haven't harvested the Dynamic Hierarchy.") unless Harvest.completed.any?
     @have_names = true
     map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
-    # update_nodes
     @node_updates
   end
 
@@ -198,9 +208,12 @@ class NamesMatcher
     opts[:strategy] ||= 0
     common_exceptions = {
       'Animalia' => 1,
+      'Animal' => 1,
+      'Animals' => 1,
       'Chromista' => 3352,
       'Fungi' => 5559,
       'Metazoa' => 1,
+      'Metazoan' => 1,
       'Plantae' => 281,
       'Protozoa' => 4651
     }
@@ -209,7 +222,7 @@ class NamesMatcher
       return save_match(node, common_exceptions[node.scientific_name.canonical], 'common kingdom match')
     end
     @logs << @strategies[opts[:strategy]]
-    results = send(@strategies[opts[:strategy]], node.scientific_name)
+    results = send(@strategies[opts[:strategy]], node)
     if results.total_count == 1
       @logs << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
       return save_match(node, results.first[:page_id], 'single hit')
@@ -245,10 +258,13 @@ class NamesMatcher
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
       scores[matching_node][:matching_children] = count_matches(matching_node.child_names, node.child_names)
-      scores[matching_node][:matching_ancestors] = count_ancestors_with_page_ids_assigned
+      scores[matching_node][:matching_ancestors] = matching_ancestors(matching_node)
+      scores[matching_node][:matching_family] = family_matched?(matching_node)
       scores[matching_node][:score] = 0
       # NOTE: we are unsure of how effective this is; we really need to pay attention to how this performs.
-      if scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
+      if
+      elsif !scores[matching_node][:matching_family] &&
+         scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
         @logs << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
           "of #{@ancestors.size}"
         scores[matching_node][:matching_ancestors] = 0
@@ -260,34 +276,35 @@ class NamesMatcher
         scores[matching_node][:score] =
           scores[matching_node][:matching_children] * @child_match_weight +
           scores[matching_node][:matching_ancestors] * @ancestor_match_weight
+        scores[matching_node][:score] += 5.0 if scores[matching_node][:matching_family]
       end
     end
     best_match = nil
     best_score = 0
     tie = false
-    scores.each do |page, details|
+    scores.each do |node_hash, details|
       if details[:score] > best_score
-        best_match = page
+        best_match = node_hash
         best_score = details[:score]
         tie = false
       elsif details[:score] == best_score
-        tie = page
+        tie = node_hash
       end
     end
     simple_scores = {}
     if (top_scores = scores.sort_by { |_, v| 0 - v[:score] })
-      top_scores[0..4].reverse.each { |k, v| simple_scores[k.id] = v }
+      top_scores[0..4].reverse.each { |k, v| simple_scores[k['id']] = v }
     end
     if best_score.zero?
       @logs << "best score was 0: #{simple_scores.inspect}"
       unmapped(node)
     elsif tie
       @logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
-        "#{best_match.canonical} = #{scores[best_match].inspect} "\
-        "VS #{tie.canonical} = #{scores[tie].inspect}"
+        "#{best_match['id']} = #{simple_scores[best_match['id']].inspect} "\
+        "VS #{tie['id']} = #{simple_scores[best_match['id']].inspect}"
       unmapped(node)
     else
-      @logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match.page_id} (#{best_match.canonical}): "\
+      @logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match['page_id']} (#{best_match['canonical']}): "\
         "#{simple_scores.inspect}"
       save_match(node, best_match['page_id'])
     end
@@ -335,8 +352,13 @@ class NamesMatcher
     other.count { |n| hash.key?(n) }
   end
 
-  def count_ancestors_with_page_ids_assigned
-    @ancestors.count { |a| !a.page_id.nil? }
+  def matching_ancestors(matching_node)
+    (matching_node[:ancestor_page_ids].sort & @ancestors.map(&:page_id)).size
+  end
+
+  def family_matched?(matching_node)
+    family_page = matching_node[:ancestor_page_ids][matching_node[:ancestor_ranks].index('family')]
+    @ancestors.map(&:page_id).include?(family_page)
   end
 
   def log_unmatched

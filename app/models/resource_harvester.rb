@@ -117,7 +117,7 @@ class ResourceHarvester
   end
 
   # TODO: Clean the code for the next few methods. This was pretty sloppy.
-
+  # TODO: Sanity checks. Is there a really long line in the file, for example?
   def validate_each_file
     # TODO: this should check ID consistentcy too...
     # @harvest.update_attribute(:consistency_checked_at, Time.now)

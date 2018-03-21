@@ -1,14 +1,34 @@
 # NOTE: this is NOT a database model! We only store strings.
 class Rank
   class << self
-    attr_accessor :ordered, :unordered, :abbrs, :prefixes
+    attr_accessor :ordered, :unordered, :abbrs, :prefixes, :species_or_lower
 
     def all
       @ordered
     end
 
-    def add_prefixes(basenames)
-      basenames.flat_map { |b| @prefixes.map { |p| p == '-' ? b : "#{p}#{b}" } }
+    def add_prefixes(basenames, options = {})
+      prefixes =
+        if (which = options[:only])
+          if which == :higher
+            @higher_prefixes
+          elsif which == :lower
+            @lower_prefixes
+          end
+        else
+          @prefixes
+        end
+      basenames.flat_map do |basename|
+        prefixes.map do |prefix|
+          if prefix == '-'
+            basename
+          elsif prefix.match?(/^_/)
+            "#{basename}#{prefix}"
+          else
+            "#{prefix}#{basename}"
+          end
+        end
+      end
     end
 
     def sort(array)
@@ -25,7 +45,7 @@ class Rank
       end
     end
 
-      def clean(verbatim)
+    def clean(verbatim)
       cleaned = verbatim.downcase # We don't allow caps (at all); these are meant to be I18n symbols!
       cleaned.gsub!(/\s+/, ' ') # Normalize all spaces
       cleaned.gsub!(/[^ a-z]/, '') # remove all non-alpha characters, including ALL punctuation! Yes, really.
@@ -60,7 +80,7 @@ class Rank
   end
 
   # These were provided by Katja and are in order:
-  @base_names = %w[
+  @higher_base_names = %w[
     domain
     kingdom
     phylum
@@ -71,8 +91,11 @@ class Rank
     family
     tribe
     genus
-  ] + ['species group'] + %w[
-    species
+  ]
+
+  @specific_base_names = ['species'] # Just allowing for more...
+
+  @lower_base_names = %w[
     variety
     form
   ]
@@ -148,11 +171,15 @@ class Rank
     'specificname' => ''
   }
 
-  @groups = 'paraphyletic group' + 'polyphyletic group'
-
-  @prefixes = %w[mega super epi sub infra subter]
-  @ordered = Rank.add_prefixes(@base_names)
   @unordered_base_names = %w[section series clade]
-  @unordered = Rank.add_prefixes(@unordered_base_names)
 
+  @groups = 'paraphyletic group' + 'polyphyletic group'
+  @higher_prefixes = %w[mega super epi _group]
+  @lower_prefixes = %w[- sub infra subter] # NOTE: the '-' is special and intended to handle NO prefix.
+  @prefixes = @higher_prefixes + @lower_prefixes
+  @species_or_lower = Rank.add_prefixes(@specific_base_names, only: :lower) + Rank.add_prefixes(@lower_base_names)
+  @ordered = Rank.add_prefixes(@higher_base_names) +
+             Rank.add_prefixes(@specific_base_names, only: :higher) +
+             @species_or_lower
+  @unordered = Rank.add_prefixes(@unordered_base_names)
 end

@@ -51,7 +51,6 @@ class WebDb < ActiveRecord::Base
       rank = full_rank.downcase
       return nil if rank.blank?
       return @ranks[rank] if @ranks.key?(rank)
-      logger.log("Encountered new rank, please assign it to a preferred rank: #{rank}", cat: :warns)
       @ranks[rank] = raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
     end
 
