@@ -231,7 +231,11 @@ class Resource < ActiveRecord::Base
       raise 'THERE WERE FAILED DOWNLOADS' if media.published.failed_download.count.positive?
       return nil
     end
-    Medium.download_and_resize(media.published.missing.limit(1000))
+    Medium.download_and_resize(media.published.missing.limit(100))
+    delay_more_downloads
+  end
+
+  def delay_more_downloads
     delay(queue: 'media').download_missing_images # NOTE: this could cause an infinite loop...
   end
 

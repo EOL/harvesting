@@ -68,3 +68,17 @@ ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
     1
   end
 end
+
+DownloadMediumJob = Struct.new(:medium_id) do
+  def perform
+    Medium.find(medium_id).download_and_resize
+  end
+
+  def queue_name
+    'media'
+  end
+
+  def max_attempts
+    1 # We handle this elsewhere.
+  end
+end

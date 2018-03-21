@@ -247,6 +247,8 @@ en:
       scientific_names: "scientific_names"
       traits: "traits"
       vernaculars: "vernaculars"
+      downloaded_media_count: "downloaded"
+      failed_downloaded_media_count: "failed"
   terms:
     actions:
       back: "back to all terms"
