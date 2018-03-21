@@ -80,6 +80,10 @@ class Resource < ActiveRecord::Base
     resource
   end
 
+  def undownloaded_media_count
+    Medium.where(resource_id: id, sizes: nil).count
+  end
+
   def lockfile_name
     "#{path}/harvest.lock"
   end
@@ -223,7 +227,12 @@ class Resource < ActiveRecord::Base
   end
 
   def download_missing_images
-    Medium.download_and_resize(media.published.missing)
+    if media.published.missing.count.zero?
+      raise 'THERE WERE FAILED DOWNLOADS' if media.published.failed_download.count.positive?
+      return nil
+    end
+    Medium.download_and_resize(media.published.missing.limit(1000))
+    delay(queue: 'media').download_missing_images # NOTE: this could cause an infinite loop...
   end
 
   def convert_trait_units
