@@ -73,16 +73,18 @@ class NamesMatcher
   end
 
   def match(node, how)
+    field = how.delete(:field) || :canonical
     how[:where] ||= {}
-    how[:where][:canonical] = node.scientific_name.canonical
+    how[:where][field] = node.scientific_name.canonical
     how[:where][:ancestor_page_ids] = @ancestor.page_id if @ancestor
     # If the new node is within animalia, it MUST match an animal page:
     if @ancestors.map(&:page_id).include?(1)
-      if how[:where][:ancestor_page_ids] && how[:where][:ancestor_page_ids] != 1
-        how[:where][:ancestor_page_ids] = [1, how[:where][:ancestor_page_ids]]
-      else
-        how[:where][:ancestor_page_ids] = 1
-      end
+      how[:where][:ancestor_page_ids] =
+        if how[:where][:ancestor_page_ids] && how[:where][:ancestor_page_ids] != 1
+          [1, how[:where][:ancestor_page_ids]]
+        else
+          1
+        end
     end
     how[:where][:is_hybrid] = true if node.scientific_name.hybrid?
     # Families and genera may ONLY match at that specific rank:
@@ -105,30 +107,30 @@ class NamesMatcher
   end
 
   def match_canonical_and_authors_in_eol(node)
-    match(node, fields: [:canonical], where: { resource_id: 1, authors: node.scientific_name.authors })
+    match(node, where: { resource_id: 1, authors: node.scientific_name.authors })
   end
 
   def match_synonyms_and_authors_in_eol(node)
-    match(node, fields: [:synonyms], where: { resource_id: 1, synonym_authors: node.scientific_name.authors })
+    match(node, field: :synonyms, where: { resource_id: 1, synonym_authors: node.scientific_name.authors })
   end
 
   def match_synonyms_and_authors_from_partners(node)
     where = { synonym_authors: node.scientific_name.authors }
     where[:resource_id] = { not: @resource.id } unless @resource.might_have_duplicate_taxa
-    match(node, fields: [:synonyms], where: where)
+    match(node, field: :synonyms, where: where)
   end
 
   def match_canonical_in_eol(node)
-    match(node, fields: [:canonical], where: { resource_id: 1 })
+    match(node, where: { resource_id: 1 })
   end
 
   def match_synonyms_in_eol(node)
-    match(node, fields: [:synonyms], where: { resource_id: 1 })
+    match(node, field: :synonyms, where: { resource_id: 1 })
   end
 
   # TODO: some resources CAN match themselves...
   def match_canonical_from_partners(node)
-    match(node, fields: [:canonical], where: { resource_id: { not: @resource.id } })
+    match(node, where: { resource_id: { not: @resource.id } })
   end
 
   def start
@@ -335,7 +337,8 @@ class NamesMatcher
 
   def save_match(node, page_id, message = nil)
     @logs << message if message
-    node.assign_attributes(page_id: page_id, matching_log: @logs.join('; '))
+    # NOTE: only grabbing the end of the matching log, if it's too long...
+    node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_535..-1])
     @node_updates << node
     true # Just avoiding a large return value.
   end
