@@ -75,7 +75,7 @@ class NamesMatcher
     how[:where][:canonical] = node.scientific_name.canonical
     how[:where][:ancestor_page_ids] = @ancestor.page_id if @ancestor
     # If the new node is within animalia, it MUST match an animal page:
-    if @ancestors.map(:page_id).include?(1)
+    if @ancestors.map(&:page_id).include?(1)
       if how[:where][:ancestor_page_ids] && how[:where][:ancestor_page_ids] != 1
         how[:where][:ancestor_page_ids] = [1, how[:where][:ancestor_page_ids]]
       else
@@ -276,7 +276,7 @@ class NamesMatcher
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
-      scores[matching_node][:matching_children] = count_matches(matching_node.child_names, node.child_names)
+      scores[matching_node][:matching_children] = count_matches(matching_node.children, node.child_names)
       scores[matching_node][:matching_ancestors] = matching_ancestors(matching_node)
       scores[matching_node][:matching_family] = family_matched?(matching_node)
       scores[matching_node][:score] = 0
@@ -365,9 +365,8 @@ class NamesMatcher
   end
 
   def count_matches(one, other)
-    hash = {}
-    one.each { |n| hash[n] = true }
-    other.count { |n| hash.key?(n) }
+    return nil if one.nil? || other.nil?
+    (one & other).size
   end
 
   def matching_ancestors(matching_node)
@@ -375,7 +374,9 @@ class NamesMatcher
   end
 
   def family_matched?(matching_node)
-    family_page = matching_node[:ancestor_page_ids][matching_node[:ancestor_ranks].index('family')]
+    family_index = matching_node[:ancestor_ranks].index('family')
+    return nil if family_index.nil?
+    family_page = matching_node[:ancestor_page_ids][family_index]
     @ancestors.map(&:page_id).include?(family_page)
   end
 
