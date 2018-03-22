@@ -38,6 +38,8 @@ class NamesMatcher
     @resource = @harvest.resource
     @root_nodes = []
     @node_updates = []
+    @species_or_lower = {}
+    Rank.species_or_lower.each { |rank| @species_or_lower[rank] = true }
     @explain = options[:explain]
     @should_update = options.key?(:update) ? options[:update] : true
     @strategies = %i[
@@ -86,10 +88,10 @@ class NamesMatcher
     # Families and genera may ONLY match at that specific rank:
     if node.rank == 'family' || node.rank == 'genus'
       how[:where][:rank] = node.rank
-    elsif node.rank == 'species' # TODO: Really? Or should it be { Rank.species_or_lower.include?(node.rank) }?
+    elsif @species_or_lower.key?(node.rank)
       # If new_node_rank=species compare only to dhierarchy_nodes with rank species, subspecies and other infraspecific
       # ranks.
-      how[:where][:rank] = Rank.species_or_lower
+      how[:where][:rank] = @species_or_lower.keys << ''
     end
     how[:includes] = [:scientific_name]
     how[:load] = false # Careful! Now you don't have models, you have a hash resembling one...
@@ -279,7 +281,8 @@ class NamesMatcher
       scores[matching_node][:matching_children] = count_matches(matching_node.children, node.child_names)
       scores[matching_node][:matching_ancestors] = matching_ancestors(matching_node)
       scores[matching_node][:matching_family] = family_matched?(matching_node)
-      scores[matching_node][:score] = 0
+      scores[matching_node][:sameness_of_names] = sameness_of_names(node, matching_node)
+      scores[matching_node][:score] = 0.0
       # NOTE: we are unsure of how effective this is; we really need to pay attention to how this performs.
       if !scores[matching_node][:matching_family] &&
          scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
@@ -294,11 +297,12 @@ class NamesMatcher
         scores[matching_node][:score] =
           scores[matching_node][:matching_children] * @child_match_weight +
           scores[matching_node][:matching_ancestors] * @ancestor_match_weight
-        scores[matching_node][:score] += 5.0 if scores[matching_node][:matching_family]
+        scores[matching_node][:score] *= 2.0 if scores[matching_node][:matching_family]
+        scores[matching_node][:score] *= scores[matching_node][:sameness_of_names]
       end
     end
     best_match = nil
-    best_score = 0
+    best_score = 0.0
     tie = false
     scores.each do |node_hash, details|
       if details[:score] > best_score
@@ -310,11 +314,11 @@ class NamesMatcher
       end
     end
     simple_scores = {}
-    if (top_scores = scores.sort_by { |_, v| 0 - v[:score] })
+    if (top_scores = scores.sort_by { |_, v| 0.0 - v[:score] })
       top_scores[0..4].reverse.each { |k, v| simple_scores[k['id']] = v }
     end
-    if best_score.zero?
-      @logs << "best score was 0: #{simple_scores.inspect}"
+    if best_score < 0.1
+      @logs << "best score was too low: #{simple_scores.inspect}"
       unmapped(node)
     elsif tie
       @logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
@@ -378,6 +382,18 @@ class NamesMatcher
     return nil if family_index.nil?
     family_page = matching_node[:ancestor_page_ids][family_index]
     @ancestors.map(&:page_id).include?(family_page)
+  end
+
+  def sameness_of_names(node, other)
+    if node.canonical == other[:canonical]
+      if node.authors == other[:authors]
+        2.0 # Excellent match.
+      else
+        1.0
+      end
+    else
+      0.5 # Partial match
+    end
   end
 
   def log_unmatched
