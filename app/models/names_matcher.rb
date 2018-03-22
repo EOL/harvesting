@@ -101,8 +101,9 @@ class NamesMatcher
     @harvest.log("Q: #{how.inspect}") if @explain
     @logs << "Q: #{how.inspect}"
     results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
-    @harvest.log("RESULTS (#{results.total_count}): #{results.hits.inspect}") if @explain
-    @logs << "RESULTS (#{results.total_count}): #{results.hits.inspect}"
+    hits = results.map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
+    @harvest.log("RESULTS (#{results.total_count}): #{hits}") if @explain
+    @logs << "RESULTS (#{results.total_count}): #{hits}"
     results
   end
 
