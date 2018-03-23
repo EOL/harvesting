@@ -286,7 +286,9 @@ module Store
       klass = OccurrenceMetadatum if occ_meta
       @models[:trait].delete(:of_taxon) if occ_meta
       @models[:trait].delete(:source) if occ_meta # TODO: we should allow (and show) this. :S
-      build_attributions(Trait, @models[:trait])
+      # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
+      # it somewhere, and that’s all that matters for mvp"
+      # build_attributions(Trait, @models[:trait])
       trait = prepare_model_for_store(klass, @models[:trait])
       meta.each do |key, value|
         datum = {}
@@ -315,7 +317,9 @@ module Store
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:assoc, AssocsReference)
-      build_attributions(Assoc, @models[:assoc])
+      # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
+      # it somewhere, and that’s all that matters for mvp"
+      # build_attributions(Assoc, @models[:assoc])
       assoc = prepare_model_for_store(Assoc, @models[:assoc])
       meta.each do |key, value|
         datum = {}

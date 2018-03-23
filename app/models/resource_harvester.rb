@@ -408,6 +408,8 @@ class ResourceHarvester
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     resolve_references(MediaReference, 'medium')
+    resolve_attributions(Medium)
+    resolve_attributions(Article) # Yes, I know, we don't really have articles yet, but I don't want to forget this.
   end
 
   def resolve_trait_keys
@@ -437,6 +439,9 @@ class ResourceHarvester
     log_info('MetaTraits (simple, measurement row refers to parent) to traits...')
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
     resolve_references(TraitsReference, 'trait')
+    # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
+    # it somewhere, and that’s all that matters for mvp"
+    # resolve_attributions(Trait)
 
     log_info('Assocs to occurrences...')
     propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
@@ -454,25 +459,33 @@ class ResourceHarvester
                         set: 'sex_term_id', with: 'sex_term_id')
     # Assoc to lifestage term:
     log_info('Assoc to lifestage term...')
-    propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
-                        set: 'lifestage_term_id', with: 'lifestage_term_id')
+    # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
+    # it somewhere, and that’s all that matters for mvp"
+    # propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
+    #                     set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaAssoc to assocs:
     # TODO: this is not handled during harvest, yet.
     # log_info('MetaAssoc to assocs...')
     # propagate_id(MetaAssoc, fk: 'assoc_resource_pk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
     resolve_references(AssocsReference, 'assoc')
-
+    resolve_attributions(Assoc)
     # TODO: transfer the lat, long, and locality from occurrences to traits and assocs... (I don't think we caputure
     # these yet)
   end
 
   def resolve_references(klass, singular)
-    # TODO: this ALSO belongs in the other two keys blocks:
     # Media to references, and back:
     propagate_id(klass, fk: "#{singular}_resource_fk", other: "#{singular.pluralize}.resource_pk",
                         set: "#{singular}_id", with: 'id')
     propagate_id(klass, fk: 'ref_resource_fk', other: 'references.resource_pk',
                         set: 'reference_id', with: 'id')
+  end
+
+  def resolve_attributions(klass)
+    # [Medium, Article, Trait, Association].each do |klass|
+    propagate_id(ContentAttribution, fk: 'content_resource_fk', other: "#{klass}.resource_pk",
+                                     set: 'content_id', with: 'id', poly_type: 'content_type', poly_val: klass)
+    # end
   end
 
   def add_occurrence_metadata_to_traits
