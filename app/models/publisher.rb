@@ -181,13 +181,13 @@ class Publisher
       attribution.created_at = t
       attribution.updated_at = t
       attribution.resource_id = @web_resource_id
+      attribution.resource_pk = content_attribution.attribution.resource_pk
       attribution.content_resource_fk = content_attribution.content_resource_fk
       attribution.content_type = content_attribution.content_type
       attribution.role_id = WebDb.role(content_attribution.attribution.role, @logger)
       attribution.url = content_attribution.attribution.sanitize_url
       @attributions << attribution
     end
-    # YOU WERE HERE: now you have to write those to a file, also init the @attributions var.
   end
 
   def add_bib_cit(object, citation)

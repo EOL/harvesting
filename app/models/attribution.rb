@@ -22,10 +22,12 @@ class Attribution < ActiveRecord::Base
   end
 
   def sanitize_url
+    return nil if url.blank?
     @sanitize_url ||= URI.escape(URI.unescape(url))
   end
 
   def sanitize_email
+    return nil if email.blank?
     @sanitize_email ||= email[/[^@\s]+@([^@\s]+\.)+[^@\s]+/]
   end
 end

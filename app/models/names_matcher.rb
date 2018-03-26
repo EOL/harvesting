@@ -382,6 +382,7 @@ class NamesMatcher
   end
 
   def family_matched?(matching_node)
+    raise "You need to reindex your Nodes, sorry." unless matching_node[:ancestor_ranks]
     family_index = matching_node[:ancestor_ranks].index('family')
     return nil if family_index.nil?
     family_page = matching_node[:ancestor_page_ids][family_index]

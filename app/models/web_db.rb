@@ -65,7 +65,7 @@ class WebDb < ActiveRecord::Base
       return nil if role.blank?
       return @roles[role] if @roles.key?(role)
       logger.log("Encountered new role, please ensure there is a translation for it: #{role}", cat: :warns)
-      @roles[role] = raw_create('roles', name: role)
+      @roles[role] = raw_create('roles', name: role, created_at: Time.now.to_s(:db), updated_at: Time.now.to_s(:db))
     end
 
     def license(url, logger)
