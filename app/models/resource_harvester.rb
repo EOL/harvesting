@@ -16,6 +16,7 @@ class ResourceHarvester
 
   # NOTE: Composition pattern, here. Too much to have in one file:
   include Store::Assocs
+  include Store::Attributions
   include Store::Boolean
   include Store::Media
   include Store::ModelBuilder
@@ -387,6 +388,21 @@ class ResourceHarvester
     @harvest.update_attribute(:ancestry_built_at, Time.now)
   end
 
+  def resolve_keys
+    resolve_node_keys
+    resolve_media_keys
+    resolve_trait_keys
+    resolve_attribution_keys
+  end
+
+  def hold_for_later_1
+    # NOTE: I'm just reserving this slot in the harvest for something later.
+  end
+
+  def hold_for_later_2
+    # NOTE: I'm just reserving this slot in the harvest for something later.
+  end
+
   def resolve_node_keys
     @harvest.log_call
     # Node ancestry:
@@ -459,16 +475,16 @@ class ResourceHarvester
                         set: 'sex_term_id', with: 'sex_term_id')
     # Assoc to lifestage term:
     log_info('Assoc to lifestage term...')
-    # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
-    # it somewhere, and that’s all that matters for mvp"
-    # propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
-    #                     set: 'lifestage_term_id', with: 'lifestage_term_id')
+    propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
+                        set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaAssoc to assocs:
     # TODO: this is not handled during harvest, yet.
     # log_info('MetaAssoc to assocs...')
-    # propagate_id(MetaAssoc, fk: 'assoc_resource_pk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
+    propagate_id(MetaAssoc, fk: 'assoc_resource_pk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
     resolve_references(AssocsReference, 'assoc')
-    resolve_attributions(Assoc)
+    # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
+    # it somewhere, and that’s all that matters for mvp"
+    # resolve_attributions(Assoc)
     # TODO: transfer the lat, long, and locality from occurrences to traits and assocs... (I don't think we caputure
     # these yet)
   end
@@ -483,9 +499,14 @@ class ResourceHarvester
 
   def resolve_attributions(klass)
     # [Medium, Article, Trait, Association].each do |klass|
-    propagate_id(ContentAttribution, fk: 'content_resource_fk', other: "#{klass}.resource_pk",
+    propagate_id(ContentAttribution, fk: 'content_resource_fk', other: "#{klass.table_name}.resource_pk",
                                      set: 'content_id', with: 'id', poly_type: 'content_type', poly_val: klass)
     # end
+  end
+
+  def resolve_attribution_keys
+    propagate_id(ContentAttribution, fk: 'attribution_resource_fk', other: 'attributions.resource_pk',
+                                     set: 'attribution_id', with: 'id')
   end
 
   def add_occurrence_metadata_to_traits

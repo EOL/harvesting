@@ -63,10 +63,8 @@ module Store
       @models[:trait][:meta][field.submapping] = val
     end
 
-    def to_traits_attributions_fk(field, val)
-      @models[:trait] ||= {}
-      @models[:trait][:attributions] ||= []
-      @models[:trait][:attributions] << val
-    end
+    # NOTE: JH said it's okay to skip these for MVP.
+    # def to_traits_attributions_fk(field, val)
+    # end
   end
 end

@@ -26,19 +26,20 @@ class ActiveRecord::Base
       clauses << "AND t.#{options[:poly_type]} = ?" if options[:poly_type]
       clauses << ')'
       clauses << "SET t.`#{set}` = o.`#{with_field}`"
-      page_size = 64_000 # NOTE: I played around with this value a bit, and this seems an efficient value.
+      values = []
       values << filter if filter
       values << options[:poly_val] if options[:poly_val]
+      page_size = 64_000 # NOTE: I played around with this value a bit, and this seems an efficient value.
       if max - min > page_size
         clauses << "WHERE t.#{primary_key} >= ? AND t.#{primary_key} <= ?"
         while max > min
           upper = min + page_size - 1
           args = values + [min, upper]
-          clean_execute([clauses.join(' '), args])
+          clean_execute([clauses.join(' '), *args])
           min += page_size
         end
       else # no pagination required:
-        clean_execute([clauses.join(' '), values])
+        clean_execute([clauses.join(' '), *values])
       end
     end
 

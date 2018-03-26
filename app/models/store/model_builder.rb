@@ -201,7 +201,7 @@ module Store
     end
 
     def build_references(key, klass)
-      sep = @models[key].delete(:ref_sep) || /[|;]/
+      sep = "[#{@models[key].delete(:ref_sep) || '|;'}]"
       unless @models[key][:ref_fks].blank?
         fks = @models[key].delete(:ref_fks)
         fks.split(/#{sep}\s*/).each do |ref_fk|
@@ -355,17 +355,20 @@ module Store
 
     def build_attributions(klass, model)
       return if model[:attributions].blank?
-      model[:attributions].each do |fk|
-        content_attribution = {
-          content_type: klass.to_s,
-          content_resource_fk: model[:resource_pk],
-          attribution_resource_fk: fk,
-          resource_id: @resource.id,
-          harvest_id: @harvest.id
-        }
-        prepare_model_for_store(ContentAttribution, content_attribution)
+      sep = "[#{model.delete(:attribution_sep) || '|;'}]"
+      unless model[:attributions].blank?
+        model[:attributions].split(/#{sep}\s*/).each do |fk|
+          content_attribution = {
+            content_type: klass.to_s,
+            content_resource_fk: model[:resource_pk],
+            attribution_resource_fk: fk,
+            resource_id: @resource.id,
+            harvest_id: @harvest.id
+          }
+          prepare_model_for_store(ContentAttribution, content_attribution)
+        end
       end
-      model.delete[:attributions]
+      model.delete(:attributions)
     end
 
     def symbolize(str)

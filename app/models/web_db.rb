@@ -10,7 +10,7 @@ class WebDb < ActiveRecord::Base
   cfg['port']     = Rails.application.secrets.web_db['port']
   establish_connection cfg
   @types = %w[referent node identifier scientific_name node_ancestor vernacular article medium image_info page_content
-              reference]
+              reference attribution]
   @page_columns_to_update =
     %w[id updated_at media_count articles_count links_count maps_count nodes_count
        vernaculars_count scientific_names_count referents_count native_node_id]
@@ -46,12 +46,25 @@ class WebDb < ActiveRecord::Base
       @taxonomic_statuses = map_ids('taxonomic_statuses', 'name')
     end
 
+    def build_roles
+      @roles = map_ids('roles', 'name')
+    end
+
     def rank(full_rank, logger)
       return nil if full_rank.nil?
       rank = full_rank.downcase
       return nil if rank.blank?
       return @ranks[rank] if @ranks.key?(rank)
       @ranks[rank] = raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
+    end
+
+    def role(full_role, logger)
+      return nil if full_role.nil?
+      role = full_role.downcase
+      return nil if role.blank?
+      return @roles[role] if @roles.key?(role)
+      logger.log("Encountered new role, please ensure there is a translation for it: #{role}", cat: :warns)
+      @roles[role] = raw_create('roles', name: role)
     end
 
     def license(url, logger)

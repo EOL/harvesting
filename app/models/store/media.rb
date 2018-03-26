@@ -135,8 +135,8 @@ module Store
 
     def to_media_attributions_fk(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:attributions] ||= []
-      @models[:medium][:attributions] << val
+      @models[:medium][:attribution_sep] ||= field.submapping
+      @models[:medium][:attributions] = val
     end
 
     def to_media_lat(field, val)

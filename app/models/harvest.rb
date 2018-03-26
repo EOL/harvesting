@@ -36,7 +36,7 @@ class Harvest < ActiveRecord::Base
   # INCOMPLETE.
   enum stage: %i[
     create_harvest_instance fetch_files validate_each_file convert_to_csv calculate_delta parse_diff_and_store
-    resolve_node_keys resolve_media_keys resolve_trait_keys resolve_missing_parents rebuild_nodes
+    resolve_keys hold_for_later_1 hold_for_later_2 resolve_missing_parents rebuild_nodes
     resolve_missing_media_owners sanitize_media_verbatims queue_downloads parse_names
     denormalize_canonical_names_to_nodes match_nodes reindex_search normalize_units calculate_statistics
     complete_harvest_instance completed

@@ -1,9 +1,16 @@
 namespace :harvest do
+  desc 'Harvest the last resource (by ID)'
   task last: :environment do
     Resource.last.rm_lockfile if ENV['FORCE']
     Resource.last.harvest
   end
 
+  desc 'Harvest an OpenData URL (you must put the URL in an environment variable called ... uhhh... URL, and use quotes.)'
+  task opendata: :environment do
+    Resource::FromOpenData.url(ENV['URL']).harvest
+  end
+
+  desc 'Undo the last harvest, removing all of its content (leaving the resource)'
   task undo: :environment do
     harvest = Harvest.last
     resource = harvest.resource

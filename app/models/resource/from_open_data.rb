@@ -58,6 +58,7 @@ class Resource
         pictures: 'pics',
         plant: 'pl',
         plants: 'pl',
+        planet: 'p',
         protist: 'prot',
         protista: 'prot',
         protists: 'prot',
@@ -172,32 +173,44 @@ class Resource
 
     def abbreviate(name)
       return name if name.size < 8
-      words = name.split.map(&:downcase)
+      # NOTE: the #titleize helps split CamelCase stuff.
+      words = name.titleize.split.map(&:downcase)
       words.delete_if { |w| @stopwords.include?(w) }
-      words = words.map do |word|
-        sym = word.to_sym
-        @abbreviations.key?(sym) ? @abbreviations[sym] : word
-      end
+      words = words.map { |word| use_abbr(word, name) }
       abbr = if words.size > 4
-               words.map(&:first).join[0..15]
+               words.map(&:first).join # We make it an acronym (without underscores)
              elsif words.size > 1
-               words.join('_')[0..15]
+               words.join('_')
              else
-               name[0..15]
+               name
              end
-      abbr.gsub(/\s+/, '_')[0..15]
+      abbr = abbr.gsub(/\s+/, '_').downcase[0..15]
+      ensure_unique(abbr)
+    end
+
+    def ensure_unique(abbr)
+      counter = 1
+      while Resource.where(abbr: abbr).exists?
+        counter += 1
+        c_str = counter.to_s
+        abbr_len = 15 - c_str.size
+        abbr = "#{abbr[0..abbr_len]}#{c_str}"
+      end
+      abbr
+    end
+
+    def use_abbr(word, name)
+      return name if name.match?(/#{word.upcase}/) # Acroynm; keep as-is.
+      sym = word.to_sym
+      @abbreviations.key?(sym) ? @abbreviations[sym] : word
     end
 
     def shorten(name)
       return name if name.size < 8
       words = name.split
-      if words.size > 4
-        return words[0..1]
-      elsif name.sub(/[^A-Z]/, '').size >= 3
-        return name.sub(/[^A-Z]/, '')
-      else
-        return name[0..15]
-      end
+      return words[0..1] if words.size > 4
+      return name.sub(/[^A-Z]/, '') if name.sub(/[^A-Z]/, '').size >= 3
+      name[0..15]
     end
 
     def log(message, options = {})

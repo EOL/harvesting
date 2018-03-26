@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180321190317) do
+ActiveRecord::Schema.define(version: 20180323181436) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -146,8 +146,8 @@ ActiveRecord::Schema.define(version: 20180321190317) do
   end
 
   create_table "content_attributions", force: :cascade do |t|
-    t.integer "attribution_id",          limit: 4,   null: false
-    t.integer "content_id",              limit: 4,   null: false
+    t.integer "attribution_id",          limit: 4
+    t.integer "content_id",              limit: 4
     t.string  "content_type",            limit: 255, null: false
     t.string  "content_resource_fk",     limit: 255, null: false
     t.string  "attribution_resource_fk", limit: 255, null: false
