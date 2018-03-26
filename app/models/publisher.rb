@@ -184,6 +184,7 @@ class Publisher
       attribution.resource_pk = content_attribution.attribution.resource_pk
       attribution.content_resource_fk = content_attribution.content_resource_fk
       attribution.content_type = content_attribution.content_type
+      attribution.content_id = content_attribution.content_id # NOTE this is the HARVEST DB ID. It will be replaced.
       attribution.role_id = WebDb.role(content_attribution.attribution.role, @logger)
       attribution.url = content_attribution.attribution.sanitize_url
       @attributions << attribution
