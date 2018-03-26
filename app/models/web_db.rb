@@ -28,6 +28,7 @@ class WebDb < ActiveRecord::Base
       build_languages
       build_licenses
       build_taxonomic_statuses
+      build_roles
     end
 
     def build_ranks
