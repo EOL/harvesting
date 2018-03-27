@@ -74,8 +74,8 @@ class TermsController < ApplicationController
 
   def term_params
     params.require(:term).permit(
-      :uri, :name, :header_lines, :definition, :comment, :attribution, :is_hidden_from_overview,
-      :is_hidden_from_glossary
+      %i[uri name used_for is_hidden_from_overview is_hidden_from_glossary is_text_only is_verbatim_only uri definition
+         comment attribution ontology_information_url ontology_source_url ontology_source_url]
     )
   end
 
