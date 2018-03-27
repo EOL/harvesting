@@ -127,7 +127,10 @@ class Resource < ActiveRecord::Base
   end
 
   def path
-    Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
+    return @path if @path
+    @path = Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
+    raise "MISSING RESOURCE DIR (#{@path})!" unless File.exist?(@path)
+    @path
   end
 
   def move_files(to)
