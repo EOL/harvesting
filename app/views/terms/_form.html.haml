@@ -1,7 +1,9 @@
 = simple_form_for @term do |f|
   .fields
     = f.input :name, wrapper_html: { class: 'four wide' }
-    = f.input :used_for
+    = f.input :position, wrapper_html: { class: 'three wide' }
+    = f.input :used_for, wrapper_html: { class: 'three wide' }
+  .fields
     = f.input :is_hidden_from_overview, wrapper_html: { class: 'three wide' }
     = f.input :is_hidden_from_glossary, wrapper_html: { class: 'three wide' }
     = f.input :is_text_only, wrapper_html: { class: 'three wide' }

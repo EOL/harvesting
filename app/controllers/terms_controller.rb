@@ -61,6 +61,8 @@ class TermsController < ApplicationController
 
   def update
     @term = Term.find(params[:id])
+    old_pos = @term.position
+    @term.position.update(params[:term][:position]) rescue nil # Hack, but I'm in a rush.
     if @term.update(term_params)
       name = @term.name
       name = @term.uri if name.blank?
@@ -75,7 +77,7 @@ class TermsController < ApplicationController
   def term_params
     params.require(:term).permit(
       %i[uri name used_for is_hidden_from_overview is_hidden_from_glossary is_text_only is_verbatim_only uri definition
-         comment attribution ontology_information_url ontology_source_url ontology_source_url]
+         comment attribution ontology_information_url ontology_source_url ontology_source_url position]
     )
   end
 
