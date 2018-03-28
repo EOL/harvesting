@@ -3,6 +3,8 @@
   .sub.header
     = link_to(t("resources.actions.back"), resources_path)
     •
+    = link_to(t("resources.actions.publishing_side"), "#{Rails.application.secrets[:repository]}/resources/#{WebDb.resource_id(@resource)}")
+    •
     = link_to(t("edit"), edit_resource_path(@resource))
     •
     = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })

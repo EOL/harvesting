@@ -177,6 +177,7 @@ en:
       back: "back to all resources"
       harvest: "harvest"
       harvest_in_queue: "currently harvesting, wait..."
+      publishing_side: "see in production"
       re_harvest: "re-harvest"
       resume_harvest: "resume harvest"
       re_download_opendata_harvest: "Re-download OpenData and harvest"
