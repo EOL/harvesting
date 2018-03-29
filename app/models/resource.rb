@@ -126,10 +126,16 @@ class Resource < ActiveRecord::Base
     path.join("publish_#{table}.tsv")
   end
 
-  def path
+  def path(make_if_missing = false)
     return @path if @path
     @path = Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
-    raise "MISSING RESOURCE DIR (#{@path})!" unless File.exist?(@path)
+    unless File.exist?(@path)
+      if make_if_missing
+        FileUtils.mkdir_p(@path)
+      else
+        raise "MISSING RESOURCE DIR (#{@path})!"
+      end
+    end
     @path
   end
 

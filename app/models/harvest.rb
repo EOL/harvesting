@@ -55,6 +55,14 @@ class Harvest < ActiveRecord::Base
     update_attributes(failed_at: now, completed_at: now)
   end
 
+  def started_matching_at
+    hlogs.where(category: Hlog.categories[:starts]).where('message LIKE "%match_nodes"')&.first&.created_at
+  end
+
+  def finished_matching_at
+    hlogs.where(category: Hlog.categories[:starts]).where('message LIKE "%reindex_search"')&.first&.created_at
+  end
+
   def complete
     update_attribute(:completed_at, Time.now)
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
