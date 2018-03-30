@@ -106,7 +106,7 @@ class Harvest < ActiveRecord::Base
     hash = {
       harvest: self,
       category: options[:cat],
-      message: message[0..65_534], # Truncates really long messages, alas...
+      message: message[0..64_000], # Truncates really long messages, alas...
       backtrace: backtrace.join("\n"),
       format: options[:format],
       line: options[:line]

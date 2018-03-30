@@ -180,6 +180,16 @@ module Store
       @models[:medium][:format] ||= :jpg
       build_references(:medium, MediaReference)
       build_attributions(Medium, @models[:medium])
+      # TODO: generalize this. We'll likely want to truncate other fields...
+      if @models[:medium][:name_verbatim].size > 254
+        log_warning("title is too long for medium #{@models[:medium][:resource_pk]}; truncating to 254 chars: "\
+          "#{@models[:medium][:name_verbatim][0..60_000]}")
+        @models[:medium][:name_verbatim] = @models[:medium][:name_verbatim][0..254]
+      end
+      if @models[:medium][:name].size > 254
+        # NOTE: no reason to carp about this one; if this was too long, the verbatim was too long, so they got a mesg.
+        @models[:medium][:name] = @models[:medium][:name][0..254]
+      end
 
       # TODO: there are some other normalizations and checks we should do here.
       prepare_model_for_store(Medium, @models[:medium])
@@ -201,8 +211,8 @@ module Store
     end
 
     def build_references(key, klass)
-      sep = "[#{@models[key].delete(:ref_sep) || '|;'}]"
       unless @models[key][:ref_fks].blank?
+        sep = "[#{@models[key].delete(:ref_sep) || '|;'}]"
         fks = @models[key].delete(:ref_fks)
         fks.split(/#{sep}\s*/).each do |ref_fk|
           prepare_model_for_store(klass, "#{key}_resource_fk": @models[key][:resource_pk],

@@ -63,7 +63,7 @@ class Publisher
   end
 
   def by_resource
-    measure_time('OVERALL PUBLISHING') do
+    measure_time('Overall TSV Creation') do
       learn_resource_id
       WebDb.init
       slurp_nodes

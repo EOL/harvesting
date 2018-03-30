@@ -209,7 +209,7 @@ class ResourceHarvester
             @line_num = line
             csv_row = []
             # Un-quote cells; we use a special quote char:
-            line.map! { |cell| cell =~ /^".*"$/ ? cell.sub(/^"/, '').sub(/"$/, '') : cell  }
+            line.map! { |cell| cell.match?(/^".*"$/) ? cell.sub(/^"/, '').sub(/"$/, '') : cell  }
             @headers.each do |header|
               csv_row << row[header]
             end
