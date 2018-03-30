@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180323181436) do
+ActiveRecord::Schema.define(version: 20180330150400) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -126,7 +126,7 @@ ActiveRecord::Schema.define(version: 20180323181436) do
     t.integer  "resource_id",           limit: 4,     null: false
     t.integer  "harvest_id",            limit: 4,     null: false
     t.string   "resource_pk",           limit: 255,   null: false
-    t.string   "name",                  limit: 255
+    t.text     "name",                  limit: 65535
     t.string   "email",                 limit: 255
     t.integer  "removed_by_harvest_id", limit: 4
     t.datetime "created_at",                          null: false
