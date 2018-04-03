@@ -30,6 +30,14 @@ namespace :harvest do
     resource.rm_lockfile if ENV['FORCE']
     resource.re_harvest
   end
+
+  desc 'Resume Harvest of resource identified by ENV var: ID or ABBR. Non-destructive.'
+  task resume: :environment do
+    resource = ENV['ID'] ? Resource.find(ENV['ID']) : Resource.find_by_abbr(ENV['ABBR'])
+    resource ||= Harvest.last.resource # No info given, so assume the last one we did!
+    resource.rm_lockfile if ENV['FORCE']
+    resource.resume
+  end
 end
 
 desc 'Harvest the resource identified by ENV var: ID or ABBR.'
