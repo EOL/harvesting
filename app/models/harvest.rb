@@ -115,7 +115,17 @@ class Harvest < ActiveRecord::Base
     puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
     puts "-- #{backtrace.join("\n")}" unless backtrace.blank?
     STDOUT.flush
-    hlogs << Hlog.create!(hash.merge(format: options[:format]))
+    begin
+      hlogs << Hlog.create!(hash.merge(format: options[:format]))
+    rescue => e
+      # TODO: this is handy; extract to some appropriate module:
+      queries = Hlog.connection.exec_query('SHOW processlist').rows.reject { |r| r[4] == 'Sleep' }.map { |r| r[-1] }
+      puts "!! WARNING: Logging failed: #{e.message}"
+      puts "!! ...Skipping previous log message (#{message[0..20]}...) and continuing..."
+      puts '!! Queries currently running:'
+      queries.each { |q| puts "!! #{q}" }
+      STDOUT.flush
+    end
   end
 
   def remove_content
