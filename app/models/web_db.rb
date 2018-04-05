@@ -82,7 +82,7 @@ class WebDb < ActiveRecord::Base
     def language(language, logger)
       return nil if language.blank?
       return @languages[language.code] if @languages.key?(language.code)
-      logger.log("Encountered new language, please assign it to a language group and give it a name: #{language}", cat: :warns)
+      logger.log("Encountered new language, please assign it to a language group and give it a name: #{language.code}", cat: :warns)
       @languages[language.code] = raw_create('languages', code: language.code, group: language.group_code)
     end
 
