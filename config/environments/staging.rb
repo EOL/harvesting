@@ -2,6 +2,7 @@ Rails.application.configure do
   config.cache_classes = true
   cache_addr = ENV["EOL_STAGING_CACHE_URL"] || "memcached:11211"
   config.cache_store = :dalli_store, cache_addr, { namespace: 'harvester', compress: true }
+  config.lograge.ignore_actions = ['ResourcesController#ping', 'ResourcesController#index']
   config.eager_load = true
   config.consider_all_requests_local = false
   config.action_controller.perform_caching = true
