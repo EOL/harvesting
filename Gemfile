@@ -27,6 +27,8 @@ gem 'jquery-rails'
 gem 'kaminari'
 # Helps lock processes safely (maybe not REALLY needed for our purposes, but I feel safer with it):
 gem 'lockfile'
+# QUIET PLEASE MAKE IT STOP:
+gem 'lograge'
 # Use mysql as the database for Active Record
 gem 'mysql2'
 # Debugging:
