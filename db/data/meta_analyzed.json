@@ -21,6 +21,7 @@
 "represents":"to_traits_measurement_of_taxon",
 "submapping":null,
 "is_unique":false,
+"default_when_blank":"false",
 "is_required":false},
 {"term":"http://eol.org/schema/parentMeasurementID",
 "for_format":"measurements",

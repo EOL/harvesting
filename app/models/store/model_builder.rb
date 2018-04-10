@@ -263,6 +263,7 @@ module Store
       occurrence = @models[:trait][:occurrence_resource_pk]
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
+      debugger if Rails.env.development? && @models[:trait][:predicate].match?(/contributor/) # Testing IUCN-SD...
       if @models[:trait][:of_taxon] && parent
         return log_warning("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a "\
                            "parentMeasurementID #{parent}")

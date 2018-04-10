@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180330150400) do
+ActiveRecord::Schema.define(version: 20180410180330) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -197,15 +197,16 @@ ActiveRecord::Schema.define(version: 20180330150400) do
   add_index "delayed_jobs", ["queue"], name: "index_delayed_jobs_on_queue", using: :btree
 
   create_table "fields", force: :cascade do |t|
-    t.integer "format_id",        limit: 4,                   null: false
-    t.integer "position",         limit: 4,                   null: false
-    t.integer "validation",       limit: 4
-    t.integer "mapping",          limit: 4
-    t.integer "special_handling", limit: 4
-    t.string  "submapping",       limit: 255
-    t.string  "expected_header",  limit: 255
-    t.boolean "unique_in_format",             default: false, null: false
-    t.boolean "can_be_empty",                 default: true,  null: false
+    t.integer "format_id",          limit: 4,                   null: false
+    t.integer "position",           limit: 4,                   null: false
+    t.integer "validation",         limit: 4
+    t.integer "mapping",            limit: 4
+    t.integer "special_handling",   limit: 4
+    t.string  "submapping",         limit: 255
+    t.string  "expected_header",    limit: 255
+    t.boolean "unique_in_format",               default: false, null: false
+    t.boolean "can_be_empty",                   default: true,  null: false
+    t.string  "default_when_blank", limit: 255
   end
 
   create_table "formats", force: :cascade do |t|
