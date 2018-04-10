@@ -303,7 +303,7 @@ class ResourceHarvester
         begin
           @headers.each do |header|
             field = fields[header]
-            next if row[header].blank?
+            # next if row[header].blank? # Ooooohh. Oh no! I have to remove this, and it could break things!
             next if field.to_ignored?
             raise "NO HANDLER FOR '#{field.mapping}'!" unless self.respond_to?(field.mapping)
             # NOTE: that these methods are defined in the Store::* mixins:
