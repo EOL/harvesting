@@ -1,0 +1,8 @@
+#!/bin/sh
+ps aux | grep worker.start | grep media | awk '{print $2}' | while read -r pid ; do
+  echo "Killing $pid"
+  kill $pid
+  # echo "Killed $pid at `date`" >> log/harvest.log
+done
+
+# [[ -z "$pid" ]] && { echo "Doesn't appear to be running" ; exit 1; }
