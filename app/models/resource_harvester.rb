@@ -208,10 +208,11 @@ class ResourceHarvester
           @parser.rows_as_hashes do |row, line|
             @line_num = line
             csv_row = []
-            # Un-quote cells; we use a special quote char:
-            line.map! { |cell| cell.match?(/^".*"$/) ? cell.sub(/^"/, '').sub(/"$/, '') : cell  }
             @headers.each do |header|
-              csv_row << row[header]
+              # Un-quote values; we use a special quote char:
+              val = row[header]
+              val.sub(/^"/, '').sub(/"$/, '') if val.match?(/^".*"$/)
+              csv_row << val
             end
             csv << csv_row
           end
