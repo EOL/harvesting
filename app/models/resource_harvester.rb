@@ -211,7 +211,7 @@ class ResourceHarvester
             @headers.each do |header|
               # Un-quote values; we use a special quote char:
               val = row[header]
-              val.sub(/^"/, '').sub(/"$/, '') if val.match?(/^".*"$/)
+              val.sub(/^"/, '').sub(/"$/, '') if val&.match?(/^".*"$/)
               csv_row << val
             end
             csv << csv_row
