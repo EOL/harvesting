@@ -6,7 +6,7 @@ class Format < ActiveRecord::Base
   before_destroy :remove_files
 
   has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :delete_all
-  has_many :hlogs, inverse_of: :format, dependent: :delete_all
+  has_many :hlogs, inverse_of: :format # NOTE: not removing...
 
   belongs_to :harvest, inverse_of: :formats
   belongs_to :resource, inverse_of: :formats
@@ -131,8 +131,15 @@ class Format < ActiveRecord::Base
     CsvParser.new(diff, headers: headers)
   end
 
+  # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
   def remove_files
     File.unlink(converted_csv_path) if File.exist?(converted_csv_path)
     File.unlink(diff_path) if File.exist?(diff_path)
+  end
+
+  def remove_content
+    # I'm actually going to retain the logs... so nothing there...
+    fields.delete_all
+    remove_files
   end
 end

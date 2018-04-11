@@ -40,7 +40,7 @@ class Node < ActiveRecord::Base
     end
 
     def remove_indexes(filter)
-      Node.where(filter).each do |node|
+      Node.where(filter).find_each do |node|
         Node.searchkick_index.remove(node)
       end
     end

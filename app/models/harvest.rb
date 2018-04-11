@@ -1,6 +1,6 @@
 class Harvest < ActiveRecord::Base
   belongs_to :resource, inverse_of: :harvests
-  has_many :formats, inverse_of: :harvest, dependent: :destroy # NOTE: a few more deletes off of this one.
+  has_many :formats, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :hlogs, inverse_of: :harvest # destroyed via formats
   has_many :nodes, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :scientific_names, through: :nodes, source: 'scientific_names'
@@ -134,10 +134,13 @@ class Harvest < ActiveRecord::Base
      Reference, ContentAttribution, Attribution].each do |klass|
        klass.where(harvest_id: id).delete_all
      end
+    formats.each(&:remove_content)
     nodes.pluck(:id).in_groups_of(5_000, false) do |batch|
       NodeAncestor.where(node_id: batch).delete_all
+      Node.remove_indexes(node_id: batch)
+      Node.where(id: batch).delete_all
     end
-    Node.remove_indexes(harvest_id: id)
-    Node.where(harvest_id: id).delete_all
+    update_attribute(:completed_at, Time.now) unless completed_at
+    resource.rm_lockfile
   end
 end
