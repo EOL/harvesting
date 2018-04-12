@@ -152,14 +152,17 @@ class ResourceHarvester
     fields = {}
     expected_by_file = @headers.dup
     @format.fields.each_with_index do |field, i|
+      actual_header = @headers[i]
+      actual_header.sub!(/^"/, '').sub!(/"$/, '') if actual_header&.match?(/^".*"$/)
+      actual_header.sub!(/^'/, '').sub!(/'$/, '') if actual_header&.match?(/^'.*'$/)
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
-      unless field.expected_header == @headers[i]
+      unless field.expected_header.downcase == actual_header.downcase
         raise(Exceptions::ColumnMismatch, "COLUMN MISMATCH: #{@format.represents} expected "\
-          "'#{field.expected_header}' as column #{i}, but got '#{@headers[i]}'")
+          "'#{field.expected_header}' as column #{i}, but got '#{actual_header}'")
       end
-      fields[@headers[i]] = field
-      expected_by_file.delete(@headers[i])
+      fields[actual_header] = field
+      expected_by_file.delete(actual_header)
     end
     { expected: expected_by_file, fields: fields }
   end
@@ -211,7 +214,8 @@ class ResourceHarvester
             @headers.each do |header|
               # Un-quote values; we use a special quote char:
               val = row[header]
-              val.sub(/^"/, '').sub(/"$/, '') if val&.match?(/^".*"$/)
+              val.sub!(/^"/, '').sub!(/"$/, '') if val&.match?(/^".*"$/)
+              val.sub!(/^'/, '').sub!(/'$/, '') if val&.match?(/^'.*'$/)
               csv_row << val
             end
             csv << csv_row
