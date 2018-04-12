@@ -1,0 +1,146 @@
+%h1.ui.header= "Trait #{@trait.id}"
+%h2.ui.top.attached.header Source
+.ui.attached.segment
+  .ui.list
+    .item
+      .content
+        .header Resource
+        .description= link_to(@resource.name, @resource)
+    .item
+      .content
+        .header Harvest
+        .description= link_to(I18n.l(@harvest.created_at, format: :short), @harvest)
+    .item
+      .content
+        .header Format
+        .description= link_to(@format.represents, @format)
+    .item
+      .content
+        .header= "Lines From File (DOESN'T ALWAYS WORK) ( #{@cmd} )"
+        .description
+          .ui.segments
+            .ui.attached.segment
+              %pre= @heads.gsub(/\t/, "&rarr;").html_safe
+            - @lines.each do |line|
+              .ui.attached.segment
+                %pre= line.gsub(/\t/, "&rarr;").html_safe
+
+%h2.ui.top.attached.header Columns
+.ui.attached.segment
+  .ui.list
+    .item
+      .content
+        .header page_id
+        .description= @trait.node.page_id
+    .item
+      .content
+        .header scientific_name
+        .description= @trait.node.scientific_name.italicized.html_safe
+    .item
+      .content
+        .header eol_pk
+        .description= "R#{@trait.resource_id}-PK#{@trait.id}"
+    .item
+      .content
+        .header resource_pk
+        .description= @trait.resource_pk
+    .item
+      .content
+        .header predicate
+        .description= @trait.predicate_term.uri
+    .item
+      .content
+        .header value_uri
+        .description= @trait.object_term.try(:uri)
+    .item
+      .content
+        .header measurement
+        .description= @trait.measurement
+    .item
+      .content
+        .header literal
+        .description= @trait.literal
+    .item
+      .content
+        .header units
+        .description= @trait.units_term.try(:uri)
+    .item
+      .content
+        .header statistical_method
+        .description= @trait.statistical_method_term.try(:uri)
+    .item
+      .content
+        .header sex
+        .description= @trait.sex_term.try(:uri)
+    .item
+      .content
+        .header lifestage
+        .description= @trait.lifestage_term.try(:uri)
+    .item
+      .content
+        .header source
+        .description= @trait.source
+
+%h2.ui.top.attached.header= 'Metadata'
+- metadata = (@trait.meta_traits + @trait.references + @trait.children + @trait.occurrence.occurrence_metadata).compact
+- if metadata.empty?
+  .ui.attached.segment
+    %p [none]
+- else
+  .ui.attached.segment
+    .ui.list
+      - metadata.each do |meta|
+        .item
+          .content
+            .header eol_pk
+            .description= "#{meta.class.name}-#{meta.id}"
+        - if meta.is_a?(Reference)
+          -# # TODO: we should probably make this URI configurable:
+          .item
+            .content
+              .header predicate
+              .description= 'http://eol.org/schema/reference/referenceID'
+          - body = meta.body || ''
+          - body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
+          - body += " #{meta.doi}" unless meta.doi.blank?
+          .item
+            .content
+              .header literal
+              .description= body
+        - else
+          .item
+            .content
+              .header predicate
+              .description= meta.predicate_term.try(:uri)
+          .item
+            .content
+              .header units
+              .description= meta.units_term.try(:uri) if meta.respond_to?(:units_term)
+          .item
+            .content
+              .header statistical_method
+              .description= meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term)
+          .item
+            .content
+              .header value_uri
+              .description= meta.object_term.try(:uri)
+          .item
+            .content
+              .header measurement
+              .description= meta.measurement if meta.respond_to?(:measurement)
+          .item
+            .content
+              .header literal
+              .description= meta.literal
+          .item
+            .content
+              .header sex
+              .description= meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term
+          .item
+            .content
+              .header lifestage
+              .description= meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
+          .item
+            .content
+              .header source
+              .description= meta.source if meta.respond_to?(:source)

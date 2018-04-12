@@ -33,5 +33,6 @@ Rails.application.routes.draw do
     post :bulk_import, on: :collection
     get :search, on: :collection
   end
+  resources :traits, only: [:show]
   match '/ping', to: 'resources#ping', via: :all
 end
