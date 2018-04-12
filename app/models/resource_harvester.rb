@@ -152,19 +152,24 @@ class ResourceHarvester
     fields = {}
     expected_by_file = @headers.dup
     @format.fields.each_with_index do |field, i|
-      actual_header = @headers[i]
-      actual_header.sub!(/^"/, '').sub!(/"$/, '') if actual_header&.match?(/^".*"$/)
-      actual_header.sub!(/^'/, '').sub!(/'$/, '') if actual_header&.match?(/^'.*'$/)
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
-      unless field.expected_header.downcase == actual_header.downcase
+      actual_header = strip_quotes(@headers[i])
+      unless strip_quotes(field.expected_header).downcase == actual_header.downcase
         raise(Exceptions::ColumnMismatch, "COLUMN MISMATCH: #{@format.represents} expected "\
           "'#{field.expected_header}' as column #{i}, but got '#{actual_header}'")
       end
-      fields[actual_header] = field
-      expected_by_file.delete(actual_header)
+      fields[@headers[i]] = field
+      expected_by_file.delete(@headers[i])
     end
     { expected: expected_by_file, fields: fields }
+  end
+
+  def strip_quotes(string)
+    out = string.dup
+    out.sub!(/^"/, '').sub!(/"$/, '') if out&.match?(/^".*"$/)
+    out.sub!(/^'/, '').sub!(/'$/, '') if out&.match?(/^'.*'$/)
+    out
   end
 
   def validate_csv(csv, fields)
@@ -213,9 +218,7 @@ class ResourceHarvester
             csv_row = []
             @headers.each do |header|
               # Un-quote values; we use a special quote char:
-              val = row[header]
-              val.sub!(/^"/, '').sub!(/"$/, '') if val&.match?(/^".*"$/)
-              val.sub!(/^'/, '').sub!(/'$/, '') if val&.match?(/^'.*'$/)
+              val = strip_quotes(row[header])
               csv_row << val
             end
             csv << csv_row
