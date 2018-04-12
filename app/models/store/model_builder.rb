@@ -165,11 +165,10 @@ module Store
       @models[:medium][:location_id] = location.id
     end
 
-    # NOTE: this can and should fail if there was no node PK or if it's unmatched:
     def build_medium
       # TODO: handle this later:
       raise 'ARTICLES UNSUPPORTED' if @models[:medium][:is_article]
-      raise 'MISSING IDENTIFIER FOR MEDIUM!' unless @models[:medium][:resource_pk]
+      @models[:medium][:resource_pk] = fake_pk(:medium) unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
       @models[:medium][:harvest_id] = @harvest.id
@@ -493,6 +492,12 @@ module Store
       @old[klass] ||= {}
       @old[klass][key] ||= []
       @old[klass][key] << pk
+    end
+
+    def fake_pk(type)
+      @fake_pks ||= {}
+      @fake_pks[type] ||= 0
+      @fake_pks[type] += 1
     end
   end
 end
