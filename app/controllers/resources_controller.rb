@@ -7,7 +7,7 @@ class ResourcesController < ApplicationController
       render status: 500
     end
   end
-  
+
   def index
     params[:per_page] ||= 50
     @resources = Resource.order(:name).includes([:partner])
@@ -99,7 +99,9 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
 
     if @resource.update(resource_params)
+      resp = WebDb.update_resource(@resource, logger = nil)
       flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
+      flash[:notice] += " (#{resp})" unless resp.blank?
       redirect_to @resource
     else
       # TODO: some kind of hint as to the problem, in a flash...

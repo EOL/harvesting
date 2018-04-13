@@ -144,6 +144,7 @@ class WebDb < ActiveRecord::Base
       }
       attrs = hash.map { |k,v| "#{k}=#{quote_value(v)}" }.join(', ')
       connection.exec_update("UPDATE resources SET #{attrs} WHERE id = #{web_id}", 'SQL', attrs)
+      logger
     end
 
     def quote_value(val)
