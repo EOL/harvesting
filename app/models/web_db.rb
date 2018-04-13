@@ -118,8 +118,37 @@ class WebDb < ActiveRecord::Base
       connection.last_inserted_id(table)
     end
 
+
+    def update_resource(obj, logger = nil)
+      web_id = resource_id(obj)
+        if logger.nil?
+          logger = ''
+          def logger.log(msg, options = {})
+            logger = msg
+          end
+        end
+      lic = license(License.find(obj.dataset_license_id).source_url, logger) if obj.dataset_license_id
+      hash = {
+        name: obj.name,
+        # url: # Ruh-roh, need to add this to HARV DB.
+        description: obj.description,
+        notes: obj.notes,
+        is_browsable: obj.is_browsable,
+        has_duplicate_nodes: obj.might_have_duplicate_taxa,
+        node_source_url_template: obj.pk_url,
+        dataset_license_id: lic,
+        dataset_rights_holder: obj.dataset_rights_holder,
+        dataset_rights_statement: obj.dataset_rights_statement,
+        updated_at: obj.updated_at,
+        abbr: obj.abbr
+      }
+      attrs = hash.map { |k,v| "#{k}=#{quote_value(v)}" }.join(', ')
+      connection.exec_update("UPDATE resources SET #{attrs} WHERE id = #{web_id}", 'SQL', attrs)
+    end
+
     def quote_value(val)
       return 'NULL' if val.nil?
+      return ActiveRecord::Base.connection.quote(val) if val.is_a?(ActiveSupport::TimeWithZone)
       return val if val.is_a?(Numeric)
       return 1 if val.is_a? TrueClass
       return 0 if val.is_a? FalseClass

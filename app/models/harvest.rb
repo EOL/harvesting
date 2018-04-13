@@ -137,7 +137,7 @@ class Harvest < ActiveRecord::Base
     formats.each(&:remove_content)
     nodes.pluck(:id).in_groups_of(5_000, false) do |batch|
       NodeAncestor.where(node_id: batch).delete_all
-      Node.remove_indexes(node_id: batch)
+      Node.remove_indexes(id: batch)
       Node.where(id: batch).delete_all
     end
     update_attribute(:completed_at, Time.now) unless completed_at
