@@ -250,8 +250,9 @@ module Store
       meta.each do |key, value|
         datum = {}
         datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
-        datum[:predicate_term_id] = find_or_create_term(key, type: 'meta-predicate').id
-        datum = convert_meta_value(datum, value)
+        predicate_term = find_or_create_term(key, type: 'meta-predicate')
+        datum[:predicate_term_id] = predicate_term.id
+        datum = convert_meta_value(datum, value, predicate: predicate_term)
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum.delete(:source) # TODO: we should allow (and show) this. :S
@@ -287,7 +288,7 @@ module Store
       units_term = find_or_create_term(units, type: 'units')
       @models[:trait][:units_term_id] = units_term.try(:id)
 
-      @models[:trait] = convert_trait_value(@models[:trait])
+      @models[:trait] = convert_trait_value(@models[:trait], predicate: predicate_term)
 
       if @models[:trait][:statistical_method]
         stat_m = @models[:trait].delete(:statistical_method)
@@ -309,7 +310,7 @@ module Store
         datum[:trait_resource_pk] = trait.resource_pk unless occ_meta
         predicate_term = find_or_create_term(key, type: 'meta-predicate')
         datum[:predicate_term_id] = predicate_term.id
-        datum = convert_meta_value(datum, value)
+        datum = convert_meta_value(datum, value, predicate: predicate_term)
         klass = MetaTrait
         if !@models[:trait][:of_taxon] && parent.blank?
           klass = OccurrenceMetadatum
@@ -340,7 +341,7 @@ module Store
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
         datum[:trait_resource_pk] = assoc.resource_pk
-        datum = convert_meta_value(datum, value)
+        datum = convert_meta_value(datum, value, predicate: predicate_term)
         prepare_model_for_store(MetaAssoc, datum)
       end
     end
@@ -387,8 +388,12 @@ module Store
       str.downcase.gsub(/\W+/, '_').underscore.gsub(/_+$/, '').gsub(/^_+/, '').gsub(/_+/, '_')
     end
 
-    def convert_trait_value(instance)
+    def convert_trait_value(instance, options = {})
       value = instance.delete(:value)
+      if options[:predicate]&.is_verbatim_only?
+        instance[:literal] = value
+        return instance
+      end
       if value =~ URI::ABS_URI && Regexp.last_match.begin(0).zero?
         object_term = find_or_create_term(value, type: 'value')
         instance[:object_term_id] = object_term.id
@@ -412,7 +417,11 @@ module Store
     end
 
     # Simpler:
-    def convert_meta_value(datum, value)
+    def convert_meta_value(datum, value, options = {})
+      if options[:predicate]&.is_verbatim_only?
+        datum[:literal] = value
+        return datum
+      end
       if value =~ URI::ABS_URI
         object_term = find_or_create_term(value, type: 'meta-value')
         datum[:object_term_id] = object_term.id
