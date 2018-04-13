@@ -43,7 +43,8 @@ class Harvest < ActiveRecord::Base
   ]
 
   def download_all_images
-    Medium.download_and_resize(media.missing)
+    Medium.download_and_resize(media.missing.limit(100))
+    delay(queue: 'media').download_all_images
   end
 
   def convert_trait_units
