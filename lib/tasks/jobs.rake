@@ -1,7 +1,7 @@
 namespace :jobs do
   desc 'Harvest the last resource (by ID)'
   task q: :environment do
-    puts "HARVESTING (#{Delayed::Job.where(queue: 'harvest', failed_at: nil).count} jobs):"
+    puts "--\nHARVESTING (#{Delayed::Job.where(queue: 'harvest', failed_at: nil).count} jobs):"
     Delayed::Job.where(queue: 'harvest', failed_at: nil).each do |job|
       lock = job.locked_by || 'pending'
       h = YAML.load(job.handler)
@@ -11,9 +11,10 @@ namespace :jobs do
       puts "#{job.id}: #{klass} (#{res}) [#{lock}]"
     end
     count = Delayed::Job.where(queue: 'media', failed_at: nil).count
-    puts "MEDIA (#{count} jobs)"
+    puts "\n--\nMEDIA (#{count} jobs)"
     puts 'FIRST TEN ONLY:' if count > 10
     Delayed::Job.where(queue: 'media', failed_at: nil).limit(10).each do |job|
+      lock = job.locked_by || 'pending'
       h = YAML.load(job.handler)
       klass = h.class.name
       mid = h&.medium_id
