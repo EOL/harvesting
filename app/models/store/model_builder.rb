@@ -180,11 +180,13 @@ module Store
       build_references(:medium, MediaReference)
       build_attributions(Medium, @models[:medium])
       # TODO: generalize this. We'll likely want to truncate other fields...
+      @models[:medium][:name_verbatim] ||= ''
       if @models[:medium][:name_verbatim].size > 254
         log_warning("title is too long for medium #{@models[:medium][:resource_pk]}; truncating to 254 chars: "\
           "#{@models[:medium][:name_verbatim][0..60_000]}")
         @models[:medium][:name_verbatim] = @models[:medium][:name_verbatim][0..254]
       end
+      @models[:medium][:name] ||= @models[:medium][:name_verbatim]
       if @models[:medium][:name].size > 254
         # NOTE: no reason to carp about this one; if this was too long, the verbatim was too long, so they got a mesg.
         @models[:medium][:name] = @models[:medium][:name][0..254]
