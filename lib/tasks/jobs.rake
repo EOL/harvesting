@@ -3,7 +3,6 @@ module JobsTask
     begin
       yield(job)
     rescue
-      lock = "RUNNING on #{job.locked_by}  <---- " || 'pending'
       # I don't want to modify Rails's eager_load_paths just to allow this, so:
       job.handler.scan(/ruby\/object:(\S+)/).each do |array|
         klass = array.first
@@ -15,7 +14,7 @@ module JobsTask
       bits = []
       if h.respond_to?(:resource_id)
         res = Resource.find(h.resource_id)
-        bits << "[#{res}](https://beta-repo.eol.org/resources/#{res.id})"
+        bits << "[#{res.name}](https://beta-repo.eol.org/resources/#{res.id})"
       end
       what = if h.respond_to?(:display_name)
         h.display_name
@@ -23,6 +22,7 @@ module JobsTask
         job.handler[0..64].gsub(/\s+/, ' ')
       end
       bits << what
+      bits << "RUNNING on #{job.locked_by}  <---- " || 'pending'
       puts "job = Delayed::Job.find(#{job.id}): #{bits.join(' ')}"
     end
   end
