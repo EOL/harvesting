@@ -11,7 +11,6 @@ module JobsTask
         require Rails.root.join('app', 'models', "#{klass.underscore}.rb")
       end
       h = YAML.load(job.handler)
-      bits = []
       if h.respond_to?(:resource_id)
         res = Resource.find(h.resource_id)
         bits << "[#{res.name}](https://beta-repo.eol.org/resources/#{res.id})"
@@ -41,7 +40,7 @@ namespace :jobs do
         klass = h.class.name
         rid = h&.resource_id rescue nil
         res = rid ? Resource.find(rid).name : 'no resource'
-        puts "[#{res}](https://beta-repo.eol.org/resources/#{rid}): #{klass} #{lock}"
+        puts "##{job.id} [#{res}](https://beta-repo.eol.org/resources/#{rid}): #{klass} #{lock}"
       end
     end
     count = Delayed::Job.where(queue: 'media', failed_at: nil).count
@@ -54,7 +53,7 @@ namespace :jobs do
         klass = h.class.name
         mid = h&.medium_id rescue nil
         med = mid ? Medium.find(mid).source_url : 'no medium'
-        puts "[#{klass}](#{med}): #{lock}"
+        puts "##{job.id} [#{klass}](#{med}): #{lock}"
       end
     end
   end
