@@ -14,15 +14,15 @@ module JobsTask
       bits << "[#{res.name}](https://beta-repo.eol.org/resources/#{res.id})"
     end
     if h.respond_to?(:method_name)
-      bits << "##{h.method_name}"
+      bits << ".#{h.method_name}"
     end
     if h.respond_to?(:id)
-      bits << "ID##{h.id}"
+      bits << "id=#{h.id}"
     end
     if h.respond_to?(:medium_id)
       mid = h&.medium_id rescue nil
       med = mid ? Medium.find(mid).source_url : 'no medium'
-      bits << "[Medium##{mid}](#{med})"
+      bits << "[Medium.find(#{mid})](#{med})"
     end
     what = if h.respond_to?(:display_name)
       h.display_name
@@ -38,8 +38,6 @@ end
 namespace :jobs do
   desc 'Harvest the last resource (by ID)'
   task :q => :environment do
-    # Rails.configuration.eager_load_paths += "#{Rails.configuration.root}/app/models"
-
     puts "--\nHARVESTING (#{Delayed::Job.where(queue: 'harvest', failed_at: nil).count} jobs):"
     Delayed::Job.where(queue: 'harvest', failed_at: nil).each do |job|
       JobsTask.safe_job(job)
