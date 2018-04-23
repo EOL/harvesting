@@ -1,30 +1,41 @@
-def safe_job(job)
-  begin
-    yield(job)
-  rescue
-    lock = "RUNNING on #{job.locked_by}  <---- " || 'pending'
-    h = YAML.load(job.handler)
-    bits = []
-    if h.respond_to?(:resource_id)
-      res = Resource.find(h.resource_id)
-      bits << "[#{res}](https://beta-repo.eol.org/resources/#{rid})"
+module JobsTask
+  def self.safe_job(job)
+    begin
+      yield(job)
+    rescue
+      lock = "RUNNING on #{job.locked_by}  <---- " || 'pending'
+      # I don't want to modify Rails's eager_load_paths just to allow this, so:
+      job.handler.scan(/ruby\/object:(\S+)/).each do |array|
+        klass = array.first
+        next if klass.match?(/^Active/)
+        next if klass.match?(/^Delayed/)
+        require Rails.root.join('app', 'models', "#{klass.underscore}.rb")
+      end
+      h = YAML.load(job.handler)
+      bits = []
+      if h.respond_to?(:resource_id)
+        res = Resource.find(h.resource_id)
+        bits << "[#{res}](https://beta-repo.eol.org/resources/#{rid})"
+      end
+      what = if h.respond_to?(:display_name)
+        h.display_name
+      else
+        job.handler[0..64].gsub(/\s+/, ' ')
+      end
+      bits << what
+      puts "job = Delayed::Job.find(#{job.id}): #{bits.join(' ')}"
     end
-    what = if h.respond_to?(:display_name)
-      h.display_name
-    else
-      job.handler[0..64].gsub(/\s+/, ' ')
-    end
-    bits << what
-    puts "job = Delayed::Job.find(#{job.id}): #{bits.join(' ')}"
   end
 end
 
 namespace :jobs do
   desc 'Harvest the last resource (by ID)'
-  task q: :environment do
+  task :q => :environment do
+    # Rails.configuration.eager_load_paths += "#{Rails.configuration.root}/app/models"
+
     puts "--\nHARVESTING (#{Delayed::Job.where(queue: 'harvest', failed_at: nil).count} jobs):"
     Delayed::Job.where(queue: 'harvest', failed_at: nil).each do |job|
-      safe_job(job) do
+      JobsTask.safe_job(job) do
         lock = "RUNNING on #{job.locked_by}  <---- " || 'pending'
         h = YAML.load(job.handler)
         klass = h.class.name
@@ -37,7 +48,7 @@ namespace :jobs do
     puts "\n--\nMEDIA (#{count} jobs)"
     puts 'FIRST TEN ONLY:' if count > 10
     Delayed::Job.where(queue: 'media', failed_at: nil).limit(10).each do |job|
-      safe_job(job) do
+      JobsTask.safe_job(job) do
         lock = job.locked_by || 'pending'
         h = YAML.load(job.handler)
         klass = h.class.name
