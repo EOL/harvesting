@@ -3,6 +3,7 @@ module JobsTask
     begin
       yield(job)
     rescue
+      bits = []
       # I don't want to modify Rails's eager_load_paths just to allow this, so:
       job.handler.scan(/ruby\/object:(\S+)/).each do |array|
         klass = array.first
