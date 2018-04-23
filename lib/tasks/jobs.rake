@@ -22,7 +22,7 @@ module JobsTask
     if h.respond_to?(:medium_id)
       mid = h&.medium_id rescue nil
       med = mid ? Medium.find(mid).source_url : 'no medium'
-      bits << "[Medium##{mid}](#{med.id})"
+      bits << "[Medium##{mid}](#{med})"
     end
     what = if h.respond_to?(:display_name)
       h.display_name
