@@ -15,7 +15,7 @@ module JobsTask
       bits = []
       if h.respond_to?(:resource_id)
         res = Resource.find(h.resource_id)
-        bits << "[#{res}](https://beta-repo.eol.org/resources/#{rid})"
+        bits << "[#{res}](https://beta-repo.eol.org/resources/#{res.id})"
       end
       what = if h.respond_to?(:display_name)
         h.display_name
