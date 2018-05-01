@@ -359,7 +359,9 @@ module Store
     def build_attribution
       @models[:attribution][:resource_id] ||= @resource.id
       @models[:attribution][:harvest_id] ||= @harvest.id
-      @models[:attribution][:role] = symbolize(@models[:attribution][:role])
+      # NOTE: the role *can* be nil. It's not required. ...but the publishing DB DOES require it, so we're setting a
+      # default here of "contributor" per JH's suggestion. It's vague enough that it works.
+      @models[:attribution][:role] = symbolize(@models[:attribution][:role]) || :contributor
       if (other_info = @models[:attribution].delete(:other_info))
         @models[:attribution][:other_info] = other_info.to_json
       end
@@ -385,6 +387,7 @@ module Store
     end
 
     def symbolize(str)
+      return nil if str.blank?
       str.downcase.gsub(/\W+/, '_').underscore.gsub(/_+$/, '').gsub(/^_+/, '').gsub(/_+/, '_')
     end
 
