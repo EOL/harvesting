@@ -3,6 +3,9 @@
   = link_to(@harvest.resource.name, @harvest.resource)
   Created
   = l(@harvest.created_at.localtime, format: :short)
+- if @harvest.failed_at
+  .ui.button
+    = link_to(t("harvests.actions.resume"), resource_resume_harvest_path(@harvest.resource))
 .ui.negative.button
   = link_to(t("harvests.actions.destroy"), harvest_path(@harvest), method: :delete, style: 'color: white', data: { confirm: 'Are you SURE?' })
 
