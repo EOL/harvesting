@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180410180330) do
+ActiveRecord::Schema.define(version: 20180503135200) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -436,6 +436,7 @@ ActiveRecord::Schema.define(version: 20180410180330) do
   end
 
   add_index "meta_traits", ["harvest_id", "trait_resource_pk"], name: "index_meta_traits_on_harvest_id_and_trait_resource_pk", using: :btree
+  add_index "meta_traits", ["trait_id"], name: "index_meta_traits_on_trait_id", using: :btree
 
   create_table "meta_xml_fields", force: :cascade do |t|
     t.string  "term",        limit: 255
