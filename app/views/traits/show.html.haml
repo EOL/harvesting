@@ -87,9 +87,9 @@
   .ui.attached.segment
     %p [none]
 - else
-  .ui.attached.segment
-    .ui.list
-      - metadata.each do |meta|
+  - metadata.each do |meta|
+    .ui.attached.segment
+      .ui.list
         .item
           .content
             .header eol_pk
