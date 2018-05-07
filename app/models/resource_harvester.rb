@@ -92,6 +92,7 @@ class ResourceHarvester
         if @harvest
           log_err(e)
         end
+        @resource.stop_adding_media_jobs if @resource
       ensure
         Searchkick.enable_callbacks
         took = Time.delta_s(@start_time)

@@ -80,7 +80,6 @@ class Resource < ActiveRecord::Base
     resource
   end
 
-  # NOTE: never called by code; only manual.
   def stop_adding_media_jobs
     Delayed::Job.where(queue: 'media').where(%{handler LIKE "%resource_id: #{id}%"}).delete_all
   end
