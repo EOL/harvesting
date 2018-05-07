@@ -43,7 +43,9 @@ class Harvest < ActiveRecord::Base
   ]
 
   def download_all_images
-    Medium.download_and_resize(media.missing.limit(100))
+    resource.fix_downloaded_media_count
+    return if media.missing.count.zero?
+    Medium.download_and_resize(media.missing.limit(25))
     delay(queue: 'media').download_all_images
   end
 

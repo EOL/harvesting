@@ -173,6 +173,7 @@ class Rank
 
   @unordered_base_names = %w[section series clade]
 
+  # TODO: do something with these:
   @groups = 'paraphyletic group' + 'polyphyletic group'
   @higher_prefixes = %w[mega super epi _group]
   @lower_prefixes = %w[- sub infra subter] # NOTE: the '-' is special and intended to handle NO prefix.
