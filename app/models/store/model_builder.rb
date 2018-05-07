@@ -166,7 +166,11 @@ module Store
     end
 
     def build_medium
-      return(log_warning('ARTICLES UNSUPPORTED')) if @models[:medium][:is_article]
+      if @models[:medium][:is_article]
+        return if @warned.key?(:articles_unsupported)
+        @warned[:articles_unsupported] = true
+        return(log_warning('ARTICLES UNSUPPORTED'))
+      end
       @models[:medium][:resource_pk] = fake_pk(:medium) unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id

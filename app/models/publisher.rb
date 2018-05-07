@@ -175,6 +175,7 @@ class Publisher
 
   def add_attributions(object)
     object.content_attributions.each do |content_attribution|
+      next unless content_attribution.attribution
       t = Time.now.to_s(:db)
       attribution = Struct::WebAttribution.new
       attribution.value = clean_values(content_attribution.attribution.body)
