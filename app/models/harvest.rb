@@ -144,6 +144,10 @@ class Harvest < ActiveRecord::Base
       Node.where(id: batch).delete_all
     end
     update_attribute(:completed_at, Time.now) unless completed_at
-    resource.rm_lockfile
+    begin
+      resource.rm_lockfile
+    rescue => e
+      puts "WARNING (non-fatal): #{e.message}"
+    end
   end
 end
