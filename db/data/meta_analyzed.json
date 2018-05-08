@@ -760,5 +760,11 @@
   "represents":"to_media_attributions_fk",
   "submapping":null,
   "is_unique":false,
+  "is_required":false},
+{ "term":"http://purl.org/dc/terms/bibliographicCitation",
+  "for_format":"media",
+  "represents":"to_bibliographic_citation",
+  "submapping":null,
+  "is_unique":false,
   "is_required":false}
 ]
