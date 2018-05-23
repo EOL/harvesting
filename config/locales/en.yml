@@ -253,6 +253,7 @@ en:
       failed_downloaded_media_count: "failed"
       downloaded_media_progress:
         zero: "starting..."
+        one: "1% downloaded"
         other: "%{count}% downloaded"
   terms:
     actions:

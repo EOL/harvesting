@@ -32,18 +32,9 @@ module Store
 
     def get_meta_field(cache, uri, meta_uri)
       return uri unless uri =~ URI::ABS_URI
-      name =
-        if cache.key?(uri)
-          cache[uri]
-        elsif Term.exists?(uri: uri)
-          cache[uri] = Term.find_by_uri(uri).name
-        else
-          log_warning("No term exists for sex value of '#{uri}' (forced to use full URI)")
-          cache[uri] = uri
-        end
       @models[:occurrence][:meta] ||= {}
       @models[:occurrence][:meta][meta_uri] = uri
-      name
+      uri
     end
 
     def to_occurrences_lat(field, val)
