@@ -1,6 +1,13 @@
 class Term < ActiveRecord::Base
   enum used_for: %i[unknown measurement association value metadata]
 
+  def self.uri?(uri)
+    @valid_protocols ||= %w[http doi].join('|')
+    return false unless (uri =~ URI::ABS_URI).zero? # NOTE: must be at the start
+    return false unless uri =~ /^(#{@valid_protocols})/i
+    true
+  end
+
   def self.add_new_terms
     Term.from_file(Rails.root.join('doc', 'new_terms.json'))
   end

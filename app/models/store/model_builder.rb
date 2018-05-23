@@ -400,14 +400,14 @@ module Store
         instance[:literal] = value
         return instance
       end
-      if value =~ URI::ABS_URI && Regexp.last_match.begin(0).zero?
+      if Term.uri?(value)
         object_term = find_or_create_term(value, type: 'value')
         instance[:object_term_id] = object_term.id
       end
       # NOTE we have to check both for units AND for a numeric value to see if it's "numeric"
       if instance[:units] || (!Float(value&.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
         units = instance.delete(:units)
-        if units&.match?(URI::ABS_URI)
+        if Term.uri?(units)
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         elsif !units.blank?
@@ -428,7 +428,7 @@ module Store
         datum[:literal] = value
         return datum
       end
-      if value =~ URI::ABS_URI
+      if Term.uri?(value)
         object_term = find_or_create_term(value, type: 'meta-value')
         datum[:object_term_id] = object_term.id
       else
