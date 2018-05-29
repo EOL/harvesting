@@ -142,10 +142,10 @@
       .value= @resource.scientific_names.published.count
       .label= t("resources.stats.scientific_names")
     .statistic
-      .value= @resource.traits.published.count
+      .value= Trait.where(harvest_id: @resource.harvest_ids).published.count
       .label= t("resources.stats.traits")
     .statistic
-      .value= @resource.assocs.published.count
+      .value= Assoc.where(harvest_id: @resource.harvest_ids).published.count
       .label= t("resources.stats.associations")
     .statistic
       .value= @resource.vernaculars.published.count
