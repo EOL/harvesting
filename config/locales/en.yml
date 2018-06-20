@@ -69,7 +69,7 @@ en:
     flash:
       destroyed: "Harvest destroyed."
   layout:
-    logged_in_as: "Logged in as %{user}."
+    logged_in_as: "logged in as %{user}."
     index_link: "harvested resources"
     sign_in: "sign in"
     sign_out: "sign out"

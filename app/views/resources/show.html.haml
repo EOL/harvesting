@@ -1,101 +1,103 @@
-%h1.ui.header
+%h1.ui.top.attached.centered.brown.block.header
   = @resource.name
-  .sub.header
-    = link_to(t("resources.actions.back"), resources_path)
-    •
-    -# TODO: HACK! We need real secrets for this to work, argh:
-    = link_to(t("resources.actions.publishing_side"), "http://beta.eol.org/resources/#{WebDb.resource_id(@resource)}")
-    - if policy(@resource).update?
-      •
-      = link_to(t("edit"), edit_resource_path(@resource))
-      •
-      = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
-
-- if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
-  = t("resources.actions.harvest_in_queue")
-- elsif policy(@resource).update?
-  - if @resource.harvests.completed.any?
-    .ui.button
-      = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
-  - elsif @resource.harvests.any?
-    .ui.button
-      = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
-  - else
-    .ui.button
-      = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
-  - if @resource.opendata_url
-    .ui.button
-      = link_to(t("resources.actions.re_download_opendata_harvest"),
-        resource_re_download_opendata_harvest_path(@resource),
-        data: { confirm: t("resources.actions.re_download_confirm") })
-  .ui.button
-    = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
-  .ui.button
-    = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
-
-.ui.list
-  - unless @resource.abbr.blank?
+.ui.tiny.attached.menu
+  -# TODO: HACK! We need real secrets for this to work, argh:
+  .item= link_to(t("resources.actions.publishing_side"), "http://beta.eol.org/resources/#{WebDb.resource_id(@resource)}")
+  - if policy(@resource).update?
+    .item= link_to(t("edit"), edit_resource_path(@resource))
+    .item= link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
+  - if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
+    .item= t("resources.actions.harvest_in_queue")
+  - elsif policy(@resource).update?
+    .right.menu
+      - if @resource.harvests.completed.any?
+        .item
+          .ui.button
+            = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
+      - elsif @resource.harvests.any?
+        .item
+          .ui.button
+            = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
+      - else
+        .item
+          .ui.button
+            = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+      - if @resource.opendata_url
+        .item
+          .ui.button
+            = link_to(t("resources.actions.re_download_opendata_harvest"),
+              resource_re_download_opendata_harvest_path(@resource),
+              data: { confirm: t("resources.actions.re_download_confirm") })
+      .item
+        .ui.button
+          = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
+      .item
+        .ui.button
+          = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
+.ui.bottom.attached.segment
+  .ui.list
+    - unless @resource.abbr.blank?
+      .item
+        %strong= "Abbreviation:"
+        = @resource.abbr
+    - unless @resource.opendata_url.blank?
+      .item
+        %strong= "OpenData URL:"
+        = link_to(@resource.opendata_url.sub(%r{^.*/}, ''), @resource.opendata_url)
     .item
-      %strong= "Abbreviation:"
-      = @resource.abbr
-  - unless @resource.opendata_url.blank?
+      %strong= "Minimum Days Between Harvests:"
+      = @resource.min_days_between_harvests
+    - if @resource.harvest_day_of_month
+      .item
+        %strong= "Harvests on Day of Month:"
+        = @resource.harvest_day_of_month
+    - if @resource.harvest_months_json && ! @resource.harvest_months_json == ""
+      .item
+        %strong= "Harvests on Months:"
+        - months = JSON.parse(@resource.harvest_months_json)
+        = months.join(", ")
     .item
-      %strong= "OpenData URL:"
-      = link_to(@resource.opendata_url.sub(%r{^.*/}, ''), @resource.opendata_url)
-  .item
-    %strong= "Minimum Days Between Harvests:"
-    = @resource.min_days_between_harvests
-  - if @resource.harvest_day_of_month
-    .item
-      %strong= "Harvests on Day of Month:"
-      = @resource.harvest_day_of_month
-  - if @resource.harvest_months_json && ! @resource.harvest_months_json == ""
-    .item
-      %strong= "Harvests on Months:"
-      - months = JSON.parse(@resource.harvest_months_json)
-      = months.join(", ")
-  .item
-    %strong= "Harvesting Status:"
-    - if @resource.publish_status.nil?
-      = t("resources.publish_status.nil")
+      %strong= "Harvesting Status:"
+      - if @resource.publish_status.nil?
+        = t("resources.publish_status.nil")
+      - else
+        = t("resources.publish_status.#{@resource.publish_status}")
+    - if @resource.nodes_count
+      .item
+        %strong= "Nodes:"
+        = @resource.nodes_count
     - else
-      = t("resources.publish_status.#{@resource.publish_status}")
-  - if @resource.nodes_count
+      .item= "Nodes count is blank (this is not a problem, but is inconvenient)."
     .item
-      %strong= "Nodes:"
-      = @resource.nodes_count
-  - else
-    .item= "Nodes count is blank (this is not a problem, but is inconvenient)."
-  .item
-    %strong= "URLs for node IDs will direct the client to:"
-    - if @resource.pk_url == "$PK"
-      "(The ID itself: this assumes the IDs are valid URIs)"
+      %strong= "URLs for node IDs will direct the client to:"
+      - if @resource.pk_url == "$PK"
+        "(The ID itself: this assumes the IDs are valid URIs)"
+      - else
+        = @resource.pk_url.gsub("$PK", "[the identfier]")
+    - if @resource.auto_publish?
+      "This resource will auto-publish after harvesting."
     - else
-      = @resource.pk_url.gsub("$PK", "[the identfier]")
-  - if @resource.auto_publish?
-    "This resource will auto-publish after harvesting."
-  - else
-    "This resource will NOT be published after harvesting. It must be published manually."
-  .item
-    %strong= "Trusted:"
-    = @resource.not_trusted? ? "No." : "Yes."
-  - if @resource.hold_harvesting?
+      "This resource will NOT be published after harvesting. It must be published manually."
     .item
-      %strong= "THIS RESOURCE IS ON HOLD:"
-      = "It will not be harvested until an admin releases this hold."
-  .item
-    %strong= "May Contain Duplicate Taxa:"
-    = @resource.might_have_duplicate_taxa? ? "Yes." : "No."
-  - if @resource.force_harvest?
+      %strong= "Trusted:"
+      = @resource.not_trusted? ? "No." : "Yes."
+    - if @resource.hold_harvesting?
+      .item
+        %strong= "THIS RESOURCE IS ON HOLD:"
+        = "It will not be harvested until an admin releases this hold."
     .item
-      %strong= "THIS RESOURCE WILL BE HARVESTED ASAP:"
-      = "An admin has set this resource to Force Harvest."
-  .item
-    %strong= "Created:"
-    = I18n.l @resource.created_at.localtime, format: :short
-  .item
-    %strong= "Last Updated:"
-    = I18n.l @resource.updated_at.localtime, format: :short
+      %strong= "May Contain Duplicate Taxa:"
+      = @resource.might_have_duplicate_taxa? ? "Yes." : "No."
+    - if @resource.force_harvest?
+      .item
+        %strong= "THIS RESOURCE WILL BE HARVESTED ASAP:"
+        = "An admin has set this resource to Force Harvest."
+    .item
+      %strong= "Created:"
+      = I18n.l @resource.created_at.localtime, format: :short
+    .item
+      %strong= "Last Updated:"
+      = I18n.l @resource.updated_at.localtime, format: :short
 
 %h2= "Expected File Format Definitions"
 - if @formats.empty?
@@ -123,7 +125,7 @@
 %h2= "Content"
 - media_count = @resource.media.published.count
 .ui.segment
-  .ui.tiny.statistics
+  .ui.six.tiny.statistics
     .statistic
       .value= @resource.nodes.published.count
       .label= t("resources.stats.nodes")
@@ -142,6 +144,7 @@
     .statistic
       .value= @resource.scientific_names.published.count
       .label= t("resources.stats.scientific_names")
+  .ui.six.tiny.statistics
     .statistic
       .value= Trait.where(harvest_id: @resource.harvest_ids).published.count
       .label= t("resources.stats.traits")
@@ -167,7 +170,9 @@
       .label= t("resources.stats.downloaded_media_progress", count: pct)
 
 %h2= t(:resource_nodes_title)
-- unless @resource.nodes.published.empty?
+- if @resource.nodes.published.empty?
+  %p This resource has no nodes.
+- else
   %h3= t(:resource_nodes_root_head_count, count: @resource.nodes.root.count)
   = paginate(@root_nodes)
   .ui.list
