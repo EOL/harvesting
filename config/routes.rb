@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  devise_for :users
   root 'resources#index'
 
   resources :formats, only: [:show, :destroy] do

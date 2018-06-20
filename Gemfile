@@ -8,11 +8,13 @@ gem 'acts_as_list'
 gem 'creek'
 # Required to run bin/delayed_job:
 gem 'daemons'
+# Dalli store:
+gem 'dalli'
 # Background jobs:
 gem 'delayed_job', '~> 4.1.4'
 gem 'delayed_job_active_record'
-# Dalli store:
-gem 'dalli'
+# Store users securely:
+gem 'devise'
 # Enums with simple_form:
 gem 'enum_help'
 # Because ERB is just plain silly compared to Haml:

@@ -1,3 +1,4 @@
+# 20161121181833
 class InitialUsers < ActiveRecord::Migration
   def change
     create_table :users do |t|

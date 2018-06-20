@@ -86,6 +86,6 @@ class TermsController < ApplicationController
     name = @term.name
     name = @term.uri if name.blank?
     @term.destroy
-    redirect_to resource, notice: I18n.t('terms.flash.destroyed', name: name)
+    redirect_to resources_path, notice: I18n.t('terms.flash.destroyed', name: name)
   end
 end
