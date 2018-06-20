@@ -5,14 +5,15 @@
     •
     -# TODO: HACK! We need real secrets for this to work, argh:
     = link_to(t("resources.actions.publishing_side"), "http://beta.eol.org/resources/#{WebDb.resource_id(@resource)}")
-    •
-    = link_to(t("edit"), edit_resource_path(@resource))
-    •
-    = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
+    - if user_signed_in?
+      •
+      = link_to(t("edit"), edit_resource_path(@resource))
+      •
+      = link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
 
 - if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
   = t("resources.actions.harvest_in_queue")
-- else
+- elsif user_signed_in?
   - if @resource.harvests.completed.any?
     .ui.button
       = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
