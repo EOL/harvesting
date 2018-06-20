@@ -71,10 +71,11 @@
           - if resource.publish_status
             .description= t("resources.publish_status.#{resource.publish_status}")
   %p= paginate(@resources)
-.ui.section
-  .ui.button= link_to(t("resources.create.action"), new_resource_path)
-  - unless params[:all]
-    .ui.button= link_to(t("resources.actions.show_all"), resources_path(all: true))
+- if user_signed_in?
+  .ui.section
+    .ui.button= link_to(t("resources.create.action"), new_resource_path)
+    - unless params[:all]
+      .ui.button= link_to(t("resources.actions.show_all"), resources_path(all: true))
 .ui.segment
   %h2= t("resources.index.from_url_header")
   = simple_form_for Resource.new do |f|

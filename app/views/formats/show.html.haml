@@ -71,6 +71,7 @@
                   = field.special_handling
                 = field.unique_in_format? ? "(must be unique)" : nil
                 = field.can_be_empty? ? nil : "(must not be empty)"
-.ui.section
-  .ui.button= link_to(t("formats.show.actions.add_field"), new_format_field_path(@format))
-  .ui.button= link_to(t("formats.show.actions.return"), resource_path(@format.resource))
+- if user_signed_in?
+  .ui.section
+    .ui.button= link_to(t("formats.show.actions.add_field"), new_format_field_path(@format))
+    .ui.button= link_to(t("formats.show.actions.return"), resource_path(@format.resource))
