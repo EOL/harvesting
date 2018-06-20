@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: [:ping, :index, :show]
 
   # See your environment config; this action should be ignored by logs.
   def ping

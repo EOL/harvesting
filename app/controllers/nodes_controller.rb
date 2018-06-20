@@ -1,4 +1,6 @@
 class NodesController < ApplicationController
+  before_action :authenticate_user!, except: [:index, :show, :search]
+
   def index
     @resource = Resource.find(params[:resource_id])
     @nodes = prep_for_api(@resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors))
@@ -21,6 +23,7 @@ class NodesController < ApplicationController
   end
 
   def search
-    @results = Node.search('*', where: { canonical: params[:q] })
+    @results = Node.search('*', fields: %i[canonical authors synonyms synonym_authors],
+                                where: { canonical: params[:q] })
   end
 end

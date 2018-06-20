@@ -1,4 +1,5 @@
 class TraitsController < ApplicationController
+  before_action :authenticate_user!, except: [:index, :show, :search]
 
   @@simple_meta_fields = %i[predicate_term object_term]
   @@meta_fields = @@simple_meta_fields + %i[units_term statistical_method_term]

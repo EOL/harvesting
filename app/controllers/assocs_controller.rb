@@ -1,4 +1,5 @@
 class AssocsController < ApplicationController
+  before_action :authenticate_user!
   def index
     @resource = Resource.find(params[:resource_id])
 

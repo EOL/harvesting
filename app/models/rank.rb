@@ -22,7 +22,7 @@ class Rank
         prefixes.map do |prefix|
           if prefix == '-'
             basename
-          elsif prefix.match?(/^_/)
+          elsif prefix.match(/^_/)
             "#{basename}#{prefix}"
           else
             "#{prefix}#{basename}"

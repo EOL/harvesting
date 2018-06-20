@@ -1,4 +1,5 @@
 class FormatsController < ApplicationController
+  before_action :authenticate_user!
   def show
     @format = Format.find(params[:id])
   end

@@ -1,4 +1,5 @@
 class FieldsController < ApplicationController
+  before_action :authenticate_user!
   def new
     fmt = Format.find(params[:format_id])
     pos = Field.where(format_id: fmt.id).maximum(:position) || 0

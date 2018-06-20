@@ -1,4 +1,6 @@
 class TermsController < ApplicationController
+  before_action :authenticate_user!, except: [:index, :show, :search]
+  
   def index
     params[:per_page] ||= 50
     @terms = prep_for_api(Term.order(params[:by_position] ? :position : %i[name uri]), updated: true)

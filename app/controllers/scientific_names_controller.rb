@@ -1,4 +1,6 @@
 class ScientificNamesController < ApplicationController
+  before_action :authenticate_user!
+
   def index
     @resource = Resource.find(params[:resource_id])
     @names = prep_for_api(@resource.scientific_names.includes(:node, :dataset).published)

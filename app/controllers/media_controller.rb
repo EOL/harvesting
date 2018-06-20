@@ -1,4 +1,5 @@
 class MediaController < ApplicationController
+  before_action :authenticate_user!
   def index
     @resource = Resource.find(params[:resource_id])
     @media = prep_for_api(@resource.media.includes(:node, :license).published)

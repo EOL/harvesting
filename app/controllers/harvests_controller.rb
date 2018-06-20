@@ -5,6 +5,7 @@ class HarvestsController < ApplicationController
   end
 
   def destroy
+    authenticate_user!
     @harvest = Harvest.find(params[:id])
     resource = @harvest.resource
     @harvest.destroy
