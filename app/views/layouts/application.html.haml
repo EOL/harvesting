@@ -21,6 +21,8 @@
   %body
     .ui.container
       .ui.menu
+        .item
+          = link_to(t('layout.index_link'), resources_path)
         - if current_user
           .item
             = t('layout.logged_in_as', user: current_user.email.split('@')[0])

@@ -12,4 +12,13 @@ class User < ActiveRecord::Base
     skip_confirmation!
     save
   end
+
+  def grant_admin
+    self.update_attribute(:is_admin, true)
+  end
+
+  def revoke_admin
+    self.update_attribute(:is_admin, false)
+  end
+
 end

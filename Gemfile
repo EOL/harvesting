@@ -35,6 +35,8 @@ gem 'lograge'
 gem 'mysql2'
 # Debugging:
 gem 'pry-rails'
+# Authorization:
+gem 'pundit'
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
 gem 'rails', '4.2.10'
 # Image resizing and manipulation:

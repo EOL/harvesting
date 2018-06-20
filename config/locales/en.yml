@@ -70,6 +70,7 @@ en:
       destroyed: "Harvest destroyed."
   layout:
     logged_in_as: "Logged in as %{user}."
+    index_link: "harvested resources"
     sign_in: "sign in"
     sign_out: "sign out"
     sign_up: "sign up"

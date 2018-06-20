@@ -905,9 +905,9 @@ MetaXmlField.load
 
 Node.reindex # This empties all of the stuff from ElasticSearch.
 
-User.create(email: 'admin@eol.org', password: 'admin4Tramea')
-user = User.last
-user.activate
+if (user = User.create(email: 'admin@eol.org', password: 'admin4Tramea'))
+  user.activate
+end
 
 # Jonathan's thought: use a table to store ids. You could do something like
 # create_table :keys_to_ids do |t|
