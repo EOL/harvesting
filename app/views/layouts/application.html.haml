@@ -35,10 +35,13 @@
             = link_to(t('layout.sign_up'), new_user_registration_path, class: 'ui primary button')
 
       .ui.inline.cookie.nag
-        %span.title= t("nags.beta").html_safe
         %i.close.icon
+        .header= t("nags.beta").html_safe
       - flash.each do |key, value|
-        .ui.message{ class: "flash-#{key}" }
+        - classes = ["flash-#{key}"]
+        - classes << 'warning' if key == 'alert'
+        .ui.message{ class: classes.join(' ') }
           %i.close.icon
+          .header= key
           %p= value.to_s.html_safe
       = content_for?(:body) ? yield(:body) : yield

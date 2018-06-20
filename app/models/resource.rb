@@ -71,7 +71,6 @@ class Resource < ActiveRecord::Base
 
   def self.from_xml(loc, resource = nil)
     abbr = File.basename(loc)
-    resource&.formats&.abstract&.delete_all
     # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
     resource ||= create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
     resource.partner = resource.fake_partner

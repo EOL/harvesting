@@ -67,6 +67,7 @@ class ResourcesController < ApplicationController
 
   def re_read_xml
     @resource = Resource.find(params[:resource_id])
+    authorize @resource, :update?
     @resource.re_read_xml
     flash[:notice] = t('resources.flash.re_read_xml')
     redirect_to @resource
