@@ -35,5 +35,6 @@ Rails.application.routes.draw do
     get :search, on: :collection
   end
   resources :traits, only: [:show]
+
   match '/ping', to: 'resources#ping', via: :all
 end

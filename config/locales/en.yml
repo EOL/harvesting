@@ -69,6 +69,10 @@ en:
     flash:
       destroyed: "Harvest destroyed."
   layout:
+    logged_in_as: "Logged in as %{user}."
+    sign_in: "sign in"
+    sign_out: "sign out"
+    sign_up: "sign up"
     title: "EOL Resource Harvester"
   location:
     fields:

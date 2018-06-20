@@ -1,4 +1,6 @@
 class ResourcesController < ApplicationController
+  before_action :authenticate_user!
+
   # See your environment config; this action should be ignored by logs.
   def ping
     if ActiveRecord::Base.connection.active?

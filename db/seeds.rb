@@ -905,6 +905,10 @@ MetaXmlField.load
 
 Node.reindex # This empties all of the stuff from ElasticSearch.
 
+User.create(email: 'admin@eol.org', password: 'admin4Tramea')
+user = User.last
+user.activate
+
 # Jonathan's thought: use a table to store ids. You could do something like
 # create_table :keys_to_ids do |t|
 #   t.integer :resource_id
