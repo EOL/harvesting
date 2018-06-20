@@ -1,5 +1,5 @@
-%h1.ui.top.attached.centered.brown.block.header
-  = @resource.name
+.ui.top.attached.centered.brown.block.header
+  %h1= @resource.name
 .ui.tiny.attached.menu
   -# TODO: HACK! We need real secrets for this to work, argh:
   .item= link_to(t("resources.actions.publishing_side"), "http://beta.eol.org/resources/#{WebDb.resource_id(@resource)}")
@@ -10,30 +10,26 @@
     .item= t("resources.actions.harvest_in_queue")
   - elsif policy(@resource).update?
     .right.menu
-      - if @resource.harvests.completed.any?
-        .item
-          .ui.button
-            = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
-      - elsif @resource.harvests.any?
-        .item
-          .ui.button
-            = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
-      - else
-        .item
-          .ui.button
-            = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
-      - if @resource.opendata_url
-        .item
-          .ui.button
-            = link_to(t("resources.actions.re_download_opendata_harvest"),
-              resource_re_download_opendata_harvest_path(@resource),
-              data: { confirm: t("resources.actions.re_download_confirm") })
       .item
-        .ui.button
-          = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
-      .item
-        .ui.button
-          = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
+        .ui.buttons
+          - if @resource.harvests.completed.any?
+            .ui.compact.button
+              = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
+          - elsif @resource.harvests.any?
+            .ui.compact.button
+              = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
+          - else
+            .ui.compact.button
+              = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+          - if @resource.opendata_url
+            .ui.compact.button
+              = link_to(t("resources.actions.re_download_opendata_harvest"),
+                resource_re_download_opendata_harvest_path(@resource),
+                data: { confirm: t("resources.actions.re_download_confirm") })
+          .ui.compact.button
+            = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
+          .ui.compact.button
+            = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
 .ui.bottom.attached.segment
   .ui.list
     - unless @resource.abbr.blank?
