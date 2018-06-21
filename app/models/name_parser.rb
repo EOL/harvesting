@@ -18,7 +18,8 @@ class NameParser
     # NOTE: this while loop is ONLY here because gnparser seems to skip some names in each batch. For about 24K names,
     # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
     # Ick. TODO: find the problem and fix.
-    while ScientificName.where(harvest_id: @harvest.id, canonical: nil).count.positive? && @attempts <= 10
+    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count.positive? && @attempts <= 10
+      @harvest.log("I see #{count} names which still need to be parsed.", cat: :warns)
       @attempts += 1
       loop_over_names_in_batches do |names|
         @names = {}
@@ -37,6 +38,7 @@ class NameParser
         end
         update_names(updates) unless updates.empty?
       end
+      sleep(1)
     end
     if @attempts >= 10
       @harvest.log('Required more than 10 attempts to parse all names!', cat: :errors)
