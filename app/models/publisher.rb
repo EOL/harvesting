@@ -514,6 +514,7 @@ class Publisher
     object.owner || "licensed media from #{@resource.name} without owner"
   end
 
+  # TODO: move this method up.
   # NOTE: vernaculars will not be preferred until the website runs
   # Vernacular.joins(:page).where(['pages.vernaculars_count = 1 AND vernaculars.is_preferred_by_resource = ? '\
   #   'AND vernaculars.resource_id = ?', true, @resource.id]).update_all(is_preferred: true)
