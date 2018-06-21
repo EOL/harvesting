@@ -49,17 +49,9 @@ class ResourcesController < ApplicationController
     enqueue_harvest(:re_download_opendata)
   end
 
-  def enqueue_harvest(type = '')
-    @resource = Resource.find(params[:resource_id])
-    count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count
-    type = "#{type}_" unless type.blank?
-    @resource.send("enqueue_#{type}harvest")
-    flash[:notice] = t('resources.flash.harvest_enqueued', count: count)
-    redirect_to @resource
-  end
-
   def re_create_tsv
     @resource = Resource.find(params[:resource_id])
+    authorize @resource, :update?
     @resource.delay(queue: 'harvest').publish
     flash[:notice] = t('resources.flash.re_create_tsv_enqueued')
     redirect_to @resource
@@ -83,6 +75,7 @@ class ResourcesController < ApplicationController
 
   def create
     @resource = Resource.new(resource_params)
+    authorize @resource, :update?
     if @resource.opendata_url
       @resource = Resource::FromOpenData.url(@resource.opendata_url)
       flash[:notice] = I18n.t('resources.flash.imported', name: @resource.name,
@@ -100,7 +93,7 @@ class ResourcesController < ApplicationController
 
   def update
     @resource = Resource.find(params[:id])
-
+    authorize @resource, :update?
     if @resource.update(resource_params)
       resp = WebDb.update_resource(@resource, logger = nil)
       flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
@@ -114,6 +107,7 @@ class ResourcesController < ApplicationController
 
   def destroy
     @resource = Resource.find(params[:id])
+    authorize @resource, :update?
     name = @resource.name
     @resource.destroy
     flash[:notice] = I18n.t('resources.flash.destroyed', name: name)
@@ -121,6 +115,16 @@ class ResourcesController < ApplicationController
   end
 
   private
+
+  def enqueue_harvest(type = '')
+    @resource = Resource.find(params[:resource_id])
+    authorize @resource, :update?
+    count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count
+    type = "#{type}_" unless type.blank?
+    @resource.send("enqueue_#{type}harvest")
+    flash[:notice] = t('resources.flash.harvest_enqueued', count: count)
+    redirect_to @resource
+  end
 
   def resource_params
     params.require(:resource)
