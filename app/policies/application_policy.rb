@@ -15,7 +15,7 @@ class ApplicationPolicy
   end
 
   def create?
-    user.is_admin?
+    user&.is_admin?
   end
 
   def new?
@@ -23,7 +23,7 @@ class ApplicationPolicy
   end
 
   def update?
-    user.is_admin?
+    user&.is_admin?
   end
 
   def edit?
@@ -31,7 +31,7 @@ class ApplicationPolicy
   end
 
   def destroy?
-    user.is_admin?
+    user&.is_admin?
   end
 
   def search?
