@@ -1,5 +1,5 @@
 class FormatsController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: [:show]
   def show
     @format = Format.find(params[:id])
   end
@@ -7,14 +7,17 @@ class FormatsController < ApplicationController
   def new
     resource = Resource.find(params[:resource_id])
     @format = Format.new(resource: resource, utf8: true, data_begins_on_line: 2)
+    log_auth(@format)
   end
 
   def edit
     @format = Format.find(params[:id])
+    log_auth(@format)
   end
 
   def create
     @format = Format.new(format_params)
+    log_auth(@format)
     @format.field_sep.gsub!(/\\t/, "\t") # TODO: others? Maybe we should just use a picklist. :|
     if @format.save
       path = resource_format_path(@format, resource_id: @format.resource_id)
@@ -28,6 +31,7 @@ class FormatsController < ApplicationController
 
   def update
     @format = Format.find(params[:id])
+    log_auth(@format)
     # TODO: others? Maybe we should just use a picklist. :| ALSO GENERALIZE WITH EDIT
     format_params[:field_sep].gsub!(/\\t/, "\t")
     if @format.update(format_params)
@@ -48,6 +52,7 @@ class FormatsController < ApplicationController
 
   def destroy
     @format = Format.find(params[:id])
+    log_auth(@format)
     name = @format.represents
     resource = @format.resource
     @format.destroy

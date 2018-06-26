@@ -1,0 +1,2 @@
+class FieldPolicy < ApplicationPolicy
+end

@@ -1,6 +1,6 @@
 class TermsController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show, :search]
-  
+
   def index
     params[:per_page] ||= 50
     @terms = prep_for_api(Term.order(params[:by_position] ? :position : %i[name uri]), updated: true)
@@ -16,9 +16,11 @@ class TermsController < ApplicationController
   end
 
   def new_bulk
+    log_auth(Term)
   end
 
   def bulk_import
+    log_auth(Term)
     flash[notice] =
       begin
         terms = params[:terms]
@@ -42,14 +44,17 @@ class TermsController < ApplicationController
 
   def new
     @term = Term.new()
+    log_auth(@term)
   end
 
   def edit
     @term = Term.find(params[:id])
+    log_auth(@term)
   end
 
   def create
     @term = Term.new(term_params)
+    log_auth(@term)
     if @term.save
       name = @term.name
       name = @term.uri if name.blank?
@@ -63,6 +68,7 @@ class TermsController < ApplicationController
 
   def update
     @term = Term.find(params[:id])
+    log_auth(@term)
     old_pos = @term.position
     @term.position.update(params[:term][:position]) rescue nil # Hack, but I'm in a rush.
     if @term.update(term_params)
@@ -85,6 +91,7 @@ class TermsController < ApplicationController
 
   def destroy
     @term = Term.find(params[:id])
+    log_auth(@term)
     name = @term.name
     name = @term.uri if name.blank?
     @term.destroy

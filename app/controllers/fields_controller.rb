@@ -33,6 +33,7 @@ class FieldsController < ApplicationController
 
   def create
     @field = Field.new(field_params)
+    log_auth(@field)
     if @field.save
       name = @field.expected_header
       name = @field.mapping if name.blank?

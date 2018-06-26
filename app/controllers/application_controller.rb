@@ -15,18 +15,26 @@ class ApplicationController < ActionController::Base
 
   protected
 
-  def access_logger
-    @@my_logger ||= Logger.new(Rails.root.join('log', 'access.log'))
+  def log_auth(what, which = nil)
+    log_activity # NOTE we log first, regardless of the results.
+    authorize(what, which || :update?)
   end
 
   def log_activity
-    (path, line, method) = caller.first.split(':')
+    # NOTE: this weird (1..1)[0] syntax is a "performance recommendation" from ruby. [shrug]
+    which = caller(1..1)[0]
+    which = caller(2..2)[0] if which =~ /log_auth/
+    (path, line, method) = which.split(':')
     source = path.split('/').last.sub('_controller.rb', '')
     fn = method[4..-2] # Strip out the "in ``"
-    user = current_user&.email || "[ANONYMOUS]"
+    user = current_user&.email || '[ANONYMOUS]'
     ids = params.select { |p| p =~ /id$/ }.map { |key, val| "#{key}: #{val}" }
     access_logger.warn("#{user} (#{request.remote_ip}) calling #{source.titleize}Controller##{fn} +#{line} "\
       "{ #{ids.join(', ')} })")
+  end
+
+  def access_logger
+    @@my_logger ||= Logger.new(Rails.root.join('log', 'access.log'))
   end
 
   private
@@ -37,6 +45,7 @@ class ApplicationController < ActionController::Base
 
   def user_not_authorized
     flash[:alert] = 'You are not authorized to perform this action.'
+    access_logger.error("#{user} (#{request.remote_ip}) DENIED.")
     redirect_to(request.referrer || root_path)
   end
 end

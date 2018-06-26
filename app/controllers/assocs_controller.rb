@@ -1,8 +1,7 @@
 class AssocsController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: [:index]
   def index
     @resource = Resource.find(params[:resource_id])
-
     @assocs = prep_for_api(@resource.assocs.published
                            .includes(:predicate_term, :sex_term, :lifestage_term, :references,
                                      occurrence: { occurrence_metadata: %i[predicate_term object_term] },

@@ -1,0 +1,2 @@
+class TermPolicy < ApplicationPolicy
+end

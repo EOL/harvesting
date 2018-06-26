@@ -13,15 +13,12 @@ class ResourcesController < ApplicationController
   def index
     params[:per_page] ||= 50
     @resources = Resource.order(:name).includes([:partner])
-    unless params[:all]
-      @resources = @resources.where(publish_status: Resource.publish_statuses[:published])
-    end
+    @resources = @resources.where(publish_status: Resource.publish_statuses[:published]) unless params[:all]
     params[:per_page] = 15 if request.format.html?
     @resources = prep_for_api(@resources, updated: true)
   end
 
   def show
-    # log_activity
     @resource = Resource.find(params[:id])
     @formats = Format.where(resource_id: @resource.id).abstract
     respond_to do |fmt|
@@ -52,7 +49,7 @@ class ResourcesController < ApplicationController
 
   def re_create_tsv
     @resource = Resource.find(params[:resource_id])
-    authorize @resource, :update?
+    log_auth(@resource)
     @resource.delay(queue: 'harvest').publish
     flash[:notice] = t('resources.flash.re_create_tsv_enqueued')
     redirect_to @resource
@@ -60,7 +57,7 @@ class ResourcesController < ApplicationController
 
   def re_read_xml
     @resource = Resource.find(params[:resource_id])
-    authorize @resource, :update?
+    log_auth(@resource)
     @resource.re_read_xml
     flash[:notice] = t('resources.flash.re_read_xml')
     redirect_to @resource
@@ -68,15 +65,17 @@ class ResourcesController < ApplicationController
 
   def new
     @resource = Resource.new
+    log_auth(@resource)
   end
 
   def edit
     @resource = Resource.find(params[:id])
+    log_auth(@resource)
   end
 
   def create
     @resource = Resource.new(resource_params)
-    authorize @resource, :update?
+    log_auth(@resource)
     if @resource.opendata_url
       @resource = Resource::FromOpenData.url(@resource.opendata_url)
       flash[:notice] = I18n.t('resources.flash.imported', name: @resource.name,
@@ -94,7 +93,7 @@ class ResourcesController < ApplicationController
 
   def update
     @resource = Resource.find(params[:id])
-    authorize @resource, :update?
+    log_auth(@resource)
     if @resource.update(resource_params)
       resp = WebDb.update_resource(@resource, logger = nil)
       flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
@@ -108,7 +107,7 @@ class ResourcesController < ApplicationController
 
   def destroy
     @resource = Resource.find(params[:id])
-    authorize @resource, :update?
+    log_auth(@resource)
     name = @resource.name
     @resource.destroy
     flash[:notice] = I18n.t('resources.flash.destroyed', name: name)
@@ -119,7 +118,7 @@ class ResourcesController < ApplicationController
 
   def enqueue_harvest(type = '')
     @resource = Resource.find(params[:resource_id])
-    authorize @resource, :update?
+    log_auth(@resource)
     count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count
     type = "#{type}_" unless type.blank?
     @resource.send("enqueue_#{type}harvest")

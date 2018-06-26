@@ -1,5 +1,5 @@
 class ScientificNamesController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: [:index]
 
   def index
     @resource = Resource.find(params[:resource_id])
