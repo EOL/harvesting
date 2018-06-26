@@ -21,7 +21,7 @@ class ResourcesController < ApplicationController
   end
 
   def show
-    log_activity
+    # log_activity
     @resource = Resource.find(params[:id])
     @formats = Format.where(resource_id: @resource.id).abstract
     respond_to do |fmt|
