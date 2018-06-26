@@ -13,6 +13,22 @@ class ApplicationController < ActionController::Base
     query = query.page(params[:page] || 1).per(params[:per_page] || 1000)
   end
 
+  protected
+
+  def access_logger
+    @@my_logger ||= Logger.new(Rails.root.join('log', 'access.log'))
+  end
+
+  def log_activity
+    (path, line, method) = caller.first.split(':')
+    source = path.split('/').last.sub('_controller.rb', '')
+    fn = method[4..-2] # Strip out the "in ``"
+    user = current_user&.email || "[ANONYMOUS]"
+    ids = params.select { |p| p =~ /id$/ }.map { |key, val| "#{key}: #{val}" }
+    access_logger.warn("#{user} (#{request.remote_ip}) calling #{source.titleize}Controller##{fn} +#{line} "\
+      "{ #{ids.join(', ')} })")
+  end
+
   private
 
   def underscore_params!
