@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180620184900) do
+ActiveRecord::Schema.define(version: 20180626175617) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -223,6 +223,7 @@ ActiveRecord::Schema.define(version: 20180620184900) do
     t.string  "field_sep",           limit: 4,   default: ","
     t.string  "line_sep",            limit: 4,   default: "\n"
     t.boolean "utf8",                            default: false, null: false
+    t.integer "line_count",          limit: 4
   end
 
   add_index "formats", ["harvest_id"], name: "index_formats_on_harvest_id", using: :btree
