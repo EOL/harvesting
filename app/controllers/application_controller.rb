@@ -34,7 +34,10 @@ class ApplicationController < ActionController::Base
   end
 
   def access_logger
-    @@my_logger ||= Logger.new(Rails.root.join('log', 'access.log'))
+    return @@access_logger if defined?(@@access_logger)
+    @@access_logger = Logger.new(Rails.root.join('log', 'access.log'))
+    @@access_logger.datetime_format = '%Y-%m-%d %H:%M:%S'
+    @@access_logger
   end
 
   private
@@ -45,6 +48,7 @@ class ApplicationController < ActionController::Base
 
   def user_not_authorized
     flash[:alert] = 'You are not authorized to perform this action.'
+    user = current_user&.email || '[ANONYMOUS]'
     access_logger.error("#{user} (#{request.remote_ip}) DENIED.")
     redirect_to(request.referrer || root_path)
   end
