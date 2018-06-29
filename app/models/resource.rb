@@ -118,8 +118,8 @@ class Resource < ActiveRecord::Base
   end
 
   def any_files_changed?
-    return true if harvests.completed.blank?
-    last_harvest = harvests.completed.last.created_at
+    return true if harvests.complete_non_failed.blank?
+    last_harvest = harvests.complete_non_failed.last.created_at
     formats.each do |fmt|
       return true if File.mtime(fmt.get_from) > last_harvest
     end

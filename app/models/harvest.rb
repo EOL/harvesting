@@ -21,9 +21,7 @@ class Harvest < ActiveRecord::Base
 
   delegate :resume, to: :resource
 
-  # NOTE: Be careful. #completed is this scope, #completed! sets the stage to completed, and completed? checks that the
-  # stage is "completed"...
-  scope :completed, -> { where('completed_at IS NOT NULL') }
+  scope :complete_non_failed, -> { where('completed_at IS NOT NULL AND failed_at IS NULL') }
   scope :failed, -> { where('failed_at IS NOT NULL') }
   scope :running, -> { where('failed_at IS NULL AND completed_at IS NULL') }
 

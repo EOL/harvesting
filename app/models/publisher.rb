@@ -14,7 +14,7 @@ class Publisher
 
   def initialize(options = {})
     @resource = options[:resource]
-    @logger = options[:logger] || @resource.harvests.completed.last
+    @logger = options[:logger] || @resource.harvests.complete_non_failed.last
     raise 'No completed harvests!' unless @logger
     @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
     @web_resource_id = nil

@@ -6,7 +6,7 @@ class Resource
 
     def initialize(resource)
       @resource = resource
-      @harvest = @resource.harvests.completed.last
+      @harvest = @resource.harvests.complete_non_failed.last
       @nodes_to_pages = []
     end
 
