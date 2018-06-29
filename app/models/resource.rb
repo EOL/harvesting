@@ -18,7 +18,7 @@ class Resource < ActiveRecord::Base
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
-  enum publish_status: %i(unpublished publishing published deprecated updated_files harvest_pending)
+  enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending]
 
   acts_as_list
 
@@ -80,7 +80,7 @@ class Resource < ActiveRecord::Base
   end
 
   def stop_adding_media_jobs
-    Delayed::Job.where(queue: 'media').where(%{handler LIKE "%resource_id: #{id}%"}).delete_all
+    Delayed::Job.where(queue: 'media').where(%(handler LIKE "%resource_id: #{id}%")).delete_all
   end
 
   def undownloaded_media_count
@@ -95,7 +95,8 @@ class Resource < ActiveRecord::Base
     "#{path}/harvest.lock"
   end
 
-  # NOTE: why no #locked? ...Because it's not quite that simple. I
+  # NOTE: why no #locked? ...Because it's not quite that simple. I didn't want to lull you into a false sense of the
+  # resource being unlocked if you don't see a lockfile.
   def lockfile_exists?
     File.exist?(lockfile_name)
   end
