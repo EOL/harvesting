@@ -243,6 +243,10 @@ class Resource < ActiveRecord::Base
     harvester
   end
 
+  def remap_names
+    Resource::RemapNames.for_resource(self)
+  end
+
   def download_missing_images
     if media.published.missing.count.zero?
       raise 'THERE WERE FAILED DOWNLOADS' if media.published.failed_download.count.positive?
