@@ -84,12 +84,19 @@ class Medium < ActiveRecord::Base
       # TODO: we really should use https. It will be the only thing availble, at some point...
       get_url = source_url.sub(/^https/, 'http')
       require 'open-uri'
+      attempts = 0
       begin
         raw = open(get_url)
-      rescue URI::InvalidURIError
+      rescue URI::InvalidURIError => e
         extend EncodingFixer
+        puts "Unable to read #{get_url}"
         get_url = fix_encoding(get_url)
-        retry
+        puts "Re-trying with #{get_url}"
+        if attempts.positive?
+          raise e
+        else
+          retry
+        end
       rescue Net::ReadTimeout
         mess = "Timed out reading #{get_url} for Medium ##{id}"
         harvest.log(mess, cat: :errors)
