@@ -1,6 +1,6 @@
 # Simple Module for fixing strings that were bogusly converted on input. We really need to address root prob
 module EncodingFixer
-  def fix(input)
+  def fix_encoding(input)
     string = input.dup
     @fixes = {
       'Ã€' => 'À',
@@ -69,7 +69,7 @@ module EncodingFixer
       'Ã¿' => 'ÿ'
     }
     @fixes.each do |from, to|
-      string.gsub(from, to)
+      string.gsub!(from, to)
     end
     string
   end

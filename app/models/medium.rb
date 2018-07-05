@@ -86,6 +86,10 @@ class Medium < ActiveRecord::Base
       require 'open-uri'
       begin
         raw = open(get_url)
+      rescue URI::InvalidURIError
+        extend EncodingFixer
+        get_url = fix_encoding(get_url)
+        retry
       rescue Net::ReadTimeout
         mess = "Timed out reading #{get_url} for Medium ##{id}"
         harvest.log(mess, cat: :errors)
