@@ -12,6 +12,10 @@ class Publisher
     publisher
   end
 
+# TODO: Inefficient:
+# Reference Load (0.7ms)  SELECT `references`.* FROM `references` INNER JOIN `scientific_names_references` ON `references`.`id` = `scientific_names_references`.`reference_id` WHERE `scientific_names_references`.`scientific_name_id` = 4465
+# ScientificName Load (0.8ms)  SELECT  `scientific_names`.* FROM `scientific_names` WHERE `scientific_names`.`id` = 4466 LIMIT 1
+
   def initialize(options = {})
     @resource = options[:resource]
     @logger = options[:logger] || @resource.harvests.complete_non_failed.last
@@ -92,7 +96,7 @@ class Publisher
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
                       .includes(:identifiers, :node_ancestors, :references,
-                                vernaculars: [:language], scientific_names: [:dataset],
+                                vernaculars: [:language], scientific_names: [:dataset, :references],
                                 media: %i[node license language references bibliographic_citation location] <<
                                   { content_attributions: :attribution },
                                 articles: %i[node license language references bibliographic_citation location] <<

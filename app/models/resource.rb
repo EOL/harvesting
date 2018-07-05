@@ -257,7 +257,7 @@ class Resource < ActiveRecord::Base
   end
 
   def delay_more_downloads
-    delay(queue: 'media').download_missing_images # NOTE: this could cause an infinite loop...
+    delay(queue: 'media').download_missing_images # NOTE: this *could* cause a kind of infinite loop...
   end
 
   def convert_trait_units
