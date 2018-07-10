@@ -95,6 +95,7 @@ class Medium < ActiveRecord::Base
         if attempts.positive?
           raise e
         else
+          attempts += 1
           retry
         end
       rescue Net::ReadTimeout
