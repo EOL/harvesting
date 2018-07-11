@@ -77,7 +77,9 @@ class Medium < ActiveRecord::Base
   def download_and_resize
     raw = nil
     image = nil
+    tmp_dir = ENV['TMPDIR'] # nil is fine.
     begin
+      ENV['TMPDIR'] = Rails.root.join('public', 'data', 'tmp') # Has more space; required for ImageMagic.
       unless Dir.exist?(dir)
         FileUtils.mkdir_p(dir)
         FileUtils.chmod(0o755, dir)
@@ -176,7 +178,9 @@ class Medium < ActiveRecord::Base
       image&.destroy!
       image = nil
       # And, rudely, we delete anything open-uri may have left behind that's older than 10 minutes:
-      `find /tmp/open-uri* -type f -mmin +10 -exec rm {} \\;`
+      `find #{ENV['TMPDIR']}/open-uri* -type f -mmin +10 -exec rm {} \\;`
+      `find #{ENV['TMPDIR']}/magic* -type f -mmin +10 -exec rm {} \\;`
+      ENV['TMPDIR'] = tmp_dir
     end
   end
 
