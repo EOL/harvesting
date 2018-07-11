@@ -75,6 +75,8 @@ class Medium < ActiveRecord::Base
   end
 
   def download_and_resize
+    raw = nil
+    image = nil
     begin
       unless Dir.exist?(dir)
         FileUtils.mkdir_p(dir)
@@ -163,12 +165,18 @@ class Medium < ActiveRecord::Base
       update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
                         unmodified_url: unmodified_url, base_url: default_base_url)
       resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
-      image&.destroy! # Clear memory
       harvest.log("download_and_resize completed for Medium.find(#{id}) /#{base_url}.260x190.jpg", cat: :downloads)
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
+      harvest.log("download_and_resize FAILED for Medium.find(#{id})", cat: :downloads)
       return nil
+    ensure
+      raw = nil
+      image&.destroy!
+      image = nil
+      # And, rudely, we delete anything open-uri may have left behind that's older than 10 minutes:
+      `find /tmp/open-uri* -type f -mmin +10 -exec rm {} \\;`
     end
   end
 
