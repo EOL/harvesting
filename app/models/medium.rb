@@ -79,7 +79,7 @@ class Medium < ActiveRecord::Base
     image = nil
     tmp_dir = ENV['TMPDIR'] # nil is fine.
     begin
-      ENV['TMPDIR'] = Rails.root.join('public', 'data', 'tmp') # Has more space; required for ImageMagic.
+      ENV['TMPDIR'] = Rails.root.join('public', 'data', 'tmp').to_s # Has more space; required for ImageMagic.
       unless Dir.exist?(dir)
         FileUtils.mkdir_p(dir)
         FileUtils.chmod(0o755, dir)
