@@ -84,9 +84,10 @@ class Medium < ActiveRecord::Base
       # TODO: we really should use https. It will be the only thing availble, at some point...
       get_url = source_url.sub(/^https/, 'http')
       require 'open-uri'
+      uri = URI.parse(get_url)
       attempts = 0
       begin
-        raw = open(get_url)
+        raw = uri.open(progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
       rescue URI::InvalidURIError => e
         extend EncodingFixer
         puts "Unable to read #{get_url}"
@@ -102,6 +103,10 @@ class Medium < ActiveRecord::Base
         mess = "Timed out reading #{get_url} for Medium ##{id}"
         harvest.log(mess, cat: :errors)
         raise Net::ReadTimeout, mess
+      rescue IOError => e
+        mess = "File too large reading #{get_url} for Medium ##{id}"
+        harvest.log(mess, cat: :errors)
+        raise e
       end
       if raw.nil?
         mess = "#{get_url} was empty. Medium.find(#{id}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
@@ -132,6 +137,8 @@ class Medium < ActiveRecord::Base
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'unparsable'
+      ensure
+        raw = nil # Hand it to GC.
       end
       d_time = Time.now
       orig_w = image.columns
