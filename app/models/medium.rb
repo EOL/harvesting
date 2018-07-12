@@ -85,6 +85,12 @@ class Medium < ActiveRecord::Base
       orig_filename = "#{dir}/#{basename}.jpg"
       # TODO: we really should use https. It will be the only thing availble, at some point...
       get_url = source_url.sub(/^https/, 'http')
+      if get_url.match?(/\.svg\b/)
+        mess = "#{get_url} was empty. Medium.find(#{id}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
+        Delayed::Worker.logger.error(mess)
+        harvest.log(mess, cat: :errors)
+        raise 'empty'
+      end
       require 'open-uri'
       uri = URI.parse(get_url)
       attempts = 0
@@ -117,7 +123,8 @@ class Medium < ActiveRecord::Base
         raise 'empty'
       end
       content_type = raw.content_type
-      unless content_type.match?(/^image/i) || content_type.match?(%r{application/octet-stream})
+      unless (content_type.match?(/^image/i) || content_type.match?(%r{application/octet-stream})) &&
+             (!content_type.match?(/^svg/i))
         # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
         # clearer.
         mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{id}) resource: #{resource.name} "\
