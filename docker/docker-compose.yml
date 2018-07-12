@@ -21,7 +21,7 @@ services:
     networks:
       - docker_eolnet
   eol-repo-mysql:
-    image: mysql
+    image: mysql:5.7.12
     container_name: eol-repo-mysql
     restart: always
     env_file:
