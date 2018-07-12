@@ -78,6 +78,7 @@ class Medium < ActiveRecord::Base
     raw = nil
     image = nil
     tmp_dir = ENV['TMPDIR'] # nil is fine.
+    img_tmp_dir = ENV['MAGICK_TEMPORARY_PATH'] # nil is fine.
     begin
       ENV['TMPDIR'] = Rails.root.join('public', 'data', 'tmp').to_s # Has more space; required for ImageMagic.
       unless Dir.exist?(dir)
@@ -179,8 +180,9 @@ class Medium < ActiveRecord::Base
       image = nil
       # And, rudely, we delete anything open-uri may have left behind that's older than 10 minutes:
       `find #{ENV['TMPDIR']}/open-uri* -type f -mmin +10 -exec rm {} \\;`
-      `find #{ENV['TMPDIR']}/magic* -type f -mmin +10 -exec rm {} \\;`
+      `find #{ENV['MAGICK_TEMPORARY_PATH']}/magic* -type f -mmin +10 -exec rm {} \\;`
       ENV['TMPDIR'] = tmp_dir
+      ENV['MAGICK_TEMPORARY_PATH'] = img_tmp_dir
     end
   end
 
