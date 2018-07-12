@@ -36,6 +36,7 @@ services:
     restart: always
     volumes:
       - /data/eol-repo-app:/u/apps/harvester/public/data
+      - /data/eol-repo-app/tmp:/tmp
       - ./bin/init.sh:/etc/my_init.d/init.sh
       - ./resources/secrets.yml:/u/apps/secrets.yml
     depends_on:
