@@ -248,12 +248,18 @@ class Resource < ActiveRecord::Base
   end
 
   def download_missing_images
-    if media.published.missing.count.zero?
-      raise 'THERE WERE FAILED DOWNLOADS' if media.published.failed_download.count.positive?
-      return nil
-    end
-    Medium.download_and_resize(media.published.missing.limit(100))
+    return no_more_images_to_download if media.published.missing.count.zero?
+    count = Medium.download_and_resize(media.published.missing.limit(25))
+    return no_more_images_to_download if count.zero?
     delay_more_downloads
+  end
+
+  def no_more_images_to_download
+    msg = 'NO additional images were found to download'
+    if media.published.failed_download.count.positive?
+      msg += ', NOTE THAT SOME DOWNLOADS FAILED.'
+    end
+    harvests.last.log(msg, cat: :warns)
   end
 
   def delay_more_downloads

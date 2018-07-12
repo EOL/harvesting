@@ -27,7 +27,17 @@ class Medium < ActiveRecord::Base
     attr_accessor :sizes, :bucket_size
 
     def download_and_resize(images)
-      images.select('id').map(&:id).each { |img_id| Delayed::Job.enqueue(DownloadMediumJob.new(img_id)) }
+      count = 0
+      images.select('id').map(&:id).each do |img_id|
+        next if download_enqueued?(id)
+        Delayed::Job.enqueue(DownloadMediumJob.new(img_id))
+        count += 1
+      end
+      count
+    end
+
+    def download_enqueued?(id)
+      Delayed::Job.where(queue: 'media').where(%(handler LIKE "%DownloadMediumJob%medium_id: #{id}%")).any?
     end
   end
 
