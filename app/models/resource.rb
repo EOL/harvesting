@@ -260,6 +260,7 @@ class Resource < ActiveRecord::Base
       msg += ', NOTE THAT SOME DOWNLOADS FAILED.'
     end
     harvests.last.log(msg, cat: :warns)
+    nil
   end
 
   def delay_more_downloads

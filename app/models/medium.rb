@@ -29,7 +29,7 @@ class Medium < ActiveRecord::Base
     def download_and_resize(images)
       count = 0
       images.select('id').map(&:id).each do |img_id|
-        next if download_enqueued?(id)
+        next if download_enqueued?(img_id)
         Delayed::Job.enqueue(DownloadMediumJob.new(img_id))
         count += 1
       end
