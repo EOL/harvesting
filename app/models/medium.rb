@@ -77,10 +77,7 @@ class Medium < ActiveRecord::Base
   def download_and_resize
     raw = nil
     image = nil
-    tmp_dir = ENV['TMPDIR'] # nil is fine.
-    img_tmp_dir = ENV['MAGICK_TEMPORARY_PATH'] # nil is fine.
     begin
-      ENV['TMPDIR'] = Rails.root.join('public', 'data', 'tmp').to_s # Has more space; required for ImageMagic.
       unless Dir.exist?(dir)
         FileUtils.mkdir_p(dir)
         FileUtils.chmod(0o755, dir)
@@ -179,10 +176,17 @@ class Medium < ActiveRecord::Base
       image&.destroy!
       image = nil
       # And, rudely, we delete anything open-uri may have left behind that's older than 10 minutes:
-      `find #{ENV['TMPDIR']}/open-uri* -type f -mmin +10 -exec rm {} \\;`
-      `find #{ENV['MAGICK_TEMPORARY_PATH']}/magic* -type f -mmin +10 -exec rm {} \\;`
-      ENV['TMPDIR'] = tmp_dir
-      ENV['MAGICK_TEMPORARY_PATH'] = img_tmp_dir
+      delete_tmp_files_older_than_10_min('open-uri')
+      delete_tmp_files_older_than_10_min('magic')
+    end
+  end
+
+  # TODO: This belongs in another class.
+  def delete_tmp_files_older_than_10_min(prefix)
+    begin
+      `find #{ENV['TMPDIR']}/#{prefix}* -type f -mmin +10 -exec rm {} \\;`
+    rescue
+      nil # We don't need to worry about any errors.
     end
   end
 
