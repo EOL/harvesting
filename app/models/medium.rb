@@ -112,12 +112,9 @@ class Medium < ActiveRecord::Base
         puts "Unable to read #{get_url}"
         get_url = fix_encoding(get_url)
         puts "Re-trying with #{get_url}"
-        if attempts.positive?
-          raise e
-        else
-          attempts += 1
-          retry
-        end
+        raise e if attempts.positive?
+        attempts += 1
+        retry
       rescue Net::ReadTimeout
         mess = "Timed out reading #{get_url} for Medium ##{id}"
         harvest.log(mess, cat: :errors)
@@ -241,6 +238,6 @@ class Medium < ActiveRecord::Base
     this_image = Image.read(filename).first
     this_w = this_image.columns
     this_h = this_image.rows
-    return "#{this_w}x#{this_h}"
+    "#{this_w}x#{this_h}"
   end
 end
