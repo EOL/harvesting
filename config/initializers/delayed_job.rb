@@ -12,7 +12,7 @@ Delayed::Backend::ActiveRecord.configure do |config|
   config.reserve_sql_strategy = :default_sql
 end
 
-# NOTE: If you add another one of these, you should really move them to a jobs folder.
+# TODO: You should really move these to a jobs folder.
 HarvestJob = Struct.new(:resource_id) do
   def perform
     Resource.find(resource_id).harvest
