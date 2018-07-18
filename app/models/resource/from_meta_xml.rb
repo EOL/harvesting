@@ -74,6 +74,7 @@ class Resource::FromMetaXml
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
     file_configs = @doc.css('archive table')
+    file_configs = @doc.css('archive core') if file_configs.empty?
     ignored_fields = []
     formats = []
     file_configs.each do |file_config|
