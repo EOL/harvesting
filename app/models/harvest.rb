@@ -127,6 +127,7 @@ class Harvest < ActiveRecord::Base
       queries.each { |q| puts "!! #{q}" }
       STDOUT.flush
     end
+    true # NOTE: this is here to avoid passing back ALL OF THE HLOGS. Argh.
   end
 
   def remove_content
