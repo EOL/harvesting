@@ -413,6 +413,7 @@ module Store
         elsif !units.blank?
           log_warning("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
         end
+        # TODO: Ideally, we need to know whether the source file users commas or periods as a delimiter.
         instance[:measurement] = value&.tr(',', '')
         # NOTE: We are handling unit normalization at the publishing layer for now.
       else
