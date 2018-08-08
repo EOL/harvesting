@@ -96,7 +96,7 @@ class Medium < ActiveRecord::Base
       # TODO: we really should use https. It will be the only thing availble, at some point...
       get_url = source_url.sub(/^https/, 'http')
       if get_url.match?(/\.svg\b/)
-        mess = "Medium.find(#{id}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
+        mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
           "(#{get_url}). Aborting."
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
@@ -116,16 +116,16 @@ class Medium < ActiveRecord::Base
         attempts += 1
         retry
       rescue Net::ReadTimeout
-        mess = "Timed out reading #{get_url} for Medium ##{id}"
+        mess = "Timed out reading #{get_url} for Medium ##{self[:id]}"
         harvest.log(mess, cat: :errors)
         raise Net::ReadTimeout, mess
       rescue IOError => e
-        mess = "File too large reading #{get_url} for Medium ##{id}"
+        mess = "File too large reading #{get_url} for Medium ##{self[:id]}"
         harvest.log(mess, cat: :errors)
         raise e
       end
       if raw.nil?
-        mess = "#{get_url} was empty. Medium.find(#{id}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
+        mess = "#{get_url} was empty. Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'empty'
@@ -135,7 +135,7 @@ class Medium < ActiveRecord::Base
              (!content_type.match?(/^svg/i))
         # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
         # clearer.
-        mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{id}) resource: #{resource.name} "\
+        mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
           "(#{resource.id}), PK: #{resource_pk}"
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
@@ -150,7 +150,7 @@ class Medium < ActiveRecord::Base
                   Image.from_blob(raw.read).first
                 end
       rescue Magick::ImageMagickError => e
-        mess = "Couldn't parse image #{get_url} for Medium ##{id} (#{e.message})"
+        mess = "Couldn't parse image #{get_url} for Medium ##{self[:id]} (#{e.message})"
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'unparsable'
@@ -180,11 +180,11 @@ class Medium < ActiveRecord::Base
       update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
                         unmodified_url: unmodified_url, base_url: default_base_url)
       resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
-      harvest.log("download_and_resize completed for Medium.find(#{id}) /#{base_url}.260x190.jpg", cat: :downloads)
+      harvest.log("download_and_resize completed for Medium.find(#{self[:id]}) /#{base_url}.260x190.jpg", cat: :downloads)
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-      harvest.log("download_and_resize FAILED for Medium.find(#{id})", cat: :downloads)
+      harvest.log("download_and_resize FAILED for Medium.find(#{self[:id]})", cat: :downloads)
       return nil
     ensure
       raw = nil
