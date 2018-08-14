@@ -1,4 +1,4 @@
-version: '3.0'
+version: '3.0' # Note that the verison is NOT for this document, but for the version of docker-compose itself. Keep.
 services:
   eol-repo-elasticsearch:
     image: elasticsearch
