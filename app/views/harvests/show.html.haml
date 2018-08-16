@@ -6,8 +6,9 @@
 - if @harvest.failed_at && user_signed_in?
   .ui.button
     = link_to(t("harvests.actions.resume"), resource_resume_harvest_path(@harvest.resource))
-.ui.negative.button
-  = link_to(t("harvests.actions.destroy"), harvest_path(@harvest), method: :delete, style: 'color: white', data: { confirm: 'Are you SURE?' })
+- if policy(@harvest).destroy?
+  .ui.negative.button
+    = link_to(t("harvests.actions.destroy"), harvest_path(@harvest), method: :delete, style: 'color: white', data: { confirm: 'Are you SURE?' })
 
 .ui.list
   - if @harvest.stage

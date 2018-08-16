@@ -1,10 +1,18 @@
-%h1.ui.header
-  = @term.name
-  .sub.header
-    .ui.horizontal.bulleted.link.list
-      = link_to(t("terms.actions.back"), terms_path, class: 'item')
-      = link_to(t("edit"), edit_term_path(@term), class: 'item')
-      = link_to(t("delete"), @term, method: :delete, class: 'item', data: { confirm: t("are_you_sure") })
+.ui.top.attached.centered.brown.block.header
+  %h1= @term.name
+.ui.tiny.attached.menu
+  .item= link_to(t('terms.actions.back'), terms_path)
+  .item= link_to(@term.uri, @term.uri)
+  - if policy(@term).update?
+    .right.menu
+      .item
+        .ui.buttons
+          - if policy(@term).update?
+            .ui.compact.button
+              = link_to(t('edit'), edit_term_path(@term))
+          - if policy(@term).destroy?
+            .ui.negative.compact.button
+              = link_to(t('delete'), @term, method: :delete, style: 'color: white', data: { confirm: t('are_you_sure') })
 
 .ui.list
   .item

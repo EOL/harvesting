@@ -30,6 +30,9 @@
             = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
           .ui.compact.button
             = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
+          - if policy(@resource).destroy?
+            .ui.negative.button
+              = link_to(t("harvests.actions.destroy"), resource_path(@resource), method: :delete, style: 'color: white', data: { confirm: 'This is the resource, not the harvest. This CANNOT be undone. Are you SURE?' })
 .ui.bottom.attached.segment
   .ui.list
     - unless @resource.abbr.blank?
