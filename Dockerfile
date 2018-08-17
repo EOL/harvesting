@@ -16,6 +16,7 @@ WORKDIR /app
 
 # Install gnparser
 RUN mkdir -p /u/tmp
+RUN mkdir -p /u/apps
 RUN cd /u/tmp \
     && wget https://github.com/GlobalNamesArchitecture/gnparser/releases/download/release-0.4.2/gnparser-0.4.2.zip \
     && unzip gnparser-0.4.2.zip && mv gnparser-0.4.2 /u/apps/gnparser && rm -f /usr/local/bin/gnparser \
