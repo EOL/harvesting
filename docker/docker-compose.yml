@@ -38,7 +38,7 @@ services:
     volumes:
       - /data/eol-repo-app:/app/public/data
       - /data/eol-repo-app/tmp:/tmp
-      - /tmp:/app/tmp
+      - /eol/tmp/harvester:/tmp
     depends_on:
       - eol-repo-elasticsearch
       - eol-repo-mysql

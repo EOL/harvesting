@@ -34,6 +34,7 @@ RUN bundle install --jobs 10 --retry 5 --without test development staging
 
 RUN touch /tmp/supervisor.sock
 RUN chmod 777 /tmp/supervisor.sock
+RUN ln -s /tmp /app/tmp
 
 EXPOSE 3000
 
