@@ -34,3 +34,5 @@ RUN touch /tmp/supervisor.sock
 RUN chmod 777 /tmp/supervisor.sock
 
 EXPOSE 3000
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
