@@ -31,14 +31,13 @@ services:
     networks:
       - docker_eolnet
   eol-repo-app:
-    image: encoflife/eol-repo-app
+    build: ..
+    image: harvester_v3
     container_name: eol-repo-app
     restart: always
     volumes:
-      - /data/eol-repo-app:/u/apps/harvester/public/data
+      - /data/eol-repo-app:/app/public/data
       - /data/eol-repo-app/tmp:/tmp
-      - ./bin/init.sh:/etc/my_init.d/init.sh
-      - ./resources/secrets.yml:/u/apps/secrets.yml
     depends_on:
       - eol-repo-elasticsearch
       - eol-repo-mysql
