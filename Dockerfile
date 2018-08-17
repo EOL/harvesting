@@ -8,7 +8,7 @@ ENV LAST_FULL_REBUILD 2018-08-17
 RUN apt-get update -q && \
     apt-get install -qq -y build-essential libpq-dev curl wget \
     apache2-utils nodejs procps supervisor vim nginx logrotate \
-    libmagickwand-dev imagemagick && \
+    libmagickwand-dev imagemagick zip unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
