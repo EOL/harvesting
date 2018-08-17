@@ -22,6 +22,8 @@ RUN cd /u/tmp \
     && unzip gnparser-0.4.2.zip && mv gnparser-0.4.2 /u/apps/gnparser && rm -f /usr/local/bin/gnparser \
     && ln -s /u/apps/gnparser/bin/gnparser /usr/local/bin && rm -rf /u/tmp
 
+ENV LAST_SOURCE_REBUILD 2018-08-17
+
 COPY . /app
 COPY config/nginx-sites.conf /etc/nginx/sites-enabled/default
 # NOTE: supervisorctl and supervisord *service* doesn't work with custom config files, so just use default:
