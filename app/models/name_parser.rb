@@ -30,14 +30,21 @@ class NameParser
         learn_names(names)
         json = parse_names_in_file
         updates = []
-        JSON.parse(json).each_with_index do |result, i|
-          begin
-            @names[result['verbatim']].assign_attributes(parse_result(result))
-            updates << @names[result['verbatim']]
-          rescue => e
-            @harvest.log("error reading line #{i}", cat: :errors)
-            raise(e)
+        begin
+          JSON.parse(json).each_with_index do |result, i|
+            begin
+              @names[result['verbatim']].assign_attributes(parse_result(result))
+              updates << @names[result['verbatim']]
+            rescue => e
+              @harvest.log("error reading line #{i}: #{result[0..250]}", cat: :errors)
+              raise(e)
+            end
           end
+        rescue JSON::ParserError => e
+          file = @harvest.resource.path.join('failed_names.json')
+          File.unlink(file) if File.exist?(file)
+          File.open(file, 'w') { |out| out.write(json) }
+          @harvest.log("Failed to parse JSON: #{e} OUTPUT: #{file}", cat: :errors)
         end
         update_names(updates) unless updates.empty?
       end
@@ -85,11 +92,16 @@ class NameParser
       stdin.write(@verbatims)
       stdin.close_write
       # TODO: I think I'm missing the first one. ...or the last one...
+      output = []
       while (line = stdout.gets)
-        json << line.chomp if line =~ /^{/
+        if line =~ /^{/
+          json << line.chomp
+        else
+          output << line
+        end
       end
       exit_status = wait_thread.value
-      abort "!! FAILED #{cmd}" unless exit_status.success?
+      abort "!! FAILED #{cmd} OUTPUT: #{output.join}" unless exit_status.success?
     end
     if @verbatims_size != json.size
       @harvest.log("Found #{@verbatims_size} verbatims from #{json.size} results", cat: :warns)
