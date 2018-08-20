@@ -2,19 +2,24 @@ FROM ruby:2.4.4
 MAINTAINER Jeremy Rice <jrice@eol.org>
 LABEL Description="EOL Harvester"
 
-ENV LAST_FULL_REBUILD 2018-08-17
+ENV LAST_FULL_REBUILD 2018-08-20
 
 # Install packages
 RUN apt-get update -q && \
     apt-get install -qq -y build-essential libpq-dev curl wget \
     apache2-utils nodejs procps supervisor vim nginx logrotate \
-    libmagickwand-dev imagemagick zip unzip && \
+    libmagickwand-dev imagemagick zip unzip openjdk-8-jdk && \
+    ca-certificates-java && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 
-# Install gnparser
+# Install gnparser...
+
+# Fix Java problems: TODO - move gnparser to its own container...
+RUN update-ca-certificates -f
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN mkdir -p /u/tmp
 RUN mkdir -p /u/apps
 RUN cd /u/tmp \
@@ -22,7 +27,7 @@ RUN cd /u/tmp \
     && unzip gnparser-0.4.2.zip && mv gnparser-0.4.2 /u/apps/gnparser && rm -f /usr/local/bin/gnparser \
     && ln -s /u/apps/gnparser/bin/gnparser /usr/local/bin && rm -rf /u/tmp
 
-ENV LAST_SOURCE_REBUILD 2018-08-17
+ENV LAST_SOURCE_REBUILD 2018-08-20
 
 COPY . /app
 COPY config/nginx-sites.conf /etc/nginx/sites-enabled/default

@@ -22,6 +22,8 @@ class NameParser
     while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count.positive? && @attempts <= 10
       @harvest.log("I see #{count} names which still need to be parsed.", cat: :warns)
       @attempts += 1
+      # For debugging help:
+      # names = ScientificName.where(harvest_id: @harvest.id, canonical: nil).limit(100)
       loop_over_names_in_batches do |names|
         @names = {}
         write_names_to_file(names)
