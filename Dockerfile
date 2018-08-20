@@ -4,12 +4,15 @@ LABEL Description="EOL Harvester"
 
 ENV LAST_FULL_REBUILD 2018-08-20
 
-# Install packages
+# Install packages (note we clean up at the end of EACH run, because each gets an image)
 RUN apt-get update -q && \
     apt-get install -qq -y build-essential libpq-dev curl wget \
     apache2-utils nodejs procps supervisor vim nginx logrotate \
-    libmagickwand-dev imagemagick zip unzip openjdk-8-jdk && \
-    ca-certificates-java && \
+    libmagickwand-dev imagemagick zip unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get install --target-release jessie-backports \
+    openjdk-8-jdk-headless ca-certificates-java --assume-yes && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -19,7 +22,6 @@ WORKDIR /app
 
 # Fix Java problems: TODO - move gnparser to its own container...
 RUN update-ca-certificates -f
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN mkdir -p /u/tmp
 RUN mkdir -p /u/apps
 RUN cd /u/tmp \
