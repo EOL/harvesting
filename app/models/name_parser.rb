@@ -32,6 +32,10 @@ class NameParser
         updates = []
         begin
           JSON.parse(json).each_with_index do |result, i|
+            if @names[result['verbatim']].nil?
+              @harvest.log("error assigning name to #{result['verbatim']} (missing!): #{result.inspect}", cat: :errors)
+              next
+            end
             begin
               @names[result['verbatim']].assign_attributes(parse_result(result))
               updates << @names[result['verbatim']]
