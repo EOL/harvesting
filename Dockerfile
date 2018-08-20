@@ -11,8 +11,8 @@ RUN apt-get update -q && \
     libmagickwand-dev imagemagick zip unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN apt-get update -q && install --target-release jessie-backports \
-    openjdk-8-jdk-headless ca-certificates-java --assume-yes && \
+RUN apt-get update -q && apt-get install -qq -y --target-release jessie-backports \
+    openjdk-8-jdk-headless ca-certificates-java && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
