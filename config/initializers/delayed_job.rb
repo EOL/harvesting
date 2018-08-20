@@ -25,6 +25,10 @@ HarvestJob = Struct.new(:resource_id) do
   def max_attempts
     1
   end
+
+  def error(job, exception)
+    Rails.logger.error("** HARVEST JOB ERROR: #{exception.message} TRACE: #{exception.backtrace.join("\n")}")
+  end
 end
 
 ReHarvestJob = Struct.new(:resource_id) do
