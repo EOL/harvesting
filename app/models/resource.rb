@@ -7,8 +7,8 @@ class Resource < ActiveRecord::Base
   has_many :scientific_names, inverse_of: :resource
   has_many :nodes, inverse_of: :resource
   has_many :vernaculars, inverse_of: :resource
-  has_many :articles, inverse_of: :resource
   has_many :media, inverse_of: :resource
+  has_many :articles, inverse_of: :resource
   has_many :traits, inverse_of: :resource
   has_many :meta_traits, inverse_of: :resource
   has_many :assocs, inverse_of: :resource

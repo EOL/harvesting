@@ -18,7 +18,7 @@ class ResourceHarvester
   include Store::Assocs
   include Store::Attributions
   include Store::Boolean
-  include Store::Media
+  include Store::Media # NOTE: this also handles import of Articles, since they are in one file.
   include Store::ModelBuilder
   include Store::Nodes
   include Store::Occurrences
@@ -407,6 +407,7 @@ class ResourceHarvester
   def resolve_keys
     resolve_node_keys
     resolve_media_keys
+    resolve_article_keys
     resolve_trait_keys
     resolve_attribution_keys
   end
@@ -441,6 +442,13 @@ class ResourceHarvester
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     resolve_references(MediaReference, 'medium')
     resolve_attributions(Medium)
+  end
+
+  def resolve_article_keys
+    @harvest.log_call
+    # Media to nodes:
+    propagate_id(Article, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    resolve_references(ArticlesReference, 'medium')
     resolve_attributions(Article) # Yes, I know, we don't really have articles yet, but I don't want to forget this.
   end
 
@@ -506,7 +514,6 @@ class ResourceHarvester
   end
 
   def resolve_references(klass, singular)
-    # Media to references, and back:
     propagate_id(klass, fk: "#{singular}_resource_fk", other: "#{singular.pluralize}.resource_pk",
                         set: "#{singular}_id", with: 'id')
     propagate_id(klass, fk: 'ref_resource_fk', other: 'references.resource_pk',

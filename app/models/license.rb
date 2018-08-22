@@ -1,6 +1,7 @@
 class License < ActiveRecord::Base
   has_many :resources, inverse_of: :license
   has_many :media, inverse_of: :license
+  has_many :articles, inverse_of: :license
 
   class << self
     def public_domain

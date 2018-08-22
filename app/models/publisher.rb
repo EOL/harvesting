@@ -48,9 +48,9 @@ class Publisher
     @ancestors_by_node_pk = {}
     @sci_names_by_node_pk = {}
     @media_by_node_pk = {}
+    @articles_by_node_pk = {}
     @image_info_by_node_pk = {}
     @vernaculars_by_node_pk = {}
-    @articles_by_node_pk = {}
     @references = []
     @attributions = []
     # : all the other hashes, like links
@@ -126,8 +126,8 @@ class Publisher
       build_ancestors(node)
       build_scientific_names(node)
       build_media(node)
-      build_vernaculars(node)
       build_articles(node)
+      build_vernaculars(node)
       # TODO: links
     end
   end
@@ -238,9 +238,9 @@ class Publisher
     if @pages.key?(node.page_id)
       @pages[node.page_id].nodes_count += 1
       @pages[node.page_id].media_count += node.media.size
+      @pages[node.page_id].articles_count += node.articles.size
       @pages[node.page_id].vernaculars_count += node.vernaculars.size
       @pages[node.page_id].scientific_names_count += node.scientific_names.size
-      @pages[node.page_id].articles_count += node.articles.size
       @pages[node.page_id].referents_count += node.references.size
       # TODO: add counts for links, maps
     else
@@ -249,7 +249,7 @@ class Publisher
       t = Time.now.to_s(:db)
       @pages[node.page_id].created_at = t
       @pages[node.page_id].updated_at = t
-      @pages[node.page_id].media_count = node.media.size
+      @pages[node.page_id].articles_count = node.articles.size
       @pages[node.page_id].nodes_count = 1 # This one, silly!
       @pages[node.page_id].vernaculars_count = node.vernaculars.size
       @pages[node.page_id].scientific_names_count = node.scientific_names.size
@@ -349,7 +349,7 @@ class Publisher
       add_refs(article)
       add_attributions(article)
       add_bib_cit(web_article, article.bibliographic_citation)
-      add_locs(web_article, article.location)
+      add_loc(web_article, article.location)
     end
   end
 
@@ -549,8 +549,8 @@ class Publisher
     load_hashes_from_array(@ancestors_by_node_pk.values.flatten)
     load_hashes_from_array(@sci_names_by_node_pk.values.flatten)
     load_hashes_from_array(@media_by_node_pk.values.flatten)
-    load_hashes_from_array(@image_info_by_node_pk.values.flatten)
     load_hashes_from_array(@articles_by_node_pk.values.flatten)
+    load_hashes_from_array(@image_info_by_node_pk.values.flatten)
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
     load_hashes_from_array(@references)
     load_hashes_from_array(@attributions)
