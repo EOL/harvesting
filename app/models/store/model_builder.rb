@@ -166,37 +166,56 @@ module Store
     end
 
     def build_medium
-      if @models[:medium][:is_article]
-        return if @warned.key?(:articles_unsupported)
-        @warned[:articles_unsupported] = true
-        return(log_warning('ARTICLES UNSUPPORTED'))
-      end
       @models[:medium][:resource_pk] = fake_pk(:medium) unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
       @models[:medium][:harvest_id] = @harvest.id
-      @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
       lic_url = @models[:medium].delete(:license_url)
       @models[:medium][:license_id] ||= find_or_build_license(lic_url)
+      if @models[:medium][:is_article]
+        @models[:article] = @models[:medium]
+        build_article
+      else
+        build_true_medium
+      end
+    end
+
+    def build_article
+      @models[:article][:guid] = "EOL-article-#{@resource.id}-#{@models[:article][:node_resource_pk]}"
+      build_references(:article, ArticlesReference)
+      build_attributions(Article, @models[:article])
+      truncate(:article, :name, 254)
+      @models[:article][:body] = @models[:article].delete(:description)
+      # Articles have far less information than media:
+      %i[subclass format is_article name_verbatim description_verbatim].each do |superfluous_field|
+        @models[:article].delete(superfluous_field)
+      end
+      prepare_model_for_store(Article, @models[:article])
+    end
+
+    def build_true_medium
+      @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
       build_references(:medium, MediaReference)
       build_attributions(Medium, @models[:medium])
       # TODO: generalize this. We'll likely want to truncate other fields...
       @models[:medium][:name_verbatim] ||= ''
-      if @models[:medium][:name_verbatim].size > 254
-        log_warning("title is too long for medium #{@models[:medium][:resource_pk]}; truncating to 254 chars: "\
-          "#{@models[:medium][:name_verbatim][0..60_000]}")
-        @models[:medium][:name_verbatim] = @models[:medium][:name_verbatim][0..254]
-      end
+      truncate(:medium, :name_verbatim, 254, warn: true)
       @models[:medium][:name] ||= @models[:medium][:name_verbatim]
-      if @models[:medium][:name].size > 254
-        # NOTE: no reason to carp about this one; if this was too long, the verbatim was too long, so they got a mesg.
-        @models[:medium][:name] = @models[:medium][:name][0..254]
-      end
-
-      # TODO: there are some other normalizations and checks we should do here.
+      truncate(:medium, :name, 254)
       prepare_model_for_store(Medium, @models[:medium])
+    end
+
+    def truncate(model, field, length, options = {})
+      if @models[model][field].size > length
+        longer = length + 256
+        # Max length on log line (the limit is bout 64_000, but that's tedious and doesn't give us much more info.)
+        longer = 2000 if longer > 2000
+        log_warning("title is too long for medium #{@models[model][:resource_pk]}; truncating to #{length} chars: "\
+          "#{@models[model][field][0..longer]}...") if options[:warn]
+        @models[model][field] = @models[model][field][0..length]
+      end
     end
 
     def find_or_build_license(url)
