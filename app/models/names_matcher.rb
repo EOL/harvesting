@@ -180,7 +180,7 @@ class NamesMatcher
 
   def map_if_needed(node)
     if skip_blank_canonical(node)
-      # Nothing more to do...
+      unmapped(node, 'blank_canonical')
     elsif node.needs_to_be_mapped?
       if node.parent_id.nil? || node.parent_id.zero? # NOTE: nil is preferred; 0 is "old school"
         @in_unmapped_area = true
