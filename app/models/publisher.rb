@@ -236,6 +236,13 @@ class Publisher
 
   def build_page(node)
     if @pages.key?(node.page_id)
+      # I am not sure why this happens, but it does. (?)
+      @pages[node.page_id].nodes_count ||= 0
+      @pages[node.page_id].media_count ||= 0
+      @pages[node.page_id].articles_count ||= 0
+      @pages[node.page_id].vernaculars_count ||= 0
+      @pages[node.page_id].scientific_names_count ||= 0
+      @pages[node.page_id].referents_count ||= 0
       @pages[node.page_id].nodes_count += 1
       @pages[node.page_id].media_count += node.media.size
       @pages[node.page_id].articles_count += node.articles.size
