@@ -198,10 +198,8 @@ class Medium < ActiveRecord::Base
 
   # TODO: This belongs in another class.
   def delete_tmp_files_older_than_10_min(prefix)
-    begin
+    if Dir.glob("#{ENV['TMPDIR'] || '/tmp'}/#{prefix}*").any?
       `find #{ENV['TMPDIR'] || '/tmp'}/#{prefix}* -type f -mmin +10 -exec rm {} \\;`
-    rescue
-      nil # We don't need to worry about any errors.
     end
   end
 
