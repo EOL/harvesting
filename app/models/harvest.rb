@@ -45,7 +45,7 @@ class Harvest < ActiveRecord::Base
     return if media.missing.count.zero?
     # Medium.download_and_resize(media.missing.limit(25))
     # TEMP TEMP TEMP TEMP TEMP ... we had a trouble resource...
-    Medium.download_and_resize(media.missing.limit(5))
+    Medium.download_and_resize(media.missing.limit(3))
     sleep(60)
     # TEMP TEMP TEMP TEMP TEMP ... we had a trouble resource...
     delay(queue: 'media').download_all_images
@@ -56,7 +56,7 @@ class Harvest < ActiveRecord::Base
     bad_images = media.where(w: nil, format: Medium.formats[:jpg])
     return if bad_images.count.zero?
     bad_images.update_all(downloaded_at: nil)
-    download_all_images
+    delay(queue: 'media').download_all_images
   end
 
   def convert_trait_units
