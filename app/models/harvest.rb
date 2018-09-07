@@ -47,6 +47,14 @@ class Harvest < ActiveRecord::Base
     delay(queue: 'media').download_all_images
   end
 
+  def retry_failed_images
+    resource.fix_downloaded_media_count
+    bad_images = media.where(w: nil, format: Medium.formats[:jpg])
+    return if bad_images.count.zero?
+    bad_images.update_all(downloaded_at: nil)
+    download_all_images
+  end
+
   def convert_trait_units
     traits.where('measurement IS NOT NULL AND units_term_id IS NOT NULL').find_each(&:convert_measurement)
   end
