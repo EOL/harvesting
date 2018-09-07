@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180626175617) do
+ActiveRecord::Schema.define(version: 20180906170814) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -668,6 +668,23 @@ ActiveRecord::Schema.define(version: 20180626175617) do
 
   create_table "section", force: :cascade do |t|
     t.string "name", limit: 255
+  end
+
+  create_table "section_parents", force: :cascade do |t|
+    t.integer "section_id", limit: 4
+    t.integer "parent_id",  limit: 4
+  end
+
+  create_table "section_values", force: :cascade do |t|
+    t.integer "section_id", limit: 4
+    t.string  "value",      limit: 255
+  end
+
+  add_index "section_values", ["value"], name: "index_section_values_on_value", using: :btree
+
+  create_table "sections", force: :cascade do |t|
+    t.string  "name",     limit: 255
+    t.integer "position", limit: 4
   end
 
   create_table "sections_terms", id: false, force: :cascade do |t|
