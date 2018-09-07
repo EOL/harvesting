@@ -184,7 +184,7 @@ class Medium < ActiveRecord::Base
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-      harvest.log("download_and_resize FAILED for Medium.find(#{self[:id]})", cat: :downloads)
+      harvest.log("download_and_resize FAILED for Medium.find(#{self[:id]}) [#{e.backtrace.first}]: #{e.message[0..1000]}", cat: :downloads)
       return nil
     ensure
       raw = nil
