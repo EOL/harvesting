@@ -766,5 +766,11 @@
   "represents":"to_bibliographic_citation",
   "submapping":null,
   "is_unique":false,
+  "is_required":false},
+{ "term":"http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/CVterm",
+  "for_format":"media",
+  "represents":"to_section",
+  "submapping":null,
+  "is_unique":false,
   "is_required":false}
 ]
