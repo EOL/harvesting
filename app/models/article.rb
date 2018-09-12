@@ -13,5 +13,8 @@ class Article < ActiveRecord::Base
   has_many :content_attributions, as: :content
   has_many :attributions, through: :content_attributions
 
+  has_many :articles_sections
+  has_many :sections, through: :articles_sections
+
   scope :published, -> { where(removed_by_harvest_id: nil) }
 end

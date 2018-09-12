@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180906170814) do
+ActiveRecord::Schema.define(version: 20180911155258) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -55,9 +55,11 @@ ActiveRecord::Schema.define(version: 20180906170814) do
   add_index "articles_references", ["harvest_id"], name: "index_articles_references_on_harvest_id", using: :btree
   add_index "articles_references", ["reference_id"], name: "index_articles_references_on_reference_id", using: :btree
 
-  create_table "articles_sections", id: false, force: :cascade do |t|
-    t.integer "article_id", limit: 4, null: false
-    t.integer "section_id", limit: 4, null: false
+  create_table "articles_sections", force: :cascade do |t|
+    t.integer "article_id", limit: 4
+    t.integer "section_id", limit: 4,   null: false
+    t.string  "article_pk", limit: 255, null: false
+    t.integer "harvest_id", limit: 4,   null: false
   end
 
   create_table "assoc_traits", force: :cascade do |t|

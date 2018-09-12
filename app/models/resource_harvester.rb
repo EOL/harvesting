@@ -141,7 +141,7 @@ class ResourceHarvester
         @format.fields.each { |f| fields[f.expected_header] = f }
       end
       @file = @format.converted_csv_path
-      CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
+      CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
         validate_csv(csv, fields)
       end
       @converted[@format.id] = true
@@ -213,7 +213,7 @@ class ResourceHarvester
     each_format do
       unless @converted[@format.id]
         @file = @format.converted_csv_path
-        CSV.open(@file, 'wb', encoding: 'ISO-8859-1') do |csv|
+        CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
           @parser.rows_as_hashes do |row, line|
             @line_num = line
             csv_row = []
@@ -446,8 +446,10 @@ class ResourceHarvester
 
   def resolve_article_keys
     @harvest.log_call
-    # Media to nodes:
+    # To nodes:
     propagate_id(Article, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    # To sections:
+    propagate_id(ArticlesSection, fk: 'article_pk', other: 'articles.resource_pk', set: 'article_id', with: 'id')
     resolve_references(ArticlesReference, 'medium')
     resolve_attributions(Article) # Yes, I know, we don't really have articles yet, but I don't want to forget this.
   end

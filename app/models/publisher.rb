@@ -53,6 +53,7 @@ class Publisher
     @vernaculars_by_node_pk = {}
     @references = []
     @attributions = []
+    @content_sections = []
     # : all the other hashes, like links
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
@@ -99,7 +100,8 @@ class Publisher
                                 vernaculars: [:language], scientific_names: [:dataset, :references],
                                 media: %i[node license language references bibliographic_citation location] <<
                                   { content_attributions: :attribution },
-                                articles: %i[node license language references bibliographic_citation location] <<
+                                articles: %i[node license language references bibliographic_citation location
+                                             articles_sections] <<
                                   { content_attributions: :attribution })
     if testing
       nodes = @nodes.limit(100)
@@ -193,6 +195,16 @@ class Publisher
       attribution.role_id = WebDb.role(content_attribution.attribution.role, @logger)
       attribution.url = content_attribution.attribution.sanitize_url
       @attributions << attribution
+    end
+  end
+
+  def add_sections(object, type)
+    object.articles_sections.each do |articles_section|
+      section = Struct::WebContentSection.new
+      section.content_id = object.id # NOTE this is the HARVEST DB ID. It will be replaced.
+      section.content_type = type
+      section.section_id = articles_section.section_id # WE ASSUME THE IDs ARE THE SAME! (q.v.: DefaultSections)
+      @content_sections << section
     end
   end
 
@@ -355,6 +367,7 @@ class Publisher
       @articles_by_node_pk[node.resource_pk] << web_article
       add_refs(article)
       add_attributions(article)
+      add_sections(article, 'Article')
       add_bib_cit(web_article, article.bibliographic_citation)
       add_loc(web_article, article.location)
     end
@@ -561,6 +574,7 @@ class Publisher
     load_hashes_from_array(@vernaculars_by_node_pk.values.flatten)
     load_hashes_from_array(@references)
     load_hashes_from_array(@attributions)
+    load_hashes_from_array(@content_sections)
     new_referents = new_referents_only
     load_hashes_from_array(new_referents)
   end
@@ -610,7 +624,7 @@ class Publisher
   end
 
   def load_hashes_from_array(array, options = {})
-    return nil if array.empty?
+    return nil if array.blank?
     table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
     log("Loading #{array.size} #{table}...")
     write_local_csv(table, array, options)

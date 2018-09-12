@@ -21,7 +21,7 @@ class CsvParser
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
     @tried = {}
     begin
-      CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
+      CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'UTF-8') do |row|
         next if row.compact.empty?
         yield(row, i)
         i += 1

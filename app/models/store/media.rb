@@ -73,10 +73,8 @@ module Store
     end
 
     def to_section(field, val)
-      # TODO ... argh. The values are a controlled vocabulary, which we may edit in the future, but not for MVP. It's
-      # drawn from a couple of sources and contains some homegrown terms also. It's documented at
-      # http://eol.org/info/toc_subjects. The URI for the field is http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/CVterm
-      # ...We will allow multiple values via a semicolon-delimited field.
+      @models[:medium] ||= {}
+      @models[:medium][:section_value] = val
     end
 
     def to_bibliographic_citation(field, val)

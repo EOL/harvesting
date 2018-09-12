@@ -11,7 +11,7 @@ if File.exist?(file)
   puts '.. Importing datasets'
   datasets = []
   headers = nil
-  CSV.foreach(file, encoding: 'ISO-8859-1') do |row|
+  CSV.foreach(file, encoding: 'UTF-8') do |row|
     if headers.nil?
       headers = row
     else

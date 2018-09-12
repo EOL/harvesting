@@ -186,6 +186,7 @@ module Store
       build_attributions(Article, @models[:article])
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
+      build_sections(@models[:article].delete(:section_value))
       # Articles have far less information than media:
       %i[subclass format is_article name_verbatim description_verbatim].each do |superfluous_field|
         @models[:article].delete(superfluous_field)
@@ -406,6 +407,29 @@ module Store
         end
       end
       model.delete(:attributions)
+    end
+
+    def build_sections(values)
+      return nil if values.blank?
+      # Sorry, not making this separator configurable. :|
+      values.split(/\s*[|;]\s*/).each do |value|
+        sid = find_section(value)
+        next if sid.nil?
+        prepare_model_for_store(ArticlesSection,
+                                article_pk: @models[:article][:resource_pk], section_id: sid, harvest_id: @harvest.id)
+      end
+    end
+
+    def find_section(orig_value)
+      return nil if orig_value.blank?
+      value = orig_value.gsub(/\s+\Z/, '').gsub(/\A\s+/, '') # Strip space, of course.
+      @section_values ||= {}
+      return @section_values[value] if @section_values.key?(value)
+      unless SectionValue.exists?(value: value)
+        log_warning("Could not find a section value of '#{value}' for article #{@models[:article][:resource_pk]}")
+        return @section_values[value] = nil
+      end
+      @section_values[value] = SectionValue.where(value: value).pluck(:section_id).first
     end
 
     def symbolize(str)

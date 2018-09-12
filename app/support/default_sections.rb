@@ -1,3 +1,6 @@
+# NOTE: there is currently NO system for synchronization of these with the publishing side. I'm just gouing to copy this
+# class over there and effectively run it, so that things are duplicated with values/IDs. This is clearly cheating...
+# but: priorities!
 class DefaultSections
   class << self
     attr_accessor :sections

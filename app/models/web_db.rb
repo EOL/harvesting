@@ -10,7 +10,7 @@ class WebDb < ActiveRecord::Base
   cfg['port']     = Rails.application.secrets.web_db['port']
   establish_connection cfg
   @types = %w[referent node identifier scientific_name node_ancestor vernacular article medium image_info page_content
-              reference attribution]
+              reference attribution content_section]
   @page_columns_to_update =
     %w[id updated_at media_count articles_count links_count maps_count nodes_count
        vernaculars_count scientific_names_count referents_count native_node_id]

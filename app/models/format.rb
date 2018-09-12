@@ -110,7 +110,7 @@ class Format < ActiveRecord::Base
   end
 
   def open_converted_csv
-    CSV.read(converted_csv_path, encoding: 'ISO-8859-1')
+    CSV.read(converted_csv_path, encoding: 'UTF-8')
   end
 
   def file_parser

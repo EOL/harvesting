@@ -16,7 +16,7 @@ sep = comma_count > tab_count ? ',' : "\t"
 quote = null_count.positive? || sep == "\t" ? "\x00" : '"'
 field = ARGV[1].dup
 div = field.sub!(/\.$/, '') ? /[;|]/ : nil
-CSV.foreach(ARGV[0], col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
+CSV.foreach(ARGV[0], col_sep: sep, quote_char: quote, encoding: 'UTF-8') do |row|
   if header.nil?
     header = row.index(field)
     raise "Couldn't find a header of #{field} in #{ARGV[0]}" if header.nil?
@@ -48,7 +48,7 @@ headers = nil
 fk_head = ARGV[3] || field
 second_header = ARGV[4]
 line_count = 0
-CSV.foreach(backup, col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |row|
+CSV.foreach(backup, col_sep: sep, quote_char: quote, encoding: 'UTF-8') do |row|
   if header.nil?
     headers = row
     header = row.index(fk_head)
@@ -66,7 +66,7 @@ if rows.empty?
   exit
 end
 puts "Found #{rows.size} matching rows out of #{line_count}, writing:"
-CSV.open(ARGV[2], 'w', col_sep: sep, quote_char: quote, encoding: 'ISO-8859-1') do |csv|
+CSV.open(ARGV[2], 'w', col_sep: sep, quote_char: quote, encoding: 'UTF-8') do |csv|
   csv << headers
   rows.each { |row| csv << row }
 end
