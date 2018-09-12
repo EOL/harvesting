@@ -201,6 +201,7 @@ class Publisher
   def add_sections(object, type)
     object.articles_sections.each do |articles_section|
       section = Struct::WebContentSection.new
+      section.resource_id = @web_resource_id
       section.content_id = object.id # NOTE this is the HARVEST DB ID. It will be replaced.
       section.content_type = type
       section.section_id = articles_section.section_id # WE ASSUME THE IDs ARE THE SAME! (q.v.: DefaultSections)
