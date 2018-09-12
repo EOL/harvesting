@@ -188,7 +188,7 @@ module Store
       @models[:article][:body] = @models[:article].delete(:description)
       build_sections(@models[:article].delete(:section_value))
       # Articles have far less information than media:
-      %i[subclass format is_article name_verbatim description_verbatim].each do |superfluous_field|
+      %i[subclass format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|
         @models[:article].delete(superfluous_field)
       end
       prepare_model_for_store(Article, @models[:article])
