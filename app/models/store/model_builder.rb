@@ -205,6 +205,7 @@ module Store
       truncate(:medium, :name_verbatim, 254, warn: true)
       @models[:medium][:name] ||= @models[:medium][:name_verbatim]
       truncate(:medium, :name, 254)
+      @models[:medium].delete(:section_value) # TODO: someday we probably want to keep this. Not today.
       prepare_model_for_store(Medium, @models[:medium])
     end
 
