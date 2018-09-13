@@ -1,5 +1,3 @@
-require 'open3'
-
 # Parses names using the GNA system, via open3 system call.
 class NameParser
   def self.for_harvest(harvest)
@@ -28,10 +26,12 @@ class NameParser
         @names = {}
         write_names_to_file(names)
         learn_names(names)
-        json = parse_names_in_file
+        json = run_parser_on_names
         updates = []
         begin
-          JSON.parse(json).each_with_index do |result, i|
+          parsed = JSON.parse(json)
+          parsed = parsed['namesJson'] if parsed.is_a?(Hash) && parsed.key?('namesJson')
+          parsed.each_with_index do |result, i|
             if @names[result['verbatim']].nil?
               @harvest.log("error assigning name to #{result['verbatim']} (missing!): #{result.inspect}", cat: :errors)
               next
@@ -88,29 +88,14 @@ class NameParser
     end
   end
 
-  def parse_names_in_file
-    # TODO: the command should be config'd, so we can move it around as needed. Eventually we'll use a service.
-    cmd = 'gnparser'
-    json = []
-    Open3.popen3(cmd) do |stdin, stdout, _, wait_thread|
-      stdin.write(@verbatims)
-      stdin.close_write
-      # TODO: I think I'm missing the first one. ...or the last one...
-      output = []
-      while (line = stdout.gets)
-        if line =~ /^{/
-          json << line.chomp
-        else
-          output << line
-        end
-      end
-      exit_status = wait_thread.value
-      abort "!! FAILED #{cmd} OUTPUT: #{output.join}" unless exit_status.success?
-    end
-    if @verbatims_size != json.size
-      @harvest.log("Found #{@verbatims_size} verbatims from #{json.size} results", cat: :warns)
-    end
-    "[#{json.join(',')}]"
+  def run_parser_on_names
+    uri = URI('https://parser.globalnames.org/api')
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
+    request.body = @verbatims.to_json
+    response = http.request(request)
+    response.body
   end
 
   # Examples of the types of results you will get may be found by doing:
@@ -150,7 +135,9 @@ class NameParser
         if canonical.is_a?(String)
           canonical
         elsif canonical.is_a?(Hash)
-          if canonical.key?('value')
+          if canonical.key?('value_ranked')
+            canonical['value_ranked']
+          elsif canonical.key?('value')
             canonical['value']
           elsif canonical.key?('extended')
             canonical['extended']
