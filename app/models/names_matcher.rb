@@ -179,6 +179,7 @@ class NamesMatcher
   end
 
   def map_if_needed(node)
+    @logs = []
     if skip_blank_canonical(node)
       unmapped(node, 'blank_canonical')
     elsif node.needs_to_be_mapped?
@@ -201,7 +202,6 @@ class NamesMatcher
   end
 
   def map_node(node, opts = {})
-    @logs = []
     return unmapped(node, 'first_import') unless @have_names
     # NOTE: Surrogates never get matched in this version of the algorithm.
     return unmapped(node, 'surrogate') if node.scientific_name.surrogate?

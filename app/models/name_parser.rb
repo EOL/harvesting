@@ -24,7 +24,7 @@ class NameParser
       # names = ScientificName.where(harvest_id: @harvest.id, canonical: nil).limit(100)
       loop_over_names_in_batches do |names|
         @names = {}
-        write_names_to_file(names)
+        format_names(names)
         learn_names(names)
         json = run_parser_on_names
         updates = []
@@ -76,9 +76,11 @@ class NameParser
     end
   end
 
-  def write_names_to_file(names)
+  def format_names(names)
     @verbatims_size = names.size
-    @verbatims = names.map(&:verbatim).join("\n") + "\n"
+    # @verbatims = names.map(&:verbatim).join("\n") + "\n" # OLD VERSION, where parser took string...
+    # New version, where parser takes JSON:
+    @verbatims = names.map(&:verbatim)
   end
 
   def learn_names(names)
@@ -95,7 +97,7 @@ class NameParser
     request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
     request.body = @verbatims.to_json
     response = http.request(request)
-    response.body
+    response.body.force_encoding('UTF-8')
   end
 
   # Examples of the types of results you will get may be found by doing:
