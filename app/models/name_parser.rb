@@ -37,13 +37,14 @@ class NameParser
           parsed = JSON.parse(json)
           parsed = parsed['namesJson'] if parsed.is_a?(Hash) && parsed.key?('namesJson')
           parsed.each_with_index do |result, i|
-            if @names[result['verbatim']].nil?
-              @harvest.log("error assigning name to #{result['verbatim']} (missing!): #{result.inspect}", cat: :errors)
+            verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
+            if @names[verbatim].nil?
+              @harvest.log("error assigning name to #{verbatim} (missing!): #{result.inspect}", cat: :errors)
               next
             end
             begin
-              @names[result['verbatim']].assign_attributes(parse_result(result))
-              updates << @names[result['verbatim']]
+              @names[verbatim].assign_attributes(parse_result(result))
+              updates << @names[verbatim]
             rescue => e
               @harvest.log("error reading line #{i}: #{result[0..250]}", cat: :errors)
               raise(e)
