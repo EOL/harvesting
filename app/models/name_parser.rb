@@ -5,6 +5,11 @@ class NameParser
     parser.parse
   end
 
+  def self.parse_names(names)
+    parser = NameParser.new(nil)
+    parser.run_parser_on_names(names)
+  end
+
   def initialize(harvest)
     @harvest = harvest
     @resource = harvest.resource
@@ -26,7 +31,7 @@ class NameParser
         @names = {}
         format_names(names)
         learn_names(names)
-        json = run_parser_on_names
+        json = run_parser_on_names(@verbatims)
         updates = []
         begin
           parsed = JSON.parse(json)
@@ -90,12 +95,12 @@ class NameParser
     end
   end
 
-  def run_parser_on_names
+  def run_parser_on_names(verbatims)
     uri = URI('https://parser.globalnames.org/api')
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
-    request.body = @verbatims.to_json
+    request.body = verbatims.to_json
     response = http.request(request)
     response.body.force_encoding('UTF-8')
   end
