@@ -12,7 +12,7 @@ class NameParser
 
   def initialize(harvest)
     @harvest = harvest
-    @resource = harvest.resource
+    @resource = harvest&.resource
     @verbatims = []
   end
 
@@ -100,7 +100,7 @@ class NameParser
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
-    request.body = verbatims.to_json
+    request.body = Array(verbatims).to_json
     response = http.request(request)
     response.body.force_encoding('UTF-8')
   end
