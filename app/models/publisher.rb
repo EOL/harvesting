@@ -280,7 +280,6 @@ class Publisher
       @pages[node.page_id].maps_count = 0 # TODO
       # These are NOT used by our code, but are required by the database (and thus we avoid inserting nulls):
       @pages[node.page_id].page_contents_count = 0
-      @pages[node.page_id].data_count = 0
       @pages[node.page_id].species_count = 0
       @pages[node.page_id].is_extinct = 0
       @pages[node.page_id].is_marine = 0
