@@ -417,12 +417,12 @@ class Publisher
     web_medium.resource_id = @web_resource_id
     web_medium.name = clean_values(medium.name_verbatim) if medium.name.blank?
     web_medium.description = clean_values(medium.description_verbatim) if medium.description.blank?
-    if medium.base_url.nil? # The image has not been downloaded.
-      web_medium.base_url = "#{@root_url}/#{medium.default_base_url}"
-    else
-      # It *has* been downloaded, but still lacks the root URL, so we add that:
-      web_medium.base_url = "#{@root_url}/#{medium.base_url}"
-    end
+    web_medium.base_url = if medium.base_url.nil? # The image has not been downloaded.
+                            "#{@root_url}/#{medium.default_base_url}"
+                          else
+                            # It *has* been downloaded, but still lacks the root URL, so we add that:
+                            "#{@root_url}/#{medium.base_url}"
+                          end
     web_medium.license_id = WebDb.license(medium.license&.source_url, @logger)
     web_medium.language_id = WebDb.language(medium.language, @logger)
     web_medium
