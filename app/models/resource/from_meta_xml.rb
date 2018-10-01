@@ -107,7 +107,7 @@ class Resource::FromMetaXml
           :skip
         end
       if reps == :skip
-        puts "SKIPPING events file..."
+        puts "SKIPPING #{file_config['rowType']} config (#{file_config_name})..."
         next
       end
       reps ||=
