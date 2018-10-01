@@ -172,6 +172,7 @@ module Store
       @models[:medium][:harvest_id] = @harvest.id
       lic_url = @models[:medium].delete(:license_url)
       @models[:medium][:license_id] ||= find_or_build_license(lic_url)
+      build_bib_cit(@models[:medium].delete(:bib_cit), @models[:medium][:resource_pk])
       if @models[:medium][:is_article]
         @models[:article] = @models[:medium]
         build_article
@@ -186,7 +187,6 @@ module Store
       build_attributions(Article, @models[:article])
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
-      build_bib_cit(@models[:article].delete(:bib_cit), @models[:article][:resource_pk])
       build_sections(@models[:article].delete(:section_value))
       # Articles have far less information than media:
       %i[subclass format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|

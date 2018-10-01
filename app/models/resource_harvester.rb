@@ -440,6 +440,9 @@ class ResourceHarvester
     @harvest.log_call
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
+    # Bib_cit:
+    propagate_id(Medium, fk: 'resource_pk', other: 'bibliographic_citations.resource_pk',
+                          set: 'bibliographic_citation_id', with: 'id')
     resolve_references(MediaReference, 'medium')
     resolve_attributions(Medium)
   end
