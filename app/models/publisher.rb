@@ -219,6 +219,7 @@ class Publisher
     bc.body = clean_values(citation.body)
     bc.created_at = t
     bc.updated_at = t
+    bc.harv_db_id = citation.id
     bc.resource_id = @web_resource_id
     @bib_cits[citation.id] = bc
   end
