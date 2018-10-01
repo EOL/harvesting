@@ -78,7 +78,8 @@ module Store
     end
 
     def to_bibliographic_citation(field, val)
-      # TODO ... argh.
+      @models[:medium] ||= {}
+      @models[:medium][:bib_cit] = val
     end
 
     def to_media_name(field, val)

@@ -186,6 +186,7 @@ module Store
       build_attributions(Article, @models[:article])
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
+      build_bib_cit(@models[:article].delete(:bib_cit), @models[:article][:resource_pk])
       build_sections(@models[:article].delete(:section_value))
       # Articles have far less information than media:
       %i[subclass format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|
@@ -408,6 +409,13 @@ module Store
         end
       end
       model.delete(:attributions)
+    end
+
+    def build_bib_cit(value, resource_pk)
+      return nil if value.blank?
+      # TODO: we should do some scrubbing of that body content:
+      prepare_model_for_store(BibliographicCitation, body: value, resource_pk: resource_pk, resource_id: @resource.id,
+                                                     harvest_id: @harvest.id)
     end
 
     def build_sections(values)

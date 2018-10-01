@@ -450,6 +450,10 @@ class ResourceHarvester
     propagate_id(Article, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # To sections:
     propagate_id(ArticlesSection, fk: 'article_pk', other: 'articles.resource_pk', set: 'article_id', with: 'id')
+    # Bib_cit:
+    propagate_id(Article, fk: 'resource_pk', other: 'bibliographic_citations.resource_pk',
+                          set: 'bibliographic_citation_id', with: 'id')
+
     resolve_references(ArticlesReference, 'medium')
     resolve_attributions(Article) # Yes, I know, we don't really have articles yet, but I don't want to forget this.
   end
