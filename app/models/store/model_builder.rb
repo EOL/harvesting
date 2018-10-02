@@ -188,6 +188,11 @@ module Store
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
       build_sections(@models[:article].delete(:section_value))
+      if @models[:article][:source_url].blank?
+        @models[:article][:source_url] = @models[:article].delete(:source_page_url)
+      elsif !@models[:article][:source_page_url].blank?
+        raise "Attempt to specify both source_url and source_page_url on Article #{@models[:article][:resource_pk]}"
+      end
       # Articles have far less information than media:
       %i[subclass format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|
         @models[:article].delete(superfluous_field)
