@@ -32,7 +32,9 @@ class Medium < ActiveRecord::Base
         string = img.source_page_url.sub(/^.*File:/, '').sub(/\..{3,4}$/, '')
         good_name = URI.decode(string)
         bad_name = img.name.sub(/^.*File:/, '').sub(/\..{3,4}$/, '')
-        %i[source_url name_verbatim name description description_verbatim].each { |f| img[f].sub!(bad_name, good_name) }
+        %i[source_url name_verbatim name description description_verbatim].each do |f|
+          img[f].sub!(bad_name, good_name) unless img[f].nil?
+        end
         img.save
         img.download_and_resize
       end
