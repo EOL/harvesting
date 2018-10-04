@@ -116,7 +116,7 @@ class Medium < ActiveRecord::Base
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'empty'
-      if get_url.match?(/\.ogv\b/)
+      elsif get_url.match?(/\.ogv\b/)
         mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
           "*video* (#{get_url}). Aborting."
         Delayed::Worker.logger.error(mess)
