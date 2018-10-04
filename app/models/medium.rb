@@ -29,9 +29,10 @@ class Medium < ActiveRecord::Base
     # NOTE: this is TEMP code for use ONCE. You can delete it, if you are reading this. Yes, really. Truly. Do it.
     def fix_wikimedia_characters(res)
       res.media.where(w: nil).find_each do |img|
+        next if img.source_url =~ /(svg|ogg|ogv)$/
         string = img.source_page_url.sub(/^.*File:/, '').sub(/\..{3,4}$/, '')
         good_name = URI.decode(string)
-        bad_name = img.name.sub(/^.*File:/, '').sub(/\..{3,4}$/, '')
+        bad_name = img.source_url.sub(/^.*\//, '').sub(/\..{3,4}$/, '')
         %i[source_url name_verbatim name description description_verbatim].each do |f|
           img[f].sub!(bad_name, good_name) unless img[f].nil?
         end
@@ -112,6 +113,12 @@ class Medium < ActiveRecord::Base
       if get_url.match?(/\.svg\b/)
         mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
           "(#{get_url}). Aborting."
+        Delayed::Worker.logger.error(mess)
+        harvest.log(mess, cat: :errors)
+        raise 'empty'
+      if get_url.match?(/\.ogv\b/)
+        mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
+          "*video* (#{get_url}). Aborting."
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'empty'
