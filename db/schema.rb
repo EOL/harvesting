@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180911155258) do
+ActiveRecord::Schema.define(version: 20181001141857) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,   null: false
@@ -142,9 +142,12 @@ ActiveRecord::Schema.define(version: 20180911155258) do
   add_index "attributions", ["harvest_id"], name: "index_attributions_on_harvest_id", using: :btree
 
   create_table "bibliographic_citations", force: :cascade do |t|
-    t.text     "body",       limit: 65535
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
+    t.text     "body",        limit: 65535
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+    t.string   "resource_pk", limit: 255,   null: false
+    t.integer  "harvest_id",  limit: 4,     null: false
+    t.integer  "resource_id", limit: 4,     null: false
   end
 
   create_table "content_attributions", force: :cascade do |t|

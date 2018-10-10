@@ -183,10 +183,16 @@ module Store
 
     def build_article
       @models[:article][:guid] = "EOL-article-#{@resource.id}-#{@models[:article][:node_resource_pk]}"
-      build_references(:article, ArticlesReference)
-      build_attributions(Article, @models[:article])
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
+      size = @models[:article][:body].size
+      if size > 21_845
+        log_warning("body is too long (#{size} chrs) for article #{@models[:article][:resource_pk]}")
+        @models.delete(:article)
+        return nil
+      end
+      build_references(:article, ArticlesReference)
+      build_attributions(Article, @models[:article])
       build_sections(@models[:article].delete(:section_value))
       if @models[:article][:source_url].blank?
         @models[:article][:source_url] = @models[:article].delete(:source_page_url)
