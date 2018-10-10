@@ -186,11 +186,6 @@ module Store
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
       size = @models[:article][:body].size
-      if size > 18_000
-        log_warning("body is too long (#{size} chrs) for article #{@models[:article][:resource_pk]}")
-        @models.delete(:article)
-        return nil
-      end
       build_references(:article, ArticlesReference)
       build_attributions(Article, @models[:article])
       build_sections(@models[:article].delete(:section_value))
