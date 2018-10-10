@@ -186,7 +186,7 @@ module Store
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
       size = @models[:article][:body].size
-      if size > 21_845
+      if size > 18_000
         log_warning("body is too long (#{size} chrs) for article #{@models[:article][:resource_pk]}")
         @models.delete(:article)
         return nil
