@@ -379,7 +379,7 @@ class ResourceHarvester
         begin
           klass.import! group, validate: false
         rescue
-          debugger
+          pry
           1
         end
       end
