@@ -376,7 +376,12 @@ class ResourceHarvester
         g_count += 1
         # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
         # DB validations are adequate and we want to go faster:
-        klass.import! group, validate: false
+        begin
+          klass.import! group, validate: false
+        rescue
+          debugger
+          1
+        end
       end
     end
     @harvest.update_attribute(:stored_at, Time.now)
