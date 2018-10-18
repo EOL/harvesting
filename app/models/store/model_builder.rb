@@ -182,7 +182,7 @@ module Store
     end
 
     def build_article
-      @models[:article][:guid] = "EOL-article-#{@resource.id}-#{@models[:article][:node_resource_pk]}"
+      @models[:article][:guid] = "EOL-article-#{@resource.id}-#{@models[:article][:resource_pk]}"
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
       size = @models[:article][:body].size
@@ -202,7 +202,7 @@ module Store
     end
 
     def build_true_medium
-      @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:node_resource_pk]}"
+      @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:resource_pk]}"
       @models[:medium][:subclass] ||= :image
       @models[:medium][:format] ||= :jpg
       build_references(:medium, MediaReference)
