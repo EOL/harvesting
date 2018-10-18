@@ -462,7 +462,7 @@ class ResourceHarvester
     propagate_id(Article, fk: 'resource_pk', other: 'bibliographic_citations.resource_pk',
                           set: 'bibliographic_citation_id', with: 'id')
 
-    resolve_references(ArticlesReference, 'medium')
+    resolve_references(ArticlesReference, 'article')
     resolve_attributions(Article) # Yes, I know, we don't really have articles yet, but I don't want to forget this.
   end
 
