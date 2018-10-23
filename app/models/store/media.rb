@@ -79,13 +79,13 @@ module Store
 
     def to_bibliographic_citation(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:bib_cit] = val
+      @models[:medium][:bib_cit] = clean_string(val)
     end
 
     def to_media_name(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:name_verbatim] = val
-      @models[:medium][:name] = sanitize(val)
+      @models[:medium][:name_verbatim] = clean_string(val)
+      @models[:medium][:name] = sanitize(@models[:medium][:name_verbatim])
     end
 
     def to_media_license(field, val)
@@ -95,35 +95,35 @@ module Store
 
     def to_media_description(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:description_verbatim] = val
-      @models[:medium][:description] = sanitize(val)
+      @models[:medium][:description_verbatim] = clean_string(val)
+      @models[:medium][:description] = sanitize(@models[:medium][:description_verbatim])
     end
 
     # http://rs.tdwg.org/ac/terms/accessURI (where to fetch the media file)
     def to_media_source_url(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:source_url] = val
+      @models[:medium][:source_url] = clean_string(val)
     end
 
     # http://rs.tdwg.org/ac/terms/furtherInformationURL (where the link accompanying the media object should point)
     def to_media_source_page_url(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:source_page_url] = val
+      @models[:medium][:source_page_url] = clean_string(val)
     end
 
     def to_media_owner(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:owner] = val
+      @models[:medium][:owner] = clean_string(val)
     end
 
     def to_media_rights_statement(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:rights_statement] = val
+      @models[:medium][:rights_statement] = clean_string(val)
     end
 
     def to_media_usage_statement(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:usage_statement] = val
+      @models[:medium][:usage_statement] = clean_string(val)
     end
 
     def to_media_ref_fks(field, val)
@@ -166,6 +166,10 @@ module Store
     def to_media_locality(field, val)
       @models[:location] ||= {}
       @models[:location][:locality] = val
+    end
+
+    def clean_string(val)
+      val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"(.*)\"$/, '\\1')
     end
   end
 end
