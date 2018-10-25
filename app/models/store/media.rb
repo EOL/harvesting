@@ -169,7 +169,7 @@ module Store
     end
 
     def clean_string(val)
-      val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"(.*)\"$/, '\\1')
+      val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"\s*(.*)\s*\"$/, '\\1')
     end
   end
 end

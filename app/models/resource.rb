@@ -293,6 +293,7 @@ class Resource < ActiveRecord::Base
     Reference.where(resource_id: id).delete_all
     Node.remove_indexes(resource_id: id)
     Node.where(resource_id: id).delete_all
+    NodeAncestor.where(resource_id: id).delete_all
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
     else

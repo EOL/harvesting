@@ -774,7 +774,7 @@
   "is_unique":false,
   "is_required":false},
 { "term": "http://eol.org/schema/reference/referenceID",
- "for_format": "articles",
+ "for_format": "media",
  "represents": "to_media_ref_fks",
  "submapping": "|;",
  "is_unique": false,
