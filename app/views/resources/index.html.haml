@@ -3,9 +3,9 @@
 %p
   Welcome to the Encyclopedia of Life repository layer. This is where harvested data resources are stored in EOL format, for publication to the front end database, which supports our APIs and other data services, as well as the EOL website.
 %p
-  Here you can find data resource profile pages (
-  = link_to('example:', 'http://beta-repo.eol.org/resources/85')
-  ), which contain basic information about a resource, and connect to the source of the file (usually an address in our open data repository) and to the corresponding profile in the front end database. While this repository layer is mostly useful for EOL admin, you may find details that interest you here if you are curious about the most recent harvest date, the degree of taxonomic names matching or the data model for a particular dataset.
+  Here you can find data resource profile pages
+  = "(" + link_to('example', 'http://beta-repo.eol.org/resources/85') + "),"
+  which contain basic information about a resource, and connect to the source of the file (usually an address in our open data repository) and to the corresponding profile in the front end database. While this repository layer is mostly useful for EOL admin, you may find details that interest you here if you are curious about the most recent harvest date, the degree of taxonomic names matching or the data model for a particular dataset.
 
 %h2= t("resources.index.header")
 %h3= t("resources.index.jobs_header")
