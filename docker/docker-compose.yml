@@ -36,6 +36,7 @@ services:
     container_name: eol-repo-app
     restart: always
     volumes:
+      - ./resources/secrets.yml:/app/config/secrets.yml
       - /data/eol-repo-app:/app/public/data
       - /data/eol-repo-app/tmp:/tmp
       - /eol/tmp/harvester:/tmp
