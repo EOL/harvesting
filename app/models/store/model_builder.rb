@@ -173,6 +173,9 @@ module Store
       lic_url = @models[:medium].delete(:license_url)
       @models[:medium][:license_id] ||= find_or_build_license(lic_url)
       build_bib_cit(@models[:medium].delete(:bib_cit), @models[:medium][:resource_pk])
+      lang_code = @models[:medium][:language_code_verbatim] || 'en'
+      lang = find_or_create_language(lang_code)
+      @models[:medium][:language_id] = lang.id
       if @models[:medium][:is_article]
         @models[:article] = @models[:medium]
         build_article
@@ -255,10 +258,10 @@ module Store
 
     # TODO: handle things if there's no "is_preferred" field. ...not sure if we should assume pref'd or not, though.
     def build_vernacular
-      lang_code = @models[:vernacular][:language_code_verbatim] || 'en'
-      lang = find_or_create_language(lang_code)
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
+      lang_code = @models[:vernacular][:language_code_verbatim] || 'en'
+      lang = find_or_create_language(lang_code)
       @models[:vernacular][:language_id] = lang.id
       # TODO: there are some other normalizations and checks we should do here, I expect.
       prepare_model_for_store(Vernacular, @models[:vernacular])
