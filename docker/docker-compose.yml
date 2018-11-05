@@ -1,19 +1,67 @@
 version: '3.0' # Note that the verison is NOT for this document, but for the version of docker-compose itself. Keep.
 services:
   eol-repo-elasticsearch:
-    image: elasticsearch
-    container_name: eol-repo-elasticsearch
+    image: elasticsearch:6.4.0
+    container_name: harv_search
     restart: always
     environment:
-      - TZ=America/New_York
-      - ES_JAVA_OPTS=-Xms512m -Xmx30g
+      - RAILS_ENV
+      - bootstrap.memory_lock=true
+      - cluster.name=eol-search-${RAILS_ENV}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
-      - /data/eol-repo-es/data:/usr/share/elasticsearch/data
+      - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /data/eol-repo-elasticsearch/data:/var/data/elasticsearch
+      - /data/eol-repo-elasticsearch/log:/var/log/elasticsearch
+    networks:
+      - docker_eolnet
+    ports:
+      - 9200:9200
+      - 9300:9300
+  eol-repo-elasticsearch2:
+    image: elasticsearch:6.4.0
+    container_name: harv_search2
+    environment:
+      - RAILS_ENV
+      - cluster.name=eol-search-${RAILS_ENV}
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=[eol-backend-elasticsearch,eol-backend-elasticsearch3]"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /data/eol-repo-elasticsearch2/data:/var/data/elasticsearch
+      - /data/eol-repo-elasticsearch2/log:/var/log/elasticsearch
+    networks:
+      - docker_eolnet
+  eol-repo-elasticsearch3:
+    image: elasticsearch:6.4.0
+    container_name: harv_search3
+    environment:
+      - cluster.name=eol-search-${RAILS_ENV}
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=[eol-backend-elasticsearch,eol-backend-elasticsearch2]"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /data/eol-repo-elasticsearch3/data:/var/data/elasticsearch
+      - /data/eol-repo-elasticsearch3/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
   eol-repo-memcached:
     image: memcached
-    container_name: eol-repo-memcached
+    container_name: harv_cache
     restart: always
     environment:
       - TZ=America/New_York
@@ -22,7 +70,7 @@ services:
       - docker_eolnet
   eol-repo-mysql:
     image: mysql:5.7.12
-    container_name: eol-repo-mysql
+    container_name: harv_db
     restart: always
     env_file:
       - resources/staging.env
@@ -33,7 +81,7 @@ services:
   eol-repo-app:
     build: ..
     image: harvester_v3
-    container_name: eol-repo-app
+    container_name: harv_app
     restart: always
     volumes:
       - ./resources/secrets.yml:/app/config/secrets.yml
