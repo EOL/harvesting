@@ -97,6 +97,7 @@ class NamesMatcher
     end
     how[:includes] = [:scientific_name]
     how[:load] = false # Careful! Now you don't have models, you have a hash resembling one...
+    how[:fields] = [:canonical] # It seems this shouldn't matter, since the query is '*', but, alas: it matters.
     how.delete(:where) if how[:where].empty?
     @harvest.log("Q: #{how.inspect}") if @explain
     @logs << "Q: #{how.inspect}"
