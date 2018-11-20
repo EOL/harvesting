@@ -236,7 +236,7 @@ module Store
       end
       return @licenses[url] if @licenses.key?(url)
       name =
-        if url =~ /creativecommons\/licenses/
+        if url =~ /creativecommons\.org\/licenses/
           "cc-" + url.split('/')[-2..-1].join(' ')
         else
           url.split('/').last.titleize
