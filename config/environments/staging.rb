@@ -7,14 +7,14 @@ Rails.application.configure do
   config.consider_all_requests_local = false
   config.action_controller.perform_caching = true
   # TODO: set up mailing...
-  config.action_mailer.default_url_options = { host: 'beta-repo.eol.org', port: 3000 }
+  config.action_mailer.default_url_options = { host: 'content.eol.org', port: 3000 }
   config.action_mailer.raise_delivery_errors = false
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = { address: 'beta-repo.eol.org', port: 1025}
+  config.action_mailer.smtp_settings = { address: 'content.eol.org', port: 1025}
   config.active_support.deprecation = :log
   config.active_record.migration_error = :page_load
   config.assets.debug = false
   config.assets.digest = true
   config.assets.raise_runtime_errors = true
-  config.default_host = 'http://beta-repo.eol.org'
+  config.default_host = 'http://content.eol.org'
 end

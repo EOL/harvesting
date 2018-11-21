@@ -2,8 +2,8 @@
   %h1= @resource.name
 .ui.tiny.attached.menu
   -# TODO: HACK! We need real secrets for this to work, argh:
-  - beta_id = WebDb.resource_id(@resource) rescue ''
-  .item= link_to(t("resources.actions.publishing_side"), "http://beta.eol.org/resources/#{beta_id}")
+  - id = WebDb.resource_id(@resource) rescue ''
+  .item= link_to(t("resources.actions.publishing_side"), "http://eol.org/resources/#{id}")
   - if policy(@resource).update?
     .item= link_to(t("edit"), edit_resource_path(@resource))
     .item= link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })

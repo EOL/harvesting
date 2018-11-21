@@ -34,9 +34,6 @@
           .item
             = link_to(t('layout.sign_up'), new_user_registration_path, class: 'ui primary button')
 
-      .ui.inline.cookie.nag
-        %i.close.icon
-        .header= t("nags.beta").html_safe
       - flash.each do |key, value|
         - classes = ["flash-#{key}"]
         - classes << 'warning' if key == 'alert'

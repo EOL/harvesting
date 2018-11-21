@@ -85,8 +85,6 @@ en:
       long: "Longitude (decimal):"
       alt: "Altitude (decimal):"
   link_simple_see_all: "see all"
-  nags:
-    beta: "This is an alpha version of EOL version 3. Provide feedback and join the discussion at <a href='https://discuss.eol.org/'>https://discuss.eol.org</a>."
   media:
     empty_fields:
       resource: "No resource attached (this is highly unusual)!"

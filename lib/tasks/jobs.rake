@@ -11,7 +11,7 @@ module JobsTask
     h = YAML.load(job.handler)
     if h.respond_to?(:resource_id)
       res = Resource.find(h.resource_id)
-      bits << "[#{res.name}](https://beta-repo.eol.org/resources/#{res.id})"
+      bits << "[#{res.name}](https://content.eol.org/resources/#{res.id})"
     end
     if h.respond_to?(:method_name)
       bits << ".#{h.method_name}"
