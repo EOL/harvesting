@@ -1,9 +1,9 @@
 #!/bin/sh
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_a ' ; worker.start " > log/media_a.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_b ' ; worker.start " > log/media_b.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_c ' ; worker.start " > log/media_c.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_d ' ; worker.start " > log/media_d.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_e ' ; worker.start " > log/media_e.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_f ' ; worker.start " > log/media_f.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_g ' ; worker.start " > log/media_g.log 2>&1 &
-nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_h ' ; worker.start " > log/media_h.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_a ' ; worker.start " >> log/media_a.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_b ' ; worker.start " >> log/media_b.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_c ' ; worker.start " >> log/media_c.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_d ' ; worker.start " >> log/media_d.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_e ' ; worker.start " >> log/media_e.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_f ' ; worker.start " >> log/media_f.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_g ' ; worker.start " >> log/media_g.log 2>&1 &
+nohup rails r "worker = Delayed::Worker.new(queues: ['media']).start ; worker.name_prefix = 'media_h ' ; worker.start " >> log/media_h.log 2>&1 &
