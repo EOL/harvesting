@@ -102,6 +102,17 @@ class Node < ActiveRecord::Base
           include: { identifiers: {}, scientific_name: { only: %i[normalized verbatim canonical] } })
   end
 
+  def dump_eol_page_ids
+    file = Rails.public_path.join('data', 'eol_page_ids.csv')
+    CSV.open(file, 'wb', encoding: 'UTF-8') do |csv|
+      where(resource_id: 1).select('id, resource_pk, page_id').find_in_batches(batch_size: 25_000) do |batch|
+        batch.each do |row|
+          csv << [row.resource_pk, row.page_id]
+        end
+      end
+    end
+  end
+
   def ancestor_page_ids
     node_ancestors.map { |na| na&.ancestor&.page_id }.compact
   end
