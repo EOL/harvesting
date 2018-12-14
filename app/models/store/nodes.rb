@@ -76,6 +76,8 @@ module Store
       end
     end
 
+    # KS: "Note that a few data sets have acceptedNameUsageID values also for preferred names, in those cases
+    # acceptedNameUsageID=taxonID for preferred names and acceptedNameUsageID≠taxonID for non-preferred names"
     def accepted_name_is_synonym?(val)
       @models[:node] && @models[:node][:resource_pk] && @models[:node][:resource_pk] != val
     end

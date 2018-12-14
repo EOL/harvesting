@@ -51,6 +51,7 @@ module Store
       @models[:scientific_name][:synonym_of] = @models[:node].delete(:parent_resource_pk)
     end
 
+    # Opposite of is_preferred? ...but I think this is clearer...
     def is_synonym?
       @models[:scientific_name] && @models[:scientific_name][:synonym_of]
     end
@@ -63,6 +64,10 @@ module Store
         syn_of = @models[:scientific_name].delete(:synonym_of)
         @models[:scientific_name][:node_resource_pk] = syn_of
         @models[:scientific_name][:is_preferred] = false
+        #  KS: "Generally, records of non-preferred names don't have a parentNameUsageID, but sometimes they do. In
+        #  records that have both an acceptedNameUsageID and a parentNameUsageID, the parentNameUsageID should be
+        #  ignored"
+        @models[:node][:parent_resource_pk] = nil if @models[:node]
       else
         @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
         @models[:scientific_name][:is_preferred] = true

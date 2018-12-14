@@ -109,7 +109,7 @@ class TaxonomicStatus
 
     def preferred?(verbatim)
       string = normalize(verbatim)
-      map.key?(string) && map[string] == :preferred # TODO: include provisionally_accepted and alternative
+      map.key?(string) && [:preferred, :provisionally_accepted, :accepted].includes?(map[string])
     end
   end
 end
