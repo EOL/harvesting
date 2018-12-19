@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20181010193307) do
+ActiveRecord::Schema.define(version: 20181218202746) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -28,7 +28,7 @@ ActiveRecord::Schema.define(version: 20181010193307) do
     t.text     "owner",                     limit: 65535,    null: false
     t.string   "name",                      limit: 255
     t.string   "source_url",                limit: 2083
-    t.text     "body",                      limit: 16777215, null: false
+    t.text     "body",                      limit: 16777215
     t.integer  "removed_by_harvest_id",     limit: 4
     t.datetime "created_at",                                 null: false
     t.datetime "updated_at",                                 null: false
@@ -36,10 +36,11 @@ ActiveRecord::Schema.define(version: 20181010193307) do
     t.string   "node_resource_pk",          limit: 255
   end
 
-  add_index "articles", ["guid"], name: "index_articles_on_guid", using: :btree
-  add_index "articles", ["harvest_id", "resource_pk"], name: "index_articles_on_harvest_id_and_resource_pk", using: :btree
+  add_index "articles", ["guid"], name: "index_articles_on_guid", length: {"guid"=>191}, using: :btree
   add_index "articles", ["harvest_id"], name: "index_articles_on_harvest_id", using: :btree
+  add_index "articles", ["node_resource_pk"], name: "node_resource_pk", length: {"node_resource_pk"=>191}, using: :btree
   add_index "articles", ["resource_id"], name: "index_articles_on_resource_id", using: :btree
+  add_index "articles", ["resource_pk"], name: "resource_pk", length: {"resource_pk"=>191}, using: :btree
 
   create_table "articles_references", force: :cascade do |t|
     t.integer "harvest_id",          limit: 4
