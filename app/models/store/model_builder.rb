@@ -225,6 +225,7 @@ module Store
     end
 
     def truncate(model, field, length, options = {})
+      return unless @models[model][field] 
       if @models[model][field].size > length
         longer = length + 256
         # Max length on log line (the limit is bout 64_000, but that's tedious and doesn't give us much more info.)
