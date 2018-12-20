@@ -123,6 +123,7 @@ class NameParser
     if result.key?('details')
       result['details'].each do |hash|
         hash.each do |k, v|
+          k = k.underscore.downcase # Looks like the format changed from this_style to thisStyle; change it back!
           next if k == 'annotation_identification'
           next if k == 'ignored'
           if k == 'infraspecific_epithets'
@@ -137,8 +138,8 @@ class NameParser
         end
       end
     end
-    if result.key?('canonical_name')
-      canonical = result['canonical_name']
+    if result.key?('canonical_name') || result.key?('canonicalName')
+      canonical = result['canonical_name'] || result['canonicalName']
       canon =
         if canonical.is_a?(String)
           canonical
@@ -153,7 +154,9 @@ class NameParser
         end
     end
     if result['parsed']
-      warns = result.key?('quality_warnings') ? result['quality_warnings'].map { |a| a[1] }.join('; ') : nil
+      warns = if result.key?('quality_warnings') || result.key?('qualityWarnings')
+        (result['quality_warnings'] || result['qualityWarnings']).map { |a| a[1] }.join('; ')
+      end
       quality = result['quality'] ? result['quality'].to_i : 0
       norm = result['normalized'] ? result['normalized'] : nil
     else
