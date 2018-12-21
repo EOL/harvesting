@@ -194,6 +194,15 @@ module Store
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
       size = @models[:article][:body].size
+      if @models[:article][:owner].blank?
+        @models[:article][:owner] =
+          if model[:attributions].blank?
+            @resource.name
+          else
+            sep = "[#{@models[:article][:attribution_sep] || '|;'}]"
+            @models[:article][:attributions].split(/#{sep}\s*/).join('; ')
+          end
+      end
       build_references(:article, ArticlesReference)
       build_attributions(Article, @models[:article])
       build_sections(@models[:article].delete(:section_value))
@@ -225,7 +234,7 @@ module Store
     end
 
     def truncate(model, field, length, options = {})
-      return unless @models[model][field] 
+      return unless @models[model][field]
       if @models[model][field].size > length
         longer = length + 256
         # Max length on log line (the limit is bout 64_000, but that's tedious and doesn't give us much more info.)
@@ -305,7 +314,6 @@ module Store
       occurrence = @models[:trait][:occurrence_resource_pk]
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
-      debugger if Rails.env.development? && @models[:trait][:predicate].match?(/contributor/) # Testing IUCN-SD...
       if @models[:trait][:of_taxon] && parent
         return log_warning("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a "\
                            "parentMeasurementID #{parent}")
