@@ -376,7 +376,18 @@ class ResourceHarvester
         g_count += 1
         # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
         # DB validations are adequate and we want to go faster:
-        klass.import! group, validate: false
+        begin
+          klass.import! group, validate: false
+        rescue => e
+          if e.message =~ /row (\d+)\b/
+            row = Regexp.last_match(1)
+            raise "#{e.class} while parsing something around here: #{group[row-1..row+1]}"
+          else
+            group.each do |instance|
+              klass.import! [instance], validate: false # Let it fail on the single row that had a problem!
+            end
+          end
+        end
       end
     end
     @harvest.update_attribute(:stored_at, Time.now)
