@@ -380,7 +380,7 @@ class ResourceHarvester
           klass.import! group, validate: false
         rescue => e
           if e.message =~ /row (\d+)\b/
-            row = Regexp.last_match(1)
+            row = Regexp.last_match(1).to_i
             raise "#{e.class} while parsing something around here: #{group[row-1..row+1]}"
           else
             group.each do |instance|
