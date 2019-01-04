@@ -381,7 +381,7 @@ class ResourceHarvester
         rescue => e
           if e.message =~ /row (\d+)\b/
             row = Regexp.last_match(1).to_i
-            raise "#{e.class} while parsing something around here: #{group[row-1..row+1]}"
+            raise "#{e.class} while parsing something around here: #{group[row-1..row+1].to_json}"
           else
             group.each do |instance|
               klass.import! [instance], validate: false # Let it fail on the single row that had a problem!
