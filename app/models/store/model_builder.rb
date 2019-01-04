@@ -196,7 +196,7 @@ module Store
       size = @models[:article][:body].size
       if @models[:article][:owner].blank?
         @models[:article][:owner] =
-          if model[:attributions].blank?
+          if @models[:article][:attributions].blank?
             @resource.name
           else
             sep = "[#{@models[:article][:attribution_sep] || '|;'}]"
