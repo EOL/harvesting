@@ -140,7 +140,8 @@ class WebDb < ActiveRecord::Base
         dataset_rights_holder: obj.dataset_rights_holder,
         dataset_rights_statement: obj.dataset_rights_statement,
         updated_at: obj.updated_at,
-        abbr: obj.abbr
+        abbr: obj.abbr,
+        classification: obj.classification
       }
       attrs = hash.map { |k,v| "#{k}=#{quote_value(v)}" }.join(', ')
       connection.exec_update("UPDATE resources SET #{attrs} WHERE id = #{web_id}", 'SQL', attrs)

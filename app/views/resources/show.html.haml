@@ -81,6 +81,9 @@
     .item
       %strong= "Trusted:"
       = @resource.not_trusted? ? "No." : "Yes."
+    .item
+      %strong= "Classification Resource:"
+      = @resource.classification? ? "Yes." : "No."
     - if @resource.hold_harvesting?
       .item
         %strong= "THIS RESOURCE IS ON HOLD:"

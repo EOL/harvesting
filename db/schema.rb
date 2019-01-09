@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20181218202746) do
+ActiveRecord::Schema.define(version: 20190109212530) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -612,6 +612,7 @@ ActiveRecord::Schema.define(version: 20181218202746) do
     t.string   "opendata_url",                  limit: 2083
     t.integer  "downloaded_media_count",        limit: 4,     default: 0
     t.integer  "failed_downloaded_media_count", limit: 4,     default: 0
+    t.boolean  "classification",                              default: false
   end
 
   add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree
