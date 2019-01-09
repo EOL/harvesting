@@ -6,6 +6,7 @@ Rails.application.configure do
   config.eager_load = true
   config.consider_all_requests_local = false
   config.action_controller.perform_caching = true
+  config.action_dispatch.default_headers = { 'X-Frame-Options' => 'ALLOWALL' }
   # TODO: set up mailing...
   config.action_mailer.default_url_options = { host: 'content.eol.org', port: 3000 }
   config.action_mailer.raise_delivery_errors = false
