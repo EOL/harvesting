@@ -410,7 +410,7 @@ class Publisher
     web_medium.harv_db_id = medium.id
     web_medium.subclass = Medium.subclasses[medium.subclass]
     web_medium.format = Medium.formats[medium.format]
-    web_medium.owner = get_owner(medium)
+    web_medium.owner = medium.owner
     # TODO: ImageInfo from medium.sizes
     copy_fields(@same_medium_attributes, medium, web_medium)
     web_medium.created_at = Time.now.to_s(:db)
@@ -434,7 +434,7 @@ class Publisher
     web_article = Struct::WebArticle.new
     web_article.page_id = node.page_id
     web_article.harv_db_id = article.id
-    web_article.owner = get_owner(article)
+    web_article.owner = article.owner
     copy_fields(@same_article_attributes, article, web_article)
     web_article.created_at = Time.now.to_s(:db)
     web_article.updated_at = Time.now.to_s(:db)
@@ -534,12 +534,6 @@ class Publisher
       meta.respond_to?(:statistical_method_term) ? meta.statistical_method_term&.uri : nil,
       meta.respond_to?(:source) ? meta.source : nil
     ]
-  end
-
-  def get_owner(object)
-    # TODO: certain types of license allow an empty owner.
-    # TODO: if it's not one of those licenses, we should warn and ignore that record (during harvest)
-    object.owner || "licensed media from #{@resource.name} without owner"
   end
 
   # TODO: move this method up.

@@ -169,6 +169,8 @@ module Store
     end
 
     def clean_string(val)
+      return nil if val.nil?
+      return '' if val.blank?
       val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"\s*(.*)\s*\"$/, '\\1')
     end
   end

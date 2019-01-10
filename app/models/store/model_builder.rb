@@ -194,15 +194,19 @@ module Store
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
       size = @models[:article][:body].size
-      if @models[:article][:owner].blank?
-        @models[:article][:owner] =
-          if @models[:article][:attributions].blank?
-            @resource.name
-          else
-            sep = "[#{@models[:article][:attribution_sep] || '|;'}]"
-            @models[:article][:attributions].split(/#{sep}\s*/).join('; ')
-          end
-      end
+      # TODO: we should check if the owner is blank, and if it is, check that the license allows it. If not, ignore the
+      # entire record.
+
+      # Commenting this out for now since we're having trouble with bogus owners.
+      # if @models[:article][:owner].blank?
+      #   @models[:article][:owner] =
+      #     if @models[:article][:attributions].blank?
+      #       @resource.name
+      #     else
+      #       sep = "[#{@models[:article][:attribution_sep] || '|;'}]"
+      #       @models[:article][:attributions].split(/#{sep}\s*/).join('; ')
+      #     end
+      # end
       build_references(:article, ArticlesReference)
       build_attributions(Article, @models[:article])
       build_sections(@models[:article].delete(:section_value))
