@@ -124,15 +124,15 @@ class NameParser
       result['details'].each do |hash|
         hash.each do |k, v|
           k = k.underscore.downcase # Looks like the format changed from this_style to thisStyle; change it back!
-          next if k == 'annotationIdentification'
+          next if k == 'annotation_identification'
           next if k == 'ignored'
-          if k == 'infraspecificEpithets'
-            attributes['infraspecificEpithet'] = v.map { |i| i['value'] }.join(' ; ')
+          if k == 'infraspecific_epithets'
+            attributes['infraspecific_epithet'] = v.map { |i| i['value'] }.join(' ; ')
             v.each do |i|
               add_authorship(authorships, i)
             end
           else
-            attributes[k] = v['value']
+            attributes[k] = Array(v).map { |i| i['value'] }.join(' ; ')
             add_authorship(authorships, v)
           end
         end
