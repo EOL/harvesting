@@ -124,10 +124,10 @@ class NameParser
       result['details'].each do |hash|
         hash.each do |k, v|
           k = k.underscore.downcase # Looks like the format changed from this_style to thisStyle; change it back!
-          next if k == 'annotation_identification'
+          next if k == 'annotationIdentification'
           next if k == 'ignored'
-          if k == 'infraspecific_epithets'
-            attributes['infraspecific_epithet'] = v.map { |i| i['value'] }.join(' ; ')
+          if k == 'infraspecificEpithets'
+            attributes['infraspecificEpithet'] = v.map { |i| i['value'] }.join(' ; ')
             v.each do |i|
               add_authorship(authorships, i)
             end
@@ -138,24 +138,28 @@ class NameParser
         end
       end
     end
-    if result.key?('canonical_name') || result.key?('canonicalName')
-      canonical = result['canonical_name'] || result['canonicalName']
+    if result.key?('canonicalName')
+      canonical = result['canonicalName']
       canon =
         if canonical.is_a?(String)
           canonical
         elsif canonical.is_a?(Hash)
-          if canonical.key?('value_ranked')
-            canonical['value_ranked']
+          if canonical.key?('valueRanked')
+            canonical['valueRanked']
           elsif canonical.key?('value')
             canonical['value']
           elsif canonical.key?('extended')
             canonical['extended']
+          elsif canonical.key?('simple')
+            canonical['simple']
+          elsif canonical.key?('full')
+            canonical['full']
           end
         end
     end
     if result['parsed']
-      warns = if result.key?('quality_warnings') || result.key?('qualityWarnings')
-        (result['quality_warnings'] || result['qualityWarnings']).map { |a| a[1] }.join('; ')
+      warns = if result.key?('qualityWarnings')
+        result['qualityWarnings'].map { |a| a[1] }.join('; ')
       end
       quality = result['quality'] ? result['quality'].to_i : 0
       norm = result['normalized'] ? result['normalized'] : nil
@@ -193,11 +197,11 @@ class NameParser
     hash ||= {}
     if hash.key?('authorship')
       value = hash['authorship']['value']
-      if hash['authorship'].key?('basionym_authorship')
-        authors = hash['authorship']['basionym_authorship']['authors']
+      if hash['authorship'].key?('basionymAuthorship')
+        authors = hash['authorship']['basionymAuthorship']['authors']
         first = authors.first # We only need one for et. al
-        year = hash['authorship']['basionym_authorship']['year']['value'] if
-          hash['authorship']['basionym_authorship'].key?('year')
+        year = hash['authorship']['basionymAuthorship']['year']['value'] if
+          hash['authorship']['basionymAuthorship'].key?('year')
       end
     end
     authorships << { value: value, first_author: first, year: year, authors: authors }

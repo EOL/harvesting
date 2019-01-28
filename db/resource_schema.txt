@@ -1,0 +1,163 @@
+articles:
+  string:   guid (calculated)
+  string:   resource_pk
+  string:   language_code_verbatim
+  integer:  resource_id
+  integer:  harvest_id
+  integer:  license_id (normalized)
+  integer:  location_id (normalized)
+  integer:  bibliographic_citation_id (normalized)
+  text:     owner
+  string:   name
+  string:   source_url
+  text:     body
+  string:   node_resource_pk
+  string:   reference_pks
+  string:   attribution_pks
+  string:   sections
+
+associations:
+  integer:  resource_id
+  integer:  harvest_id
+  integer:  predicate_term_id (normalized)
+  integer:  sex_term_id  (normalized)
+  integer:  lifestage_term_id  (normalized)
+  string:   resource_pk
+  string:   occurrence_resource_pk
+  string:   target_occurrence_resource_pk
+  text:     source
+  string:   reference_pks
+  [ + metadata ]
+
+attributions:
+  integer:  resource_id
+  integer:  harvest_id
+  string:   resource_pk
+  text:     name
+  string:   email
+  text:     other_info
+  string:   role
+  string:   url
+
+bibliographic_citations:
+  text:     body
+  string:   resource_pk
+  integer:  harvest_id
+  integer:  resource_id
+
+identifiers:
+  integer: resource_id
+  integer: harvest_id
+  string:  identifier
+  string:  node_resource_pk
+
+languages:
+  string: code
+  string: group_code
+
+licenses:
+  string:   name
+  string:   source_url
+  string:   icon_url
+  boolean:  can_be_chosen_by_partners
+
+links:
+  string:   guid
+  string:   resource_pk
+  string:   language_code_verbatim
+  integer:  resource_id
+  integer:  harvest_id
+  string:   name
+  string:   source_url
+  text:     description
+  string:   sections
+
+locations:
+  string:   literal
+
+media:
+  string:   guid
+  string:   resource_pk
+  string:   node_resource_pk
+  string:   unmodified_url
+  string:   name_verbatim
+  string:   source_page_url
+  string:   source_url
+  string:   rights_statement
+  string:   usage_statement
+  string:   bibliographic_citation_pk
+  string:   language_code_verbatim
+  integer:  subclass
+  integer:  resource_id
+  integer:  harvest_id
+  integer:  license_id (normalized)
+  integer:  location_id (normalized)
+  integer:  bibliographic_citation_id (normalized)
+  text:     owner
+  text:     description_verbatim
+  text:     derived_from
+  string:   sections
+  string:   reference_pks
+
+nodes:
+  integer:  resource_id
+  integer:  harvest_id
+  integer:  landmark
+  string:   taxonomic_status_verbatim
+  string:   resource_pk
+  string:   parent_resource_pk
+  string:   further_information_url
+  string:   rank_verbatim
+  text:     scientific_name_verbatim
+  string:   reference_pks
+  [ + ancestors ]
+
+occurrences:
+  integer: harvest_id
+  string:  resource_pk
+  string:  node_resource_pk
+  string:  sex_term_id (normalized)
+  string:  lifestage_term_id (normalized)
+  integer: resource_id
+  [ + metadata ]
+
+references:
+  text:     body
+  integer:  resource_id
+  integer:  harvest_id
+  string:   resource_pk
+  string:   url
+  string:   doi
+
+traits:
+  integer:  resource_id
+  integer:  harvest_id
+  integer:  predicate_term_id (normalized)
+  integer:  object_term_id (normalized)
+  integer:  units_term_id (normalized)
+  integer:  statistical_method_term_id (normalized)
+  integer:  sex_term_id (normalized)
+  integer:  lifestage_term_id (normalized)
+  boolean:  of_taxon
+  string:   occurrence_resource_pk
+  string:   assoc_resource_pk
+  string:   parent_pk
+  string:   resource_pk
+  string:   measurement
+  text:     literal
+  text:     source
+  string:   normal_units_uri (normalized)
+  string:   normal_measurement
+  string:   reference_pks
+  [ + metadata ]
+
+vernaculars:
+  integer:  resource_id
+  integer:  harvest_id
+  string:   node_resource_pk
+  text:     verbatim
+  string:   language_code_verbatim
+  string:   locality
+  text:     remarks
+  text:     source
+  boolean:  is_preferred
