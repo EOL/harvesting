@@ -132,7 +132,7 @@ class NameParser
               add_authorship(authorships, i)
             end
           else
-            attributes[k] = Array(v).map { |i| i['value'] }.join(' ; ')
+            attributes[k] = v['value']
             add_authorship(authorships, v)
           end
         end
