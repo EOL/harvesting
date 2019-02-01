@@ -96,14 +96,23 @@ class NameParser
     end
   end
 
-  def run_parser_on_names(verbatims)
+  def request_parser(body)
     uri = URI('https://parser.globalnames.org/api')
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
-    request.body = Array(verbatims).to_json
+    request.body = body
     response = http.request(request)
     response.body.force_encoding('UTF-8')
+  end
+
+  def ping_parser
+    response = request_parser('')
+    raise "GN Parser unavailble: #{response}" unless response.match?(/^\[\]/)
+  end
+
+  def run_parser_on_names(verbatims)
+    request_parser(Array(verbatims).to_json)
   end
 
   # Examples of the types of results you will get may be found by doing:
