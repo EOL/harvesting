@@ -25,6 +25,7 @@ module Store
         'image' => :image,
         'video' => :video,
         'sound' => :sound,
+        'map' => :map_image,
         'map_image' => :map_image,
         'map_js' => :map_js,
         'http://purl.org/dc/dcmitype/stillimage' => :image,
@@ -58,7 +59,9 @@ module Store
         'audio/ogg' => :ogg, # NOTE: this one is "best"
         'application/ogg' => :ogg,
         'audio/wav' => :wav,
-        'text/html' => nil, # Nothing needed; it's just an article!
+        'text/html' => nil, # Nothing needed; this is just an article!
+        'map' => :map_image,
+        'map_image' => :map_image
       }
       norm_val = val.downcase
       type = if @media_subtype_mappings.key?(norm_val)
