@@ -48,6 +48,9 @@ module Store
     # http://rs.tdwg.org/audubon_core/subtype Note that we've "merged" format AND subtype into one field, here, as I
     # didn't see a need to store them both (there's no overlap)
     def to_media_subtype(field, val)
+      @models[:medium] ||= {}
+      # Skip it if we already have a value and it's more specific than "jpg"
+      return if @models[:medium].key?(:format) && @models[:medium][:format] != :jpg
       @media_subtype_mappings ||= {
         'image/jpeg' => :jpg,
         'image/gif' => :jpg, # It will be converted.
@@ -74,12 +77,7 @@ module Store
                @missing_media_types[norm_val] = true
                :jpg
              end
-      @models[:medium][:format] =
-        if @models[:medium].key?(:format)
-          type if @models[:medium][:format] == :jpg # JPG is the only one we can replace (with more specific values).
-        else
-          type
-        end
+      @models[:medium][:format] = type
     end
 
     def to_section(field, val)
