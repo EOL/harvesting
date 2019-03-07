@@ -141,7 +141,12 @@ class NameParser
               add_authorship(authorships, i)
             end
           else
-            attributes[k] = v['value']
+            begin
+              attributes[k] = v['value']
+            rescue => e
+              @harvest.log("ERROR: no '#{k}' value for attributes: #{v.inspect}", cat: :errors)
+              raise e
+            end
             add_authorship(authorships, v)
           end
         end
