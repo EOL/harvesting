@@ -98,7 +98,9 @@ class Resource
       already_exists = File.exist?("#{path}/meta.xml") && @resource.formats.any?
       dir = DropDir.unpack_file(file)
       if already_exists
-        log('...Resource already exists; new data is now in place. You may harvest it.')
+        log('...Resource already exists; re-reading XML...')
+        @resource.re_read_xml
+        log('...new data is now in place. You may harvest it.')
       else
         # TODO: Find Excel and write a .from_excel method much like .from_xml...
         if File.exist?("#{dir}/meta.xml")
