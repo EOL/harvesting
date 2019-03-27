@@ -3,7 +3,7 @@
 First draft, created Mar 2019, is just meant as a loose list of the kinds of queries that will be needed, not a
 full-fledged list of functions, their parameters, and the expected return values.
 
-## "Obvious" functionality
+## Basic functionality
 
 - Writing new records to the database (preferably in bulk)
 - Querying a class by resource_id and getting all results (probably in pages of variable size)
@@ -11,36 +11,30 @@ full-fledged list of functions, their parameters, and the expected return values
 - Updating instances by resource_id and resource_pk, setting a variable set of fields/values.
 - Getting simple counts based on queries (see below), rather than the results
 
-## Methods
-
-### resolve_keys
-
-- find nodes that have parent_resource_pk values that do NOT have a matching resource_pk
-- find scientific_names that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find vernaculars that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find identifiers that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find media that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find articles that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find articles that have section values that do NOT have a matching section
-- find occurrences that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find traits that have occurrence ID values that do NOT have a matching occurrence.resource_pk
-- find associations that have occurrence ID values that do NOT have a matching occurrence.resource_pk
-- find attributions that have node_resource_pk values that do NOT have a matching nodes.resource_pk
-- find ALL reference IDs (on all classes) that do NOT have a matching references.resource_pk
-- find ALL bibliographic citation IDs (on all classes) that do NOT have a matching bibliographic_citations.resource_pk
-- find ALL attribution IDs (on all classes) that do NOT have a matching attributions.resource_pk
-
-There's some question about how we want to handle the rows identified by these results. IDEALLY, we would be able to
-flag them and skip them from harvest, but that *could* get complicated as relationships can be nested. Warrants
-discussion.
-
-## Other queries
-
-These are part of the harvesting process but didn't fall neatly into a function (because we need to compute things on
-the results).
+### Important Queries
 
 - Scientific Names where canonical is nil
 - Traits that have a measurement with units; i.e.: where measurement IS NOT NULL AND units_term_id IS NOT NULL
+
+## Referential Integrity
+
+The following referential integrity must be preserved; rows that fail one of these tests should be ignored, and added to
+a list of "warnings" for the harvest that an admin or master curator can read and address.
+
+- nodes that have parent_resource_pk values that do NOT have a matching resource_pk
+- scientific_names that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- vernaculars that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- identifiers that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- media that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- articles that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- articles that have section values that do NOT have a matching section
+- occurrences that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- traits that have occurrence ID values that do NOT have a matching occurrence.resource_pk
+- associations that have occurrence ID values that do NOT have a matching occurrence.resource_pk
+- attributions that have node_resource_pk values that do NOT have a matching nodes.resource_pk
+- ALL reference IDs (on all classes) that do NOT have a matching references.resource_pk
+- ALL bibliographic citation IDs (on all classes) that do NOT have a matching bibliographic_citations.resource_pk
+- ALL attribution IDs (on all classes) that do NOT have a matching attributions.resource_pk
 
 ## The publishing dataset classes
 
