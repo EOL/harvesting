@@ -99,39 +99,51 @@ class Medium < ActiveRecord::Base
     "#{resource_id}.#{resource_pk&.tr('^-_A-Za-z0-9', '_')}"
   end
 
+  def ensure_dir_exists
+    unless Dir.exist?(dir)
+      FileUtils.mkdir_p(dir)
+      FileUtils.chmod(0o755, dir)
+    end
+  end
+
+  def sanitized_source_url
+    @sanitized_source_url ||= source_url.sub(/^https/, 'http')
+  end
+
+  def fix_encoding_for_sanitized_source_url
+    @sanitized_source_url = fix_encoding(sanitized_source_url)
+  end
+
   def download_and_resize
     raw = nil
     image = nil
     begin
-      unless Dir.exist?(dir)
-        FileUtils.mkdir_p(dir)
-        FileUtils.chmod(0o755, dir)
-      end
-      orig_filename = "#{dir}/#{basename}.jpg"
+      ensure_dir_exists
+
       # TODO: we really should use https. It will be the only thing availble, at some point...
-      get_url = source_url.sub(/^https/, 'http')
-      if get_url.match?(/\.svg\b/)
+
+      if sanitized_source_url.match?(/\.svg\b/)
         mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
-          "(#{get_url}). Aborting."
+          "(#{sanitized_source_url}). Aborting."
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'empty'
-      elsif get_url.match?(/\.ogv\b/)
+      elsif sanitized_source_url.match?(/\.ogv\b/)
         mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
-          "*video* (#{get_url}). Aborting."
+          "*video* (#{sanitized_source_url}). Aborting."
         Delayed::Worker.logger.error(mess)
         harvest.log(mess, cat: :errors)
         raise 'empty'
       end
       require 'open-uri'
-      uri = URI.parse(URI.encode(get_url))
+      uri = URI.parse(URI.encode(sanitized_source_url))
       attempts = 0
       begin
         raw = uri.open(progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
       rescue URI::InvalidURIError => e
         extend EncodingFixer
-        puts "Unable to read #{get_url}"
-        get_url = fix_encoding(get_url)
+        puts "Unable to read #{sanitized_source_url}"
+        fix_encoding_for_sanitized_source_url
         puts "Re-trying with #{get_url}"
         raise e if attempts.positive?
         attempts += 1
@@ -184,6 +196,7 @@ class Medium < ActiveRecord::Base
       available_sizes = {}
       image.format = 'JPEG'
       image.auto_orient
+      orig_filename = "#{dir}/#{basename}.jpg"
       if File.exist?(orig_filename)
         mess = "#{orig_filename} already exists. Skipping."
         Delayed::Worker.logger.warn(mess)

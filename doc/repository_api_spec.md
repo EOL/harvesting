@@ -59,7 +59,7 @@ a list of "warnings" for the harvest that an admin or master curator can read an
 - resource_pk
 - source_url
 - canonical_form
-- scientific_name
+- scientific_name (really this is the italicized version of the scientific name)
 - has_breadcrumb
 - rank
 - landmark
@@ -68,7 +68,7 @@ a list of "warnings" for the harvest that an admin or master curator can read an
 
 - value
 - resource_pk
-- content_resource_fk (The id of the content to which the attribution in attached)
+- content_resource_fk (The id of the content to which the attribution is attached)
 - content_type
 - role
 - url
@@ -87,6 +87,8 @@ a list of "warnings" for the harvest that an admin or master curator can read an
 
 ### Pages
 
+I'm assuming that only "new" pages (created by this resource) matters here.
+
 - id
 - articles_count
 - nodes_count
@@ -97,7 +99,6 @@ a list of "warnings" for the harvest that an admin or master curator can read an
 - links_count
 - maps_count
 - page_contents_count
-- species_count
 
 ### Identifiers
 
