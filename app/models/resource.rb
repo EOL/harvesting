@@ -249,7 +249,7 @@ class Resource < ActiveRecord::Base
 
   def download_missing_images
     return no_more_images_to_download if media.published.missing.count.zero?
-    count = Medium.download_and_resize(media.published.missing.limit(25))
+    count = Medium.download_and_prep(media.published.missing.limit(25))
     return no_more_images_to_download if count.zero?
     delay_more_downloads
   end

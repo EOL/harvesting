@@ -37,11 +37,11 @@ class Medium < ActiveRecord::Base
           img[f].sub!(bad_name, good_name) unless img[f].nil?
         end
         img.save
-        img.download_and_resize
+        img.download_and_prep
       end
     end
 
-    def download_and_resize(images)
+    def download_and_prep(images)
       count = 0
       images.select('id').map(&:id).each do |img_id|
         next if download_enqueued?(img_id)
@@ -111,115 +111,29 @@ class Medium < ActiveRecord::Base
   end
 
   def fix_encoding_for_sanitized_source_url
+    extend EncodingFixer
+    bad_url = sanitized_source_url
     @sanitized_source_url = fix_encoding(sanitized_source_url)
+    raise "Unable to resolve URL #{sanitized_source_url}" if bad_url == sanitized_source_url
   end
 
-  def download_and_resize
+  def download_and_prep
     raw = nil
     image = nil
     begin
       ensure_dir_exists
-
-      # TODO: we really should use https. It will be the only thing availble, at some point...
-
-      if sanitized_source_url.match?(/\.svg\b/)
-        mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
-          "(#{sanitized_source_url}). Aborting."
-        Delayed::Worker.logger.error(mess)
-        harvest.log(mess, cat: :errors)
-        raise 'empty'
-      elsif sanitized_source_url.match?(/\.ogv\b/)
-        mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
-          "*video* (#{sanitized_source_url}). Aborting."
-        Delayed::Worker.logger.error(mess)
-        harvest.log(mess, cat: :errors)
-        raise 'empty'
-      end
-      require 'open-uri'
-      uri = URI.parse(URI.encode(sanitized_source_url))
-      attempts = 0
-      begin
-        raw = uri.open(progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
-      rescue URI::InvalidURIError => e
-        extend EncodingFixer
-        puts "Unable to read #{sanitized_source_url}"
-        fix_encoding_for_sanitized_source_url
-        puts "Re-trying with #{get_url}"
-        raise e if attempts.positive?
-        attempts += 1
-        retry
-      rescue Net::ReadTimeout
-        mess = "Timed out reading #{get_url} for Medium ##{self[:id]}"
-        harvest.log(mess, cat: :errors)
-        raise Net::ReadTimeout, mess
-      rescue IOError => e
-        mess = "File too large reading #{get_url} for Medium ##{self[:id]}"
-        harvest.log(mess, cat: :errors)
-        raise e
-      end
-      if raw.nil?
-        mess = "#{get_url} was empty. Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
-        Delayed::Worker.logger.error(mess)
-        harvest.log(mess, cat: :errors)
-        raise 'empty'
-      end
-      content_type = raw.content_type
-      unless (content_type.match?(/^image/i) || content_type.match?(%r{application/octet-stream})) &&
-             (!content_type.match?(/^svg/i))
-        # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
-        # clearer.
-        mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
-          "(#{resource.id}), PK: #{resource_pk}"
-        Delayed::Worker.logger.error(mess)
-        harvest.log(mess, cat: :errors)
-        raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
-      end
-      begin
-        # NOTE: #first because no animations are supported!
-        image = if raw.respond_to?(:to_io)
-                  Image.read(raw.to_io).first
-                else
-                  raw.rewind
-                  Image.from_blob(raw.read).first
-                end
-      rescue Magick::ImageMagickError => e
-        mess = "Couldn't parse image #{get_url} for Medium ##{self[:id]} (#{e.message})"
-        Delayed::Worker.logger.error(mess)
-        harvest.log(mess, cat: :errors)
-        raise 'unparsable'
-      ensure
-        raw = nil # Hand it to GC.
-      end
+      abort_if_filetype_unreadable
+      raw = download_raw_data
       d_time = Time.now
-      orig_w = image.columns
-      orig_h = image.rows
-      available_sizes = {}
-      image.format = 'JPEG'
-      image.auto_orient
-      orig_filename = "#{dir}/#{basename}.jpg"
-      if File.exist?(orig_filename)
-        mess = "#{orig_filename} already exists. Skipping."
-        Delayed::Worker.logger.warn(mess)
-        harvest.log(mess, cat: :warns)
-      else
-        image.write(orig_filename)
-        FileUtils.chmod(0o644, orig_filename)
-      end
-      Medium.sizes.each do |size|
-        available = crop_image(image, size)
-        available_sizes[size] = available if available
-      end
-      available_sizes[:original] = "#{orig_w}x#{orig_h}"
-      unmodified_url = "#{default_base_url}.jpg"
-      update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
-                        unmodified_url: unmodified_url, base_url: default_base_url)
-      resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
-      # Taking this one out... it was WAY too noisy.
-      # harvest.log("download_and_resize completed for Medium.find(#{self[:id]}) /#{base_url}.260x190.jpg", cat: :downloads)
+      # TODO: This is where we need to branch out and handle other media types...
+      abort_if_media_is_unreadable(raw.content_type)
+      image = read_image(raw)
+      raw = nil # Ensure it's not taking up memory anymore.
+      prep_image(image)
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-      harvest.log("download_and_resize FAILED for Medium.find(#{self[:id]}) [#{e.backtrace.first}]: #{e.message[0..1000]}", cat: :downloads)
+      harvest.log("download_and_prep FAILED for Medium.find(#{self[:id]}) [#{e.backtrace.first}]: #{e.message[0..1000]}", cat: :downloads)
       return nil
     ensure
       raw = nil
@@ -242,6 +156,123 @@ class Medium < ActiveRecord::Base
     name.blank? ? "#{subclass.titleize} of #{node.canonical}" : name
   end
 
+  def download_raw_data
+    require 'open-uri'
+    uri = URI.parse(URI.encode(sanitized_source_url))
+    attempts = 0
+    begin
+      raw = uri.open(progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
+    rescue URI::InvalidURIError => e
+      raise e if attempts.positive?
+      fix_encoding_for_sanitized_source_url
+      attempts += 1
+      retry
+    rescue Net::ReadTimeout
+      mess = "Timed out reading #{get_url} for Medium ##{self[:id]}"
+      harvest.log(mess, cat: :errors)
+      raise Net::ReadTimeout, mess
+    rescue IOError => e
+      mess = "File too large reading #{get_url} for Medium ##{self[:id]}"
+      harvest.log(mess, cat: :errors)
+      raise e
+    end
+    abort_empty_download if raw.nil?
+    raw
+  end
+
+  def abort_empty_download
+    mess = "#{get_url} was empty. Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
+    Delayed::Worker.logger.error(mess)
+    harvest.log(mess, cat: :errors)
+    raise 'empty'
+  end
+
+  def abort_if_filetype_unreadable
+    if sanitized_source_url.match?(/\.svg\b/)
+      mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
+        "(#{sanitized_source_url}). Aborting."
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
+      raise 'empty'
+    elsif sanitized_source_url.match?(/\.ogv\b/)
+      mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
+        "*video* (#{sanitized_source_url}). Aborting."
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
+      raise 'empty'
+    end
+  end
+
+  def abort_if_media_is_unreadable(content_type)
+    unless (content_type.match?(/^image/i) || content_type.match?(%r{application/octet-stream})) &&
+           (!content_type.match?(/^svg/i))
+      # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
+      # clearer.
+      mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
+        "(#{resource.id}), PK: #{resource_pk}"
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
+      raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
+    end
+  end
+
+  # TODO: extract.
+  def read_image(raw)
+    # NOTE: #first because no animations are supported!
+    begin
+      image = get_image(raw)
+    rescue Magick::ImageMagickError => e
+      mess = "Couldn't parse image #{get_url} for Medium ##{self[:id]} (#{e.message})"
+      Delayed::Worker.logger.error(mess)
+      harvest.log(mess, cat: :errors)
+      raise 'unparsable'
+    ensure
+      raw = nil # Hand it to GC.
+    end
+    image
+  end
+
+  # TODO: extract.
+  def get_image(raw)
+    if raw.respond_to?(:to_io)
+      Image.read(raw.to_io).first
+    else
+      raw.rewind
+      Image.from_blob(raw.read).first
+    end
+  end
+
+  # TODO: extract.
+  def prep_image(image)
+    orig_w = image.columns
+    orig_h = image.rows
+    image.format = 'JPEG'
+    image.auto_orient
+    store_original(image)
+    available_sizes = create_alternative_sizes(image, original: "#{orig_w}x#{orig_h}")
+    unmodified_url = "#{default_base_url}.jpg"
+    update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
+                      unmodified_url: unmodified_url, base_url: default_base_url)
+    resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
+  end
+
+  def store_original(image)
+    orig_filename = "#{dir}/#{basename}.jpg"
+    unless File.exist?(orig_filename)
+      image.write(orig_filename)
+      FileUtils.chmod(0o644, orig_filename)
+    end
+  end
+
+  def create_alternative_sizes(image, available_sizes = {})
+    Medium.sizes.each do |size|
+      available = crop_image(image, size)
+      available_sizes[size] = available if available
+    end
+    available_sizes
+  end
+
+  # TODO: extract.
   def crop_image(image, size)
     filename = "#{dir}/#{basename}.#{size}.jpg"
     if File.exist?(filename)
@@ -267,6 +298,7 @@ class Medium < ActiveRecord::Base
     "#{new_w}x#{new_h}"
   end
 
+  # TODO: extract.
   def get_image_size(filename)
     this_image = Image.read(filename).first
     this_w = this_image.columns

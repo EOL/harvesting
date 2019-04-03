@@ -75,7 +75,7 @@ end
 
 DownloadMediumJob = Struct.new(:medium_id) do
   def perform
-    Medium.find(medium_id).download_and_resize
+    Medium.find(medium_id).download_and_prep
   end
 
   def queue_name
