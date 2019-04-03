@@ -36,6 +36,12 @@ a list of "warnings" for the harvest that an admin or master curator can read an
 - ALL bibliographic citation IDs (on all classes) that do NOT have a matching bibliographic_citations.resource_pk
 - ALL attribution IDs (on all classes) that do NOT have a matching attributions.resource_pk
 
+## Notes
+
+- I did not consider queries involved in flattening hierarchy, because that's a calculated process and is probably more natural to store in MySQL.
+- I did not consider queries involved in the building of the ElasticSearch index, because I *think* we want to keep that in ES. It's really mostly based on flattened hierarchies.
+- I did not consider queries involved in names matching, because that only *reads* the flattened hierarchies (and the ES index). It *writes* to the repository, but that's covered by the "obvious queries."
+
 ## The publishing dataset classes
 
 ### Vernaculars
@@ -237,9 +243,3 @@ The following fields are populated by the global names parser process:
 - lifestage
 - statistical_method
 - source
-
-## Notes
-
-- Skipping flattening hierarchy, because that's a calculated process and is probably more natural to store in MySQL.
-- Skipping the building of the ElasticSearch index, because I *think* we want to keep that in ES. It's really mostly based on flattened hierarchies.
-- Skipping names matching, because that only *reads* the flattened hierarchies (and the ES index). It *writes* to the repository, but that's covered by the "obvious queries."
