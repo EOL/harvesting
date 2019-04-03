@@ -135,11 +135,11 @@ The following fields are populated by the global names parser process:
 - uninomial
 - authorship
 - publication
-- parse_quality
+- parse_quality (number)
 - year
-- hybrid
-- surrogate
-- virus
+- hybrid (boolean)
+- surrogate (boolean)
+- virus (boolean)
 
 ### Articles
 
@@ -156,8 +156,8 @@ The following fields are populated by the global names parser process:
 ### Media
 
 - page_id
-- subclass
-- format
+- subclass (must be one of: image video sound map_image js_map)
+- format (must be one of: jpg youtube flash vimeo mp3 ogg wav mp4)
 - owner
 - guid
 - resource_pk
