@@ -57,7 +57,7 @@ a list of "warnings" for the harvest that an admin or master curator can read an
 - parent_resource_pk
 - in_unmapped_area
 - resource_pk
-- source_url
+- source_url (this is calculated from the node's PK and the *resource's* "pk_url" attribute, q.v.: Node#source_url)
 - canonical_form
 - scientific_name (really this is the italicized version of the scientific name)
 - has_breadcrumb
@@ -94,11 +94,12 @@ I'm assuming that only "new" pages (created by this resource) matters here.
 - nodes_count
 - vernaculars_count
 - scientific_names_count
+- media_count
 - articles_count
 - referents_count
-- links_count
+- links_count (unimplemented)
 - maps_count
-- page_contents_count
+- page_contents_count (effectively a sum of media, articles, links, and maps)
 
 ### Identifiers
 
@@ -117,20 +118,23 @@ Note that, again, I think these probably live in the MySQL database.
 
 - page_id
 - canonical_form
+- remarks
+- verbatim
 - taxonomic_status
 - is_preferred
 - node_resource_pk
 - attribution
+
+The following fields are populated by the global names parser process:
+
 - italicized
 - genus
 - specific_epithet
 - infraspecific_epithet
 - infrageneric_epithet
 - uninomial
-- verbatim
 - authorship
 - publication
-- remarks
 - parse_quality
 - year
 - hybrid
