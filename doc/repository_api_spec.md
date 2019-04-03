@@ -164,25 +164,24 @@ The following fields are populated by the global names parser process:
 - source_url
 - name
 - description
-- unmodified_url
-- base_url
+- unmodified_url (this is calculated by the harvester)
+- base_url (this is calculated by the harvester)
 - source_page_url
 - rights_statement
 - usage_statement
 - name
 - description
-- base_url
 - license
 - language
 
 ### Adding references
 
-- some kind of identifier
+- reference_id
 - body
 
 ### Adding referents
 
-- some kind of reference identifier (see above)
+- reference_id (see above)
 - parent_type
 - parent_id
 - referent_id
@@ -190,25 +189,26 @@ The following fields are populated by the global names parser process:
 ### Image Info
 
 - resource_pk
-- w
-- h
-- downloaded_at
+- w (integer)
+- h (integer)
+- downloaded_at (datetime)
 - unmodified_url
 - base_url
 - original_size
 - large_size = sizes['580x360']
 - medium_size = sizes['260x190']
 - small_size = sizes['98x68']
-- crop_x = medium.crop_x_pct
-- crop_y = medium.crop_y_pct
-- crop_w = medium.crop_w_pct
+- crop_x = medium.crop_x_pct (integer)
+- crop_y = medium.crop_y_pct (integer)
+- crop_w = medium.crop_w_pct (integer)
 
 ### Traits
 
 ...note that V3 currently breaks up traits more than BA has been proposing for the repository DB, so this may require more work to get "right:"
 
-- eol_pk page_id
-- scientific_name
+- eol_pk (e.g.: "Trait-[database id]" or "Association-[database id]")
+- page_id
+- scientific_name (italicized version of the name from the attached node)
 - resource_pk
 - predicate
 - sex
@@ -216,18 +216,18 @@ The following fields are populated by the global names parser process:
 - statistical_method
 - source
 - object_page_id
-- target_scientific_name
+- target_scientific_name (italicized version of the name from the attached association node)
 - value_uri
-- literal
+- literal (ALWAYS filled with the actual value from the file)
 - measurement
 - units
-- normal_measurement
-- normal_units_uri
+- normal_measurement (calculated IFF there is a "measurement" with "units" that are in a known list that needs conversion)
+- normal_units_uri (calculated IFF there is a "measurement" with "units" that are in a known list that needs conversion)
 
 ### Metadata
 
-- eol_pk
-- trait_eol_pk
+- eol_pk ("Metadata-[database id]")
+- trait_eol_pk (e.g.: "Trait-[database id]" or "Association-[database id]")
 - predicate
 - literal
 - measurement
@@ -236,17 +236,6 @@ The following fields are populated by the global names parser process:
 - sex
 - lifestage
 - statistical_method
-- source
-- (a unique identifier of ANY kind)
-- trait.eol_pk
-- predicate
-- literal
-- measurement
-- object_term
-- units_term
-- sex_term
-- lifestage_term
-- statistical_method_term
 - source
 
 ## Notes
