@@ -129,7 +129,7 @@ class Medium < ActiveRecord::Base
       abort_if_media_is_unreadable(raw.content_type)
       image = read_image(raw)
       raw = nil # Ensure it's not taking up memory anymore.
-      prep_image(image)
+      prep_image(image, d_time)
     rescue => e
       update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
       resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
@@ -243,7 +243,7 @@ class Medium < ActiveRecord::Base
   end
 
   # TODO: extract.
-  def prep_image(image)
+  def prep_image(image, d_time)
     orig_w = image.columns
     orig_h = image.rows
     image.format = 'JPEG'
