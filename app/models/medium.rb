@@ -1,6 +1,4 @@
 class Medium < ActiveRecord::Base
-  include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
-
   belongs_to :resource, inverse_of: :media
   belongs_to :harvest, inverse_of: :media
   belongs_to :node, inverse_of: :media
@@ -118,38 +116,26 @@ class Medium < ActiveRecord::Base
   end
 
   def download_and_prep
-    raw = nil
-    image = nil
     begin
       ensure_dir_exists
       abort_if_filetype_unreadable
       raw = download_raw_data
-      d_time = Time.now
       # TODO: This is where we need to branch out and handle other media types...
       abort_if_media_is_unreadable(raw.content_type)
-      image = read_image(raw)
-      raw = nil # Ensure it's not taking up memory anymore.
-      prep_image(image, d_time)
+      prepper = ImagePrepper.new(self, raw)
+      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC).
+      prepper.prep_medium
     rescue => e
-      update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
-      resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-      harvest.log("download_and_prep FAILED for Medium.find(#{self[:id]}) [#{e.backtrace.first}]: #{e.message[0..1000]}", cat: :downloads)
-      return nil
-    ensure
-      raw = nil
-      image&.destroy!
-      image = nil
-      # And, rudely, we delete anything open-uri may have left behind that's older than 10 minutes:
-      delete_tmp_files_older_than_10_min('open-uri')
-      delete_tmp_files_older_than_10_min('magic')
+      return fail_from_download_and_prep(e)
     end
   end
 
-  # TODO: This belongs in another class.
-  def delete_tmp_files_older_than_10_min(prefix)
-    if Dir.glob("#{ENV['TMPDIR'] || '/tmp'}/#{prefix}*").any?
-      `find #{ENV['TMPDIR'] || '/tmp'}/#{prefix}* -type f -mmin +10 -exec rm {} \\;`
-    end
+  def fail_from_download_and_prep(e)
+    update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
+    resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
+    harvest.log("download_and_prep FAILED for Medium.find(#{self[:id]}) [#{e.backtrace.first}]: #{e.message[0..1000]}",
+      cat: :downloads)
+    nil
   end
 
   def safe_name
@@ -214,95 +200,5 @@ class Medium < ActiveRecord::Base
       harvest.log(mess, cat: :errors)
       raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
     end
-  end
-
-  # TODO: extract.
-  def read_image(raw)
-    # NOTE: #first because no animations are supported!
-    begin
-      image = get_image(raw)
-    rescue Magick::ImageMagickError => e
-      mess = "Couldn't parse image #{get_url} for Medium ##{self[:id]} (#{e.message})"
-      Delayed::Worker.logger.error(mess)
-      harvest.log(mess, cat: :errors)
-      raise 'unparsable'
-    ensure
-      raw = nil # Hand it to GC.
-    end
-    image
-  end
-
-  # TODO: extract.
-  def get_image(raw)
-    if raw.respond_to?(:to_io)
-      Image.read(raw.to_io).first
-    else
-      raw.rewind
-      Image.from_blob(raw.read).first
-    end
-  end
-
-  # TODO: extract.
-  def prep_image(image, d_time)
-    orig_w = image.columns
-    orig_h = image.rows
-    image.format = 'JPEG'
-    image.auto_orient
-    store_original(image)
-    available_sizes = create_alternative_sizes(image, original: "#{orig_w}x#{orig_h}")
-    unmodified_url = "#{default_base_url}.jpg"
-    update_attributes(sizes: JSON.generate(available_sizes), w: orig_w, h: orig_h, downloaded_at: d_time,
-                      unmodified_url: unmodified_url, base_url: default_base_url)
-    resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
-  end
-
-  def store_original(image)
-    orig_filename = "#{dir}/#{basename}.jpg"
-    unless File.exist?(orig_filename)
-      image.write(orig_filename)
-      FileUtils.chmod(0o644, orig_filename)
-    end
-  end
-
-  def create_alternative_sizes(image, available_sizes = {})
-    Medium.sizes.each do |size|
-      available = crop_image(image, size)
-      available_sizes[size] = available if available
-    end
-    available_sizes
-  end
-
-  # TODO: extract.
-  def crop_image(image, size)
-    filename = "#{dir}/#{basename}.#{size}.jpg"
-    if File.exist?(filename)
-      mess = "#{filename} already exists. Skipping."
-      Delayed::Worker.logger.warn(mess)
-      harvest.log(mess, cat: :warns)
-      return get_image_size(filename)
-    end
-    (w, h) = size.split('x').map(&:to_i)
-    this_image =
-      if w == h
-        image.resize_to_fill(w, h).crop(NorthWestGravity, w, h)
-      else
-        image.resize_to_fit(w, h)
-      end
-    new_w = this_image.columns
-    new_h = this_image.rows
-    this_image.strip! # Cleans up properties
-    this_image.write(filename) { self.quality = 80 }
-    this_image.destroy! # Reclaim memory.
-    # Note: we *should* honor crops. But none of these will have been cropped (yet), so I am skipping it for now.
-    FileUtils.chmod(0o644, filename)
-    "#{new_w}x#{new_h}"
-  end
-
-  # TODO: extract.
-  def get_image_size(filename)
-    this_image = Image.read(filename).first
-    this_w = this_image.columns
-    this_h = this_image.rows
-    "#{this_w}x#{this_h}"
   end
 end
