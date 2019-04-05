@@ -71,7 +71,7 @@ class ImagePrepper
   end
 
   def store_original
-    orig_filename = "#{dir}/#{basename}.jpg"
+    orig_filename = "#{@medium.dir}/#{@medium.basename}.jpg"
     return if File.exist?(orig_filename)
     @image.write(orig_filename) { self.quality = @our_quality }
     FileUtils.chmod(0o644, orig_filename)
