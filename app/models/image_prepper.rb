@@ -75,7 +75,8 @@ class ImagePrepper
   def store_original
     orig_filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
     return if File.exist?(orig_filename)
-    @image.write(orig_filename) { self.quality = @our_quality }
+    local_quality = @our_quality
+    @image.write(orig_filename) { self.quality = local_quality }
     FileUtils.chmod(0o644, orig_filename)
   end
 
@@ -107,7 +108,8 @@ class ImagePrepper
     new_w = this_image.columns
     new_h = this_image.rows
     this_image.strip! # Cleans up properties
-    this_image.write(filename) { self.quality = @our_quality }
+    local_quality = @our_quality
+    this_image.write(filename) { self.quality = local_quality }
     this_image.destroy! # Reclaim memory.
     # Note: we *should* honor crops. But none of these will have been cropped (yet), so I am skipping it for now.
     FileUtils.chmod(0o644, filename)
