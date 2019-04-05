@@ -1,4 +1,4 @@
-# Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
+#{@ext}# Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
 # versions, resizing it for others, and then storing information about it in the DB.
 class ImagePrepper
   include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
@@ -12,6 +12,7 @@ class ImagePrepper
     # NOTE: you can try changing this to make for faster downloads (smaller values, down to 10) or better representation
     # of the original (higher values, up to 100)
     @our_quality = 60
+    @ext = 'jpg'
     read_image(raw)
   end
 
@@ -64,14 +65,15 @@ class ImagePrepper
     @image.auto_orient
     store_original
     create_alternative_sizes
-    unmodified_url = "#{default_base_url}.jpg"
+    unmodified_url = "#{@medium.default_base_url}.#{@ext}"
     @medium.update_attributes(sizes: JSON.generate(@available_sizes), w: @orig_w, h: @orig_h,
-                              downloaded_at: @downloaded_at, unmodified_url: unmodified_url, base_url: default_base_url)
+                              downloaded_at: @downloaded_at, unmodified_url: unmodified_url,
+                              base_url: @medium.default_base_url)
     @medium.resource.update_attribute(:downloaded_media_count, @medium.resource.downloaded_media_count + 1)
   end
 
   def store_original
-    orig_filename = "#{@medium.dir}/#{@medium.basename}.jpg"
+    orig_filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
     return if File.exist?(orig_filename)
     @image.write(orig_filename) { self.quality = @our_quality }
     FileUtils.chmod(0o644, orig_filename)
@@ -88,7 +90,7 @@ class ImagePrepper
   end
 
   def crop_image(size)
-    filename = "#{@medium.dir}/#{@medium.basename}.#{size}.jpg"
+    filename = "#{@medium.dir}/#{@medium.basename}.#{size}.#{@ext}"
     if File.exist?(filename)
       mess = "#{filename} already exists. Skipping."
       Delayed::Worker.logger.warn(mess)
