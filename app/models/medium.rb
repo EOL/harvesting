@@ -121,9 +121,8 @@ class Medium < ActiveRecord::Base
       abort_if_filetype_unreadable
       raw = download_raw_data
       # TODO: This is where we need to branch out and handle other media types...
-      abort_if_media_is_unreadable(raw.content_type)
-      prepper = ImagePrepper.new(self, raw)
-      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC).
+      prepper = get_prepper(raw)
+      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
       prepper.prep_medium
     rescue => e
       return fail_from_download_and_prep(e)
@@ -180,25 +179,32 @@ class Medium < ActiveRecord::Base
       Delayed::Worker.logger.error(mess)
       harvest.log(mess, cat: :errors)
       raise 'empty'
-    elsif sanitized_source_url.match?(/\.ogv\b/)
-      mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
-        "*video* (#{sanitized_source_url}). Aborting."
-      Delayed::Worker.logger.error(mess)
-      harvest.log(mess, cat: :errors)
-      raise 'empty'
+    # elsif sanitized_source_url.match?(/\.ogv\b/)
+    #   mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
+    #     "*video* (#{sanitized_source_url}). Aborting."
+    #   Delayed::Worker.logger.error(mess)
+    #   harvest.log(mess, cat: :errors)
+    #   raise 'empty'
     end
   end
 
-  def abort_if_media_is_unreadable(content_type)
-    unless (content_type.match?(/^image/i) || content_type.match?(%r{application/octet-stream})) &&
-           (!content_type.match?(/^svg/i))
-      # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
-      # clearer.
-      mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
-        "(#{resource.id}), PK: #{resource_pk}"
-      Delayed::Worker.logger.error(mess)
-      harvest.log(mess, cat: :errors)
-      raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
+  def get_prepper(raw)
+    content_type = raw.content_type
+    @valid_type_res ||= {
+      /^image/ => MediumPrepper::Image,
+      %r{application/octet-stream} => MediumPrepper::Image,
+      %r{application/ogg} => MediumPrepper::Ogg,
+      /^svg/ => MediumPrepper::Image
+    }
+    @valid_type_res.each do |re, klass|
+      return klass.new(self, raw) if content_type.downcase.match?(re)
     end
+    # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
+    # clearer.
+    mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
+      "(#{resource.id}), PK: #{resource_pk}"
+    Delayed::Worker.logger.error(mess)
+    harvest.log(mess, cat: :errors)
+    raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
   end
 end
