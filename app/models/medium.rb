@@ -179,12 +179,6 @@ class Medium < ActiveRecord::Base
       Delayed::Worker.logger.error(mess)
       harvest.log(mess, cat: :errors)
       raise 'empty'
-    # elsif sanitized_source_url.match?(/\.ogv\b/)
-    #   mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an OGV "\
-    #     "*video* (#{sanitized_source_url}). Aborting."
-    #   Delayed::Worker.logger.error(mess)
-    #   harvest.log(mess, cat: :errors)
-    #   raise 'empty'
     end
   end
 
@@ -193,8 +187,13 @@ class Medium < ActiveRecord::Base
     @valid_type_res ||= {
       /^image/ => MediumPrepper::Image,
       %r{application/octet-stream} => MediumPrepper::Image,
-      %r{application/ogg} => MediumPrepper::Ogg,
-      /^svg/ => MediumPrepper::Image
+      %r{application/ogg} => MediumPrepper::SaveAndServe,
+      %r{audio/mpeg} => MediumPrepper::SaveAndServe,
+      %r{video/mp4} => MediumPrepper::SaveAndServe,
+      %r{video/quicktime} => MediumPrepper::SaveAndServe,
+      %r{image/svg+xml} => MediumPrepper::SaveAndServe,
+      %r{video/webm} => MediumPrepper::SaveAndServe,
+      %r{audio/webm} => MediumPrepper::SaveAndServe
     }
     @valid_type_res.each do |re, klass|
       return klass.new(self, raw) if content_type.downcase.match?(re)

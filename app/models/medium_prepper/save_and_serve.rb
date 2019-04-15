@@ -14,8 +14,8 @@ class MediumPrepper::SaveAndServe
            rescue => e
              raise "Unable to parse #{base_uri} for ext (#{e.class}: #{e.message})"
            end
-    valid_exts = %w[ogg ogv]
-    raise "#{raw.base_uri} is not a valid OGG (one of #{valid_exts.join(', ')}): #{@ext}" unless
+    valid_exts = %w[mp3 ogg wav mp4 ogv mov svg webm]
+    raise "#{raw.base_uri} is not a valid save-and-serve type (one of #{valid_exts.join(', ')}): #{@ext}" unless
       valid_exts.includes?(@ext)
   end
 
