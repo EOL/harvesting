@@ -15,7 +15,7 @@ class Medium < ActiveRecord::Base
 
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
   enum subclass: %i[image video sound map_image js_map]
-  enum format: %i[jpg youtube flash vimeo mp3 ogg wav mp4]
+  enum format: %i[jpg youtube flash vimeo mp3 ogg wav mp4 ogv mov svg webm]
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where(format: Medium.formats[:jpg], downloaded_at: nil) }

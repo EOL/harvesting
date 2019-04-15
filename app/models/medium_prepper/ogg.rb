@@ -1,11 +1,22 @@
 #{@ext}# Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
 # versions, resizing it for others, and then storing information about it in the DB.
-class MediumPrepper::Ogg
+class MediumPrepper::SaveAndServe
   def initialize(medium, raw)
     @downloaded_at = Time.now
     @medium = medium
-    @ext = File.extname(raw.base_uri.path)
+    get_ext(raw.base_uri)
     save_ogg(raw)
+  end
+
+  def get_ext(base_uri)
+    @ext = begin
+             File.extname(base_uri.path).downcase
+           rescue => e
+             raise "Unable to parse #{base_uri} for ext (#{e.class}: #{e.message})"
+           end
+    valid_exts = %w[ogg ogv]
+    raise "#{raw.base_uri} is not a valid OGG (one of #{valid_exts.join(', ')}): #{@ext}" unless
+      valid_exts.includes?(@ext)
   end
 
   def prep_medium
