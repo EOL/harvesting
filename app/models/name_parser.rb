@@ -132,6 +132,7 @@ class NameParser
     if result.key?('details')
       result['details'].each do |hash|
         hash.each do |k, v|
+          next if v.nil? # specific_epithet seems to do this occassionally and I don't know why. :|
           k = k.underscore.downcase # Looks like the format changed from this_style to thisStyle; change it back!
           next if k == 'annotation_identification'
           next if k == 'ignored'
