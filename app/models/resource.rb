@@ -18,7 +18,7 @@ class Resource < ActiveRecord::Base
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
-  enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending]
+  enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending removing_content]
 
   acts_as_list
 
@@ -278,6 +278,7 @@ class Resource < ActiveRecord::Base
 
   # NOTE: keeps formats, of course.
   def remove_content
+    removing_content!
     harvests.each { |h| h.destroy }
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
     ScientificName.where(resource_id: id).delete_all
@@ -299,5 +300,6 @@ class Resource < ActiveRecord::Base
     else
       Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_all
     end
+    unpublished!
   end
 end

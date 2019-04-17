@@ -240,6 +240,7 @@ en:
       publishing: "harvesting (incomplete)"
       unpublished: "unharvested"
       updated_files: "new files!"
+      removing_content: "REMOVING CONTENT!"
     show:
       add_format: "Add a file format definition"
     stats:
