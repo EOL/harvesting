@@ -145,7 +145,8 @@ class Harvest < ActiveRecord::Base
        klass.where(harvest_id: id).delete_all
      end
     formats.each(&:remove_content)
-    nodes.pluck(:id).in_groups_of(5_000, false) do |batch|
+    # NOTE: halved the size of these batches in Apr 2019 because of timeouts.
+    nodes.pluck(:id).in_groups_of(2500, false) do |batch|
       NodeAncestor.where(node_id: batch).delete_all
       Node.remove_indexes(id: batch)
       Node.where(id: batch).delete_all
