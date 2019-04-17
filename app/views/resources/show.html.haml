@@ -119,6 +119,12 @@
 .ui.section
   = link_to(t("resources.show.add_format"), new_resource_format_path(@resource))
 %h2= "Harvests"
+- if @resource.removing_content?
+  .ui.raised.segment
+    %p
+      %b
+        Content is currently being removed.
+      This can take a VERY long time, please be patient.
 - if @resource.harvests.empty?
   This resource has not been harvested.
 - else
