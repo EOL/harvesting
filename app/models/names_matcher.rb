@@ -192,7 +192,10 @@ class NamesMatcher
     end
     return unless node.children.any?
     @ancestors.push(node)
-    map_nodes(node.children.includes(:scientific_name))
+    # Some nodes can have hundreds of thousands of children (ITIS's Animalia has 485,935), so we do children in batches:
+    node.children.pluck(:id).in_groups_of(1000) do |node_ids|
+      map_nodes(Node.where(id: node_ids).includes(:scientific_name))
+    end
     @ancestors.pop
   end
 
