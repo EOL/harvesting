@@ -273,6 +273,7 @@ GEM
       thread_safe (~> 0.1)
     uglifier (3.2.0)
       execjs (>= 0.3.0, < 3)
+    unicode-emoji (2.1.0)
     unicorn (5.4.0)
       kgio (~> 2.6)
       raindrops (~> 0.7)
@@ -322,9 +323,10 @@ DEPENDENCIES
   therubyracer
   turbolinks
   uglifier
+  unicode-emoji
   unicorn
   web-console
   whenever
 
 BUNDLED WITH
-   1.16.1
+   1.16.3

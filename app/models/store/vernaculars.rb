@@ -7,7 +7,7 @@ module Store
 
     def to_vernaculars_verbatim(field, val)
       @models[:vernacular] ||= {}
-      @models[:vernacular][:verbatim] = val
+      @models[:vernacular][:verbatim] = remove_emojis(val)
     end
 
     def to_vernaculars_language(field, val)
@@ -31,5 +31,7 @@ module Store
       @models[:vernacular] ||= {}
       @models[:vernacular][:source] = val # TODO: I actually think this is supposed to be a reference ID, but I'm not sure.
     end
+
+    def remove_emojis
   end
 end

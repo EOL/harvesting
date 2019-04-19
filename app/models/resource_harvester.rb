@@ -18,6 +18,7 @@ class ResourceHarvester
   include Store::Assocs
   include Store::Attributions
   include Store::Boolean
+  include Store::Filters # This is NOT a class, but it includes methods the others use.
   include Store::Media # NOTE: this also handles import of Articles, since they are in one file.
   include Store::ModelBuilder
   include Store::Nodes
@@ -381,6 +382,10 @@ class ResourceHarvester
         rescue => e
           if e.message =~ /row (\d+)\b/
             row = Regexp.last_match(1).to_i
+            # NOT a good idea to find and skip the row in question because of referential integrity; if you skip a node,
+            # you'll end up with media and names with a "parent" that's missing, which will cause errors. :\ You should
+            # instead figure out what the problem was and add a filter for the offending chracter(s) to the harvesting
+            # code where appropriate.
             raise "#{e.class} while parsing something around here: #{group[row-1..row+1].to_json}"
           else
             group.each do |instance|
