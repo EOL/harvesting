@@ -7,7 +7,7 @@ module Store
 
     def to_refs_body(field, val)
       @models[:reference] ||= {}
-      @models[:reference][:body] = val
+      @models[:reference][:body] = remove_emojis(val)
     end
 
     def to_refs_part(field, val)
