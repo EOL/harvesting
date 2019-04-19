@@ -31,7 +31,5 @@ module Store
       @models[:vernacular] ||= {}
       @models[:vernacular][:source] = val # TODO: I actually think this is supposed to be a reference ID, but I'm not sure.
     end
-
-    def remove_emojis
   end
 end
