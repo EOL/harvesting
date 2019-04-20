@@ -19,7 +19,7 @@ class Term < ActiveRecord::Base
       puts("No terms file found (#{terms_file}), skipping. #{'Your term URIs will not be defined.' if options[:flush]}")
       return
     end
-    Term.delete_all if options[:flush]
+    Term.delete_in_batches if options[:flush]
     puts '.. Importing terms'
     json = JSON.parse(File.read(terms_file))
     Term.from_json(json)

@@ -147,9 +147,9 @@ class Harvest < ActiveRecord::Base
     formats.each(&:remove_content)
     # NOTE: halved the size of these batches in Apr 2019 because of timeouts.
     nodes.pluck(:id).in_groups_of(2500, false) do |batch|
-      NodeAncestor.where(node_id: batch).delete_all
+      NodeAncestor.where(node_id: batch).delete_in_batches
       Node.remove_indexes(id: batch)
-      Node.where(id: batch).delete_all
+      Node.where(id: batch).delete_in_batches
     end
     update_attribute(:completed_at, Time.now) unless completed_at
     begin

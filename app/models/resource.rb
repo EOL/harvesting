@@ -80,7 +80,7 @@ class Resource < ActiveRecord::Base
   end
 
   def stop_adding_media_jobs
-    Delayed::Job.where(queue: 'media').where(%(handler LIKE "%resource_id: #{id}%")).delete_all
+    Delayed::Job.where(queue: 'media').where(%(handler LIKE "%resource_id: #{id}%")).delete_in_batches
   end
 
   def undownloaded_media_count
@@ -281,24 +281,24 @@ class Resource < ActiveRecord::Base
     removing_content!
     harvests.each { |h| h.destroy }
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
-    ScientificName.where(resource_id: id).delete_all
-    Vernacular.where(resource_id: id).delete_all
-    Article.where(resource_id: id).delete_all
-    Medium.where(resource_id: id).delete_all
-    Trait.where(resource_id: id).delete_all
-    MetaTrait.where(resource_id: id).delete_all
-    OccurrenceMetadatum.where(resource_id: id).delete_all
-    Assoc.where(resource_id: id).delete_all
-    MetaAssoc.where(resource_id: id).delete_all
-    Identifier.where(resource_id: id).delete_all
-    Reference.where(resource_id: id).delete_all
+    ScientificName.where(resource_id: id).delete_in_batches
+    Vernacular.where(resource_id: id).delete_in_batches
+    Article.where(resource_id: id).delete_in_batches
+    Medium.where(resource_id: id).delete_in_batches
+    Trait.where(resource_id: id).delete_in_batches
+    MetaTrait.where(resource_id: id).delete_in_batches
+    OccurrenceMetadatum.where(resource_id: id).delete_in_batches
+    Assoc.where(resource_id: id).delete_in_batches
+    MetaAssoc.where(resource_id: id).delete_in_batches
+    Identifier.where(resource_id: id).delete_in_batches
+    Reference.where(resource_id: id).delete_in_batches
     Node.remove_indexes(resource_id: id)
-    Node.where(resource_id: id).delete_all
-    NodeAncestor.where(resource_id: id).delete_all
+    Node.where(resource_id: id).delete_in_batches
+    NodeAncestor.where(resource_id: id).delete_in_batches
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
     else
-      Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_all
+      Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_in_batches
     end
     unpublished!
   end
