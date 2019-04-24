@@ -149,7 +149,9 @@ class Harvest < ActiveRecord::Base
     nodes.pluck(:id).in_groups_of(2500, false) do |batch|
       NodeAncestor.where(node_id: batch).delete_in_batches
       Node.remove_indexes(id: batch)
-      Node.where(id: batch).delete_in_batches
+      Searchkick.callbacks(false) do
+        Node.where(id: batch).delete_in_batches
+      end
     end
     update_attribute(:completed_at, Time.now) unless completed_at
     begin

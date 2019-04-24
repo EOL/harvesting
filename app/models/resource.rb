@@ -293,7 +293,9 @@ class Resource < ActiveRecord::Base
     Identifier.where(resource_id: id).delete_in_batches
     Reference.where(resource_id: id).delete_in_batches
     Node.remove_indexes(resource_id: id)
-    Node.where(resource_id: id).delete_in_batches
+    Searchkick.callbacks(false) do
+      Node.where(resource_id: id).delete_in_batches
+    end
     NodeAncestor.where(resource_id: id).delete_in_batches
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
