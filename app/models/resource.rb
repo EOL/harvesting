@@ -279,7 +279,6 @@ class Resource < ActiveRecord::Base
   # NOTE: keeps formats, of course.
   def remove_content
     removing_content!
-    harvests.each { |h| h.destroy }
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
     [
       ScientificName, Vernacular, Article, Medium, Trait, MetaTrait, OccurrenceMetadatum, Assoc, MetaAssoc,
@@ -292,6 +291,7 @@ class Resource < ActiveRecord::Base
       remove_type(Node)
     end
     NodeAncestor.where(resource_id: id).delete_in_batches
+    harvests.each { |h| h.destroy }
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
     else
