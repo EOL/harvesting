@@ -406,8 +406,9 @@ class NamesMatcher
   end
 
   def log_unmatched
-    return if @unmatched.blank?
-    if @unmatched.size > 10
+    if @unmatched.blank?
+      @harvest.log("ZERO unmatched nodes (of #{@resource.nodes.count})! Nicely done.")
+    elsif @unmatched.size > 10
       @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. "\
         "First 10: #{@unmatched[0..9].join('; ')}", cat: :names_matches)
     else
