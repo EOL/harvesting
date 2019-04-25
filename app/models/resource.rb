@@ -286,7 +286,7 @@ class Resource < ActiveRecord::Base
     ].each do |klass|
       remove_type(klass)
     end
-    Node.remove_indexes(resource_id: id)
+    remove_from_searchkick
     Searchkick.callbacks(false) do
       remove_type(Node)
     end
@@ -298,6 +298,12 @@ class Resource < ActiveRecord::Base
       Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_in_batches
     end
     unpublished!
+  end
+
+  def remove_from_searchkick
+    Node.select(:id).where(resource_id: id).find_in_batches(batch_size: 10_000) do |nodes|
+      Node.searchkick_index.bulk_delete(nodes)
+    end
   end
 
   def remove_type(klass)

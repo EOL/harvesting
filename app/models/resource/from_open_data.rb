@@ -5,6 +5,7 @@ class Resource
     end
 
     def self.reload(resource)
+      FileUtils.rm_rf("#{resource.path}/.", secure: true) # Remove all the old stuff!
       new(resource.opendata_url, resource).parse
     end
 
