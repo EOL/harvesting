@@ -281,20 +281,15 @@ class Resource < ActiveRecord::Base
     removing_content!
     harvests.each { |h| h.destroy }
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
-    ScientificName.where(resource_id: id).delete_in_batches
-    Vernacular.where(resource_id: id).delete_in_batches
-    Article.where(resource_id: id).delete_in_batches
-    Medium.where(resource_id: id).delete_in_batches
-    Trait.where(resource_id: id).delete_in_batches
-    MetaTrait.where(resource_id: id).delete_in_batches
-    OccurrenceMetadatum.where(resource_id: id).delete_in_batches
-    Assoc.where(resource_id: id).delete_in_batches
-    MetaAssoc.where(resource_id: id).delete_in_batches
-    Identifier.where(resource_id: id).delete_in_batches
-    Reference.where(resource_id: id).delete_in_batches
+    [
+      ScientificName, Vernacular, Article, Medium, Trait, MetaTrait, OccurrenceMetadatum, Assoc, MetaAssoc,
+      Identifier, Reference
+    ].each do |klass|
+      remove_type(klass)
+    end
     Node.remove_indexes(resource_id: id)
     Searchkick.callbacks(false) do
-      Node.where(resource_id: id).delete_in_batches
+      remove_type(Node)
     end
     NodeAncestor.where(resource_id: id).delete_in_batches
     if Delayed::Job.count > 100_000
@@ -303,5 +298,11 @@ class Resource < ActiveRecord::Base
       Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_in_batches
     end
     unpublished!
+  end
+
+  def remove_type(klass)
+    klass.transaction do
+      klass.where(resource_id: id).delete_in_batches(batch_size: 5_000) # was having trouble with default 10K
+    end
   end
 end
