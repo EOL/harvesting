@@ -140,11 +140,13 @@ class Harvest < ActiveRecord::Base
 
   def remove_content
     # Because node.destroy does all of this work but MUCH less efficiently, we fake it all here:
-    [ScientificName, Medium, Article, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference, NodesReference,
+    [ScientificName, Medium, Article, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference,
      Reference, ContentAttribution, Attribution].each do |klass|
-       klass.transaction do
-         klass.where(resource_id: id).delete_in_batches(batch_size: 5_000) # was having trouble with default 10K
-       end
+       count = klass.where(harvest_id: id).count
+       # puts "#{klass}: #{count}"
+       next if count.zero?
+       klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id = #{id}")
+       # puts "#{klass}: #{klass.where(harvest_id: id).count}"
      end
     formats.each(&:remove_content)
     # NOTE: halved the size of these batches in Apr 2019 because of timeouts.

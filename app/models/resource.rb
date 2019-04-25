@@ -301,8 +301,10 @@ class Resource < ActiveRecord::Base
   end
 
   def remove_type(klass)
-    klass.transaction do
-      klass.where(resource_id: id).delete_in_batches(batch_size: 5_000) # was having trouble with default 10K
-    end
+    count = klass.where(resource_id: id).count
+    # puts "#{klass}: #{count}"
+    return if count.zero?
+    klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE resource_id = #{id}")
+    # puts "#{klass}: #{klass.where(resource_id: id).count}"
   end
 end
