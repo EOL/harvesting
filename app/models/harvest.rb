@@ -151,10 +151,10 @@ class Harvest < ActiveRecord::Base
     formats.each(&:remove_content)
     # NOTE: halved the size of these batches in Apr 2019 because of timeouts.
     nodes.pluck(:id).in_groups_of(2500, false) do |batch|
-      NodeAncestor.where(node_id: batch).delete_in_batches
+      remove_ancestors_natively(batch)
       Node.remove_indexes(id: batch)
       Searchkick.callbacks(false) do
-        Node.where(id: batch).delete_in_batches
+        remove_nodes_natively(batch)
       end
     end
     update_attribute(:completed_at, Time.now) unless completed_at
@@ -163,5 +163,13 @@ class Harvest < ActiveRecord::Base
     rescue => e
       puts "WARNING (non-fatal): #{e.message}"
     end
+  end
+
+  def remove_ancestors_natively(node_ids)
+    NodeAncestor.connection.execute("DELETE FROM node_ancestors WHERE node_id IN (#{node_ids.join(',')})")
+  end
+
+  def remove_nodes_natively(node_ids)
+    Node.connection.execute("DELETE FROM nodes WHERE id IN (#{node_ids.join(',')})")
   end
 end

@@ -1,5 +1,3 @@
-
-
 module Store
   module Traits
     # NOTE: this is unused. ...I'm actually just keeping it here for reference ...and future use!

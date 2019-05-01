@@ -142,7 +142,7 @@ class Format < ActiveRecord::Base
 
   def remove_content
     # I'm actually going to retain the logs... so nothing there...
-    fields.delete_in_batches
+    fields.delete_all
     remove_files
   end
 end

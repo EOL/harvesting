@@ -62,8 +62,8 @@ class Flattener
 
   def build_node_ancestors
     @harvest.log("Flattener#build_node_ancestors (#{@ancestry.keys.size} ancestry keys)", cat: :starts)
-    num_deleted = NodeAncestor.where(resource_id: @resource.id).delete_in_batches
-    @harvest.log("old ancestors (#{num_deleted}) deleted.")
+    remove_ancestors_natively(@resource.id)
+    @harvest.log('old ancestors deleted.')
     @node_ancestors = []
     ancestry_size_pct = @ancestry.keys.size / 100.0
     ancestry_index = 0
@@ -81,6 +81,10 @@ class Flattener
       end
     end
     count += update_tables
+  end
+
+  def remove_ancestors_natively(resource_id)
+    NodeAncestor.connection.execute("DELETE FROM node_ancestors WHERE resource_id = #{resource_id}")
   end
 
   def update_tables(pct = nil)

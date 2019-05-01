@@ -80,7 +80,7 @@ class Resource < ActiveRecord::Base
   end
 
   def stop_adding_media_jobs
-    Delayed::Job.where(queue: 'media').where(%(handler LIKE "%resource_id: #{id}%")).delete_in_batches
+    Delayed::Job.where(queue: 'media').where(%(handler LIKE "%resource_id: #{id}%")).delete_all
   end
 
   def undownloaded_media_count
@@ -290,12 +290,12 @@ class Resource < ActiveRecord::Base
     Searchkick.callbacks(false) do
       remove_type(Node)
     end
-    NodeAncestor.where(resource_id: id).delete_in_batches
+    remove_type(NodeAncestor)
     harvests.each { |h| h.destroy }
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
     else
-      Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_in_batches
+      Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_all
     end
     unpublished!
   end

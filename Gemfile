@@ -13,8 +13,6 @@ gem 'dalli'
 # Background jobs:
 gem 'delayed_job', '~> 4.1.4'
 gem 'delayed_job_active_record'
-# Faster delete of large numbers of things:
-gem 'delete_in_batches'
 # Store users securely:
 gem 'devise'
 # Enums with simple_form:

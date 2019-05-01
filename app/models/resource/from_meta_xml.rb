@@ -69,7 +69,7 @@ class Resource::FromMetaXml
   end
 
   def import
-    @resource.formats&.abstract&.delete_in_batches
+    @resource.formats&.abstract&.delete_all
     filename = "#{@path}/meta.xml"
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
