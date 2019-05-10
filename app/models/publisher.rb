@@ -341,6 +341,8 @@ class Publisher
     # name_struct.source_reference = name_model. ...errr.... TODO: This is intended to move off of the node. Put it
     # here!
     name_struct.attribution = clean_values(name_model.attribution_html)
+    name_struct.attribution = clean_values(name_model.dataset_name)
+    name_struct.attribution = clean_values(name_model.name_according_to)
     copy_fields(@same_sci_name_attributes, name_model, name_struct)
     name_struct
   end

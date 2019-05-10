@@ -806,5 +806,17 @@
 "submapping": null,
 "is_unique": false,
 "is_required": false,
-"default_when_blank": null}
+"default_when_blank": null},
+{"term":"http://rs.tdwg.org/dwc/terms/datasetName",
+"for_format":"nodes",
+"represents":"to_nodes_dataset_name",
+"submapping":null,
+"is_unique":false,
+"is_required":false},
+{"term":"http://rs.tdwg.org/dwc/terms/nameAccordingTo",
+"for_format":"nodes",
+"represents":"to_nodes_name_according_to",
+"submapping":null,
+"is_unique":false,
+"is_required":false}
 ]
