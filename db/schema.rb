@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190110144535) do
+ActiveRecord::Schema.define(version: 20190510142120) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -650,6 +650,8 @@ ActiveRecord::Schema.define(version: 20190110144535) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "resource_pk",               limit: 255
+    t.text     "dataset_name",              limit: 65535
+    t.text     "name_according_to",         limit: 65535
   end
 
   add_index "scientific_names", ["harvest_id"], name: "index_scientific_names_on_harvest_id", using: :btree
