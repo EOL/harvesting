@@ -101,5 +101,15 @@ module Store
       @models[:identifiers] ||= []
       @models[:identifiers] += val.split(/,\s*/)
     end
+
+    def to_nodes_dataset_name(field, val)
+      @models[:scientific_name] ||= {}
+      @models[:scientific_name][:dataset_name] = val
+    end
+
+    def to_nodes_name_according_to(field, val)
+      @models[:scientific_name] ||= {}
+      @models[:scientific_name][:name_according_to] = val
+    end
   end
 end
