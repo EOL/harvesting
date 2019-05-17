@@ -110,7 +110,7 @@
     - @formats.each do |fmt|
       .item
         %strong= "#{link_to(fmt.represents, fmt)}:".html_safe
-        = fmt.get_from
+        = link_to(File.basename(fmt.get_from), fmt.get_from.sub("#{Rails.public_path}", ''))
         - if fmt.excel?
           = ", sheet ##{fmt.sheet}"
         = "(#{fmt.fields.size} fields)"

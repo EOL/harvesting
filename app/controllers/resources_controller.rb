@@ -16,6 +16,10 @@ class ResourcesController < ApplicationController
     @resources = @resources.where(publish_status: Resource.publish_statuses[:published]) unless params[:all]
     params[:per_page] = 15 if request.format.html?
     @resources = prep_for_api(@resources, updated: true)
+    respond_to do |fmt|
+      fmt.html {}
+      fmt.json {}
+    end
   end
 
   def show
