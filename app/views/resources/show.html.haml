@@ -131,6 +131,13 @@
   %ul
     - @resource.harvests.order(created_at: :desc).each do |harv|
       .item= render('harvests/show', harv: harv)
+%h2= "Processes"
+- if @resource.harvest_processes.empty?
+  No processes have run for this resource.
+- else
+  %ul
+    - @resource.harvest_processes.order(created_at: :desc).each do |process|
+      .item= render('harvest_processes/show', process: process)
 %h2= "Content"
 - media_count = @resource.media.published.count
 .ui.segment

@@ -2,7 +2,7 @@
 class LoggedProcess
   def initialize(resource)
     @resource = resource
-    @process = resource.process
+    @process = HarvestProcess.create(resource_id: @resource.id)
     @log = resource.process_log
     @start_time = Time.now
     starting("logged process")

@@ -15,7 +15,7 @@ class Resource < ActiveRecord::Base
   has_many :meta_assocs, inverse_of: :resource
   has_many :identifiers, inverse_of: :resource
   has_many :references, inverse_of: :resource
-  has_many :processes, inverse_of: :resource
+  has_many :harvest_processes, inverse_of: :resource, dependent: :destroy
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml

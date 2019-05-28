@@ -1,0 +1,17 @@
+    -# t.integer "resource_id",         limit: 4
+    -# t.text    "method_breadcrumbs",  limit: 65535
+    -# t.integer "current_group",       limit: 4
+    -# t.integer "current_group_size",  limit: 4
+    -# t.text    "current_group_times", limit: 65535
+
+%strong= "#{l(process.created_at.localtime, format: :short)}"
+- if process.method_breadcrumbs
+  = process.method_breadcrumbs.split(',').join(" &rarr; ").html_safe
+- if process.current_group
+  = "currently in #{process.current_group}"
+  - if process.current_group_size
+    = "(size: #{process.current_group_size})"
+  - if process.current_group_times
+    = "(times: #{process.current_group_times})"
+    - avg = process.current_group_times.sum / process.current_group_times.size
+    = "(average time: #{avg})"
