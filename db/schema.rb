@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190524191117) do
+ActiveRecord::Schema.define(version: 20190528202440) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -233,6 +233,14 @@ ActiveRecord::Schema.define(version: 20190524191117) do
   end
 
   add_index "formats", ["harvest_id"], name: "index_formats_on_harvest_id", using: :btree
+
+  create_table "harvest_processes", force: :cascade do |t|
+    t.integer "resource_id",         limit: 4
+    t.text    "method_breadcrumbs",  limit: 65535
+    t.integer "current_group",       limit: 4
+    t.integer "current_group_size",  limit: 4
+    t.text    "current_group_times", limit: 65535
+  end
 
   create_table "harvests", force: :cascade do |t|
     t.integer  "resource_id",            limit: 4,                 null: false
@@ -564,14 +572,6 @@ ActiveRecord::Schema.define(version: 20190524191117) do
   create_table "partners_users", id: false, force: :cascade do |t|
     t.integer "user_id",    limit: 4, null: false
     t.integer "partner_id", limit: 4, null: false
-  end
-
-  create_table "processes", force: :cascade do |t|
-    t.integer "resource_id",         limit: 4
-    t.text    "method_breadcrumbs",  limit: 65535
-    t.integer "current_group",       limit: 4
-    t.integer "current_group_size",  limit: 4
-    t.text    "current_group_times", limit: 65535
   end
 
   create_table "references", force: :cascade do |t|

@@ -70,21 +70,20 @@ RSpec.describe ResourceHarvester do
         create(:field,
           format: fmt,
           position: 6,
-          expected_header: "Missing",
-          map_to_table: :vernaculars,
+          expected_header: 'Missing',
           mapping: :language_group_code)
       end
 
-      it "raises an exception" do
+      it 'raises an exception' do
         harvester.create_harvest_instance
         expect { harvester.validate }.to raise_error(Exceptions::ColumnMissing)
       end
     end
   end
 
-  context "with an extra column in the file" do
-    describe "#validate" do
-      it "raises an exception" do
+  context 'with an extra column in the file' do
+    describe '#validate' do
+      it 'raises an exception' do
         Field.last.destroy
         harvester.create_harvest_instance
         expect { harvester.validate }.to raise_error(Exceptions::ColumnUnmatched)
