@@ -64,6 +64,7 @@ class Harvest < ActiveRecord::Base
     update_attributes(failed_at: now, completed_at: now)
   end
 
+  # TODO: these two methods are obsolete. Remove them and their calls.
   def started_matching_at
     hlogs.where(category: Hlog.categories[:starts]).where('message LIKE "%match_nodes"')&.first&.created_at
   end
@@ -77,65 +78,6 @@ class Harvest < ActiveRecord::Base
     update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
     resource.published!
     resource.update_attribute(:nodes_count, Node.where(resource_id: id).count)
-  end
-
-  def log_call
-    i = caller.index { |c| c =~ /harvester/ } # TODO: really, we don't KNOW that's the name. :S
-    (path, line, info) = caller(i+1..i+1).first.split(':')
-    method = info.split.last[1..-2]
-    log("#{path.split('/').last}:#{line}##{method}", cat: :starts)
-  rescue
-    log("Starting method #{caller(0..0)}")
-  end
-
-  # Reminder: errors warns infos progs loops starts ends counts queries commands names_matches
-  def log(message, options = {})
-    options[:cat] ||= :infos
-    backtrace = []
-    message ||= ''
-    if options[:e] && options[:e]&.backtrace # rubocop:disable Style/SafeNavigation
-      lines_shown = 0
-      options[:e].backtrace.each do |trace|
-        next if trace.match?(/\bpry\b/)
-        next if trace.match?(/\delayed_job.rb\b/)
-        next if trace.match?(/\bbundler\b/)
-        next if trace.match?(/\bscript\b/)
-        next if trace.match?(/\bruby\b/)
-        next if trace.match?(/\bgems\b/)
-        next if trace.match?(/\b\.rbenv\b/)
-        break if lines_shown > 5
-        trace.gsub!(%r{#{Rails.root}}, '.') # Remove website path..
-        backtrace << trace
-        lines_shown += 1
-      end
-      message += '; ' unless message.blank?
-      message += "ERROR: #{options[:e]&.message&.gsub(/#<(\w+):0x[0-9a-f]+>/, '\\1')}" # No need for hex memory address!
-    end
-    options[:format] = nil if options[:format].is_a?(String) # Sometimes it's "none" or the like.
-    hash = {
-      harvest: self,
-      category: options[:cat],
-      message: message[0..64_000], # Truncates really long messages, alas...
-      backtrace: backtrace.join("\n"),
-      format: options[:format],
-      line: options[:line]
-    }
-    # TODO: we should be able to configure whether this outputs to STDOUT:
-    puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
-    puts "-- #{backtrace.join("\n")}" unless backtrace.blank?
-    STDOUT.flush
-    begin
-      hlogs << Hlog.create!(hash.merge(format: options[:format]))
-    rescue => e
-      # TODO: this is handy; extract to some appropriate module:
-      queries = Hlog.connection.exec_query('SHOW processlist').rows.reject { |r| r[4] == 'Sleep' }.map { |r| r[-1] }
-      puts "!! WARNING: Logging failed: #{e.message}"
-      puts "!! ...Skipping previous log message (#{message[0..20]}...) and continuing..."
-      puts '!! Queries currently running:'
-      queries.each { |q| puts "!! #{q}" }
-      STDOUT.flush
-    end
-    true # NOTE: this is here to avoid passing back ALL OF THE HLOGS. Argh.
   end
 
   def remove_content

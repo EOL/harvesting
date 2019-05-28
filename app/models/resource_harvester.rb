@@ -67,14 +67,14 @@ class ResourceHarvester
   end
 
   def start
-    @start_time = Time.now
+    @process = LoggedProcess.new(@resource)
     Searchkick.disable_callbacks
     @resource.lock do
       begin
         fast_forward = @harvest && !@harvest.stage.nil?
         Harvest.stages.each_key do |stage|
           if fast_forward && harvest.stage != stage
-            @harvest.log("Already completed stage #{stage}, skipping...", cat: :infos)
+            @process.info("Already completed stage #{stage}, skipping...")
             next
           # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
           elsif Harvest.where(resource_id: @resource.id).running.count > 1
@@ -83,29 +83,30 @@ class ResourceHarvester
           end
           fast_forward = false
           @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
-          send(stage)
+          @process.run_step(stage) { send(stage) }
         end
       rescue Lockfile::TimeoutLockError => e
-        if @harvest
-          log_err(Exception.new('Already running!'))
-        end
+        log_err(Exception.new('Already running!'))
       rescue => e
-        if @harvest
-          log_err(e)
-        end
         @resource.stop_adding_media_jobs if @resource
+        log_err(e)
       ensure
         Searchkick.enable_callbacks
-        took = Time.delta_s(@start_time)
-        @harvest.log("}} Harvest ends for #{@resource.name} (#{@resource.id}), took #{took}", cat: :ends) if @harvest
+        time = @process.exit
+        @harvest.update_attribute(:time_in_minutes, (time / 60.0).ceil) unless fast_forward
       end
     end
+  end
+
+  def log_err(e)
+    @process.fail(e)
+    @harvest.fail if @harvest
+    raise e
   end
 
   def create_harvest_instance
     @harvest = @resource.create_harvest_instance
     @harvest.create_harvest_instance!
-    @harvest.log("{{ Harvest begins for #{@resource.name} (#{@resource.id})", cat: :starts)
   end
 
   # grab the file from each format
@@ -128,7 +129,7 @@ class ResourceHarvester
     # here (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join('converted_csv')) unless
       Dir.exist?(Rails.public_path.join('converted_csv'))
-    @harvest.log_call
+    @process.info_call
     each_format do
       fields = nil # scope.
       if @format.header_lines.positive?
@@ -210,7 +211,7 @@ class ResourceHarvester
   end
 
   def convert_to_csv
-    @harvest.log_call
+    @process.info_call
     each_format do
       unless @converted[@format.id]
         @file = @format.converted_csv_path
@@ -230,7 +231,7 @@ class ResourceHarvester
       end
       path = @format.converted_csv_path.to_s.gsub(' ', '\\ ')
       cmd = "/usr/bin/sort #{path} > #{path}_sorted"
-      log_cmd(cmd)
+      @process.cmd(cmd)
       # NOTE: the LC_ALL fixes a problem with unicode characters.
       if system({'LC_ALL' => 'C'}, cmd)
         FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
@@ -288,7 +289,7 @@ class ResourceHarvester
   end
 
   def run_cmd(cmd, env = {})
-    log_cmd(cmd)
+    @process.cmd(cmd)
     # NOTE: the LC_ALL fixes a problem with diff.
     if env.blank?
       system(cmd)
@@ -301,12 +302,13 @@ class ResourceHarvester
   def parse_diff_and_store
     clear_storage_vars
     each_diff do
-      log_info "Loading #{@format.represents} (##{@format.id}) diff file into memory (#{@format.diff_size} lines)..."
+      @process.info("Loading #{@format.represents} (##{@format.id}) diff file \
+        into memory (#{@format.diff_size} lines)...")
       fields = build_fields
       i = 0
       any_diff = @parser.diff_as_hashes(@headers) do |row|
         i += 1
-        log_info("row #{i}") if (i % 100_000).zero?
+        @process.info("row #{i}") if (i % 100_000).zero?
         @file = @parser.path_to_file
         @diff = @parser.diff
         reset_row
@@ -326,7 +328,7 @@ class ResourceHarvester
             send(field.mapping, field, row[header])
           end
         rescue => e
-          log_info "Failed to parse row #{@line_num}..."
+          @process.info "Failed to parse row #{@line_num}..."
           raise e
         end
         # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
@@ -336,7 +338,7 @@ class ResourceHarvester
           build_models
         end
       end
-      log_warning('There were no differences in this file!') unless any_diff
+      @process.warn('There were no differences in this file!') unless any_diff
     end
     find_orphan_parent_nodes
     find_duplicate_nodes
@@ -346,7 +348,7 @@ class ResourceHarvester
   end
 
   def clear_storage_vars
-    @harvest.log_call
+    @process.info_call
     @nodes_by_ancestry = {}
     @terms = {}
     @models = {}
@@ -368,12 +370,12 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def store_new
     @new.each do |klass, models|
-      log_info "Storing #{models.size} #{klass.name.pluralize}"
+      @process.info "Storing #{models.size} #{klass.name.pluralize}"
       # Grouping them might not be necssary, but it sure makes debugging easier...
       group_size = 1000
       g_count = 1
       models.in_groups_of(group_size, false) do |group|
-        log_info "... #{g_count * group_size}" if (g_count % 10).zero?
+        @process.info "... #{g_count * group_size}" if (g_count % 10).zero?
         g_count += 1
         # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
         # DB validations are adequate and we want to go faster:
@@ -401,7 +403,7 @@ class ResourceHarvester
   # TODO: extract to Store::Storage
   def mark_old
     @old.each do |klass, by_keys|
-      log_info("Marking old #{klass.name}") unless by_keys.empty?
+      @process.info("Marking old #{klass.name}") unless by_keys.empty?
       by_keys.each do |key, pks|
         pks.in_groups_of(1000, false) do |group|
           klass.send(:where, key => group, :resource_id => @resource.id).update_all(removed_by_harvest_id: @harvest.id)
@@ -415,8 +417,8 @@ class ResourceHarvester
   end
 
   def rebuild_nodes
-    @harvest.log_call
-    Flattener.flatten(@resource, @harvest)
+    @process.info_call
+    Flattener.flatten(@resource, @process)
     @harvest.update_attribute(:ancestry_built_at, Time.now)
   end
 
@@ -437,7 +439,7 @@ class ResourceHarvester
   end
 
   def resolve_node_keys
-    @harvest.log_call
+    @process.info_call
     # Node ancestry:
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
     # Node scientific names:
@@ -453,7 +455,7 @@ class ResourceHarvester
   end
 
   def resolve_media_keys
-    @harvest.log_call
+    @process.info_call
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Bib_cit:
@@ -464,7 +466,7 @@ class ResourceHarvester
   end
 
   def resolve_article_keys
-    @harvest.log_call
+    @process.info_call
     # To nodes:
     propagate_id(Article, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # To sections:
@@ -478,57 +480,57 @@ class ResourceHarvester
   end
 
   def resolve_trait_keys
-    @harvest.log_call
-    log_info('Occurrences to nodes (through scientific_names)...')
+    @process.info_call
+    @process.info('Occurrences to nodes (through scientific_names)...')
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'scientific_names.resource_pk',
                              set: 'node_id', with: 'node_id')
     propagate_id(OccurrenceMetadatum, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                                       set: 'occurrence_id', with: 'id')
-    log_info('traits to occurrences...')
+    @process.info('traits to occurrences...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                         set: 'occurrence_id', with: 'id')
-    log_info('traits to nodes (through occurrences)...')
+    @process.info('traits to nodes (through occurrences)...')
     propagate_id(Trait, fk: 'occurrence_id', other: 'occurrences.id', set: 'node_id', with: 'node_id')
     # Traits to sex term:
-    log_info('Traits to sex term...')
+    @process.info('Traits to sex term...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                         set: 'sex_term_id', with: 'sex_term_id')
     # Traits to lifestage term:
-    log_info('Traits to lifestage term...')
+    @process.info('Traits to lifestage term...')
     propagate_id(Trait, fk: 'occurrence_resource_pk', other: 'occurrences.resource_pk',
                         set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaTraits to traits:
-    log_info('MetaTraits to traits...')
+    @process.info('MetaTraits to traits...')
     propagate_id(MetaTrait, fk: 'trait_resource_pk', other: 'traits.resource_pk', set: 'trait_id', with: 'id')
     # MetaTraits (simple, measurement row refers to parent) to traits:
-    log_info('MetaTraits (simple, measurement row refers to parent) to traits...')
+    @process.info('MetaTraits (simple, measurement row refers to parent) to traits...')
     propagate_id(Trait, fk: 'parent_pk', other: 'traits.resource_pk', set: 'parent_id', with: 'id')
     resolve_references(TraitsReference, 'trait')
     # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
     # it somewhere, and that’s all that matters for mvp"
     # resolve_attributions(Trait)
 
-    log_info('Assocs to occurrences...')
+    @process.info('Assocs to occurrences...')
     propagate_id(Assoc, fk: 'occurrence_resource_fk', other: 'occurrences.resource_pk',
                         set: 'occurrence_id', with: 'id')
     propagate_id(Assoc, fk: 'target_occurrence_resource_fk', other: 'occurrences.resource_pk',
                         set: 'target_occurrence_id', with: 'id')
     # Assoc to nodes (through occurrences)
-    log_info('Assocs to nodes...')
+    @process.info('Assocs to nodes...')
     propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id', set: 'node_id', with: 'node_id')
     propagate_id(Assoc, fk: 'target_occurrence_id', other: 'occurrences.id',
                         set: 'target_node_id', with: 'node_id')
     # Assoc to sex term:
-    log_info('Assoc to sex term...')
+    @process.info('Assoc to sex term...')
     propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
                         set: 'sex_term_id', with: 'sex_term_id')
     # Assoc to lifestage term:
-    log_info('Assoc to lifestage term...')
+    @process.info('Assoc to lifestage term...')
     propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
                         set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaAssoc to assocs:
     # TODO: this is not handled during harvest, yet.
-    # log_info('MetaAssoc to assocs...')
+    # @process.info('MetaAssoc to assocs...')
     propagate_id(MetaAssoc, fk: 'assoc_resource_pk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
     resolve_references(AssocsReference, 'assoc')
     # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
@@ -558,7 +560,7 @@ class ResourceHarvester
   end
 
   def add_occurrence_metadata_to_traits
-    @harvest.log_call
+    @process.info_call
     meta_traits = []
     OccurrenceMetadata.includes(:occurrence).where(harvest_id: @harvest.id).find_each do |meta|
       # NOTE: this is probably not very efficient. :S
@@ -572,32 +574,12 @@ class ResourceHarvester
   end
 
   def resolve_missing_parents
-    @harvest.log_call
+    @process.info_call
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
   end
 
   def propagate_id(klass, options = {})
     klass.propagate_id(options.merge(harvest_id: @harvest.id))
-  end
-
-  def log_info(what)
-    @harvest.log(what, cat: :infos)
-  end
-
-  def log_cmd(what)
-    @harvest.log(what, cat: :commands)
-  end
-
-  def log_err(e)
-    puts "GENERAL ERROR"
-    # custom exceptions have no backtrace, for some reason:
-    @harvest.log('', e: e, cat: :errors, line: @line_num, format: @format)
-    @harvest.fail
-    raise e
-  end
-
-  def log_warning(msg)
-    @format.warn(msg, @line_num)
   end
 
   def build_fields
@@ -613,32 +595,32 @@ class ResourceHarvester
   end
 
   def queue_downloads
-    @harvest.log_call
+    @process.info_call
     # TODO: Likely other "kinds" of downloads for other kinds of media.
     @harvest.download_all_images
   end
 
   def parse_names
-    @harvest.log_call
-    NameParser.for_harvest(@harvest)
+    @process.info_call
+    NameParser.for_harvest(@harvest, @process)
     @harvest.update_attribute(:names_parsed_at, Time.now)
   end
 
   def denormalize_canonical_names_to_nodes
-    @harvest.log_call
+    @process.info_call
     propagate_id(Node, fk: 'scientific_name_id', other: 'scientific_names.id', set: 'canonical', with: 'canonical')
   end
 
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
-    @harvest.log_call
-    NamesMatcher.for_harvest(@harvest)
+    @process.info_call
+    NamesMatcher.for_harvest(@harvest, @process)
     @harvest.update_attribute(:nodes_matched_at, Time.now)
   end
 
   def reindex_search
-    @harvest.log_call
+    @process.info_call
     # TODO: I don't think we *need* to enable/disable, here... but I'm being safe:
     Searchkick.enable_callbacks
     Node.where(harvest_id: @harvest.id).reindex
@@ -708,7 +690,5 @@ class ResourceHarvester
 
   def completed
     @harvest.update_attribute(:completed_at, Time.now)
-    @harvest.update_attribute(:time_in_minutes, ((Time.now - @start_time).to_i / 60.0).ceil)
-    @harvest.log("Harvest of #{@harvest.resource.name} completed.", cat: :ends)
   end
 end

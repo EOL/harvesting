@@ -18,23 +18,25 @@
 # and so on, I don't want to enumerate them here in the documentation, as the code itself is canonical, q.v.!
 
 class NamesMatcher
-  def self.for_harvest(harvest, options = {})
-    new(harvest, options).start
+  def self.for_harvest(harvest, process, options = {})
+    new(harvest, process, options).start
   end
 
-  def self.explain_node(node, options = {})
+  # This is meant to be called manually.
+  def self.explain_node(node, process, options = {})
     harvest = node.resource.create_harvest_instance # Perhaps heavy-handed, but... simpler.
     results = []
     begin
-      results = new(harvest, options).explain_node(node)
+      results = new(harvest, process, options).explain_node(node)
     ensure
       harvest.complete
     end
     results
   end
 
-  def initialize(harvest, options = {})
+  def initialize(harvest, process, options = {})
     @harvest = harvest
+    @process = process
     @resource = @harvest.resource
     @root_nodes = []
     @node_updates = []
@@ -99,11 +101,11 @@ class NamesMatcher
     how[:load] = false # Careful! Now you don't have models, you have a hash resembling one...
     how[:fields] = [:canonical] # It seems this shouldn't matter, since the query is '*', but, alas: it matters.
     how.delete(:where) if how[:where].empty?
-    @harvest.log("Q: #{how.inspect}") if @explain
+    @process.info("Q: #{how.inspect}") if @explain
     @logs << "Q: #{how.inspect}"
     results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
     hits = results.map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
-    @harvest.log("RESULTS (#{results.total_count}): #{hits}") if @explain
+    @process.info("RESULTS (#{results.total_count}): #{hits}") if @explain
     @logs << "RESULTS (#{results.total_count}): #{hits}"
     results
   end
@@ -139,19 +141,18 @@ class NamesMatcher
     @root_nodes = @resource.nodes.published.includes(:scientific_name).where(harvest_id: @harvest.id).root
     @have_names = Harvest.completed.any?
     begin
-      map_all_nodes_to_pages(@root_nodes)
+      @process.run_step('map_all_nodes_to_pages') { map_all_nodes_to_pages(@root_nodes) }
     ensure
       begin
         log_unmatched
       ensure
-        update_nodes
+        @process.run_step('update_nodes') { update_nodes }
       end
     end
   end
 
   # The algorithm, as pseudo-code (Ruby, for brevity):
   def map_all_nodes_to_pages(root_nodes)
-    @harvest.log_call
     map_nodes(root_nodes)
   end
 
@@ -162,12 +163,13 @@ class NamesMatcher
   end
 
   def explain_node(node)
-    @harvest.log("LIMITED RUN: explaining the names-matching for node #{node.id}")
+    @process.info("LIMITED RUN: explaining the names-matching for node #{node.id}")
     @explain = true
     return if skip_blank_canonical(node)
     @ancestors = node.node_ancestors.map(&:ancestor)
     @in_unmapped_area = @ancestors.empty? || @ancestors.select(&:is_on_page_in_dynamic_hierarchy).empty?
-    return @harvest.log("CANNOT MATCH NAMES. You haven't harvested the Dynamic Hierarchy.") unless Harvest.completed.any?
+    return @process.info("CANNOT MATCH NAMES. You haven't harvested the Dynamic Hierarchy.") unless
+      Harvest.completed.any?
     @have_names = true
     map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
     @node_updates
@@ -175,7 +177,7 @@ class NamesMatcher
 
   def skip_blank_canonical(node)
     return false unless node.canonical.blank?
-    @harvest.log("cannot match node with blank canonical: Node##{node.id}", cat: :warns)
+    @process.warn("cannot match node with blank canonical: Node##{node.id}")
     true
   end
 
@@ -359,10 +361,9 @@ class NamesMatcher
   end
 
   def update_nodes
-    @harvest.log_call
     return if @node_updates.empty?
     unless @should_update
-      @harvest.log('SKIPPPING UPDATE. (This was just an explain.)')
+      @process.info('SKIPPPING UPDATE.')
       return
     end
     Node.import!(@node_updates, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
@@ -407,13 +408,12 @@ class NamesMatcher
 
   def log_unmatched
     if @unmatched.blank?
-      @harvest.log("ZERO unmatched nodes (of #{@resource.nodes.count})! Nicely done.")
+      @process.info("ZERO unmatched nodes (of #{@resource.nodes.count})! Nicely done.")
     elsif @unmatched.size > 10
-      @harvest.log("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. "\
-        "First 10: #{@unmatched[0..9].join('; ')}", cat: :names_matches)
+      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. "\
+        "First 10: #{@unmatched[0..9].join('; ')}")
     else
-      @harvest.log("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}",
-                   cat: :names_matches)
+      @process.info("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}")
     end
   end
 end

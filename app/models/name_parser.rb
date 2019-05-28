@@ -1,17 +1,30 @@
 # Parses names using the GNA system, via open3 system call.
 class NameParser
-  def self.for_harvest(harvest)
-    parser = NameParser.new(harvest)
+  def self.for_harvest(harvest, process)
+    parser = NameParser.new(harvest, process)
     parser.parse
   end
 
-  def self.parse_names(names)
-    parser = NameParser.new(nil)
-    parser.run_parser_on_names(names)
+  def self.parse_names(harvest, names)
+    process = LoggedProcess.new(self)
+    begin
+      process.run_step('parse_names') do
+        parser = NameParser.new(harvest, process)
+        parser.run_parser_on_names(names)
+      end
+      harvest.complete!
+    rescue => e
+      process.fail(e)
+      harvest.fail
+      raise e
+    ensure
+      process.exit
+    end
   end
 
-  def initialize(harvest)
+  def initialize(harvest, process)
     @harvest = harvest
+    @process = process
     @resource = harvest&.resource
     @verbatims = []
   end
@@ -23,7 +36,7 @@ class NameParser
     # Ick. TODO: find the problem and fix.
     count = 0 # scope
     while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count.positive? && @attempts <= 10
-      @harvest.log("I see #{count} names which still need to be parsed.", cat: :warns)
+      @process.warn("I see #{count} names which still need to be parsed.")
       @attempts += 1
       # For debugging help:
       # names = ScientificName.where(harvest_id: @harvest.id, canonical: nil).limit(100)
@@ -39,14 +52,14 @@ class NameParser
           parsed.each_with_index do |result, i|
             verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
             if @names[verbatim].nil?
-              @harvest.log("error assigning name to #{verbatim} (missing!): #{result.inspect}", cat: :errors)
+              @process.warn("skipping assigning name to #{verbatim} (missing!): #{result.inspect}")
               next
             end
             begin
               @names[verbatim].assign_attributes(parse_result(result))
               updates << @names[verbatim]
             rescue => e
-              @harvest.log("error reading line #{i}: #{result[0..250]}", cat: :errors)
+              @process.warn("ERROR reading line #{i}: #{result[0..250]}")
               raise(e)
             end
           end
@@ -54,16 +67,13 @@ class NameParser
           file = @harvest.resource.path.join('failed_names.json')
           File.unlink(file) if File.exist?(file)
           File.open(file, 'w') { |out| out.write(json) }
-          @harvest.log("Failed to parse JSON: #{e} OUTPUT: #{file}", cat: :errors)
+          @process.warn("Failed to parse JSON: #{e} OUTPUT: #{file}")
         end
         update_names(updates) unless updates.empty?
       end
       sleep(1)
     end
-    if @attempts >= 20 && count > 100
-      @harvest.log('Required more than 10 attempts to parse all names!', cat: :errors)
-      raise 'Too many attempts to parse names'
-    end
+    raise "Too many attempts (#{@attempts}) to parse names" if @attempts >= 20 && count > 100
   end
 
   def update_names(updates)
@@ -145,7 +155,7 @@ class NameParser
             begin
               attributes[k] = v['value']
             rescue => e
-              @harvest.log("ERROR: no '#{k}' value for attributes: #{v.inspect}", cat: :errors)
+              @process.warn("ERROR: no '#{k}' value for attributes: #{v.inspect}")
               raise e
             end
             add_authorship(authorships, v)

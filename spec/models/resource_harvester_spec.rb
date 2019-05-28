@@ -26,32 +26,27 @@ RSpec.describe ResourceHarvester do
        format: fmt,
        position: 1,
        expected_header: "tid",
-       map_to_table: :nodes,
-       map_to_field: :resource_pk),
+       mapping: :resource_pk),
      create(:field,
        format: fmt,
        position: 2,
        expected_header: "predicate",
-       map_to_table: :vernaculars,
-       map_to_field: :verbatim),
+       mapping: :verbatim),
      create(:field,
        format: fmt,
        position: 3,
        expected_header: "value",
-       map_to_table: :vernaculars,
-       map_to_field: :ref_fk),
+       mapping: :ref_fk),
      create(:field,
        format: fmt,
        position: 4,
        expected_header: "units",
-       map_to_table: :vernaculars,
-       map_to_field: :language_code_verbatim),
+       mapping: :language_code_verbatim),
      create(:field,
        format: fmt,
        position: 5,
        expected_header: "source",
-       map_to_table: :vernaculars,
-       map_to_field: :language_code_verbatim)
+       mapping: :language_code_verbatim)
     ] }
 
   describe "#create_harvest_instance" do
@@ -77,7 +72,7 @@ RSpec.describe ResourceHarvester do
           position: 6,
           expected_header: "Missing",
           map_to_table: :vernaculars,
-          map_to_field: :language_group_code)
+          mapping: :language_group_code)
       end
 
       it "raises an exception" do

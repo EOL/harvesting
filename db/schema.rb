@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190510142120) do
+ActiveRecord::Schema.define(version: 20190524191117) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -566,6 +566,14 @@ ActiveRecord::Schema.define(version: 20190510142120) do
     t.integer "partner_id", limit: 4, null: false
   end
 
+  create_table "processes", force: :cascade do |t|
+    t.integer "resource_id",         limit: 4
+    t.text    "method_breadcrumbs",  limit: 65535
+    t.integer "current_group",       limit: 4
+    t.integer "current_group_size",  limit: 4
+    t.text    "current_group_times", limit: 65535
+  end
+
   create_table "references", force: :cascade do |t|
     t.text     "body",                  limit: 65535
     t.integer  "resource_id",           limit: 4,     null: false
@@ -613,6 +621,7 @@ ActiveRecord::Schema.define(version: 20190510142120) do
     t.integer  "downloaded_media_count",        limit: 4,     default: 0
     t.integer  "failed_downloaded_media_count", limit: 4,     default: 0
     t.boolean  "classification",                              default: false
+    t.text     "skips",                         limit: 65535
   end
 
   add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree

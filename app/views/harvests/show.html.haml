@@ -90,21 +90,23 @@
 - if @logs.empty?
   %p The logs for this harvest are empty.
 - else
-  = paginate(@logs)
-  %ul
-    - @logs.each do |log|
-      %li
-        %strong= log.category
-        (
-        = log.created_at.strftime('%H:%M:%S')
-        )
-        = log.message
-        - if log.format
-          = "(for #{log.format.represents})"
-        - if log.line?
-          = "(on line #{log.line})"
-        - if log.backtrace?
-          .ui.list
-            - log.backtrace.split("\n").each do |line|
-              .item= line
-  = paginate(@logs)
+  %blockquote
+    = @logs
+  -# = paginate(@logs)
+  -# %ul
+  -#   - @logs.each do |log|
+  -#     %li
+  -#       %strong= log.category
+  -#       (
+  -#       = log.created_at.strftime('%H:%M:%S')
+  -#       )
+  -#       = log.message
+  -#       - if log.format
+  -#         = "(for #{log.format.represents})"
+  -#       - if log.line?
+  -#         = "(on line #{log.line})"
+  -#       - if log.backtrace?
+  -#         .ui.list
+  -#           - log.backtrace.split("\n").each do |line|
+  -#             .item= line
+  -# = paginate(@logs)

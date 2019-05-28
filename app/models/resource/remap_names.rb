@@ -1,27 +1,27 @@
 class Resource
   class RemapNames
-    def self.for_resource(resource)
-      self.new(resource).match
+    def self.for_resource(resource, process)
+      self.new(resource, process).match
     end
 
-    def initialize(resource)
+    def initialize(resource, process)
       @resource = resource
+      @process = process
       @harvest = @resource.harvests.complete_non_failed.last
       @nodes_to_pages = []
     end
 
     def match
-      @harvest.log('START: Remapping Names', cat: :starts)
-      create_nodes_to_pages_map
-      @harvest.nodes.update_all(page_id: nil, matching_log: nil)
-      re_run_names_matcher
-      create_publish_map
-      File.unlink(nodes_to_pages_map_file) # ...it was mostly there for posterity.
-      @harvest.log('END: Remapping Names', cat: :ends)
+      @process.run_step('RemappingNames') do
+        @process.run_step('create_nodes_to_pages_map') { create_nodes_to_pages_map }
+        @harvest.nodes.update_all(page_id: nil, matching_log: nil)
+        @process.run_step('re_run_names_matcher') { re_run_names_matcher }
+        @process.run_step('create_publish_map') { create_publish_map }
+        File.unlink(nodes_to_pages_map_file) # ...it was mostly there for posterity.
+      end
     end
 
     def create_nodes_to_pages_map
-      @harvest.log_call
       @harvest.nodes.find_each do |node|
         @nodes_to_pages << [node.id, node.resource_pk, node.page_id, node.matching_log]
       end
@@ -31,13 +31,11 @@ class Resource
     end
 
     def re_run_names_matcher
-      @harvest.log_call
-      NamesMatcher.for_harvest(@harvest)
+      NamesMatcher.for_harvest(@harvest, @process)
       @harvest.update_attribute(:nodes_matched_at, Time.now)
     end
 
     def create_publish_map
-      @harvest.log_call
       @nodes_to_pages = CSV.read(nodes_to_pages_map_file)
       publish_map = []
 

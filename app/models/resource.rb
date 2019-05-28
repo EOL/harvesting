@@ -15,6 +15,7 @@ class Resource < ActiveRecord::Base
   has_many :meta_assocs, inverse_of: :resource
   has_many :identifiers, inverse_of: :resource
   has_many :references, inverse_of: :resource
+  has_many :processes, inverse_of: :resource
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
@@ -143,6 +144,14 @@ class Resource < ActiveRecord::Base
     @path
   end
 
+  def process_log
+    @log ||= ActiveSupport::TaggedLogging.new(Logger.new("#{path}/process.log"))
+  end
+
+  def process_log_path
+    "#{path}/process.log"
+  end
+
   def move_files(to)
     formats.each { |fmt| fmt.update_attribute(:get_from, fmt.get_from.sub(%r{data/[^/]+/}, "data/#{to}/")) }
   end
@@ -192,13 +201,12 @@ class Resource < ActiveRecord::Base
     Publisher.by_resource(self)
   end
 
-  def parse_names
+  # This is meant to be called manually.
+  def parse_names(names = nil)
+    names ||= scientific_names
     required_harvest = harvests.last
-    raise 'Harvest the resource, fisrt' if required_harvest.nil?
-    harvest.log('Resource requested #parse_names (directly)', cat: :starts)
-    NameParser.for_harvest(required_harvest)
-    harvest.log('Resource completed direct #parse_names', cat: :ends)
-    required_harvest.complete!
+    raise 'Harvest the resource, first' if required_harvest.nil?
+    NameParser.parse_names(required_harvest, names)
   end
 
   def resume_instance
@@ -243,8 +251,9 @@ class Resource < ActiveRecord::Base
     harvester
   end
 
-  def remap_names
-    Resource::RemapNames.for_resource(self)
+  # TODO: I'm not sure where this is called. (?)
+  def remap_names(process)
+    Resource::RemapNames.for_resource(self, process)
   end
 
   def download_missing_images
