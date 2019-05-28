@@ -90,8 +90,8 @@
 - if @logs.empty?
   %p The logs for this harvest are empty.
 - else
-  %blockquote
-    = @logs
+  %pre{ width: '120' }
+    = @logs.join
   -# = paginate(@logs)
   -# %ul
   -#   - @logs.each do |log|
