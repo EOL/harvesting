@@ -138,44 +138,45 @@
   %ul
     - @resource.harvest_processes.order(created_at: :desc).each do |process|
       .item= render('harvest_processes/show', process: process)
-%h2= "Content"
-- media_count = @resource.media.published.count
-.ui.segment
-  .ui.six.tiny.statistics
-    .statistic
-      .value= @resource.nodes.published.count
-      .label= t("resources.stats.nodes")
-    .statistic
-      .value= @resource.articles.published.count
-      .label= t("resources.stats.articles")
-    .statistic
-      .value= @resource.identifiers.count
-      .label= t("resources.stats.identifiers")
-    .statistic
-      .value= media_count
-      .label= t("resources.stats.media")
-    .statistic
-      .value= @resource.references.published.count
-      .label= t("resources.stats.references")
-    .statistic
-      .value= @resource.scientific_names.published.count
-      .label= t("resources.stats.scientific_names")
-  .ui.six.tiny.statistics
-    .statistic
-      .value= Trait.where(harvest_id: @resource.harvest_ids).published.count
-      .label= t("resources.stats.traits")
-    .statistic
-      .value= Assoc.where(harvest_id: @resource.harvest_ids).published.count
-      .label= t("resources.stats.associations")
-    .statistic
-      .value= @resource.vernaculars.published.count
-      .label= t("resources.stats.vernaculars")
-    .statistic
-      .value= @resource.downloaded_media_count
-      .label= t("resources.stats.downloaded_media_count")
-    .statistic
-      .value= @resource.failed_downloaded_media_count
-      .label= t("resources.stats.failed_downloaded_media_count")
+- if last_harvest = @resource.harvests&.last
+  %h2= "Last Harvest Content"
+  - media_count = last_harvest.media.published.count
+  .ui.segment
+    .ui.six.tiny.statistics
+      .statistic
+        .value= last_harvest.nodes.published.count
+        .label= t("resources.stats.nodes")
+      .statistic
+        .value= last_harvest.articles.published.count
+        .label= t("resources.stats.articles")
+      .statistic
+        .value= last_harvest.identifiers.count
+        .label= t("resources.stats.identifiers")
+      .statistic
+        .value= media_count
+        .label= t("resources.stats.media")
+      .statistic
+        .value= Refernce.where(harvest_id: last_harvest.id).published.count
+        .label= t("resources.stats.references")
+      .statistic
+        .value= last_harvest.scientific_names.published.count
+        .label= t("resources.stats.scientific_names")
+    .ui.six.tiny.statistics
+      .statistic
+        .value= Trait.where(harvest_id: last_harvest.id).published.count
+        .label= t("resources.stats.traits")
+      .statistic
+        .value= Assoc.where(harvest_id: last_harvest.id).published.count
+        .label= t("resources.stats.associations")
+      .statistic
+        .value= last_harvest.vernaculars.published.count
+        .label= t("resources.stats.vernaculars")
+      .statistic
+        .value= @resource.downloaded_media_count
+        .label= t("resources.stats.downloaded_media_count")
+      .statistic
+        .value= @resource.failed_downloaded_media_count
+        .label= t("resources.stats.failed_downloaded_media_count")
 
 - if media_count.positive?
   .ui.segment
