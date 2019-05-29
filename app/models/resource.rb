@@ -316,10 +316,9 @@ class Resource < ActiveRecord::Base
   end
 
   def remove_type(klass)
-    count = klass.where(resource_id: id).count
-    # puts "#{klass}: #{count}"
+    # NOTE: using harvest ids because everything is indexed on those:
+    count = klass.where(harvest_id: harvest_ids).count
     return if count.zero?
-    klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE resource_id = #{id}")
-    # puts "#{klass}: #{klass.where(resource_id: id).count}"
+    klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id IN (#{harvest_ids.join(',')})")
   end
 end
