@@ -52,7 +52,7 @@ class LoggedProcess
   def exit
     took = (Time.now - @start_time).round(2)
     stopping("logged process, took #{took}")
-    @process.touch
+    @process.update_attribute(:method_breadcrumbs, '')
     took
   end
 

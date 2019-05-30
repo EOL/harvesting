@@ -37,6 +37,6 @@ class HarvestProcess < ActiveRecord::Base
     breadcrumbs = method_breadcrumbs.split(',')
     return unless breadcrumbs.include?(method_name.to_s)
     breadcrumbs.delete(method_name.to_s)
-    update_attribute(:method_breadcrumbs, breadcrumbs.join(','))
+    update_attribute(:method_breadcrumbs, 'EXITED')
   end
 end
