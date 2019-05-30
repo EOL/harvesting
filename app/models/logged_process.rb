@@ -49,8 +49,9 @@ class LoggedProcess
   end
 
   def exit
-    took = Time.delta_s(@start_time)
+    took = (Time.now - @start_time).round(2)
     stopping("logged process, took #{took}")
+    @process.touch
     took
   end
 
