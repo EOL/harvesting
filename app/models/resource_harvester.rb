@@ -129,7 +129,6 @@ class ResourceHarvester
     # here (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join('converted_csv')) unless
       Dir.exist?(Rails.public_path.join('converted_csv'))
-    @process.info_call
     each_format do
       fields = nil # scope.
       if @format.header_lines.positive?
@@ -211,7 +210,6 @@ class ResourceHarvester
   end
 
   def convert_to_csv
-    @process.info_call
     each_format do
       unless @converted[@format.id]
         @file = @format.converted_csv_path
@@ -348,7 +346,6 @@ class ResourceHarvester
   end
 
   def clear_storage_vars
-    @process.info_call
     @nodes_by_ancestry = {}
     @terms = {}
     @models = {}
@@ -417,7 +414,6 @@ class ResourceHarvester
   end
 
   def rebuild_nodes
-    @process.info_call
     Flattener.flatten(@resource, @process)
     @harvest.update_attribute(:ancestry_built_at, Time.now)
   end
@@ -439,7 +435,6 @@ class ResourceHarvester
   end
 
   def resolve_node_keys
-    @process.info_call
     # Node ancestry:
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
     # Node scientific names:
@@ -455,7 +450,6 @@ class ResourceHarvester
   end
 
   def resolve_media_keys
-    @process.info_call
     # Media to nodes:
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Bib_cit:
@@ -466,7 +460,6 @@ class ResourceHarvester
   end
 
   def resolve_article_keys
-    @process.info_call
     # To nodes:
     propagate_id(Article, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # To sections:
@@ -480,7 +473,6 @@ class ResourceHarvester
   end
 
   def resolve_trait_keys
-    @process.info_call
     @process.info('Occurrences to nodes (through scientific_names)...')
     propagate_id(Occurrence, fk: 'node_resource_pk', other: 'scientific_names.resource_pk',
                              set: 'node_id', with: 'node_id')
@@ -560,7 +552,6 @@ class ResourceHarvester
   end
 
   def add_occurrence_metadata_to_traits
-    @process.info_call
     meta_traits = []
     OccurrenceMetadata.includes(:occurrence).where(harvest_id: @harvest.id).find_each do |meta|
       # NOTE: this is probably not very efficient. :S
@@ -574,7 +565,6 @@ class ResourceHarvester
   end
 
   def resolve_missing_parents
-    @process.info_call
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
   end
 
@@ -595,32 +585,27 @@ class ResourceHarvester
   end
 
   def queue_downloads
-    @process.info_call
     # TODO: Likely other "kinds" of downloads for other kinds of media.
     @harvest.download_all_images
   end
 
   def parse_names
-    @process.info_call
     NameParser.for_harvest(@harvest, @process)
     @harvest.update_attribute(:names_parsed_at, Time.now)
   end
 
   def denormalize_canonical_names_to_nodes
-    @process.info_call
     propagate_id(Node, fk: 'scientific_name_id', other: 'scientific_names.id', set: 'canonical', with: 'canonical')
   end
 
   # match node names against the DWH, store "hints", report on unmatched
   # nodes, consider the effects of curation
   def match_nodes
-    @process.info_call
     NamesMatcher.for_harvest(@harvest, @process)
     @harvest.update_attribute(:nodes_matched_at, Time.now)
   end
 
   def reindex_search
-    @process.info_call
     # TODO: I don't think we *need* to enable/disable, here... but I'm being safe:
     Searchkick.enable_callbacks
     Node.where(harvest_id: @harvest.id).reindex
