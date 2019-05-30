@@ -299,7 +299,7 @@ class Resource < ActiveRecord::Base
     Searchkick.callbacks(false) do
       remove_type(Node)
     end
-    remove_type(NodeAncestor)
+    remove_type_via_resource(NodeAncestor)
     harvests.each { |h| h.destroy }
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
