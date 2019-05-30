@@ -8,7 +8,8 @@ class LoggedProcess
     starting("logged process")
   end
 
-  def run_step(method_name)
+  def run_step(method_name = nil)
+    method_name ||= '(unnammed proc)'
     if @resource.skips&.split(',')&.include?(method_name.to_s)
       warn("Skipping #{method_name} for this resource.")
       return nil

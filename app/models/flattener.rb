@@ -2,7 +2,7 @@ class Flattener
   attr_reader :ancestry
 
   def self.flatten(resource, process)
-    flattener = self.new(resource,process)
+    flattener = self.new(resource, process)
     flattener.flatten
   end
 
@@ -62,7 +62,7 @@ class Flattener
   def build_node_ancestors
     @process.info("#{@ancestry.keys.size} ancestry keys")
     count = 0
-    @process.run_step do
+    @process.run_step(:build_node_ancestors) do
       remove_ancestors_natively(@resource.id)
       @process.info('old ancestors deleted.')
       @node_ancestors = []
