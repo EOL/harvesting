@@ -63,7 +63,7 @@ class LoggedProcess
   end
 
   def starting(method_name)
-    @log.tagged('START') { log(message) }
+    @log.tagged('START') { log(method_name) }
     @process.start(method_name)
   end
 
@@ -72,7 +72,7 @@ class LoggedProcess
   end
 
   def stopping(method_name)
-    @log.tagged('STOP') { log(message) }
+    @log.tagged('STOP') { log(method_name) }
     @process.stop(method_name)
   end
 
