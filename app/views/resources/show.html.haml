@@ -156,7 +156,7 @@
         .value= media_count
         .label= t("resources.stats.media")
       .statistic
-        .value= Refernce.where(harvest_id: last_harvest.id).published.count
+        .value= Reference.where(harvest_id: last_harvest.id).published.count
         .label= t("resources.stats.references")
       .statistic
         .value= last_harvest.scientific_names.published.count
