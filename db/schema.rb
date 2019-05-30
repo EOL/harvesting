@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190528202440) do
+ActiveRecord::Schema.define(version: 20190530134029) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -165,6 +165,7 @@ ActiveRecord::Schema.define(version: 20190528202440) do
   add_index "content_attributions", ["attribution_resource_fk", "harvest_id"], name: "by_harvest_attribution_resource_fk", using: :btree
   add_index "content_attributions", ["content_type", "content_id"], name: "index_content_attributions_on_content_type_and_content_id", using: :btree
   add_index "content_attributions", ["content_type", "content_resource_fk", "harvest_id"], name: "by_harvest_content_resource_fk", using: :btree
+  add_index "content_attributions", ["harvest_id"], name: "index_content_attributions_on_harvest_id", using: :btree
 
   create_table "data_references", force: :cascade do |t|
     t.integer "reference_id", limit: 4,   null: false
