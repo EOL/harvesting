@@ -178,7 +178,7 @@
         .value= @resource.failed_downloaded_media_count
         .label= t("resources.stats.failed_downloaded_media_count")
 
-- if media_count.positive?
+- if media_count&.positive?
   .ui.segment
     - pct = ((@resource.downloaded_media_count / media_count.to_f) * 100).ceil
     #progress.ui.progress{ data: { percent: pct } }
