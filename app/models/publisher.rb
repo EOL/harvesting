@@ -2,8 +2,8 @@
 class Publisher
   attr_accessor :resource
 
-  def self.by_resource(resource_in, options = {})
-    new(options.merge(resource: resource_in)).by_resource
+  def self.by_resource(resource_in, process, options = {})
+    new(options.merge(resource: resource_in, process: process)).by_resource
   end
 
   def self.first
@@ -18,8 +18,7 @@ class Publisher
 
   def initialize(options = {})
     @resource = options[:resource]
-    @logger = options[:logger] || @resource.harvests.complete_non_failed.last
-    raise 'No completed harvests!' unless @logger
+     = options[:process]
     @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
     @web_resource_id = nil
     @files = {}
@@ -68,23 +67,17 @@ class Publisher
   end
 
   def by_resource
-    measure_time('Overall TSV Creation') do
+    @process.run_step('overall_tsv_creation') do
       learn_resource_id
       WebDb.init
       slurp_nodes
     end
-    log('Done. Check your files:')
+    @process.info('Done. Check your files:')
     @files.each_key do |file|
       sizes = `wc -l #{file}`
       size = sizes.strip.split.first.to_i
-      log("(#{size} lines) #{file.to_s}")
+      @process.info("(#{size} lines) #{file.to_s}")
     end
-  end
-
-  def measure_time(what, &_block)
-    t = Time.now
-    yield
-    log_warn "#{what} in #{Time.delta_s(t)}"
   end
 
   def learn_resource_id
@@ -111,10 +104,10 @@ class Publisher
       remove_existing_pub_files
       @nodes.find_in_batches(batch_size: @limit) do |nodes|
         reset_vars
-        measure_time('Studied nodes') { nodes_to_hashes(nodes) }
+        @process.run_step('nodes_to_hashes') { nodes_to_hashes(nodes) }
         count_children # No need to time this, it's super-fast (about a 20th of a second in production)
-        measure_time('Loaded new data') { load_hashes }
-        measure_time('Built traits') { build_traits(nodes) }
+        @process.run_step('load_hashes') { load_hashes }
+        @process.run_step('build_traits') { build_traits(nodes) }
       end
     end
   end
@@ -143,7 +136,7 @@ class Publisher
     web_node.canonical_form = clean_values(node.safe_canonical)
     web_node.scientific_name = clean_values(node.safe_scientific)
     web_node.has_breadcrumb = clean_values(!node.no_landmark?)
-    web_node.rank_id = WebDb.rank(node.rank, @logger)
+    web_node.rank_id = WebDb.rank(node.rank, @process)
     web_node.is_hidden = 0
     web_node.created_at = Time.now.to_s(:db)
     web_node.updated_at = Time.now.to_s(:db)
@@ -192,7 +185,7 @@ class Publisher
       attribution.content_resource_fk = content_attribution.content_resource_fk
       attribution.content_type = content_attribution.content_type
       attribution.content_id = content_attribution.content_id # NOTE this is the HARVEST DB ID. It will be replaced.
-      attribution.role_id = WebDb.role(content_attribution.attribution.role, @logger)
+      attribution.role_id = WebDb.role(content_attribution.attribution.role, @process)
       attribution.url = content_attribution.attribution.sanitize_url
       @attributions << attribution
     end
@@ -332,7 +325,7 @@ class Publisher
     name_struct.page_id = node.page_id
     name_struct.harv_db_id = name_model.id
     name_struct.canonical_form = clean_values(name_model.canonical_italicized)
-    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status.try(:downcase), @logger)
+    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status.try(:downcase), @process)
     name_struct.is_preferred = clean_values(node.scientific_name_id == name_model.id)
     name_struct.created_at = Time.now.to_s(:db)
     name_struct.updated_at = Time.now.to_s(:db)
@@ -426,8 +419,8 @@ class Publisher
                             # It *has* been downloaded, but still lacks the root URL, so we add that:
                             "#{@root_url}/#{medium.base_url}"
                           end
-    web_medium.license_id = WebDb.license(medium.license&.source_url, @logger)
-    web_medium.language_id = WebDb.language(medium.language, @logger)
+    web_medium.license_id = WebDb.license(medium.license&.source_url, @process)
+    web_medium.language_id = WebDb.language(medium.language, @process)
     web_medium
   end
 
@@ -441,15 +434,15 @@ class Publisher
     web_article.created_at = Time.now.to_s(:db)
     web_article.updated_at = Time.now.to_s(:db)
     web_article.resource_id = @web_resource_id
-    web_article.license_id = WebDb.license(article.license&.source_url, @logger)
-    web_article.language_id = WebDb.language(article.language, @logger)
+    web_article.license_id = WebDb.license(article.license&.source_url, @process)
+    web_article.language_id = WebDb.language(article.language, @process)
     web_article
   end
 
   def build_traits(nodes)
     return unless Trait.where(node_id: nodes.map(&:id)).any? ||
                   Assoc.where(node_id: nodes.map(&:id)).any?
-    log("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
+    @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     simple_meta_fields = %i[predicate_term object_term]
     meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
@@ -462,7 +455,7 @@ class Publisher
                      occurrence: { occurrence_metadata: meta_fields },
                      node: :scientific_name,
                      meta_traits: meta_fields)
-    log("#{traits.size} Traits (filtered)...")
+    @process.info("#{traits.size} Traits (filtered)...")
     assocs =
       Assoc.published.where(node_id: nodes.map(&:id))
            .includes(:predicate_term, :sex_term, :lifestage_term, :references,
@@ -470,7 +463,7 @@ class Publisher
                      node: :scientific_name, target_node: :scientific_name,
                      meta_assocs: assoc_meta_fields)
 
-    log("#{assocs.size} Associations (filtered)...")
+    @process.info("#{assocs.size} Associations (filtered)...")
     filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
     start_traits_file(filename, @trait_heads)
@@ -506,7 +499,7 @@ class Publisher
         csv << build_meta(meta, trait)
       end
     end
-    log("#{count} metadata added.")
+    @process.info("#{count} metadata added.")
   end
 
   def build_meta(meta, trait)
@@ -548,7 +541,7 @@ class Publisher
     web_vern.page_id = node.page_id
     web_vern.harv_db_id = vernacular.id
     web_vern.resource_id = @web_resource_id
-    web_vern.language_id = WebDb.language(vernacular.language, @logger)
+    web_vern.language_id = WebDb.language(vernacular.language, @process)
     web_vern.created_at = Time.now.to_s(:db)
     web_vern.updated_at = Time.now.to_s(:db)
     web_vern.is_preferred = 0 # This will be fixed by the code mentioned above, run on the website.
@@ -626,7 +619,7 @@ class Publisher
   def load_hashes_from_array(array, options = {})
     return nil if array.blank?
     table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
-    log("Loading #{array.size} #{table}...")
+    @process.info("Loading #{array.size} #{table}...")
     write_local_csv(table, array, options)
   end
 
@@ -644,13 +637,5 @@ class Publisher
       end
     end
     @files[file] = true
-  end
-
-  def log(message)
-    @logger.log(message, cat: :infos)
-  end
-
-  def log_warn(message)
-    @logger.log(message, cat: :warns)
   end
 end

@@ -51,47 +51,48 @@ class WebDb < ActiveRecord::Base
       @roles = map_ids('roles', 'name')
     end
 
-    def rank(full_rank, logger)
+    def rank(full_rank, process)
       return nil if full_rank.nil?
       rank = full_rank.downcase
       return nil if rank.blank?
       return @ranks[rank] if @ranks.key?(rank)
+      process.warn("Encountered new rank, please ensure there are handlers for it: #{rank}")
       @ranks[rank] = raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
     end
 
-    def role(full_role, logger)
+    def role(full_role, process)
       return nil if full_role.nil?
       role = full_role.downcase
       return nil if role.blank?
       return @roles[role] if @roles.key?(role)
-      logger.log("Encountered new role, please ensure there is a translation for it: #{role}", cat: :warns)
+      process.warn("Encountered new role, please ensure there is a translation for it: #{role}")
       @roles[role] = raw_create('roles', name: role, created_at: Time.now.to_s(:db), updated_at: Time.now.to_s(:db))
     end
 
-    def license(url, logger)
+    def license(url, process)
       return nil if url.nil?
       license = url.downcase
       return nil if license.blank?
       return @licenses[license] if @licenses.key?(license)
-      logger.log("Encountered new license, please find a logo URL and give it a name: #{url}", cat: :warns)
+      process.warn("Encountered new license, please find a logo URL and give it a name: #{url}")
       # NOTE: passing int case-sensitive name... and a bogus name.
       @licenses[license] = raw_create('licenses', source_url: url, name: url, created_at: Time.now.to_s(:db),
                                                   updated_at: Time.now.to_s(:db))
     end
 
-    def language(language, logger)
+    def language(language, process)
       return nil if language.blank?
       return @languages[language.code] if @languages.key?(language.code)
-      logger.log("Encountered new language, please assign it to a language group and give it a name: #{language.code}", cat: :warns)
+      process.log("Encountered new language, please assign it to a language group and give it a name: #{language.code}")
       @languages[language.code] = raw_create('languages', code: language.code, group: language.group_code)
     end
 
-    def taxonomic_status(full_name, logger)
+    def taxonomic_status(full_name, process)
       name = full_name&.downcase
       name = 'accepted' if name.blank? # Empty taxonomic_statuses are NOT allowed; this is the default assumption.
       return @taxonomic_statuses[name] if @taxonomic_statuses.key?(name)
-      logger.log('Encountered new taxonomic status, please assign set its '\
-                      "alternative/preferred/problematic/mergeable: #{name}", cat: :warns)
+      process.log('Encountered new taxonomic status, please assign set its '\
+                      "alternative/preferred/problematic/mergeable: #{name}")
       @taxonomic_statuses[name] = raw_create('taxonomic_statuses', name: name)
     end
 

@@ -631,7 +631,7 @@ class ResourceHarvester
   # TODO: this is a LOUSY place to put the publishing, but it's a real pain to add new steps to harvesting. I'll do it
   # eventually, but not now.
   def complete_harvest_instance
-    Publisher.by_resource(@resource, logger: @harvest)
+    Publisher.by_resource(@resource, @process)
     @harvest.complete
   end
 

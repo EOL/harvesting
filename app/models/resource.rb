@@ -198,7 +198,7 @@ class Resource < ActiveRecord::Base
   end
 
   def publish
-    Publisher.by_resource(self)
+    Publisher.by_resource(self, LoggedProcess.new(self))
   end
 
   # This is meant to be called manually.

@@ -90,7 +90,7 @@
 - if @logs.empty?
   %p The logs for this harvest are empty.
 - else
-  %pre{ width: '120' }
+  %pre{ width: '120', style: 'white-space:pre-wrap;' }
     = @logs.join
   -# = paginate(@logs)
   -# %ul
