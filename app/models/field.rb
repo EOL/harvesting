@@ -44,7 +44,8 @@ class Field < ActiveRecord::Base
         to_associations_pk to_associations_occurrence_fk to_associations_target_occurrence_fk to_associations_predicate
         to_associations_source to_associations_ref_fks to_associations_meta
 
-        to_attributions_other to_traits_attributions_fk to_associations_attributions_fk
+        to_attributions_other to_traits_attributions_fk to_associations_attributions_fk to_nodes_dataset_name
+        to_nodes_name_according_to
 
       ]
       # SORRY! It has become unreasonable to attempt to keep these in order, so everything after the "to_associations*"
