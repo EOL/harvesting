@@ -299,7 +299,7 @@ class Resource < ActiveRecord::Base
     Searchkick.callbacks(false) do
       remove_type(Node)
     end
-    remove_type_via_resource(NodeAncestor)
+    remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
     harvests.each { |h| h.destroy }
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
@@ -322,9 +322,19 @@ class Resource < ActiveRecord::Base
     klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id IN (#{harvest_ids.join(',')})")
   end
 
+  # This tends to be rather slow, so we do it in batches. TODO: I'd prefer a generic version of this logic live
+  # somewhere else.
   def remove_type_via_resource(klass)
-    count = klass.where(resource_id: id).count
-    return if count.zero?
-    klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE resource_id = #{id}")
+    min = klass.where(resource_id: id).min
+    return if min.nil?
+    max = klass.where(resource_id: id).max
+    index = min
+    batch_size = 10_000
+    loop do
+      klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE id >= #{index} AND "\
+        "id < #{index + batch_size} AND resource_id = #{id}")
+      index += batch_size
+      break if index > max
+    end
   end
 end
