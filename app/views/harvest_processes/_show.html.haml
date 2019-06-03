@@ -2,12 +2,12 @@
 - if process.method_breadcrumbs
   = process.method_breadcrumbs.split(',').join(" &rarr; ").html_safe
 - if process.current_group
-  = "currently in #{process.current_group}"
-  - if process.current_group_size
+  = "currently processing #{process.current_group}"
+  - if process.current_group_size # Sometimes we're just counting up with no limit, so this may be missing.
     - pct = (process.current_group.to_f / process.current_group_size * 1000).floor / 10.0
-    = "(#{pct}% of #{process.current_group_size})"
-  - if process.current_group_times
+    = "(#{pct}%) of #{process.current_group_size}"
+  - if process.current_group_times # Even if we're counting up, we may still have times!
     = "(last five times: #{process.current_group_times[-5,-1].join(', ')})"
     - if process.current_group_times.size > 5
       - avg = process.current_group_times.sum / process.current_group_times.size
-      = "(average of all times): #{avg})"
+      = "(average of all times: #{avg})"

@@ -8,15 +8,20 @@ class HarvestProcess < ActiveRecord::Base
   end
 
   def tick_group(time)
+    record_time(time)
+    update_attribute(:current_group, current_group + 1)
+  end
+
+  def record_time(time)
     if current_group_times.blank?
       update_attribute(:current_group_times, time)
     else
       update_attribute(:current_group_times, "#{current_group_times},#{time}")
     end
-    update_attribute(:current_group, current_group + 1)
   end
 
-  def update_group(position)
+  def update_group(position, time = nil)
+    record_time(time) if time
     update_attribute(:current_group, position)
   end
 

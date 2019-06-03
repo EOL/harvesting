@@ -367,12 +367,12 @@ class ResourceHarvester
   # TODO - extract to Store::Storage
   def store_new
     @new.each do |klass, models|
-      @process.info "Storing #{models.size} #{klass.name.pluralize}"
+      size = models.size
+      @process.info "Storing #{size} #{klass.name.pluralize}"
       # Grouping them might not be necssary, but it sure makes debugging easier...
       group_size = 1000
       g_count = 1
-      models.in_groups_of(group_size, false) do |group|
-        @process.info "... #{g_count * group_size}" if (g_count % 10).zero?
+      @process.in_groups(models, group_size, size: size) dp |group|
         g_count += 1
         # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
         # DB validations are adequate and we want to go faster:

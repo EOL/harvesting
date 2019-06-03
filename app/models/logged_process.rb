@@ -56,9 +56,9 @@ class LoggedProcess
     end
   end
 
-  # Up to the caller to call @process.update_group(position)
-  def enter_group(size)
-    @process.in_group_of_size(size)
+  # Up to the caller to call @process.update_group(position, time)
+  def enter_group(size = nil)
+    @process.in_group_of_size(size) if size
     yield(@process)
     @process.finished_group
   end

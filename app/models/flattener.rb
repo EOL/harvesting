@@ -45,7 +45,12 @@ class Flattener
 
   def build_ancestry
     @ancestry = {}
-    walk_down_tree(nil, [])
+    @time = Time.now
+    @process.enter_group do |harv_proc|
+      @harv_proc = harv_proc
+      walk_down_tree(nil, [])
+    end
+    @time = nil
   end
 
   def walk_down_tree(id, ancestors)
@@ -54,7 +59,11 @@ class Flattener
     ancestors_here << id
     @children[id].each do |child_id|
       @ancestry[child_id] = ancestors_here
-      @process.info("ancestry now has #{@ancestry.keys.size}") if (@ancestry.keys.size % 10_000).zero?
+      if (@ancestry.keys.size % 10_000).zero?
+        @harv_proc.update_group(@ancestry.keys.size, Time.now - @time)
+        @time = Time.now
+      end
+      # @process.info("ancestry now has #{}") if (@ancestry.keys.size % 10_000).zero?
       walk_down_tree(child_id, ancestors_here)
     end
   end
@@ -68,6 +77,7 @@ class Flattener
       @node_ancestors = []
       ancestry_size = @ancestry.keys.size
       ancestry_index = 0
+      time = Time.now
       @process.enter_group(ancestry_size) do |harv_proc|
         @ancestry.each_key do |child|
           ancestry_index += 1
@@ -77,7 +87,8 @@ class Flattener
               NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
             next if @node_ancestors.size < 100_000
             count += update_tables
-            harv_proc.update_group(ancestry_index)
+            harv_proc.update_group(ancestry_index, Time.now - time)
+            time = Time.now
             @node_ancestors = []
           end
         end
