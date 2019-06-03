@@ -71,7 +71,7 @@
   - if @harvest.time_in_minutes
     .item
       %strong Time to Harvest:
-      = "(took #{@harvest.time_in_minutes} minutes)"
+      = distance_of_time_in_words(@harvest.time_in_minutes)
 
 %h2 Expected File Format Definitions
 - if @harvest.formats.empty?

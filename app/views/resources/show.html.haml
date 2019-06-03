@@ -140,14 +140,14 @@
       .item= render('harvest_processes/show', process: process)
 - if last_harvest = @resource.harvests&.last
   %h2= "Last Harvest Content"
-  - media_count = last_harvest.media.published.count
+  - media_count = last_harvest.media.count
   .ui.segment
     .ui.six.tiny.statistics
       .statistic
-        .value= last_harvest.nodes.published.count
+        .value= last_harvest.nodes.count
         .label= t("resources.stats.nodes")
       .statistic
-        .value= last_harvest.articles.published.count
+        .value= last_harvest.articles.count
         .label= t("resources.stats.articles")
       .statistic
         .value= last_harvest.identifiers.count
@@ -156,20 +156,20 @@
         .value= media_count
         .label= t("resources.stats.media")
       .statistic
-        .value= Reference.where(harvest_id: last_harvest.id).published.count
+        .value= Reference.where(harvest_id: last_harvest.id).count
         .label= t("resources.stats.references")
       .statistic
-        .value= last_harvest.scientific_names.published.count
+        .value= last_harvest.scientific_names.count
         .label= t("resources.stats.scientific_names")
     .ui.six.tiny.statistics
       .statistic
-        .value= Trait.where(harvest_id: last_harvest.id).published.count
+        .value= Trait.where(harvest_id: last_harvest.id).count
         .label= t("resources.stats.traits")
       .statistic
-        .value= Assoc.where(harvest_id: last_harvest.id).published.count
+        .value= Assoc.where(harvest_id: last_harvest.id).count
         .label= t("resources.stats.associations")
       .statistic
-        .value= last_harvest.vernaculars.published.count
+        .value= last_harvest.vernaculars.count
         .label= t("resources.stats.vernaculars")
       .statistic
         .value= @resource.downloaded_media_count
@@ -187,7 +187,7 @@
       .label= t("resources.stats.downloaded_media_progress", count: pct)
 
 %h2= t(:resource_nodes_title)
-- if @resource.nodes.published.empty?
+- if @resource.nodes.empty?
   %p This resource has no nodes.
 - else
   %h3= t(:resource_nodes_root_head_count, count: @resource.nodes.root.count)
