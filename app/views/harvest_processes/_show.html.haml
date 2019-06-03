@@ -6,6 +6,7 @@
   - if process.current_group_size
     = "(size: #{process.current_group_size})"
   - if process.current_group_times
-    = "(times: #{process.current_group_times})"
-    - avg = process.current_group_times.sum / process.current_group_times.size
-    = "(average time: #{avg})"
+    = "(last five times: #{process.current_group_times[-5,-1].join(', ')})"
+    - if process.current_group_times.size > 5
+      - avg = process.current_group_times.sum / process.current_group_times.size
+      = "(average of all times): #{avg})"

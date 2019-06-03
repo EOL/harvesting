@@ -92,21 +92,9 @@
 - else
   %pre{ width: '120', style: 'white-space:pre-wrap;' }
     = @logs.join
-  -# = paginate(@logs)
-  -# %ul
-  -#   - @logs.each do |log|
-  -#     %li
-  -#       %strong= log.category
-  -#       (
-  -#       = log.created_at.strftime('%H:%M:%S')
-  -#       )
-  -#       = log.message
-  -#       - if log.format
-  -#         = "(for #{log.format.represents})"
-  -#       - if log.line?
-  -#         = "(on line #{log.line})"
-  -#       - if log.backtrace?
-  -#         .ui.list
-  -#           - log.backtrace.split("\n").each do |line|
-  -#             .item= line
-  -# = paginate(@logs)
+%h2= "Latest Process"
+- if @harvest.resource.harvest_processes.empty?
+  No processes have run for this resource.
+- else
+  %ul
+    .item= render('harvest_processes/show', process: @harvest.resource.harvest_processes.last)
