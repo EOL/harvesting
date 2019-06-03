@@ -372,7 +372,7 @@ class ResourceHarvester
       # Grouping them might not be necssary, but it sure makes debugging easier...
       group_size = 1000
       g_count = 1
-      @process.in_groups(models, group_size, size: size) dp |group|
+      @process.in_groups(models, group_size, size: size) do |group|
         g_count += 1
         # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
         # DB validations are adequate and we want to go faster:
