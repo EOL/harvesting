@@ -4,7 +4,8 @@
 - if process.current_group
   = "currently in #{process.current_group}"
   - if process.current_group_size
-    = "(size: #{process.current_group_size})"
+    - pct = (process.current_group.to_f / process.current_group_size * 1000).floor / 10.0
+    = "(#{pct}% of #{process.current_group_size})"
   - if process.current_group_times
     = "(last five times: #{process.current_group_times[-5,-1].join(', ')})"
     - if process.current_group_times.size > 5

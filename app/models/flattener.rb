@@ -66,16 +66,18 @@ class Flattener
       remove_ancestors_natively(@resource.id)
       @process.info('old ancestors deleted.')
       @node_ancestors = []
-      ancestry_size_pct = @ancestry.keys.size / 100.0
+      ancestry_size = @ancestry.keys.size
       ancestry_index = 0
-      @ancestry.each_key do |child|
-        ancestry_index += 1
-        @ancestry[child].each_with_index do |ancestor, depth|
-          next if ancestor.nil? # No need to store this one.
-          @node_ancestors <<
-            NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
-          if @node_ancestors.size >= 100_000
-            count += update_tables((ancestry_index / ancestry_size_pct).floor)
+      @process.enter_group(ancestry_size) do |harv_proc|
+        @ancestry.each_key do |child|
+          ancestry_index += 1
+          @ancestry[child].each_with_index do |ancestor, depth|
+            next if ancestor.nil? # No need to store this one.
+            @node_ancestors <<
+              NodeAncestor.new(node_id: child, ancestor_id: ancestor, resource_id: @resource.id, depth: depth)
+            next if @node_ancestors.size < 100_000
+            count += update_tables
+            harv_proc.update_group(ancestry_index)
             @node_ancestors = []
           end
         end
@@ -88,10 +90,9 @@ class Flattener
     NodeAncestor.connection.execute("DELETE FROM node_ancestors WHERE resource_id = #{resource_id}")
   end
 
-  def update_tables(pct = nil)
+  def update_tables
     # TODO: error-handling
     if @node_ancestors.any?
-      @process.info("Flattening #{@node_ancestors.size} ancestors #{"(#{pct}%)" unless pct.nil?}")
       NodeAncestor.import! @node_ancestors
     end
     @node_ancestors.size

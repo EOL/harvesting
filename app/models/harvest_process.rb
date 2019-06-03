@@ -16,6 +16,10 @@ class HarvestProcess < ActiveRecord::Base
     update_attribute(:current_group, current_group + 1)
   end
 
+  def update_group(position)
+    update_attribute(:current_group, position)
+  end
+
   def finished_group
     all_times = current_group_times.split(/,/)
     update_attribute(:current_group_size, 0)

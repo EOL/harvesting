@@ -39,6 +39,30 @@ class LoggedProcess
     end
   end
 
+  def in_batches(set, group_size, options = {})
+    size = options.key?(:batch_size) ? options[:batch_size] : 5_000
+    groups = (size.to_f / group_size).ceil
+    info("Processing group of #{size} in #{groups} groups of #{group_size}")
+    @process.in_group_of_size(size, groups)
+    start_all = Time.now
+    begin
+      set.find_in_batches(batch_size: group_size) do |group|
+        start = Time.now
+        yeild group
+        @process.tick_group((Time.now - start).round(2))
+      end
+    ensure
+      log_times(@process.finished_group, start_all)
+    end
+  end
+
+  # Up to the caller to call @process.update_group(position)
+  def enter_group(size)
+    @process.in_group_of_size(size)
+    yield(@process)
+    @process.finished_group
+  end
+
   def log_times(times, start_all)
     info("Finished processing, times: #{times.join(', ')}")
     info("Average: #{times.sum.to_f / times.size}")

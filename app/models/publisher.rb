@@ -102,12 +102,12 @@ class Publisher
       build_traits(nodes)
     else
       remove_existing_pub_files
-      @nodes.find_in_batches(batch_size: @limit) do |nodes|
+      @process.in_batches(batch_size: @limit) do |nodes|
         reset_vars
-        @process.run_step('nodes_to_hashes') { nodes_to_hashes(nodes) }
-        count_children # No need to time this, it's super-fast (about a 20th of a second in production)
-        @process.run_step('load_hashes') { load_hashes }
-        @process.run_step('build_traits') { build_traits(nodes) }
+        nodes_to_hashes(nodes) # This takes a about 75 seconds for a batch of 10K
+        count_children # super-fast (about a 20th of a second)
+        load_hashes # A few seconds
+        build_traits(nodes)
       end
     end
   end
@@ -619,7 +619,7 @@ class Publisher
   def load_hashes_from_array(array, options = {})
     return nil if array.blank?
     table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
-    @process.info("Loading #{array.size} #{table}...")
+    # @process.info("Loading #{array.size} #{table}...")
     write_local_csv(table, array, options)
   end
 
