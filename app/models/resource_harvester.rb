@@ -304,36 +304,42 @@ class ResourceHarvester
         into memory (#{@format.diff_size} lines)...")
       fields = build_fields
       i = 0
-      any_diff = @parser.diff_as_hashes(@headers) do |row|
-        i += 1
-        @process.info("row #{i}") if (i % 100_000).zero?
-        @file = @parser.path_to_file
-        @diff = @parser.diff
-        reset_row
-        begin
-          @headers.each do |header|
-            field = fields[header]
-            if row[header].blank?
-              if field.default_when_blank
-                row[header] = field.default_when_blank
-              else
-                next # Skip this value.
-              end
-            end
-            next if field.to_ignored?
-            raise "NO HANDLER FOR '#{field.mapping}'!" unless self.respond_to?(field.mapping)
-            # NOTE: that these methods are defined in the Store::* mixins:
-            send(field.mapping, field, row[header])
+      time = Time.now
+      @process.enter_group(@format.diff_size) do |harv_proc|
+        any_diff = @parser.diff_as_hashes(@headers) do |row|
+          i += 1
+          if (i % 10_000).zero?
+            harv_proc.update_group(i, Time.now - time)
+            time = Time.now
           end
-        rescue => e
-          @process.info "Failed to parse row #{@line_num}..."
-          raise e
-        end
-        # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
-        if @diff == :removed
-          destroy_for_fmt
-        else # new or changed
-          build_models
+          @file = @parser.path_to_file
+          @diff = @parser.diff
+          reset_row
+          begin
+            @headers.each do |header|
+              field = fields[header]
+              if row[header].blank?
+                if field.default_when_blank
+                  row[header] = field.default_when_blank
+                else
+                  next # Skip this value.
+                end
+              end
+              next if field.to_ignored?
+              raise "NO HANDLER FOR '#{field.mapping}'!" unless self.respond_to?(field.mapping)
+              # NOTE: that these methods are defined in the Store::* mixins:
+              send(field.mapping, field, row[header])
+            end
+          rescue => e
+            @process.info("Failed to parse row #{@line_num}...")
+            raise e
+          end
+          # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
+          if @diff == :removed
+            destroy_for_fmt
+          else # new or changed
+            build_models
+          end
         end
       end
       @process.warn('There were no differences in this file!') unless any_diff
