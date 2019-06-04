@@ -82,23 +82,28 @@ class LoggedProcess
 
   def info(message)
     @log.tagged('INFO') { log(message) }
+    @log.flush
   end
 
   def warn(message)
     @log.tagged('WARN') { log(message) }
+    @log.flush
   end
 
   def starting(method_name)
     @log.tagged('START') { log(method_name) }
+    @log.flush
     @process.start(method_name)
   end
 
   def cmd(command)
     @log.tagged('CMD') { log(command) }
+    @log.flush
   end
 
   def stopping(method_name)
     @log.tagged('STOP') { log(method_name) }
+    @log.flush
     @process.stop(method_name)
   end
 
@@ -118,6 +123,7 @@ class LoggedProcess
 
   def error(message)
     @log.tagged('ERR') { log(message) }
+    @log.flush
   end
 
   def log(message)
