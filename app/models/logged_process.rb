@@ -26,7 +26,7 @@ class LoggedProcess
     size = options.key?(:size) ? options[:size] : set.size
     groups = (size.to_f / group_size).ceil
     info("Processing group of #{size} in #{groups} groups of #{group_size}")
-    @process.in_group_of_size(size, groups)
+    @process.in_group_of_size(groups)
     start_all = Time.now
     begin
       models.in_groups_of(group_size, false) do |group|
@@ -43,7 +43,7 @@ class LoggedProcess
     size = options.key?(:batch_size) ? options[:batch_size] : 5_000
     groups = (size.to_f / group_size).ceil
     info("Processing group of #{size} in #{groups} groups of #{group_size}")
-    @process.in_group_of_size(size, groups)
+    @process.in_group_of_size(groups)
     start_all = Time.now
     begin
       set.find_in_batches(batch_size: group_size) do |group|
