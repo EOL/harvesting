@@ -146,6 +146,8 @@ class Resource < ActiveRecord::Base
 
   def process_log
     @log ||= ActiveSupport::TaggedLogging.new(Logger.new("#{path}/process.log"))
+    @log.auto_flushing = true # We don't want to wait to hear from our process!
+    @log
   end
 
   def process_log_path
