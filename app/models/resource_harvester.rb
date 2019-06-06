@@ -300,8 +300,7 @@ class ResourceHarvester
   def parse_diff_and_store
     clear_storage_vars
     each_diff do
-      @process.info("Loading #{@format.represents} (##{@format.id}) diff file \
-        into memory (#{@format.diff_size} lines)...")
+      @process.info("Loading #{@format.represents} diff file into memory (#{@format.diff_size} lines)...")
       fields = build_fields
       i = 0
       time = Time.now
