@@ -341,8 +341,8 @@ class ResourceHarvester
             build_models
           end
         end
+        @process.warn('There were no differences in this file!') unless any_diff
       end
-      @process.warn('There were no differences in this file!') unless any_diff
     end
     find_orphan_parent_nodes
     find_duplicate_nodes
