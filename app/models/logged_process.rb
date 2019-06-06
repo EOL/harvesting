@@ -29,7 +29,7 @@ class LoggedProcess
     @process.in_group_of_size(groups)
     start_all = Time.now
     begin
-      models.in_groups_of(group_size, false) do |group|
+      set.in_groups_of(group_size, false) do |group|
         start = Time.now
         yeild group
         @process.tick_group((Time.now - start).round(2))
