@@ -85,7 +85,6 @@ class Publisher
   end
 
   def slurp_nodes
-    testing = false
     # TODO: add relationships for links
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
@@ -96,19 +95,13 @@ class Publisher
                                 articles: %i[node license language references bibliographic_citation location
                                              articles_sections] <<
                                   { content_attributions: :attribution })
-    if testing
-      nodes = @nodes.limit(100)
-      nodes_to_hashes(nodes)
+    remove_existing_pub_files
+    @process.in_batches(@nodes, @limit) do |nodes|
+      reset_vars
+      nodes_to_hashes(nodes) # This takes a about 75 seconds for a batch of 10K
+      count_children # super-fast (about a 20th of a second)
+      load_hashes # A few seconds
       build_traits(nodes)
-    else
-      remove_existing_pub_files
-      @process.in_batches(batch_size: @limit) do |nodes|
-        reset_vars
-        nodes_to_hashes(nodes) # This takes a about 75 seconds for a batch of 10K
-        count_children # super-fast (about a 20th of a second)
-        load_hashes # A few seconds
-        build_traits(nodes)
-      end
     end
   end
 

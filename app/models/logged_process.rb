@@ -39,14 +39,14 @@ class LoggedProcess
     end
   end
 
-  def in_batches(set, group_size, options = {})
-    size = options.key?(:batch_size) ? options[:batch_size] : 5_000
-    groups = (size.to_f / group_size).ceil
-    info("Processing group of #{size} in #{groups} groups of #{group_size}")
-    @process.in_group_of_size(groups)
+  def in_batches(set, batch_size, options = {})
+    size = options.key?(:size) ? options[:size] : set.size
+    num_batches = (size.to_f / batch_size).ceil
+    info("Processing group of #{size} in #{num_batches} batches of #{batch_size}")
+    @process.in_group_of_size(num_batches)
     start_all = Time.now
     begin
-      set.find_in_batches(batch_size: group_size) do |group|
+      set.find_in_batches(batch_size: batch_size) do |group|
         start = Time.now
         yeild group
         @process.tick_group((Time.now - start).round(2))
