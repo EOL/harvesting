@@ -31,7 +31,7 @@ class LoggedProcess
     begin
       set.in_groups_of(group_size, false) do |group|
         start = Time.now
-        yeild group
+        yield group
         @process.tick_group((Time.now - start).round(2))
       end
     ensure
@@ -48,7 +48,7 @@ class LoggedProcess
     begin
       set.find_in_batches(batch_size: batch_size) do |group|
         start = Time.now
-        yeild group
+        yield group
         @process.tick_group((Time.now - start).round(2))
       end
     ensure
