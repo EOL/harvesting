@@ -65,12 +65,21 @@ class LoggedProcess
 
   def log_times(times, start_all)
     info("Finished processing, times: #{times.join(', ')}")
-    info("Average: #{times.sum.to_f / times.size}")
-    info("Time: #{(Time.now - start_all).round(2)}")
+    info("Average Time: #{(times.sum.to_f / times.size).round(3)}")
+    info("Total Time: #{(Time.now - start_all).round(2)}")
     return unless times.size > 6
     first_set = times[0..2].sum.to_f / 3
     last_set = times[-3..-1].sum.to_f / 3
-    info("Slope: #{(last_set / first_set).round(2)}")
+    info("last 3 / first 3: #{(last_set / first_set).round(2)}")
+    info("Std.Dev: #{std_dev(times)}; Max: #{times.max}")
+  end
+
+  # TODO: If we ever want a standard deviation elsewhere, we should generalize this...
+  def std_dev(times)
+    mean = times.sum / times.size
+    sum = times.inject(0) { |accum, i| accum + (i - mean)**2 }
+    sample_variance = (sum / (times.size - 1)).round(3)
+    Math.sqrt(sample_variance)
   end
 
   def exit
