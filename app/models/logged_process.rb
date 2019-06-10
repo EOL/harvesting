@@ -66,12 +66,24 @@ class LoggedProcess
   def log_times(times, start_all)
     info("Finished processing, times: #{times.join(', ')}")
     info("Average Time: #{(times.sum.to_f / times.size).round(3)}")
-    info("Total Time: #{(Time.now - start_all).round(2)}")
+    info("Total Time: #{time_in_human_readable_breakdown(Time.now - start_all)}")
     return unless times.size > 6
     first_set = times[0..2].sum.to_f / 3
     last_set = times[-3..-1].sum.to_f / 3
     info("last 3 / first 3: #{(last_set / first_set).round(2)}")
     info("Std.Dev: #{std_dev(times)}; Max: #{times.max}")
+  end
+
+  def time_in_human_readable_breakdown(tot_sec)
+    sec = tot_sec % 60
+    mins  = tot_sec / 60 % 60
+    hours = tot_sec / (60 * 60) % 60
+    days  = tot_sec / (60 * 60 * 24) % 24
+    tot_time = "#{sec.ceil}s"
+    tot_time = "#{mins.floor}m#{tot_time}" if mins > 1
+    tot_time = "#{hours.floor}h#{tot_time}" if hours > 1
+    tot_time = "#{days.floor}d#{tot_time}" if days > 1
+    tot_time
   end
 
   # TODO: If we ever want a standard deviation elsewhere, we should generalize this...
