@@ -6,6 +6,7 @@ class Resource < ActiveRecord::Base
   has_many :harvests, inverse_of: :resource, dependent: :destroy # NOTE: this destroy takes care of the rest.
   has_many :scientific_names, inverse_of: :resource
   has_many :nodes, inverse_of: :resource
+  has_many :node_ancestors, inverse_of: :resource
   has_many :vernaculars, inverse_of: :resource
   has_many :media, inverse_of: :resource
   has_many :articles, inverse_of: :resource
