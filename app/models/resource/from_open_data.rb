@@ -106,8 +106,9 @@ class Resource
         # TODO: Find Excel and write a .from_excel method much like .from_xml...
         if File.exist?("#{dir}/meta.xml")
           Resource.from_xml(dir, @resource)
-          log("...Will harvest resource #{@resource.name} (#{@resource.id})")
-          @resource.enqueue_harvest
+          # TODO: re-enable this. I turned it off so I could review the XML before harvesting big jobs!
+          # log("...Will harvest resource #{@resource.name} (#{@resource.id})")
+          # @resource.enqueue_harvest
         else
           fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
         end

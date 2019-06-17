@@ -5,7 +5,7 @@ class NodeAncestor < ActiveRecord::Base
   belongs_to :ancestor, class_name: 'Node', inverse_of: :descendants
 
   def self.export_ancestry(resource)
-    CSV.open(resource.path.join('publish_node_ancestors'), 'ab') do |csv|
+    CSV.open(resource.path.join('publish_node_ancestor_pages.csv'), 'ab') do |csv|
       where(resource_id: resource.id).includes(:node, :ancestor).find_each do |nod_anc|
         csv << [nod_anc.node.page_id, nod_anc.ancestor.page_id] if nod_anc.node&.page_id && nod_anc.ancestor&.page_id
       end
