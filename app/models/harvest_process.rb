@@ -26,7 +26,7 @@ class HarvestProcess < ActiveRecord::Base
   end
 
   def finished_group
-    all_times = current_group_times.split(/,/)
+    all_times = current_group_times.split(/,/).map(&:to_f)
     update_attribute(:current_group_size, 0)
     update_attribute(:current_group_times, '')
     update_attribute(:current_group, 0)
