@@ -327,9 +327,9 @@ class Resource < ActiveRecord::Base
   # This tends to be rather slow, so we do it in batches. TODO: I'd prefer a generic version of this logic live
   # somewhere else.
   def remove_type_via_resource(klass)
-    min = klass.where(resource_id: id).min
+    min = klass.where(resource_id: id).minimum(:id)
     return if min.nil?
-    max = klass.where(resource_id: id).max
+    max = klass.where(resource_id: id).maximum(:id)
     index = min
     batch_size = 10_000
     loop do

@@ -64,7 +64,7 @@ class LoggedProcess
   end
 
   def log_times(times, start_all)
-    info("Finished processing, times: #{times.join(', ')}")
+    # info("Finished processing, times: #{times.join(', ')}")
     info("Average Time: #{(times.sum.to_f / times.size).round(3)}")
     info("Total Time: #{time_in_human_readable_breakdown(Time.now - start_all)}")
     return unless times.size > 6
