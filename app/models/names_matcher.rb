@@ -104,7 +104,7 @@ class NamesMatcher
     @process.info("Q: #{how.inspect}") if @explain
     @logs << "Q: #{how.inspect}"
     results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
-    hits = results.map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
+    hits = results[0..9].map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
     @process.info("RESULTS (#{results.total_count}): #{hits}") if @explain
     @logs << "RESULTS (#{results.total_count}): #{hits}"
     results
@@ -345,7 +345,7 @@ class NamesMatcher
   def save_match(node, page_id, message = nil)
     @logs << message if message
     # NOTE: only grabbing the end of the matching log, if it's too long...
-    node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_535..-1])
+    node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_500..-1])
     @node_updates << node
     true # Just avoiding a large return value.
   end
@@ -355,7 +355,7 @@ class NamesMatcher
     @logs << message if message
     @unmatched << "#{node.canonical} (##{node.id})"
     @in_unmapped_area = false if @resource.id == 1 # NOTE: DWH is resource ID 1, and is always "mapped"
-    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: @logs.join('; '))
+    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: @logs.join('; ')[-65_500..-1])
     @node_updates << node
     true # Just avoiding a large return value.
   end
