@@ -64,6 +64,10 @@ class Harvest < ActiveRecord::Base
     update_attributes(failed_at: now, completed_at: now)
   end
 
+  def incomplete
+    update_attributes(failed_at: nil, completed_at: nil)
+  end
+
   # TODO: these two methods are obsolete. Remove them and their calls.
   def started_matching_at
     hlogs.where(category: Hlog.categories[:starts]).where('message LIKE "%match_nodes"')&.first&.created_at

@@ -156,11 +156,11 @@ class Node < ActiveRecord::Base
 
   def needs_to_be_mapped?
     return true if page_id.blank?
-    return false if resource_id == 1 # NOTE: hard-coded DWH as 1. It really needs to be first.
     return true if in_unmapped_area?
     # TODO: This won't actually happen; add these cases natively to the harvester (set the page_id to nil).
     # TODO: Think about what would happen if DWH changed Animalia and was reharvested. Does EVERYTHING get re-matched?
-    return true if scientific_name.changed?
+    # return true if scientific_name.changed?
+    false
   end
 
   def child_names

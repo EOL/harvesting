@@ -24,6 +24,20 @@ class Resource < ActiveRecord::Base
 
   acts_as_list
 
+  def self.native
+    Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
+      Resource.where(abbr: 'dvdtg').first_or_create do |r|
+        r.name = 'EOL Dynamic Hierarchy 1.1'
+        r.partner = Partner.native
+        r.description = ''
+        r.abbr = 'dvdtg'
+        r.is_browsable = true
+        r.has_duplicate_nodes = false
+        r.nodes_count = 650000
+      end
+    end
+  end
+
   def self.quick_define(options)
     partner = if p_opts = options[:partner]
                 Partner.where(p_opts).first_or_create
@@ -79,6 +93,10 @@ class Resource < ActiveRecord::Base
     resource.save
     Resource::FromMetaXml.import(loc, resource)
     resource
+  end
+
+  def native?
+    id = Resource.native.id?
   end
 
   def stop_adding_media_jobs

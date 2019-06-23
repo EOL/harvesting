@@ -72,6 +72,9 @@ class NamesMatcher
     @unmatched = []
     @new_page_id = nil
     @in_unmapped_area = true
+    @resource_nodes_count = @resource.nodes.count
+    @progress = @resource.nodes.where(['page_id IS NOT NULL AND in_unmapped_area = ?', false]).count
+    # TODO: Logging ... @unmatched.size of @resource_nodes_count
   end
 
   def match(node, how)
@@ -153,7 +156,11 @@ class NamesMatcher
 
   # The algorithm, as pseudo-code (Ruby, for brevity):
   def map_all_nodes_to_pages(root_nodes)
-    map_nodes(root_nodes)
+    @time_per_1000 = Time.now
+    @process.enter_group(@resource_nodes_count) do |harv_proc|
+      @harv_proc = harv_proc # I don't want to pass this around everywhere.
+      map_nodes(root_nodes)
+    end
   end
 
   def map_nodes(nodes)
@@ -346,18 +353,31 @@ class NamesMatcher
     @logs << message if message
     # NOTE: only grabbing the end of the matching log, if it's too long...
     node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_500..-1])
-    @node_updates << node
-    true # Just avoiding a large return value.
+    update_node(node)
+    tick_progress
   end
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
   def unmapped(node, message = nil)
     @logs << message if message
     @unmatched << "#{node.canonical} (##{node.id})"
-    @in_unmapped_area = false if @resource.id == 1 # NOTE: DWH is resource ID 1, and is always "mapped"
+    @in_unmapped_area = false if @resource.native?
     node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: @logs.join('; ')[-65_500..-1])
+    update_node(node)
+    tick_progress
+  end
+
+  def update_node(node)
     @node_updates << node
-    true # Just avoiding a large return value.
+    update_nodes if @node_updates.size >= 100_000
+    true # Just avoiding a large return value
+  end
+
+  def tick_progress
+    return unless @harv_proc
+    @progress += 1
+    @harv_proc.update_group(@progress, Time.now - @time_per_1000) if (@progress % 1000).zero?
+    @time_per_1000 = Time.now
   end
 
   def update_nodes
@@ -367,7 +387,7 @@ class NamesMatcher
       return
     end
     Node.import!(@node_updates, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
-    true # Just avoiding a large return value.
+    @node_updates = []
   end
 
   def new_page_id
@@ -408,12 +428,12 @@ class NamesMatcher
 
   def log_unmatched
     if @unmatched.blank?
-      @process.info("ZERO unmatched nodes (of #{@resource.nodes.count})! Nicely done.")
+      @process.info("ZERO unmatched nodes (of #{@resource_nodes_count})! Nicely done.")
     elsif @unmatched.size > 10
-      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource.nodes.count})! That's too many to output. "\
+      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource_nodes_count})! That's too many to output. "\
         "First 10: #{@unmatched[0..9].join('; ')}")
     else
-      @process.info("Unmatched nodes (#{@unmatched.size} of #{@resource.nodes.count}): #{@unmatched.join('; ')}")
+      @process.info("Unmatched nodes (#{@unmatched.size} of #{@resource_nodes_count}): #{@unmatched.join('; ')}")
     end
   end
 end
