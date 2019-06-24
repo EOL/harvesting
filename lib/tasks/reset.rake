@@ -14,7 +14,7 @@ namespace :reset do
 
     desc 'rebuild the database, re-running migrations. Only the DWH harvest is performed.'
     task first: :none do
-      ResourceHarvester.new(Resource.first).start
+      ResourceHarvester.new(Resource.native).start
     end
 
     desc 'rebuild the database, re-running migrations. The DWH harvests is performed, then the resource with the ENV RESOURCE abbreviation is run.'
@@ -33,7 +33,7 @@ namespace :reset do
     Rake::Task['log:clear'].invoke
     Rake::Task['db:reset'].invoke
     Rake::Task['searchkick:reindex:all'].invoke
-    ResourceHarvester.new(Resource.first).start
+    ResourceHarvester.new(Resource.native).start
   end
 
   desc 'reset the database, using the schema instead of migrations. All seed harvests are performed.'

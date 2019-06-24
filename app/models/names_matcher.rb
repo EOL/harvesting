@@ -114,11 +114,11 @@ class NamesMatcher
   end
 
   def match_canonical_and_authors_in_eol(node)
-    match(node, where: { resource_id: 1, authors: node.scientific_name.authors })
+    match(node, where: { resource_id: Resource.native.id, authors: node.scientific_name.authors })
   end
 
   def match_synonyms_and_authors_in_eol(node)
-    match(node, field: :synonyms, where: { resource_id: 1, synonym_authors: node.scientific_name.authors })
+    match(node, field: :synonyms, where: { resource_id: Resource.native.id, synonym_authors: node.scientific_name.authors })
   end
 
   def match_synonyms_and_authors_from_partners(node)
@@ -128,11 +128,11 @@ class NamesMatcher
   end
 
   def match_canonical_in_eol(node)
-    match(node, where: { resource_id: 1 })
+    match(node, where: { resource_id: Resource.native.id })
   end
 
   def match_synonyms_in_eol(node)
-    match(node, field: :synonyms, where: { resource_id: 1 })
+    match(node, field: :synonyms, where: { resource_id: Resource.native.id })
   end
 
   # TODO: some resources CAN match themselves...

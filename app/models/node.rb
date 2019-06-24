@@ -36,7 +36,7 @@ class Node < ActiveRecord::Base
 
   class << self
     def native_virus
-      @native_virus ||= where(resource_id: 1, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
+      @native_virus ||= where(resource_id: Resource.native.id, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
     end
 
     def remove_indexes(filter)
@@ -105,7 +105,7 @@ class Node < ActiveRecord::Base
   def dump_eol_page_ids
     file = Rails.public_path.join('data', 'eol_page_ids.csv')
     CSV.open(file, 'wb', encoding: 'UTF-8') do |csv|
-      where(resource_id: 1).select('id, resource_pk, page_id').find_in_batches(batch_size: 25_000) do |batch|
+      where(resource_id: Resource.native.id).select('id, resource_pk, page_id').find_in_batches(batch_size: 25_000) do |batch|
         batch.each do |row|
           csv << [row.resource_pk, row.page_id]
         end

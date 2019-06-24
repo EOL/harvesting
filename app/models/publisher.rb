@@ -7,7 +7,7 @@ class Publisher
   end
 
   def self.first
-    publisher = new(resource: Resource.first)
+    publisher = new(resource: Resource.native)
     publisher.by_resource
     publisher
   end
