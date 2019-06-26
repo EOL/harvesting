@@ -37,7 +37,7 @@ module Store
       type = if @media_type_mappings.key?(norm_val)
         @media_type_mappings[norm_val]
       else
-        log_warning(%Q{Could not find a media type (subclass) of "#{norm_val}"}) unless
+        @process.warn(%Q{Could not find a media type (subclass) of "#{norm_val}"}) unless
           @missing_media_types.key?(norm_val)
         @missing_media_types[norm_val] = true
         :image
@@ -70,7 +70,7 @@ module Store
       type = if @media_subtype_mappings.key?(norm_val)
                @media_subtype_mappings[norm_val]
              else
-               log_warning(%Q{Could not find a media subtype (format) of "#{norm_val}"}) unless
+               @process.warn(%Q{Could not find a media subtype (format) of "#{norm_val}"}) unless
                  @missing_media_types.key?(norm_val)
                @missing_media_types[norm_val] = true
                :jpg

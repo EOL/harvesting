@@ -83,7 +83,7 @@ module Store
       begin
         TaxonomicStatus.parse(status)
       rescue Errors::UnmatchedTaxonomicStatus => e
-        log_warning("New Taxonomic status: #{status}; treatings as unusable...") unless @bad_statuses.key?(status)
+        @process.warn("New Taxonomic status: #{status}; treatings as unusable...") unless @bad_statuses.key?(status)
         @bad_statuses[status] = true
         return :unusable
       end
@@ -243,7 +243,7 @@ module Store
         longer = length + 256
         # Max length on log line (the limit is bout 64_000, but that's tedious and doesn't give us much more info.)
         longer = 2000 if longer > 2000
-        log_warning("title is too long for medium #{@models[model][:resource_pk]}; truncating to #{length} chars: "\
+        @process.warn("title is too long for medium #{@models[model][:resource_pk]}; truncating to #{length} chars: "\
           "#{@models[model][field][0..longer]}...") if options[:warn]
         @models[model][field] = @models[model][field][0..length]
       end
@@ -319,12 +319,12 @@ module Store
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon] && parent
-        return log_warning("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a "\
+        return @process.warn("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a "\
                            "parentMeasurementID #{parent}")
       end
       if !@models[:trait][:of_taxon] && parent.blank? && occurrence.blank?
         puts @models[:trait].inspect
-        return log_warning("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent "\
+        return @process.warn("IGNORING a measurement NOT of a taxon (#{@models[:trait][:resource_pk]}) with NO parent "\
                            'and NO occurrence ID.')
       end
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
@@ -462,7 +462,7 @@ module Store
       @section_values ||= {}
       return @section_values[value] if @section_values.key?(value)
       unless SectionValue.exists?(value: value)
-        log_warning("Could not find a section value of '#{value}' for article #{@models[:article][:resource_pk]}")
+        @process.warn("Could not find a section value of '#{value}' for article #{@models[:article][:resource_pk]}")
         return @section_values[value] = nil
       end
       @section_values[value] = SectionValue.where(value: value).pluck(:section_id).first
@@ -490,7 +490,7 @@ module Store
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         elsif !units.blank?
-          log_warning("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
+          @process.warn("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
         end
         # TODO: Ideally, we need to know whether the source file users commas or periods as a delimiter.
         instance[:measurement] = value&.tr(',', '')
@@ -532,7 +532,7 @@ module Store
           is_hidden_from_glossary: true
         )
         # TODO: This isn't necessarily a problem with the measurements file; it could be the occurrences. :S
-        log_warning("Created #{options[:type] || '(unspecified type of)'} term for #{uri}!")
+        @process.warn("Created #{options[:type] || '(unspecified type of)'} term for #{uri}!")
       end
       term
     end
