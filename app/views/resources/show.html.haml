@@ -3,7 +3,7 @@
 .ui.tiny.attached.menu
   -# TODO: HACK! We need real secrets for this to work, argh:
   - id = WebDb.resource_id(@resource) rescue ''
-  .item= link_to(t("resources.actions.publishing_side"), "http://eol.org/resources/#{id}")
+  .item= link_to(t("resources.actions.publishing_side"), "#{Rails.application.secrets.publishing_root_url}/resources/#{id}")
   - if policy(@resource).update?
     .item= link_to(t("edit"), edit_resource_path(@resource))
     .item= link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
