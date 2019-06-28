@@ -10,13 +10,13 @@ class MediumPrepper::SaveAndServe
 
   def get_ext(base_uri)
     @ext = begin
-             File.extname(base_uri.path).downcase
+             File.extname(base_uri.path).downcase.gsub(/^\./, '')
            rescue => e
              raise "Unable to parse #{base_uri} for ext (#{e.class}: #{e.message})"
            end
     valid_exts = %w[mp3 ogg wav mp4 ogv mov svg webm]
     raise "#{raw.base_uri} is not a valid save-and-serve type (one of #{valid_exts.join(', ')}): #{@ext}" unless
-      valid_exts.includes?(@ext)
+      valid_exts.include?(@ext)
   end
 
   def prep_medium
