@@ -20,9 +20,9 @@ class Resource::FromMetaXml
       @doc = File.open(filename) { |f| Nokogiri::XML(f) }
       file_configs = @doc.css('archive table')
       file_configs.each do |file_config|
-        location = file_config("location").first.text
+        location = file_config.css("location").first.text
         puts "++ #{resource.name}/#{location}"
-        file_config('field').each do |field|
+        file_config.css('field').each do |field|
           i = field['index'].to_i
           format = resource.formats.where("get_from LIKE '%#{location}'")&.first
           if format.nil?
