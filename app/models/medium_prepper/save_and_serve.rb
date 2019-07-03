@@ -20,14 +20,14 @@ class MediumPrepper::SaveAndServe
   end
 
   def prep_medium
-    unmodified_url = "#{@medium.default_base_url}#{@ext}"
+    unmodified_url = "#{@medium.default_base_url}.#{@ext}"
     @medium.update_attributes(downloaded_at: @downloaded_at, unmodified_url: unmodified_url,
                               base_url: @medium.default_base_url)
     @medium.resource.update_attribute(:downloaded_media_count, @medium.resource.downloaded_media_count + 1)
   end
 
   def save_ogg(raw)
-    filename = "#{@medium.dir}/#{@medium.basename}#{@ext}"
+    filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
     open(filename, 'wb') do |file|
       file << raw.read
     end
