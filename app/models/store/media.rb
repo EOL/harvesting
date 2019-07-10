@@ -18,10 +18,10 @@ module Store
       @models[:medium][:language_code_verbatim] = val # we will 'find' it later.
     end
 
+    # Sets subclass. NOT format.
     def to_media_type(field, val)
       @models[:medium] ||= {}
       return if @models[:medium].key?(:subclass) # We've already got one.
-      # TODO: lots more to these mappings, especially the URIs that commonly get used.
       @media_type_mappings ||= {
         'image' => :image,
         'video' => :video,
@@ -31,7 +31,8 @@ module Store
         'map_js' => :map_js,
         'http://purl.org/dc/dcmitype/stillimage' => :image,
         'http://purl.org/dc/dcmitype/movingimage' => :video,
-        'http://purl.org/dc/dcmitype/text' => :article
+        'http://purl.org/dc/dcmitype/text' => :article,
+        'http://purl.org/dc/dcmitype/sound' => :wav
       }
       norm_val = val.downcase
       type = if @media_type_mappings.key?(norm_val)
@@ -47,13 +48,14 @@ module Store
     end
 
     # http://rs.tdwg.org/audubon_core/subtype
+    # Sets format, and *possibly* subclass, if one is strictly inferred. Best to set subclass with to_media_type
     def to_media_subtype(field, val)
       @models[:medium] ||= {}
       @media_subtype_mappings ||= {
         'image/jpeg' => :jpg,
         'image/gif' => :jpg, # It will be converted.
         'video/x-youtube' => :youtube,
-        'application/x-shockwave-flash' => :flash,
+        'application/x-shockwave-flash' => :flash, # NOTE: we don't actually have a PLAYER for these anymore! :S
         'video/vimeo' => :vimeo,
         'video/mp4' => :mp4,
         'application/javascript' => :map_js,
@@ -62,6 +64,7 @@ module Store
         'audio/ogg' => :ogg, # NOTE: this one is "best"
         'application/ogg' => :ogg,
         'audio/wav' => :wav,
+        'audio/x-wav' => :wav,
         'text/html' => nil, # Nothing needed; this is just an article!
         'map' => :map_image,
         'map_image' => :map_image

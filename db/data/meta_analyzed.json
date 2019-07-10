@@ -133,7 +133,7 @@
 "is_required":false},
 {"term":"http://rs.tdwg.org/audubon_core/subtype",
 "for_format":"media",
-"represents":"to_media_subtype",
+"represents":"to_media_type",
 "submapping":null,
 "is_unique":false,
 "is_required":false},
