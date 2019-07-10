@@ -170,7 +170,7 @@ class Resource < ActiveRecord::Base
 
   # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.
   def log_error(message)
-    process_log.tagged('ERR') { log(message) }
+    process_log.tagged('ERR') { process_log.warn("[#{Time.now.strftime('%F %T')}][hdls] #{message}") }
   end
 
   def process_log_path
