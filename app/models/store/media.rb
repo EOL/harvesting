@@ -32,7 +32,7 @@ module Store
         'http://purl.org/dc/dcmitype/stillimage' => :image,
         'http://purl.org/dc/dcmitype/movingimage' => :video,
         'http://purl.org/dc/dcmitype/text' => :article,
-        'http://purl.org/dc/dcmitype/sound' => :wav
+        'http://purl.org/dc/dcmitype/sound' => :sound
       }
       norm_val = val.downcase
       type = if @media_type_mappings.key?(norm_val)
