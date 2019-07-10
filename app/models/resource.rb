@@ -168,6 +168,11 @@ class Resource < ActiveRecord::Base
     @log
   end
 
+  # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.
+  def log_error(message)
+    process_log.tagged('ERR') { log(message) }
+  end
+
   def process_log_path
     "#{path}/process.log"
   end

@@ -132,8 +132,7 @@ class Medium < ActiveRecord::Base
   def fail_from_download_and_prep(e)
     update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
     resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-    harvest.log("download_and_prep FAILED for Medium.find(#{self[:id]}) [#{e.backtrace.first}]: #{e.message[0..1000]}",
-      cat: :downloads)
+    resource.log_error("download_and_prep FAILED for Medium.find(#{self[:id]}): #{e.message[0..1000]}")
     nil
   end
 
@@ -154,11 +153,11 @@ class Medium < ActiveRecord::Base
       retry
     rescue Net::ReadTimeout
       mess = "Timed out reading #{get_url} for Medium ##{self[:id]}"
-      harvest.log(mess, cat: :errors)
+      resource.log_error(mess)
       raise Net::ReadTimeout, mess
     rescue IOError => e
       mess = "File too large reading #{get_url} for Medium ##{self[:id]}"
-      harvest.log(mess, cat: :errors)
+      resource.log_error(mess)
       raise e
     end
     abort_empty_download if raw.nil?
@@ -168,7 +167,7 @@ class Medium < ActiveRecord::Base
   def abort_empty_download
     mess = "#{get_url} was empty. Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
     Delayed::Worker.logger.error(mess)
-    harvest.log(mess, cat: :errors)
+    resource.log_error(mess)
     raise 'empty'
   end
 
@@ -177,7 +176,7 @@ class Medium < ActiveRecord::Base
       mess = "Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk} is an SVG "\
         "(#{sanitized_source_url}). Aborting."
       Delayed::Worker.logger.error(mess)
-      harvest.log(mess, cat: :errors)
+      resource.log_error(mess)
       raise 'empty'
     end
   end
@@ -203,7 +202,7 @@ class Medium < ActiveRecord::Base
     mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
       "(#{resource.id}), PK: #{resource_pk}"
     Delayed::Worker.logger.error(mess)
-    harvest.log(mess, cat: :errors)
+    resource.log_error(mess)
     raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
   end
 end
