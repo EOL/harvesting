@@ -152,11 +152,11 @@ class Medium < ActiveRecord::Base
       attempts += 1
       retry
     rescue Net::ReadTimeout
-      mess = "Timed out reading #{get_url} for Medium ##{self[:id]}"
+      mess = "Timed out reading #{sanitized_source_url} for Medium ##{self[:id]}"
       resource.log_error(mess)
       raise Net::ReadTimeout, mess
     rescue IOError => e
-      mess = "File too large reading #{get_url} for Medium ##{self[:id]}"
+      mess = "File too large reading #{sanitized_source_url} for Medium ##{self[:id]}"
       resource.log_error(mess)
       raise e
     end
@@ -165,7 +165,7 @@ class Medium < ActiveRecord::Base
   end
 
   def abort_empty_download
-    mess = "#{get_url} was empty. Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
+    mess = "#{sanitized_source_url} was empty. Medium.find(#{self[:id]}) resource: #{resource.name} (#{resource.id}), PK: #{resource_pk}"
     Delayed::Worker.logger.error(mess)
     resource.log_error(mess)
     raise 'empty'
@@ -199,7 +199,7 @@ class Medium < ActiveRecord::Base
     end
     # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
     # clearer.
-    mess = "#{get_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
+    mess = "#{sanitized_source_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
       "(#{resource.id}), PK: #{resource_pk}"
     Delayed::Worker.logger.error(mess)
     resource.log_error(mess)
