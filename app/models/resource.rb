@@ -109,6 +109,7 @@ class Resource < ActiveRecord::Base
 
   def fix_downloaded_media_count
     update_attribute(:downloaded_media_count, media.where('sizes IS NOT NULL').count)
+    update_attribute(:failed_downloaded_media_count, 0)
   end
 
   def lockfile_name
@@ -187,7 +188,7 @@ class Resource < ActiveRecord::Base
   end
 
   def re_download_opendata_and_harvest
-    harvests.destroy_all
+    remove_content
     Resource::FromOpenData.reload(self)
     # TODO: Change this to something nicer, once we can handle deltas.
     harvest
@@ -320,12 +321,14 @@ class Resource < ActiveRecord::Base
     ].each do |klass|
       remove_type(klass)
     end
+    update_attribute(:downloaded_media_count, 0)
+    update_attribute(:failed_downloaded_media_count, 0)
     remove_from_searchkick
     Searchkick.callbacks(false) do
       remove_type(Node)
     end
     remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
-    harvests.each { |h| h.destroy }
+    harvests.destroy_all
     if Delayed::Job.count > 100_000
       puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
     else
