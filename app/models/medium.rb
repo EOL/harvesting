@@ -200,8 +200,8 @@ class Medium < ActiveRecord::Base
     end
     # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
     # clearer.
-    mess = "#{sanitized_source_url} is #{content_type}, NOT an image. Medium.find(#{self[:id]}) resource: #{resource.name} "\
-      "(#{resource.id}), PK: #{resource_pk}"
+    mess = "#{sanitized_source_url} is #{content_type}, which is unsupported. Medium.find(#{self[:id]}) resource: "\
+      "#{resource.name} (#{resource.id}), PK: #{resource_pk}"
     Delayed::Worker.logger.error(mess)
     resource.log_error(mess)
     raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
