@@ -188,6 +188,7 @@ class Medium < ActiveRecord::Base
       %r{application/octet-stream} => MediumPrepper::Image,
       %r{application/ogg} => MediumPrepper::SaveAndServe,
       %r{audio/mpeg} => MediumPrepper::SaveAndServe,
+      %r{audio/wav} => MediumPrepper::SaveAndServe,
       %r{video/mp4} => MediumPrepper::SaveAndServe,
       %r{video/quicktime} => MediumPrepper::SaveAndServe,
       %r{image/svg+xml} => MediumPrepper::SaveAndServe,
