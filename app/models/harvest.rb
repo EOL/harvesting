@@ -40,11 +40,11 @@ class Harvest < ActiveRecord::Base
     complete_harvest_instance completed
   ]
 
-  def download_all_images
+  def download_media
     resource.fix_downloaded_media_count
     return if media.missing.count.zero?
     Medium.download_and_prep(media.missing.limit(25))
-    delay(queue: 'media').download_all_images
+    delay(queue: 'media').download_media
   end
 
   def retry_failed_images
@@ -52,7 +52,7 @@ class Harvest < ActiveRecord::Base
     bad_images = media.where(w: nil, format: Medium.formats[:jpg])
     return if bad_images.count.zero?
     bad_images.update_all(downloaded_at: nil)
-    delay(queue: 'media').download_all_images
+    delay(queue: 'media').download_media
   end
 
   def convert_trait_units

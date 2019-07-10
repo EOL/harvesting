@@ -590,8 +590,7 @@ class ResourceHarvester
   end
 
   def queue_downloads
-    # TODO: Likely other "kinds" of downloads for other kinds of media.
-    @harvest.download_all_images
+    @harvest.download_media
   end
 
   def parse_names

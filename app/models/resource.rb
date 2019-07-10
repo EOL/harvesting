@@ -104,11 +104,11 @@ class Resource < ActiveRecord::Base
   end
 
   def undownloaded_media_count
-    media.where(sizes: nil).count
+    media.where(downloaded_at: nil).count
   end
 
   def fix_downloaded_media_count
-    update_attribute(:downloaded_media_count, media.where('sizes IS NOT NULL').count)
+    update_attribute(:downloaded_media_count, media.where('downloaded_at IS NOT NULL').count)
     update_attribute(:failed_downloaded_media_count, 0)
   end
 
