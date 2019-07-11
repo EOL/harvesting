@@ -19,6 +19,7 @@ class Medium < ActiveRecord::Base
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where('base_url IS NOT NULL') }
+  scope :needs_download, -> { where(downloaded_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }
 
   class << self
