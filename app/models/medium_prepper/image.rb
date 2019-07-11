@@ -1,6 +1,6 @@
 module MediumPrepper
-# Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
-# versions, resizing it for others, and then storing information about it in the DB.
+  # Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
+  # versions, resizing it for others, and then storing information about it in the DB.
   class Image
     include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
 
@@ -10,8 +10,8 @@ module MediumPrepper
       @available_sizes = {}
       @orig_w = 0
       @orig_h = 0
-      # NOTE: you can try changing this to make for faster downloads (smaller values, down to 10) or better representation
-      # of the original (higher values, up to 100)
+      # NOTE: you can try changing this to make for faster downloads (smaller values, down to 10) or better
+      # representation of the original (higher values, up to 100)
       @our_quality = 60
       @ext = 'jpg'
       read_image(raw)
@@ -47,7 +47,7 @@ module MediumPrepper
         @medium.harvest.log(mess, cat: :errors)
         raise 'unparsable'
       ensure
-        raw = nil # Hand it to GC.
+        raw = nil # Hand it to GC. I am not sure this actually helps, but I am paranoid about removing it. :|
       end
     end
 
@@ -123,4 +123,5 @@ module MediumPrepper
       this_h = this_image.rows
       "#{this_w}x#{this_h}"
     end
+  end
 end
