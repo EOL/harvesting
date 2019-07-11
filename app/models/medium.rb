@@ -24,21 +24,6 @@ class Medium < ActiveRecord::Base
   class << self
     attr_accessor :sizes, :bucket_size
 
-    # NOTE: this is TEMP code for use ONCE. You can delete it, if you are reading this. Yes, really. Truly. Do it.
-    def fix_wikimedia_characters(res)
-      res.media.where(w: nil).find_each do |img|
-        next if img.source_url =~ /(svg|ogg|ogv)$/
-        string = img.source_page_url.sub(/^.*File:/, '').sub(/\..{3,4}$/, '')
-        good_name = URI.decode(string)
-        bad_name = img.source_url.sub(/^.*\//, '').sub(/\..{3,4}$/, '')
-        %i[source_url name_verbatim name description description_verbatim].each do |f|
-          img[f].sub!(bad_name, good_name) unless img[f].nil?
-        end
-        img.save
-        img.download_and_prep
-      end
-    end
-
     def download_and_prep(images)
       count = 0
       images.select('id').map(&:id).each do |img_id|
@@ -105,7 +90,7 @@ class Medium < ActiveRecord::Base
   end
 
   def sanitized_source_url
-    @sanitized_source_url ||= source_url.sub(/^https/, 'http')
+    @sanitized_source_url ||= source_url.sub(/^https/, 'http').gsub(' ', '%20')
   end
 
   def fix_encoding_for_sanitized_source_url
