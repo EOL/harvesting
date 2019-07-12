@@ -58,6 +58,7 @@ module Store
         'application/x-shockwave-flash' => :flash, # NOTE: we don't actually have a PLAYER for these anymore! :S
         'video/vimeo' => :vimeo,
         'video/mp4' => :mp4,
+        'video/quicktime' => :mov,
         'application/javascript' => :map_js,
         'audio/mpeg' => :mp3, # NOTE: this one is "best".
         'audio/mp3' => :mp3,
