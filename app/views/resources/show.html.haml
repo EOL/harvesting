@@ -184,7 +184,7 @@
     #progress.ui.progress{ data: { value: @resource.downloaded_media_count, total: media_count } }
       .bar
         .progress
-      .label= t("resources.stats.downloaded_media_progress", count: pct)
+      .label= t("resources.stats.downloaded_media_progress")
 
 %h2= t(:resource_nodes_title)
 - if @resource.nodes.empty?
