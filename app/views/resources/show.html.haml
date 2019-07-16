@@ -181,10 +181,10 @@
 
 - if media_count&.positive?
   .ui.segment
-    #progress.ui.progress{ data: { value: @resource.downloaded_media_count, total: media_count } }
+    #progress.ui.indicating.progress{ data: { value: @resource.downloaded_media_count, total: media_count } }
       .bar
         .progress
-      .label= t("resources.stats.downloaded_media_progress", count: @resource.downloaded_media_count)
+      .label= t("resources.stats.downloaded_media_progress", count: ((@resource.downloaded_media_count / media_count.to_f) * 100).to_i)
 
 %h2= t(:resource_nodes_title)
 - if @resource.nodes.empty?
