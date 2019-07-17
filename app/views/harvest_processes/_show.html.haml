@@ -8,7 +8,8 @@
     = "(#{pct}%) of #{process.current_group_size}"
   - if process.current_group_times && !process.current_group_times.empty? # Even if we're counting up, we may still have times!
     - times = process.current_group_times.split(',').map! { |t| t.to_f }
-    = "(last five times: #{times[-5..-1].map { |t| t.round(1) }.join('s, ')}s)"
-    - if times.size > 5
-      - avg = (times.sum / process.current_group_times.size).round(2)
-      = "(average of all times: #{avg}s)"
+    - if times[-5..-1]
+      = "(last five times: #{times[-5..-1].map { |t| t.round(1) }.join('s, ')}s)"
+      - if times.size > 5
+        - avg = (times.sum / process.current_group_times.size).round(2)
+        = "(average of all times: #{avg}s)"
