@@ -228,7 +228,10 @@ class Publisher
 
   def clean_values(src)
     val = src.dup
-    val.gsub!("\t", '&nbsp;') if val.respond_to?(:gsub!) # Sorry, no tabs allowed.
+    if val.respond_to?(:gsub!)
+      val.gsub!("\t", '&nbsp;') # Sorry, no tabs allowed.
+      val.gsub!('"', '&quot;')  # This may cause some display issues, so we should probably restore then on import.
+    end
     val = 1 if val.class == TrueClass
     val = 0 if val.class == FalseClass
     val
