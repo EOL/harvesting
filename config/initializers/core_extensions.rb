@@ -24,11 +24,13 @@ class ActiveRecord::Base
       clauses = ["UPDATE `#{table_name}` t JOIN `#{o_table}` o ON (t.`#{fk}` = o.`#{o_field}`"]
       clauses << "AND t.#{filter_field} = ? AND o.#{filter_field} = t.#{filter_field}" if filter
       clauses << "AND t.#{options[:poly_type]} = ?" if options[:poly_type]
+      clauses << "AND o.#{options[:filter_on]} = ?" if options[:filter_on]
       clauses << ')'
       clauses << "SET t.`#{set}` = o.`#{with_field}`"
       values = []
       values << filter if filter
       values << options[:poly_val] if options[:poly_val]
+      values << options[:filter_val] if options[:filter_val]
       page_size = 64_000 # NOTE: I played around with this value a bit, and this seems an efficient value.
       if max - min > page_size
         clauses << "WHERE t.#{primary_key} >= ? AND t.#{primary_key} <= ?"
