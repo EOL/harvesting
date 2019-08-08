@@ -442,7 +442,7 @@ class ResourceHarvester
   def resolve_node_keys
     # Node ancestry:
     propagate_id(Node, fk: 'parent_resource_pk', other: 'nodes.resource_pk', set: 'parent_id', with: 'id')
-    # Node scientific names:
+    # Node scientific names: # TODO - bug - this NEEDS to add a clause to ONLY select is_preferred. Gah!
     propagate_id(Node, fk: 'resource_pk', other: 'scientific_names.node_resource_pk',
                        set: 'scientific_name_id', with: 'id')
     # Scientific names to nodes:
@@ -459,7 +459,7 @@ class ResourceHarvester
     propagate_id(Medium, fk: 'node_resource_pk', other: 'nodes.resource_pk', set: 'node_id', with: 'id')
     # Bib_cit:
     propagate_id(Medium, fk: 'resource_pk', other: 'bibliographic_citations.resource_pk',
-                          set: 'bibliographic_citation_id', with: 'id')
+                         set: 'bibliographic_citation_id', with: 'id')
     resolve_references(MediaReference, 'medium')
     resolve_attributions(Medium)
   end

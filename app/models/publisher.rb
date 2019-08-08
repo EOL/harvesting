@@ -321,8 +321,8 @@ class Publisher
     name_struct.page_id = node.page_id
     name_struct.harv_db_id = name_model.id
     name_struct.canonical_form = clean_values(name_model.canonical_italicized)
-    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status.try(:downcase), @process)
-    name_struct.is_preferred = clean_values(node.scientific_name_id == name_model.id)
+    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status_verbatim&.downcase, @process)
+    name_struct.is_preferred = clean_values(name_model.is_preferred)
     name_struct.created_at = Time.now.to_s(:db)
     name_struct.updated_at = Time.now.to_s(:db)
     name_struct.resource_id = @web_resource_id

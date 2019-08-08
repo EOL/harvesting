@@ -14,6 +14,38 @@ class ScientificName < ActiveRecord::Base
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :used_for_merges, -> { where(is_used_for_merges: true) }
 
+  # We discovered that about 40 resources were affected by a bug where the #scientific_name attribute of a Node could be
+  # assigned to a non-preferred ScientificName. This code detects those problems and heals them.
+  def self.fix_bad_node_names
+    healed = 0
+    good_statuses = ['preferred', 'accepted', 'valid', 'provisionally accepted', 'HARVEST ANCESTOR']
+    set = Node.joins(:scientific_name).includes(:scientific_names).
+      where(['(scientific_names.taxonomic_status_verbatim NOT IN (?) AND '\
+        'scientific_names.taxonomic_status_verbatim IS NOT NULL)', good_statuses]); 1
+    count = set.count
+    begin
+      set.find_each do |node|
+        best_names = node.scientific_names.select { |n| n.is_preferred }
+        best_names = node.scientific_names.select { |n| n.preferred? } if best_names.empty?
+        best_names = node.scientific_names.select { |n| n.provisionally_accepted? } if best_names.empty?
+        best_names = node.scientific_names.select { |n| n.taxonomic_status.nil? } if best_names.empty?
+        best_name =
+          if best_names.size > 1
+            raise "CANNOT CHOOSE A PREFERRED NAME for Node.find(#{node.id}), please adjust code."
+          elsif best_names.size == 1
+            best_names.first
+          else
+            raise "THERE IS NO PREFERRED NAME FOR Node.find(#{node.if}), please adjust code."
+          end
+        node.update_attributes(scientific_name_id: best_name.id, canonical: best_name.canonical,
+          taxonomic_status_verbatim: best_name.taxonomic_status_verbatim)
+        healed += 1
+      end
+    ensure
+      puts "++ Healed #{healed} nodes."
+    end
+  end
+
   def authors
     authorship.try(:split, '; ')
   end
