@@ -2,7 +2,7 @@ class DropDir
   class << self
     def check
       Rails.logger.info('DropDir.check')
-      path = Rails.public_path.join('drop')
+      path = Rails.public_path.join('data', 'drop')
       FileUtils.mkdir_p(path) unless Dir.exist?(path)
       resources = []
       Dir.glob("#{path}/*").each do |file| # NOTE: file is a full path, now.
