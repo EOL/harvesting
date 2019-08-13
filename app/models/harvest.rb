@@ -80,10 +80,13 @@ class Harvest < ActiveRecord::Base
   end
 
   def complete
-    update_attribute(:completed_at, Time.now)
-    update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60)
-    resource.published!
-    resource.update_attribute(:nodes_count, Node.where(resource_id: id).count)
+    # NOTE: ScientificName goes straight to the model because the relationship goes through nodes.
+    update_attributes(completed_at: Time.now,
+                      nodes_count: nodes.count,
+                      identifiers_count: identifiers.count,
+                      scientific_names_count: ScientificName.where(harvest_id: id).count,
+                      time_in_minutes: (completed_at - created_at).to_i / 60)
+    resource.complete
   end
 
   def remove_content

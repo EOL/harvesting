@@ -95,6 +95,11 @@ class Resource < ActiveRecord::Base
     resource
   end
 
+  def complete
+    published!
+    update_attributes(nodes_count: Node.where(resource_id: id).count, root_nodes_count: nodes.root.published.count)
+  end
+
   def native?
     id = Resource.native.id?
   end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190530140350) do
+ActiveRecord::Schema.define(version: 20190813163514) do
 
   create_table "articles", force: :cascade do |t|
     t.string   "guid",                      limit: 255,      null: false
@@ -265,6 +265,9 @@ ActiveRecord::Schema.define(version: 20190530140350) do
     t.datetime "created_at",                                       null: false
     t.datetime "updated_at",                                       null: false
     t.integer  "stage",                  limit: 4
+    t.integer  "nodes_count",            limit: 4
+    t.integer  "identifiers_count",      limit: 4
+    t.integer  "scientific_names_count", limit: 4
   end
 
   create_table "hlogs", force: :cascade do |t|
@@ -625,6 +628,7 @@ ActiveRecord::Schema.define(version: 20190530140350) do
     t.integer  "failed_downloaded_media_count", limit: 4,     default: 0
     t.boolean  "classification",                              default: false
     t.text     "skips",                         limit: 65535
+    t.integer  "root_nodes_count",              limit: 4
   end
 
   add_index "resources", ["abbr"], name: "index_resources_on_abbr", unique: true, using: :btree

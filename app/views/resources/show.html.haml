@@ -145,13 +145,13 @@
   .ui.segment
     .ui.six.tiny.statistics
       .statistic
-        .value= last_harvest.nodes.count
+        .value= last_harvest.nodes_count
         .label= t("resources.stats.nodes")
       .statistic
         .value= last_harvest.articles.count
         .label= t("resources.stats.articles")
       .statistic
-        .value= last_harvest.identifiers.count
+        .value= last_harvest.identifiers_count
         .label= t("resources.stats.identifiers")
       .statistic
         .value= media_count
@@ -160,7 +160,7 @@
         .value= Reference.where(harvest_id: last_harvest.id).count
         .label= t("resources.stats.references")
       .statistic
-        .value= last_harvest.scientific_names.count
+        .value= last_harvest.scientific_names_count
         .label= t("resources.stats.scientific_names")
     .ui.six.tiny.statistics
       .statistic
@@ -190,7 +190,7 @@
 - if @resource.nodes.empty?
   %p This resource has no nodes.
 - else
-  %h3= t(:resource_nodes_root_head_count, count: @resource.nodes.root.count)
+  %h3= t(:resource_nodes_root_head_count, count: @resource.root_nodes_count)
   = paginate(@root_nodes)
   .ui.list
     - @root_nodes.each do |root_node|
