@@ -84,8 +84,8 @@ class Harvest < ActiveRecord::Base
     update_attributes(completed_at: Time.now,
                       nodes_count: nodes.count,
                       identifiers_count: identifiers.count,
-                      scientific_names_count: ScientificName.where(harvest_id: id).count,
-                      time_in_minutes: (completed_at - created_at).to_i / 60)
+                      scientific_names_count: ScientificName.where(harvest_id: id).count)
+    update_attribute(:time_in_minutes, (completed_at - created_at).to_i / 60) if created_at
     resource.complete
   end
 
