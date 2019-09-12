@@ -1,7 +1,7 @@
 module MediumPrepper
   # Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
   # versions, resizing it for others, and then storing information about it in the DB.
-  class Image
+  class ResizableImage
     include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
 
     def initialize(medium, raw)

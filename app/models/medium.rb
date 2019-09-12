@@ -170,8 +170,8 @@ class Medium < ActiveRecord::Base
   def get_prepper(raw)
     content_type = raw.content_type
     @valid_type_res ||= {
-      /^image/ => MediumPrepper::Image,
-      %r{application/octet-stream} => MediumPrepper::Image,
+      /^image/ => MediumPrepper::ResizableImage,
+      %r{application/octet-stream} => MediumPrepper::ResizableImage,
       %r{application/ogg} => MediumPrepper::SaveAndServe,
       %r{audio/mpeg} => MediumPrepper::SaveAndServe,
       %r{audio/wav} => MediumPrepper::SaveAndServe,

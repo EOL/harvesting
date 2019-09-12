@@ -19,7 +19,14 @@ module Store
     def to_nodes_scientific(field, val)
       @models[:node] ||= {}
       @models[:scientific_name] ||= {}
-      name = val =~ /^".*"$/ ? val.sub(/^"/, '').sub(/"$/, '') : val
+      # Get rid of surrounding quotes quietly:
+      no_quotes = val =~ /^".*"$/ ? val.sub(/^"/, '').sub(/"$/, '') : val
+      # If there are any OTHER unusual characters (incl. more quotes), carp about it, but fix them:
+      name = no_quotes.gsub(%r{[\"\/\\]}, '').gsub(%r{\s+}, ' ')
+      if name != no_quotes
+        @models[:log] ||= []
+        @models[:log] << "Filtered Scientific Name \`#{no_quotes}\` to \`#{name}\`"
+      end
       @models[:scientific_name][:verbatim] = name
     end
 

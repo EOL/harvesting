@@ -12,10 +12,6 @@ class Publisher
     publisher
   end
 
-# TODO: Inefficient:
-# Reference Load (0.7ms)  SELECT `references`.* FROM `references` INNER JOIN `scientific_names_references` ON `references`.`id` = `scientific_names_references`.`reference_id` WHERE `scientific_names_references`.`scientific_name_id` = 4465
-# ScientificName Load (0.8ms)  SELECT  `scientific_names`.* FROM `scientific_names` WHERE `scientific_names`.`id` = 4466 LIMIT 1
-
   def initialize(options = {})
     @resource = options[:resource]
     @process = options[:process]
@@ -174,8 +170,8 @@ class Publisher
       attribution.created_at = t
       attribution.updated_at = t
       attribution.resource_id = @web_resource_id
-      attribution.resource_pk = content_attribution.attribution.resource_pk
-      attribution.content_resource_fk = content_attribution.content_resource_fk
+      attribution.resource_pk = clean_values(content_attribution.attribution.resource_pk)
+      attribution.content_resource_fk = clean_values(content_attribution.content_resource_fk)
       attribution.content_type = content_attribution.content_type
       attribution.content_id = content_attribution.content_id # NOTE this is the HARVEST DB ID. It will be replaced.
       attribution.role_id = WebDb.role(content_attribution.attribution.role, @process)
@@ -284,7 +280,7 @@ class Publisher
       web_id = Struct::WebIdentifier.new
       web_id.resource_id = @web_resource_id
       web_id.harv_db_id = ider.id
-      web_id.node_resource_pk = node.resource_pk
+      web_id.node_resource_pk = clean_values(node.resource_pk)
       web_id.node_id = ider.node_id # NOTE: this is a HARV DB ID. We will convert it later.
       web_id.identifier = ider.identifier
       @identifiers_by_node_pk[node.resource_pk] << web_id
@@ -296,12 +292,12 @@ class Publisher
       @ancestors_by_node_pk[node.resource_pk] ||= []
       anc = Struct::WebNodeAncestor.new
       anc.resource_id = @web_resource_id
-      anc.harv_db_id = nodan.id # TODO: I'm not sure this is required?
       anc.node_id = nodan.node_id # NOTE: this is a HARV DB ID. We will convert it later.
       anc.ancestor_id = nodan.ancestor_id # NOTE: this is a HARV DB ID. We will convert it later.
-      anc.node_resource_pk = node.resource_pk
-      anc.ancestor_resource_pk = nodan.ancestor_fk
+      anc.node_resource_pk = clean_values(node.resource_pk)
+      anc.ancestor_resource_pk = clean_values(nodan.ancestor_fk)
       anc.depth = nodan.depth
+      anc.harv_db_id = nodan.id # TODO: I'm not sure this is required?
       @ancestors_by_node_pk[node.resource_pk] << anc
     end
   end
@@ -390,7 +386,7 @@ class Publisher
     t = Time.now.to_s(:db)
     ii.created_at = t
     ii.updated_at = t
-    ii.resource_pk = medium.resource_pk
+    ii.resource_pk = clean_values(medium.resource_pk)
     # ii.harv_db_id = medium.id # TODO: this is not really needed, as II isn't a harv DB model. :|
     ii
   end

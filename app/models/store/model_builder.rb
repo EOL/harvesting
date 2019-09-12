@@ -17,6 +17,7 @@ module Store
       build_licenses
       fix_parent_fks_used_for_accepted_fks
       @synonym = is_synonym?
+      @process.warn(@models[:log].join('; ')) if @models[:log]
       build_scientific_name if @models[:scientific_name]
       build_ancestors if @models[:ancestors]
       build_identifiers if @models[:identifiers]
