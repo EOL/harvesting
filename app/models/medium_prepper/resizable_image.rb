@@ -44,7 +44,7 @@ module MediumPrepper
       rescue Magick::ImageMagickError => e
         mess = "Couldn't parse image #{sanitized_source_url} for Medium ##{self[:id]} (#{e.message})"
         Delayed::Worker.logger.error(mess)
-        @medium.harvest.log(mess, cat: :errors)
+        @medium.resource.log_error(mess)
         raise 'unparsable'
       ensure
         raw = nil # Hand it to GC. I am not sure this actually helps, but I am paranoid about removing it. :|
@@ -96,7 +96,7 @@ module MediumPrepper
       if File.exist?(filename)
         mess = "#{filename} already exists. Skipping."
         Delayed::Worker.logger.warn(mess)
-        @medium.harvest.log(mess, cat: :warns)
+        @medium.harvest.log_error(mess)
         return get_image_size(filename)
       end
       (w, h) = size.split('x').map(&:to_i)
