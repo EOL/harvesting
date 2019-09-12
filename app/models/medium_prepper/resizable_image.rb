@@ -93,12 +93,7 @@ module MediumPrepper
 
     def crop_image(size)
       filename = "#{@medium.dir}/#{@medium.basename}.#{size}.#{@ext}"
-      if File.exist?(filename)
-        mess = "#{filename} already exists. Skipping."
-        Delayed::Worker.logger.warn(mess)
-        @medium.resource.log_error(mess)
-        return get_image_size(filename)
-      end
+      # NOTE: we *used* to skip existing images here, but I think that's actually unwise, so... let's just do it again.
       (w, h) = size.split('x').map(&:to_i)
       this_image =
         if w == h
