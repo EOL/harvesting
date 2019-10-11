@@ -1,5 +1,6 @@
 class User < ActiveRecord::Base
-  devise :confirmable, :database_authenticatable, :lockable, :registerable, :recoverable, :rememberable, :trackable,
+  # Removed :registerable because we don't want people signing up without "permission".
+  devise :confirmable, :database_authenticatable, :lockable, :recoverable, :rememberable, :trackable,
          :validatable
   validates :email, presence: true
 
