@@ -33,6 +33,8 @@ gem 'lockfile'
 gem 'lograge'
 # Use mysql as the database for Active Record
 gem 'mysql2'
+# Used in parsing XML for new resources:
+gem 'nokogiri', '>= 1.10.4'
 # Debugging:
 gem 'pry-rails'
 # Authorization:
