@@ -18,7 +18,7 @@ class Medium < ActiveRecord::Base
   enum format: %i[jpg youtube flash vimeo mp3 ogg wav mp4 ogv mov svg webm]
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
-  scope :missing, -> { where('base_url IS NOT NULL') }
+  scope :missing, -> { where('base_url IS NULL') }
   scope :needs_download, -> { where(downloaded_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }
 

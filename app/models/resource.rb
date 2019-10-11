@@ -299,7 +299,7 @@ class Resource < ActiveRecord::Base
     if media.published.failed_download.count.positive?
       msg += ', NOTE THAT SOME DOWNLOADS FAILED.'
     end
-    harvests.last.log(msg, cat: :warns)
+    log_error(msg)
     nil
   end
 
