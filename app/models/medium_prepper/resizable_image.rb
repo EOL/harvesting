@@ -54,10 +54,10 @@ module MediumPrepper
     def get_image(raw)
       # NOTE: #first because no animations are supported!
       if raw.respond_to?(:to_io)
-        Image.read(raw.to_io).first
+        ::Image.read(raw.to_io).first
       else
         raw.rewind
-        Image.from_blob(raw.read).first
+        ::Image.from_blob(raw.read).first
       end
     end
 

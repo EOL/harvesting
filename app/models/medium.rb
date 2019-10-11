@@ -91,7 +91,8 @@ class Medium < ActiveRecord::Base
   end
 
   def sanitized_source_url
-    @sanitized_source_url ||= source_url.sub(/^https/, 'http').gsub(' ', '%20')
+    require 'open-uri'
+    @sanitized_source_url ||= URI.encode(source_url.sub(/^https/, 'http'))
   end
 
   def fix_encoding_for_sanitized_source_url
@@ -128,7 +129,7 @@ class Medium < ActiveRecord::Base
 
   def download_raw_data
     require 'open-uri'
-    uri = URI.parse(URI.encode(sanitized_source_url))
+    uri = URI.parse(sanitized_source_url)
     attempts = 0
     begin
       raw = uri.open(progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
