@@ -187,7 +187,7 @@
       .label= t("resources.stats.downloaded_media_progress", count: ((@resource.downloaded_media_count / media_count.to_f) * 100).to_i)
 
 %h2= t(:resource_nodes_title)
-- if @resource.root_nodes_count.zero?
+- if @resource.root_nodes_count.nil? || @resource.root_nodes_count.zero?
   %p This resource has no nodes.
 - else
   %h3= t(:resource_nodes_root_head_count, count: @resource.root_nodes_count)
