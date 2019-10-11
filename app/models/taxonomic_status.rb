@@ -12,7 +12,10 @@ class TaxonomicStatus
       'teleomorph',
       'senior synonym',
       'nomen dubium',
-      'species inquirenda'
+      'species inquirenda',
+      'misapplied name',
+      'misapplied',
+      'ambiguous synonym'
     ],
     synonym: [
       'acronym',
