@@ -42,7 +42,7 @@ module MediumPrepper
       begin
         @image = get_image(raw)
       rescue Magick::ImageMagickError => e
-        mess = "Couldn't parse image #{sanitized_source_url} for Medium ##{self[:id]} (#{e.message})"
+        mess = "Couldn't parse image for Medium ##{self[:id]} (#{e.message})"
         Delayed::Worker.logger.error(mess)
         @medium.resource.log_error(mess)
         raise 'unparsable'
