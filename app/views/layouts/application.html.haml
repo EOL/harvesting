@@ -33,8 +33,8 @@
         - else
           .item
             = link_to(t('layout.sign_in'), new_user_session_path, class: 'ui button')
-          .item
-            = link_to(t('layout.sign_up'), new_user_registration_path, class: 'ui primary button')
+          -# .item
+          -#   = link_to(t('layout.sign_up'), new_user_registration_path, class: 'ui primary button')
 
       - flash.each do |key, value|
         - classes = ["flash-#{key}"]
