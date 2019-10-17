@@ -34,6 +34,25 @@ class NamesMatcher
     results
   end
 
+  def self.fix_indexed_nodes_with_no_page_id
+    results = Node.search('*', where: { page_id: nil })
+    results.each do |node|
+      match_one_node(node)
+    end
+  end
+
+  # NOTE: this has a **bad** smell. :\ But it's kind of a one-off for fixing rare problems, so that's fine.
+  def self.match_one_node(node)
+    matcher = new(node.harvest, LoggedProcess.new(node.resource))
+    node_id = node.id
+    matcher.instance_eval do
+      @logs = [] ; @have_names = true ; @ancestor = nil ; @ancestors = [] ; inode = Node.find(node_id)
+      map_node(inode, ancestor_depth: 0, strategy: pick_first_strategy(inode))
+      inode.matching_log = @logs.join(';')
+      inode.save
+    end
+  end
+
   def initialize(harvest, process, options = {})
     @harvest = harvest
     @process = process
