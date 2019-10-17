@@ -79,7 +79,8 @@ class NamesMatcher
 
   def match(node, how)
     field = how.delete(:field) || :canonical
-    how[:where] ||= {}
+    how[:where] ||= { }
+    # TODO - Seachkick update required: how[:where][:page_id] = { exists: true }
     how[:where][field] = node.scientific_name.canonical
     how[:where][:ancestor_page_ids] = @ancestor.page_id if @ancestor
     # If the new node is within animalia, it MUST match an animal page:
@@ -103,6 +104,7 @@ class NamesMatcher
     how[:includes] = [:scientific_name]
     how[:load] = false # Careful! Now you don't have models, you have a hash resembling one...
     how[:fields] = [:canonical] # It seems this shouldn't matter, since the query is '*', but, alas: it matters.
+    # TODO - Seachkick update required: how[:where] = { page_id: { exists: true } } if how[:where].empty?
     how.delete(:where) if how[:where].empty?
     @process.info("Q: #{how.inspect}") if @explain
     @logs << "Q: #{how.inspect}"
@@ -110,7 +112,7 @@ class NamesMatcher
     hits = results[0..9].map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
     @process.info("RESULTS (#{results.total_count}): #{hits}") if @explain
     @logs << "RESULTS (#{results.total_count}): #{hits}"
-    results
+    results.to_a.delete_if {|r| r['page_id'].nil? }
   end
 
   def match_canonical_and_authors_in_eol(node)
@@ -260,11 +262,13 @@ class NamesMatcher
     end
     @logs << @strategies[opts[:strategy]]
     results = send(@strategies[opts[:strategy]], node)
-    if results.total_count == 1
+    # TODO - After Searchkick upgrade: if results.total_count == 1
+    if results.size == 1
       @logs << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
       return save_match(node, results.first[:page_id], 'single hit')
     end
-    return more_than_one_match(node, results, opts) if results.total_count > 1
+    # TODO - After Searchkick upgrade: return more_than_one_match(node, results, opts) if results.total_count > 1
+    return more_than_one_match(node, results, opts) if results.size > 1
     return unmapped(node, 'virus') if node.scientific_name.virus?
     opts[:strategy] += 1
     # NOTE: mmmmmaybe we want to do a sanity check here and abort if the name is
@@ -290,7 +294,8 @@ class NamesMatcher
   end
 
   def more_than_one_match(node, matching_nodes, opts = {})
-    @logs << "#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"
+    @logs << "#{matching_nodes.size} matches via #{@strategies[opts[:strategy]]}"
+    # TODO: @logs << "#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}

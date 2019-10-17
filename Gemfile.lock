@@ -71,12 +71,12 @@ GEM
     diff-lcs (1.3)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (5.0.4)
-      elasticsearch-api (= 5.0.4)
-      elasticsearch-transport (= 5.0.4)
-    elasticsearch-api (5.0.4)
+    elasticsearch (7.3.0)
+      elasticsearch-api (= 7.3.0)
+      elasticsearch-transport (= 7.3.0)
+    elasticsearch-api (7.3.0)
       multi_json
-    elasticsearch-transport (5.0.4)
+    elasticsearch-transport (7.3.0)
       faraday
       multi_json
     enum_help (0.0.17)
@@ -88,7 +88,7 @@ GEM
     factory_bot_rails (4.8.2)
       factory_bot (~> 4.8.2)
       railties (>= 3.0.0)
-    faraday (0.13.1)
+    faraday (0.17.0)
       multipart-post (>= 1.2, < 3)
     ffi (1.11.1)
     globalid (0.4.2)
@@ -102,7 +102,7 @@ GEM
       haml (>= 4.0.6, < 6.0)
       html2haml (>= 1.0.1)
       railties (>= 4.0.1)
-    hashie (3.5.6)
+    hashie (3.6.0)
     html2haml (2.2.0)
       erubis (~> 2.7.0)
       haml (>= 4.0, < 6)
@@ -162,7 +162,7 @@ GEM
     mini_portile2 (2.4.0)
     minitest (5.12.2)
     multi_json (1.12.2)
-    multipart-post (2.0.0)
+    multipart-post (2.1.1)
     mysql2 (0.4.9)
     nokogiri (1.10.4)
       mini_portile2 (~> 2.4.0)
@@ -251,9 +251,9 @@ GEM
     sdoc (0.4.2)
       json (~> 1.7, >= 1.7.7)
       rdoc (~> 4.0)
-    searchkick (2.3.2)
-      activemodel (>= 4.1)
-      elasticsearch (>= 1)
+    searchkick (3.1.3)
+      activemodel (>= 4.2)
+      elasticsearch (>= 5)
       hashie
     sexp_processor (4.10.0)
     simple_form (4.0.0)
@@ -330,7 +330,7 @@ DEPENDENCIES
   rspec-rails
   sass-rails
   sdoc
-  searchkick
+  searchkick (~> 3.1)
   simple_form
   spring
   therubyracer

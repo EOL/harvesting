@@ -46,7 +46,7 @@ gem 'rmagick'
 # Use SCSS for stylesheets
 gem 'sass-rails'
 # ElasticSearch:
-gem 'searchkick'
+gem 'searchkick', '~> 3.1'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc'
 # Making forms simpler:

@@ -628,8 +628,17 @@ class ResourceHarvester
     @harvest.update_attribute(:linked_at, Time.now)
   end
 
+  # I have hijacked this method for some basic sanity-checking
   def calculate_statistics
-    # TODO: (LOW-PRIO)...
+    log_err(Exception.new('ZERO NODES! That is probably... bad.')) if @harvest.nodes.count.zero?
+    unmapped_pages = @harvest.nodes.where(page_id: nil).count
+    unless unmapped_pages.zero?
+      bad_nodes = @harvest.nodes.where(page_id: nil).limit(10).pluck(:id)
+      log_err(Exception.new("Unmapped page_ids for #{unmapped_pages} nodes (IDs: #{bad_nodes.join(', ')})! That is unacceptable."))
+    end
+    @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?') if
+      @harvest.node_ancestors.count.zero?
+    end
   end
 
   # TODO: this is a LOUSY place to put the publishing, but it's a real pain to add new steps to harvesting. I'll do it
