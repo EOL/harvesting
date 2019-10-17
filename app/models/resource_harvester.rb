@@ -638,7 +638,6 @@ class ResourceHarvester
     end
     @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?') if
       @harvest.node_ancestors.count.zero?
-    end
   end
 
   # TODO: this is a LOUSY place to put the publishing, but it's a real pain to add new steps to harvesting. I'll do it
