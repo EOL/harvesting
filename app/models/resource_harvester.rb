@@ -637,7 +637,7 @@ class ResourceHarvester
       log_err(Exception.new("Unmapped page_ids for #{unmapped_pages} nodes (IDs: #{bad_nodes.join(', ')})! That is unacceptable."))
     end
     @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?') if
-      @harvest.node_ancestors.count.zero?
+      @resource.node_ancestors.count.zero?
   end
 
   # TODO: this is a LOUSY place to put the publishing, but it's a real pain to add new steps to harvesting. I'll do it
