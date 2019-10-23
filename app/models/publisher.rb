@@ -70,7 +70,11 @@ class Publisher
     end
     @process.info('Done. Check your files:')
     @files.each_key do |file|
-      sizes = `wc -l #{file}`
+      begin
+        sizes = `wc -l #{file}`
+      rescue e => Errno::ENOMEM
+        raise("OUT OF MEMORY. This is NOT a problem for this resource (really, it isn't), but means that you should have someone restart the containers!")
+      end
       size = sizes.strip.split.first.to_i
       @process.info("(#{size} lines) #{file.to_s}")
     end
