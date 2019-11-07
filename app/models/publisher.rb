@@ -72,7 +72,7 @@ class Publisher
     @files.each_key do |file|
       begin
         sizes = `wc -l #{file}`
-      rescue e => Errno::ENOMEM
+      rescue Errno::ENOMEM => e
         raise("OUT OF MEMORY. This is NOT a problem for this resource (really, it isn't), but means that you should have someone restart the containers!")
       end
       size = sizes.strip.split.first.to_i
