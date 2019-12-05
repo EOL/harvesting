@@ -328,6 +328,8 @@ class Resource < ActiveRecord::Base
     end
     update_attribute(:downloaded_media_count, 0)
     update_attribute(:failed_downloaded_media_count, 0)
+    update_attribute(:nodes_count, 0)
+    update_attribute(:root_nodes_count, 0)
     remove_from_searchkick
     Searchkick.callbacks(false) do
       remove_type(Node)
