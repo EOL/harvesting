@@ -326,7 +326,8 @@ class Publisher
     name_struct.created_at = Time.now.to_s(:db)
     name_struct.updated_at = Time.now.to_s(:db)
     name_struct.resource_id = @web_resource_id
-    name_struct.node_resource_pk = clean_values(node.resource_pk)
+    name_struct.node_resource_pk = name_model.resource_pk.blank? ? clean_values(node.resource_pk) :
+      clean_values(name_model.resource_pk)
     # name_struct.source_reference = name_model. ...errr.... TODO: This is intended to move off of the node. Put it
     # here!
     name_struct.attribution = clean_values(name_model.attribution_html)
