@@ -1,4 +1,6 @@
 # Parses names using the GNA system, via open3 system call.
+require 'net/http' # I DO NOT KNOW WHY WE NEED THIS. But as of Feb 2020, we do?
+
 class NameParser
   def self.for_harvest(harvest, process)
     parser = NameParser.new(harvest, process)
