@@ -171,7 +171,6 @@ class Resource < ActiveRecord::Base
 
   def process_log
     @log ||= ActiveSupport::TaggedLogging.new(Logger.new("#{path}/process.log"))
-    @log
   end
 
   # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.
@@ -350,11 +349,42 @@ class Resource < ActiveRecord::Base
     end
   end
 
+  # NOTE: using harvest ids because everything is indexed on those:
   def remove_type(klass)
-    # NOTE: using harvest ids because everything is indexed on those:
-    count = klass.where(harvest_id: harvest_ids).count
-    return if count.zero?
-    klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id IN (#{harvest_ids.join(',')})")
+    log_info("## remove_type: #{klass}")
+    total_count = klass.where(harvest_id: harvest_ids).count
+    count = if total_count < 250_000
+      log_info("++ Calling delete_all on #{total_count} instances...")
+      klass.where(harvest_id: harvest_ids).delete_all
+    else
+      log_info("++ Batch removal of #{total_count} instances...")
+      batch_size = 10_000
+      times = 0
+      max_times = (total_count / batch_size) * 2 # No floating point math here, sloppiness okay.
+      begin
+        log_info("[#{Time.now.strftime('%H:%M:%S.%3N')}] Batch #{times}...")
+        klass.connection.
+          execute("DELETE FROM #{klass.table_name} WHERE harvest_id IN (#{harvest_ids.join(',')}) LIMIT #{batch_size}")
+        times += 1
+        sleep(0.5) # Being (moderately) nice.
+      end while klass.where(harvest_id: harvest_ids).count > 0 && times < max_times
+      raise "Failed to delete all of the #{klass} instances! Tried #{times}x#{batch_size} times." if
+        klass.where(harvest_id: harvest_ids).count.positive?
+      total_count
+    end
+    str = "[#{Time.now.strftime('%H:%M:%S.%3N')}] Removed #{count} #{klass.name.humanize.pluralize}"
+    log_info(str)
+    str
+  rescue => e # reports as Mysql2::Error but that doesn't catch it. :S
+    log_info("There was an error, retrying: #{e.message}")
+    sleep(2)
+    ActiveRecord::Base.connection.reconnect!
+    retry rescue "[#{Time.now.strftime('%H:%M:%S.%3N')}] UNABLE TO REMOVE #{klass.name.humanize.pluralize}: timed out"
+  end
+
+  def log_info(message)
+    process_log.tagged('INFO') { log(message) }
+    process_log.flush
   end
 
   # This tends to be rather slow, so we do it in batches. TODO: I'd prefer a generic version of this logic live
