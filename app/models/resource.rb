@@ -397,7 +397,7 @@ class Resource < ActiveRecord::Base
   end
 
   def log_info(message)
-    process_log.tagged('INFO') { log(message) }
+    process_log.tagged('INFO') { process_log.warn("[#{Time.now.strftime('%F %T')}] #{message}") }
     process_log.flush
   end
 
