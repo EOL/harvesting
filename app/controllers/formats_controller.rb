@@ -11,8 +11,9 @@ class FormatsController < ApplicationController
   end
 
   def edit
-    @format = Format.find(params[:id])
-    log_auth(@format)
+    return render html: "Please stop."
+    # @format = Format.find(params[:id])
+    # log_auth(@format)
   end
 
   def create

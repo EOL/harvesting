@@ -344,8 +344,22 @@ class Resource < ActiveRecord::Base
   end
 
   def remove_from_searchkick
-    Node.select(:id).where(resource_id: id).find_in_batches(batch_size: 10_000) do |nodes|
-      Node.searchkick_index.bulk_delete(nodes)
+    Node.select(:id).where(resource_id: id).find_in_batches(batch_size: 5000) do |nodes|
+      begin
+        log_info("Starting batch with ID #{nodes.first.id}...")
+        Node.searchkick_index.bulk_delete(nodes)
+      rescue
+        log_info('Failed! ...Sleeping for a moment...')
+        sleep(60)
+        log_info('Re-trying...')
+        nodes.each do |node|
+          begin
+            Node.searchkick_index.bulk_delete([node]) # Using same method for consistency
+          rescue => e
+            raise "FAILED removing ElasticSearch index for Node #{node.id}: #{e.message}"
+          end
+        end
+      end
     end
   end
 

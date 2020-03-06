@@ -19,7 +19,8 @@ class NodesController < ApplicationController
   end
 
   def show
-    @node = Node.find(params[:id])
+    # @node = Node.find(params[:id])
+    render html: "Please stop."
   end
 
   def search
