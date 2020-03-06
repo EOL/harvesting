@@ -125,6 +125,7 @@ class ResourcesController < ApplicationController
     log_auth(@resource)
     count = Delayed::Job.where(queue: 'harvest', locked_at: nil).count
     type = "#{type}_" unless type.blank?
+    @resource.log_info("## HARVEST: type = #{type}-harvest")
     @resource.send("enqueue_#{type}harvest")
     flash[:notice] = t('resources.flash.harvest_enqueued', count: count)
     redirect_to @resource
