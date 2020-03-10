@@ -11,7 +11,7 @@ gem 'daemons'
 # Dalli store:
 gem 'dalli'
 # Background jobs:
-gem 'delayed_job', '~> 4.1.4'
+gem 'delayed_job', '~> 4.1.8'
 gem 'delayed_job_active_record'
 # Store users securely:
 gem 'devise'
@@ -34,7 +34,7 @@ gem 'lograge'
 # Use mysql as the database for Active Record
 gem 'mysql2'
 # Used in parsing XML for new resources:
-gem 'nokogiri', '>= 1.10.4'
+gem 'nokogiri'
 # Debugging:
 gem 'pry-rails'
 # Authorization:
@@ -46,7 +46,8 @@ gem 'rmagick'
 # Use SCSS for stylesheets
 gem 'sass-rails'
 # ElasticSearch:
-gem 'searchkick', '~> 3.1'
+gem 'searchkick', '~> 4' # Depends on elasticsearch, which needs to be running our version.
+gem 'elasticsearch', '~> 6' # Needs to be in sync with the version of ES you are running.
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc'
 # Making forms simpler:
