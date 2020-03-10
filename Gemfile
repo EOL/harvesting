@@ -40,9 +40,9 @@ gem 'pry-rails'
 # Authorization:
 gem 'pundit'
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
-gem 'rails', '4.2.11'
+gem 'rails', '5.2.4.1'
 # Image resizing and manipulation:
-gem 'rmagick'
+# TODO: gem 'rmagick'
 # Use SCSS for stylesheets
 gem 'sass-rails'
 # ElasticSearch:
