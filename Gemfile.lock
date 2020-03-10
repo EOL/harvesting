@@ -206,6 +206,7 @@ GEM
     responders (3.0.0)
       actionpack (>= 5.0)
       railties (>= 5.0)
+    rmagick (4.0.0)
     rspec-core (3.9.1)
       rspec-support (~> 3.9.1)
     rspec-expectations (3.9.0)
@@ -313,6 +314,7 @@ DEPENDENCIES
   pry-rails
   pundit
   rails (= 5.2.4.1)
+  rmagick
   rspec-rails
   sass-rails
   sdoc
