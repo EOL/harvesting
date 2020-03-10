@@ -75,6 +75,8 @@ group :development, :test do
 end
 
 group :development do
+  # Required after Rails 5 upgrade:
+  gem 'listen'
   # For benchmarking queries:
   gem 'meta_request'
   # Spring speeds up development by keeping your application running in the background. Read more:
