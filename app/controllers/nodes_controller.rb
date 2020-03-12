@@ -1,6 +1,6 @@
 class NodesController < ApplicationController
-  before_action :authenticate_user!, except: [:index, :show, :search]
-
+  before_action :authenticate_user!
+  
   def index
     @resource = Resource.find(params[:resource_id])
     @nodes = prep_for_api(@resource.nodes.includes(:scientific_name, :identifiers, :node_ancestors))
