@@ -1,4 +1,4 @@
-class Term < ActiveRecord::Base
+class Term < ApplicationRecord
   enum used_for: %i[unknown measurement association value metadata]
 
   def self.uri?(uri)

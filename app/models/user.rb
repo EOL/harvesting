@@ -1,4 +1,4 @@
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   # Removed :registerable because we don't want people signing up without "permission".
   devise :confirmable, :database_authenticatable, :lockable, :recoverable, :rememberable, :trackable,
          :validatable

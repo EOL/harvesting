@@ -1,5 +1,5 @@
 # An measurement formed by combining a 'measurment or fact' with an 'occurrence'.
-class Trait < ActiveRecord::Base
+class Trait < ApplicationRecord
   belongs_to :parent, inverse_of: :children, class_name: 'Trait', foreign_key: 'parent_id'
   belongs_to :resource, inverse_of: :traits
   belongs_to :harvest, inverse_of: :traits

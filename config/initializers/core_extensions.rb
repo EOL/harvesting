@@ -1,4 +1,4 @@
-class ActiveRecord::Base
+class ApplicationRecord
   class << self
     # I AM NOT A FAN OF SQL... but this is **way** more efficient than alternatives:
     def propagate_id(options = {})

@@ -1,5 +1,5 @@
 # An measurement formed by combining a "measurment or fact" with an "association"
-class AssocTrait < ActiveRecord::Base
+class AssocTrait < ApplicationRecord
   belongs_to :resource, inverse_of: :assoc_traits
   belongs_to :harvest, inverse_of: :assoc_traits
   belongs_to :trait, inverse_of: :assoc_traits

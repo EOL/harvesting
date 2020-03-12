@@ -917,7 +917,7 @@ end
 #   t.integer :our_id
 # end
 #
-# class KeyToId < ActiveRecord::Base
+# class KeyToId < ApplicationRecord
 #   belongs_to :resource, inverse_of: :key_to_ids
 #   belongs_to :our, polymorphic: true
 # end

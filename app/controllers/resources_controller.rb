@@ -3,7 +3,7 @@ class ResourcesController < ApplicationController
 
   # See your environment config; this action should be ignored by logs.
   def ping
-    if ActiveRecord::Base.connection.active?
+    if ApplicationRecord.connection.active?
       render text: 'pong'
     else
       render status: 500

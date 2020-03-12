@@ -1,4 +1,4 @@
-class Vernacular < ActiveRecord::Base
+class Vernacular < ApplicationRecord
   belongs_to :resource, inverse_of: :vernaculars
   belongs_to :harvest, inverse_of: :vernaculars
   belongs_to :node, inverse_of: :vernaculars

@@ -1,4 +1,4 @@
-class Resource < ActiveRecord::Base
+class Resource < ApplicationRecord
   belongs_to :partner, inverse_of: :resources
   belongs_to :default_license, class_name: 'License', inverse_of: :resources
 
@@ -392,7 +392,7 @@ class Resource < ActiveRecord::Base
   rescue => e # reports as Mysql2::Error but that doesn't catch it. :S
     log_info("There was an error, retrying: #{e.message}")
     sleep(2)
-    ActiveRecord::Base.connection.reconnect!
+    ApplicationRecord.connection.reconnect!
     retry rescue "[#{Time.now.strftime('%H:%M:%S.%3N')}] UNABLE TO REMOVE #{klass.name.humanize.pluralize}: timed out"
   end
 
