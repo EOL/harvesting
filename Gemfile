@@ -6,6 +6,8 @@ gem 'activerecord-import'
 gem 'acts_as_list'
 # Parse Excel files:
 gem 'creek'
+# Cron jobs:
+gem 'crono', '~> 1.1'
 # Required to run bin/delayed_job:
 gem 'daemons'
 # Dalli store:

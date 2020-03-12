@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_13_163514) do
+ActiveRecord::Schema.define(version: 2020_03_12_174303) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -157,6 +157,16 @@ ActiveRecord::Schema.define(version: 2019_08_13_163514) do
     t.index ["content_type", "content_id"], name: "index_content_attributions_on_content_type_and_content_id"
     t.index ["content_type", "content_resource_fk", "harvest_id"], name: "by_harvest_content_resource_fk"
     t.index ["harvest_id"], name: "index_content_attributions_on_harvest_id"
+  end
+
+  create_table "crono_jobs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
+    t.string "job_id", null: false
+    t.text "log", limit: 4294967295
+    t.datetime "last_performed_at"
+    t.boolean "healthy"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_id"], name: "index_crono_jobs_on_job_id", unique: true
   end
 
   create_table "data_references", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|

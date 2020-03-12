@@ -1,8 +1,8 @@
-FROM ruby:2.4.4
+FROM ruby:2.7.0
 MAINTAINER Jeremy Rice <jrice@eol.org>
 LABEL Description="EOL Harvester"
 
-ENV LAST_FULL_REBUILD 2018-08-20
+ENV LAST_FULL_REBUILD 2020-03-12
 
 # Install packages (note we update / clean up at the end of EACH run, because each gets an image)
 RUN apt-get update -q && \
