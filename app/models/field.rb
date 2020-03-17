@@ -1,4 +1,4 @@
-class Field < ActiveRecord::Base
+class Field < ApplicationRecord
   belongs_to :format, inverse_of: :fields
 
   acts_as_list scope: :format

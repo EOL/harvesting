@@ -3,7 +3,7 @@ class ApplicationController < ActionController::Base
 
   protect_from_forgery with: :null_session
 
-  before_action :underscore_params!
+  # before_action :underscore_params!
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
@@ -42,9 +42,9 @@ class ApplicationController < ActionController::Base
 
   private
 
-  def underscore_params!
-    params.deep_transform_keys!(&:underscore)
-  end
+  # def underscore_params!
+  #   params.deep_transform_keys!(&:underscore)
+  # end
 
   def user_not_authorized
     flash[:alert] = 'You are not authorized to perform this action.'

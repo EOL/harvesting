@@ -1,6 +1,6 @@
 # A fact formed by combining one 'occurrence' with another 'occurrence'.
 # NOTE: The name "association" is reserved in Rails.
-class Assoc < ActiveRecord::Base
+class Assoc < ApplicationRecord
   belongs_to :resource, inverse_of: :assocs
   belongs_to :harvest, inverse_of: :assocs
   belongs_to :node, inverse_of: :assocs

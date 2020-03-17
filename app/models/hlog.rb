@@ -1,4 +1,4 @@
-class Hlog < ActiveRecord::Base
+class Hlog < ApplicationRecord
   belongs_to :harvest, inverse_of: :hlogs
   belongs_to :format, inverse_of: :hlogs
 

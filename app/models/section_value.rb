@@ -1,3 +1,3 @@
-class SectionValue < ActiveRecord::Base
+class SectionValue < ApplicationRecord
   belongs_to :section
 end

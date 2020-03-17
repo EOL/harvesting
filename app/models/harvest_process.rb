@@ -1,4 +1,4 @@
-class HarvestProcess < ActiveRecord::Base
+class HarvestProcess < ApplicationRecord
   belongs_to :resource, inverse_of: :harvest_processes
 
   def in_group_of_size(size)

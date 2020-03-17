@@ -1,8 +1,8 @@
 # For connecting to the website Database. NOTE: This code is not especially concerned about SQL-injection, as the data
 # are all either from a trusted database or from a trusted resource file. NOTHING HERE COMES FROM USERS.
-class WebDb < ActiveRecord::Base
+class WebDb < ApplicationRecord
   self.abstract_class = true
-  cfg = ActiveRecord::Base.configurations[Rails.env]
+  cfg = ApplicationRecord.configurations[Rails.env]
   cfg['database'] = Rails.application.secrets.web_db['database']
   cfg['username'] = Rails.application.secrets.web_db['username']
   cfg['password'] = Rails.application.secrets.web_db['password']
@@ -151,7 +151,7 @@ class WebDb < ActiveRecord::Base
 
     def quote_value(val)
       return 'NULL' if val.nil?
-      return ActiveRecord::Base.connection.quote(val) if val.is_a?(ActiveSupport::TimeWithZone)
+      return ApplicationRecord.connection.quote(val) if val.is_a?(ActiveSupport::TimeWithZone)
       return val if val.is_a?(Numeric)
       return 1 if val.is_a? TrueClass
       return 0 if val.is_a? FalseClass

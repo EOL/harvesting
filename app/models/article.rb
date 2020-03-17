@@ -1,4 +1,4 @@
-class Article < ActiveRecord::Base
+class Article < ApplicationRecord
   belongs_to :resource, inverse_of: :articles
   belongs_to :harvest, inverse_of: :articles
   belongs_to :node, inverse_of: :articles
