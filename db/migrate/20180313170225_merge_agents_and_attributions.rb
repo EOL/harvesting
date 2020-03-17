@@ -1,4 +1,4 @@
-class MergeAgentsAndAttributions < ActiveRecord::Migration
+class MergeAgentsAndAttributions < ActiveRecord::Migration[4.2]
   def up
     drop_table :agents
     add_column :attributions, :other_info, :text,

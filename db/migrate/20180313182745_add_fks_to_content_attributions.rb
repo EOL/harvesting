@@ -1,4 +1,4 @@
-class AddFksToContentAttributions < ActiveRecord::Migration
+class AddFksToContentAttributions < ActiveRecord::Migration[4.2]
   def change
     add_column :content_attributions, :content_resource_fk, :string, null: false
     add_column :content_attributions, :attribution_resource_fk, :string, null: false

@@ -16,7 +16,7 @@ gem 'dalli'
 gem 'delayed_job', '~> 4.1.8'
 gem 'delayed_job_active_record'
 # Store users securely:
-gem 'devise'
+gem 'devise', '~> 4.7'
 # Enums with simple_form:
 gem 'enum_help'
 # Because ERB is just plain silly compared to Haml:
@@ -34,7 +34,7 @@ gem 'lockfile'
 # QUIET PLEASE MAKE IT STOP:
 gem 'lograge'
 # Use mysql as the database for Active Record
-gem 'mysql2'
+gem 'mysql2', '0.5.3'
 # Used in parsing XML for new resources:
 gem 'nokogiri'
 # Debugging:

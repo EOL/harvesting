@@ -1,4 +1,4 @@
-class AddResPkToOccurrenceMetadata < ActiveRecord::Migration
+class AddResPkToOccurrenceMetadata < ActiveRecord::Migration[4.2]
   def change
     add_column :occurrence_metadata, :resource_id, :integer
     add_column :occurrence_metadata, :units_term_id, :integer

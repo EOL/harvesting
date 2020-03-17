@@ -1,4 +1,4 @@
-class AddPageInDynamicHierarchyToNodes < ActiveRecord::Migration
+class AddPageInDynamicHierarchyToNodes < ActiveRecord::Migration[4.2]
   def change
     add_column :nodes, :is_on_page_in_dynamic_hierarchy, :boolean,
                default: false, comment: 'names_matcher needs to know which page_ids are actually in DH'

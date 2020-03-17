@@ -1,4 +1,4 @@
-class Language < ApplicationRecord
+class Language < ActiveRecord::Base
   has_many :media, inverse_of: :language
   has_many :articles, inverse_of: :language
 

@@ -1,4 +1,4 @@
-class MoveRoleIdToAttributions < ActiveRecord::Migration
+class MoveRoleIdToAttributions < ActiveRecord::Migration[4.2]
   def change
     # NOTE: Not bothering with moving the data in this migration; it was never used.
     add_column :attributions, :role_id, :integer,

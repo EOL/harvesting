@@ -1,4 +1,4 @@
-class InitialContent < ActiveRecord::Migration
+class InitialContent < ActiveRecord::Migration[4.2]
   def change
     create_table :nodes do |t|
       t.integer :resource_id, null: false, index: true

@@ -1,4 +1,4 @@
-class AddIndexToResourcePkOnScientificNames < ActiveRecord::Migration
+class AddIndexToResourcePkOnScientificNames < ActiveRecord::Migration[4.2]
   def change
     # This is a resonable default, for things that HAD been harvested... it will screw up synonyms, but there's no way
     # to fix without reharvesting them:

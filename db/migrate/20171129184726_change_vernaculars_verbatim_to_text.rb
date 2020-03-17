@@ -1,4 +1,4 @@
-class ChangeVernacularsVerbatimToText < ActiveRecord::Migration
+class ChangeVernacularsVerbatimToText < ActiveRecord::Migration[4.2]
   def change
     # Can't index this field; too large:
     remove_index "vernaculars", name: "index_vernaculars_on_resource_id_and_verbatim"

@@ -1,4 +1,4 @@
-class CreateDataTables < ActiveRecord::Migration
+class CreateDataTables < ActiveRecord::Migration[4.2]
   def change
     # This is a way-station for data read in before we populate "traits".
     create_table :occurrences do |t|

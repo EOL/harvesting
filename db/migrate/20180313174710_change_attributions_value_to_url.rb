@@ -1,4 +1,4 @@
-class ChangeAttributionsValueToUrl < ActiveRecord::Migration
+class ChangeAttributionsValueToUrl < ActiveRecord::Migration[4.2]
   def change
     remove_column :attributions, :value # What was this?!
     url_limit = 2_083 # This is the max. size of a URL, according to teh Googs. Weird number.

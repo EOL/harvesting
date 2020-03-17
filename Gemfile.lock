@@ -308,7 +308,7 @@ DEPENDENCIES
   dalli
   delayed_job (~> 4.1.8)
   delayed_job_active_record
-  devise
+  devise (~> 4.7)
   elasticsearch (~> 6)
   enum_help
   factory_bot_rails
@@ -321,7 +321,7 @@ DEPENDENCIES
   lockfile
   lograge
   meta_request
-  mysql2
+  mysql2 (= 0.5.3)
   nokogiri
   pry-rails
   pundit

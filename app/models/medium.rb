@@ -1,4 +1,4 @@
-class Medium < ApplicationRecord
+class Medium < ActiveRecord::Base
   belongs_to :resource, inverse_of: :media
   belongs_to :harvest, inverse_of: :media
   belongs_to :node, inverse_of: :media

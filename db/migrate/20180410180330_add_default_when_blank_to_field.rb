@@ -1,5 +1,5 @@
 # 20180410180330
-class AddDefaultWhenBlankToField < ActiveRecord::Migration
+class AddDefaultWhenBlankToField < ActiveRecord::Migration[4.2]
   def change
     add_column :fields, :default_when_blank, :string,
       comment: 'If the value of the field read from the resource file is empty, use this value instead.'

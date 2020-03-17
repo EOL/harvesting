@@ -1,4 +1,4 @@
-class SpeedUpResourcesPage < ActiveRecord::Migration
+class SpeedUpResourcesPage < ActiveRecord::Migration[4.2]
   def change
     add_column :harvests, :nodes_count, :integer
     add_column :harvests, :identifiers_count, :integer

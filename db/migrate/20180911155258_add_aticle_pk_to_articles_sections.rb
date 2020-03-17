@@ -1,5 +1,5 @@
 # 20180911155258
-class AddAticlePkToArticlesSections < ActiveRecord::Migration
+class AddAticlePkToArticlesSections < ActiveRecord::Migration[4.2]
   def change
     add_column :articles_sections, :article_pk, :string, null: false
     add_column :articles_sections, :harvest_id, :integer, null: false

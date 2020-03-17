@@ -1,4 +1,4 @@
-class AddOccurrenceIdToDataTables < ActiveRecord::Migration
+class AddOccurrenceIdToDataTables < ActiveRecord::Migration[4.2]
   def change
     add_column :traits, :occurrence_id, :integer
     add_column :assocs, :occurrence_id, :integer

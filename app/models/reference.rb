@@ -1,4 +1,4 @@
-class Reference < ApplicationRecord
+class Reference < ActiveRecord::Base
   belongs_to :resource, inverse_of: :references
   has_many :nodes_references, inverse_of: :reference
   # has_many :article_references, inverse_of: :reference

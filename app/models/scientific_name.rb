@@ -1,4 +1,4 @@
-class ScientificName < ApplicationRecord
+class ScientificName < ActiveRecord::Base
   belongs_to :resource, inverse_of: :scientific_names
   belongs_to :node, inverse_of: :scientific_names
   belongs_to :dataset, inverse_of: :scientific_names

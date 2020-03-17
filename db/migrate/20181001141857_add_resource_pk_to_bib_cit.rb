@@ -1,4 +1,4 @@
-class AddResourcePkToBibCit < ActiveRecord::Migration
+class AddResourcePkToBibCit < ActiveRecord::Migration[4.2]
   def change
     add_column :bibliographic_citations, :resource_pk, :string, null: false, index: true
     add_column :bibliographic_citations, :harvest_id, :integer, null: false

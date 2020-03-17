@@ -1,4 +1,4 @@
-class AddTimestampsToHarvestedModels < ActiveRecord::Migration
+class AddTimestampsToHarvestedModels < ActiveRecord::Migration[4.2]
   def change
     # NOTE: these should really have null: false, but ... can't migrate that. :S  TODO
     add_column :scientific_names, :created_at, :datetime

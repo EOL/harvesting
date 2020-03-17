@@ -1,5 +1,5 @@
 # See Flattener class.
-class MetaXmlField < ApplicationRecord
+class MetaXmlField < ActiveRecord::Base
   class << self
     def load
       # delete_all

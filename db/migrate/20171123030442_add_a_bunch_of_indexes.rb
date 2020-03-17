@@ -1,4 +1,4 @@
-class AddABunchOfIndexes < ActiveRecord::Migration
+class AddABunchOfIndexes < ActiveRecord::Migration[4.2]
   def change
     remove_index 'articles', name: 'index_articles_on_resource_id_and_resource_pk'
     add_index 'articles', ['harvest_id', 'resource_pk'], name: 'index_articles_on_harvest_id_and_resource_pk', using: :btree

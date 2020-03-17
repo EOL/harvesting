@@ -1,4 +1,4 @@
-class CreateMetaXmlFields < ActiveRecord::Migration
+class CreateMetaXmlFields < ActiveRecord::Migration[4.2]
   def change
     create_table :meta_xml_fields do |t|
       t.string :term

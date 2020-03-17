@@ -1,5 +1,5 @@
 # 20190524191117
-class CreateConversion < ActiveRecord::Migration
+class CreateConversion < ActiveRecord::Migration[4.2]
   def change
     create_table :processes do |t|
       t.integer :resource_id

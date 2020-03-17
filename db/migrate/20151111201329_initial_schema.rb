@@ -1,6 +1,6 @@
 # This is really long: sorry. Getting all the inital ideas in one place is, IMO,
 # valuable, though.
-class InitialSchema < ActiveRecord::Migration
+class InitialSchema < ActiveRecord::Migration[4.2]
   def change
     # NOTE: skipping a "sites" table, because the harvester doesn't really care
     # about that information. It simply needs the ID.

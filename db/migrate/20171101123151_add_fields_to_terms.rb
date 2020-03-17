@@ -1,5 +1,5 @@
 # 20171101123151
-class AddFieldsToTerms < ActiveRecord::Migration
+class AddFieldsToTerms < ActiveRecord::Migration[4.2]
   def change
     add_column :terms, :ontology_information_url, :text
     add_column :terms, :ontology_source_url, :text

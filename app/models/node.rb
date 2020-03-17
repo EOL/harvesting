@@ -1,6 +1,6 @@
 # A node in the hierarchy from a given content partner, including (most notably) its scientific name and the PK provided
 # by the resource.
-class Node < ApplicationRecord
+class Node < ActiveRecord::Base
   searchkick
 
   belongs_to :parent, class_name: 'Node', inverse_of: :children

@@ -1,6 +1,6 @@
 # Each resourvce needs to have several file formats defined... e.g.: taxa, agents, refs, etc. ...This model represents
 # those file format definitions.
-class Format < ApplicationRecord
+class Format < ActiveRecord::Base
   default_scope { order(represents: :asc) }
 
   before_destroy :remove_files

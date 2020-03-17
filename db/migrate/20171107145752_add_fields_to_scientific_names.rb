@@ -1,4 +1,4 @@
-class AddFieldsToScientificNames < ActiveRecord::Migration
+class AddFieldsToScientificNames < ActiveRecord::Migration[4.2]
   def change
     add_column :scientific_names, :dataset_id, :string
 
