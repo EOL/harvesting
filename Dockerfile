@@ -12,7 +12,7 @@ RUN apt-get update -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN apt-get update -q && apt-get install -qq -y \
-    openjdk-8-jdk-headless ca-certificates-java && \
+    openjdk-8-jre ca-certificates-java && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
