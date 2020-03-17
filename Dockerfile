@@ -11,10 +11,6 @@ RUN apt-get update -q && \
     libmagickwand-dev imagemagick zip unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN apt-get update -q && apt-get install -qq -y \
-    openjdk-8-jre ca-certificates-java && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 
