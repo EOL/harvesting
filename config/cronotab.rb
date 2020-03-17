@@ -1,1 +1,1 @@
-Crono.perform(LogRotJob).every 1.hours
+Crono.perform(LogRotateJob).every 1.hours
