@@ -26,7 +26,7 @@ class ApplicationController < ActionController::Base
     source = path.split('/').last.sub('_controller.rb', '')
     fn = method[4..-2] # Strip out the "in ``"
     user = current_user&.email || '[ANONYMOUS]'
-    ids = params.select { |p| p =~ /id$/ }.to_hash.map { |key, val| "#{key}: #{val}" }
+    ids = params.select { |p| p =~ /id$/ }.to_unsafe_h.map { |key, val| "#{key}: #{val}" }
     access_logger.warn("#{user} (#{request.remote_ip}) calling #{source.titleize}Controller##{fn} +#{line} "\
       "{ #{ids.join(', ')} })")
   end
