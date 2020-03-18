@@ -1,11 +1,11 @@
 class Article < ApplicationRecord
   belongs_to :resource, inverse_of: :articles
   belongs_to :harvest, inverse_of: :articles
-  belongs_to :node, inverse_of: :articles
-  belongs_to :license
-  belongs_to :language
-  belongs_to :location, inverse_of: :articles
-  belongs_to :bibliographic_citation
+  belongs_to :node, inverse_of: :articles, optional: true
+  belongs_to :license, optional: true
+  belongs_to :language, optional: true
+  belongs_to :location, inverse_of: :articles, optional: true
+  belongs_to :bibliographic_citation, optional: true
 
   has_many :articles_references, inverse_of: :article
   has_many :references, through: :articles_references
