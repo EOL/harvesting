@@ -171,7 +171,7 @@ class Resource::FromMetaXml
         end
         fields[index] = {
           format_id: fmt.id,
-          position: index,
+          position: index + 1, # Looks like position now starts at 1 in the list gem.
           validation: nil, # TODO...
           mapping: Field.mappings[mapping_name],
           special_handling: nil, # TODO...
