@@ -2,13 +2,21 @@ FROM ruby:2.7.0
 MAINTAINER Jeremy Rice <jrice@eol.org>
 LABEL Description="EOL Harvester"
 
-ENV LAST_FULL_REBUILD 2020-03-12
+ENV LAST_FULL_REBUILD 2020-03-19
 
 # Install packages (note we update / clean up at the end of EACH run, because each gets an image)
 RUN apt-get update -q && \
     apt-get install -qq -y build-essential libpq-dev curl wget \
     apache2-utils nodejs procps supervisor vim nginx logrotate \
     libmagickwand-dev imagemagick zip unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+RUN apt-get update -q && \
+    apt-get install -qq -y yarn && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
