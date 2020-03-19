@@ -264,9 +264,9 @@ class Resource < ApplicationRecord
   def create_harvest_instance
     harvest = Harvest.create(resource_id: id)
     harvests << harvest
-    Rails.logger.error(formats.abstract.first.fields.sort_by(&:position).map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
+    Rails.logger.error('###=-> ' + formats.abstract.first.fields.sort_by(&:position).map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
     formats.abstract.each do |fmt|
-      Rails.logger.error("(Outer) Copying Format #{fmt.id} to Harvest #{harvest.id}.")
+      Rails.logger.error("###=-> (Outer) Copying Format #{fmt.id} to Harvest #{harvest.id}.")
       fmt.copy_to_harvest(harvest)
     end
     harvest

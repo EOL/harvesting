@@ -63,15 +63,15 @@ class Format < ApplicationRecord
   end
 
   def copy_to_harvest(new_harvest)
-    Rails.logger.error("Copying Format #{id} to Harvest #{new_harvest}.")
+    Rails.logger.error("###=-> Copying Format #{id} to Harvest #{new_harvest.id}.")
     new_format = self.dup # rubocop:disable Style/RedundantSelf
     new_harvest.formats << new_format
     fields.each do |field|
       new_field = field.dup
-      Rails.logger.error("Copying Field #{new_field.id} #{new_field.mapping}@#{new_field.position}.")
+      Rails.logger.error("###=-> Copying Field #{field.id} #{new_field.mapping}@#{new_field.position}.")
       # TODO: see if these two commands are redundant:
       new_format.fields << new_field
-      Rails.logger.error("Are these the same? new field format id: #{new_field.format_id} new format id: #{new_format.id}")
+      Rails.logger.error("###=-> Are these the same? new field format id: #{new_field.format_id} new format id: #{new_format.id}")
       new_field.format_id = new_format.id
       new_field.save!
     end
