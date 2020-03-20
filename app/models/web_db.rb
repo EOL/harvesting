@@ -3,11 +3,11 @@
 class WebDb < ApplicationRecord
   self.abstract_class = true
   cfg = ApplicationRecord.configurations[Rails.env]
-  cfg['database'] = Rails.application.secrets.web_db['database']
-  cfg['username'] = Rails.application.secrets.web_db['username']
-  cfg['password'] = Rails.application.secrets.web_db['password']
-  cfg['host']     = Rails.application.secrets.web_db['host']
-  cfg['port']     = Rails.application.secrets.web_db['port']
+  cfg['database'] = Rails.application.secrets.web_db[:database]
+  cfg['username'] = Rails.application.secrets.web_db[:username]
+  cfg['password'] = Rails.application.secrets.web_db[:password]
+  cfg['host']     = Rails.application.secrets.web_db[:host]
+  cfg['port']     = Rails.application.secrets.web_db[:port]
   establish_connection cfg
   @types = %w[referent node identifier scientific_name node_ancestor vernacular article medium image_info page_content
               reference attribution content_section bibliographic_citation]

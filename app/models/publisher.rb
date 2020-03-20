@@ -15,7 +15,7 @@ class Publisher
   def initialize(options = {})
     @resource = options[:resource]
     @process = options[:process]
-    @root_url = Rails.application.secrets.repository['url'] || 'http://eol.org'
+    @root_url = Rails.application.secrets.repository[:url] || 'http://eol.org'
     @web_resource_id = nil
     @files = {}
     @nodes = {}

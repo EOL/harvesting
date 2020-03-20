@@ -8,7 +8,7 @@
     = @node.resource_pk
   %li
     %strong= t('nodes.fields.page_id')
-    - base = Rails.application.secrets.host['url'] || 'http://eol.org'
+    - base = Rails.application.secrets.host[:url] || 'http://eol.org'
     = link_to(@node.page_id, "#{base}/pages/#{@node.page_id}")
   %li
     %strong= t('nodes.fields.matching_log')
