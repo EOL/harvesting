@@ -108,7 +108,7 @@ class WebDb < ApplicationRecord
     end
 
     def columns(table)
-      response = connection.exec_query("DESCRIBE `#{table}`")
+      response = exec_query("DESCRIBE `#{table}`")
       names = response.rows.map(&:first)
       names.map(&:to_sym)
     end
@@ -169,7 +169,7 @@ class WebDb < ApplicationRecord
       q = "SELECT id, #{field} FROM #{table}"
       q += " WHERE resource_id = #{options[:resource_id]}" if options[:resource_id]
       q += " ORDER BY id DESC LIMIT #{options[:limit]}" if options[:limit]
-      response = connection.exec_query(q)
+      response = exec_query(q)
       map = {}
       response.rows.each do |row|
         map[row[1]] = row[0]
@@ -251,12 +251,12 @@ class WebDb < ApplicationRecord
     end
 
     def find_by_repo_id(table, id)
-      rows = connection.exec_query("SELECT id FROM `#{table}` WHERE repository_id = #{id} LIMIT 1").rows
+      rows = exec_query("SELECT id FROM `#{table}` WHERE repository_id = #{id} LIMIT 1").rows
       rows.empty? ? nil : rows[0][0]
     end
 
     def any_nodes?(id)
-      rows = connection.exec_query("SELECT id FROM nodes WHERE resource_id = #{id} LIMIT 1").rows
+      rows = exec_query("SELECT id FROM nodes WHERE resource_id = #{id} LIMIT 1").rows
       rows.empty? ? nil : rows[0][0]
     end
 
@@ -269,7 +269,12 @@ class WebDb < ApplicationRecord
     end
 
     def existing_pages(page_ids)
-      connection.exec_query("SELECT * FROM pages WHERE id IN (#{page_ids.compact.join(',')})").rows
+      exec_query("SELECT * FROM pages WHERE id IN (#{page_ids.compact.join(',')})").rows
+    end
+
+    def exec_query(query)
+      connection.remove_connection && connection.establish_connection unless connection.active?
+      connection.exec_query(query)
     end
   end
 end
