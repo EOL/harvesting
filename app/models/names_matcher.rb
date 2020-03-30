@@ -22,8 +22,9 @@ class NamesMatcher
     new(harvest, process, options).start
   end
 
-  # This is meant to be called manually.
+  # This is meant to be called manually. You can pass the second argument in as nil if you don't have a process handle.
   def self.explain_node(node, process, options = {})
+    process ||= LoggedProcess.new(node.resource)
     harvest = node.resource.create_harvest_instance # Perhaps heavy-handed, but... simpler.
     results = []
     begin
