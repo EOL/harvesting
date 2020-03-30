@@ -192,6 +192,7 @@ class NamesMatcher
 
   def explain_node(node)
     @process.info("LIMITED RUN: explaining the names-matching for node #{node.id}")
+    @logs = []
     @explain = true
     return if skip_blank_canonical(node)
     @ancestors = node.node_ancestors.map(&:ancestor)
