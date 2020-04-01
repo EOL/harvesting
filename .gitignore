@@ -33,3 +33,6 @@ public/converted_csv/*
 
 # Never keep the secrets:
 config/secrets.yml
+
+# Docker environment file is secret:
+docker/.env

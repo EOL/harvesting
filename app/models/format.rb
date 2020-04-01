@@ -63,14 +63,12 @@ class Format < ApplicationRecord
   end
 
   def copy_to_harvest(new_harvest)
-    Rails.logger.error("###=-> Copying Format #{id} to Harvest #{new_harvest.id}.")
     new_format = self.dup # rubocop:disable Style/RedundantSelf
     new_harvest.formats << new_format
     weird_zero_position_bug = fields.any? { |f| f.position.zero? }
     fields.each do |field|
       new_field = field.dup
       new_field.position += 1 if weird_zero_position_bug
-      Rails.logger.error("###=-> Copying Field #{field.id} #{new_field.mapping}@#{new_field.position}.")
       new_format.fields << new_field
       new_field.save!
     end

@@ -55,7 +55,7 @@ gem 'sdoc'
 # Making forms simpler:
 gem 'simple_form'
 # JS runtime
-gem 'therubyracer'
+gem 'therubyracer', '0.12.3'
 # Turbolinks makes following links in your web application faster. Read more:
 # https://github.com/rails/turbolinks
 gem 'turbolinks'

@@ -15,8 +15,8 @@ services:
         hard: -1
     volumes:
       - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - /data/eol-repo-elasticsearch/data:/var/data/elasticsearch
-      - /data/eol-repo-elasticsearch/log:/var/log/elasticsearch
+      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
     ports:
@@ -37,8 +37,8 @@ services:
         hard: -1
     volumes:
       - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - /data/eol-repo-elasticsearch2/data:/var/data/elasticsearch
-      - /data/eol-repo-elasticsearch2/log:/var/log/elasticsearch
+      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch2/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch2/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
   eol-repo-elasticsearch3:
@@ -55,8 +55,8 @@ services:
         hard: -1
     volumes:
       - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - /data/eol-repo-elasticsearch3/data:/var/data/elasticsearch
-      - /data/eol-repo-elasticsearch3/log:/var/log/elasticsearch
+      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch3/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch3/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
   eol-repo-memcached:
@@ -75,7 +75,7 @@ services:
     env_file:
       - resources/staging.env
     volumes:
-      - /data/eol-repo-mysql:/var/lib/mysql
+      - ${EOL_ROOT_DIR}/eol-repo-mysql:/var/lib/mysql
     networks:
       - docker_eolnet
   eol-repo-app:
@@ -85,8 +85,8 @@ services:
     restart: always
     volumes:
       - ./resources/secrets.yml:/app/config/secrets.yml
-      - /data/eol-repo-app:/app/public/data
-      - /data/eol-repo-app/tmp:/tmp
+      - ${EOL_ROOT_DIR}/eol-repo-app:/app/public/data
+      - ${EOL_ROOT_DIR}/eol-repo-app/tmp:/tmp
     depends_on:
       - eol-repo-elasticsearch
       - eol-repo-mysql
