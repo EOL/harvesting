@@ -42,7 +42,8 @@ COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY Gemfile ./
 
-RUN bundle install --jobs 10 --retry 5 --without test development staging
+RUN bundle config set without 'test development staging'
+RUN bundle install --jobs 10 --retry 5
 
 RUN touch /tmp/supervisor.sock
 RUN chmod 777 /tmp/supervisor.sock
