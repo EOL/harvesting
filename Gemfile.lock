@@ -333,7 +333,7 @@ DEPENDENCIES
   searchkick (~> 4)
   simple_form
   spring
-  therubyracer
+  therubyracer (= 0.12.3)
   turbolinks
   uglifier
   unicode-emoji
@@ -342,4 +342,4 @@ DEPENDENCIES
   whenever
 
 BUNDLED WITH
-   2.1.2
+   2.1.4
