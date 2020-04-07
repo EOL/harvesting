@@ -2,6 +2,8 @@ source "https://rubygems.org"
 
 # Because we are going to create many, many records!
 gem 'activerecord-import'
+# Used when parsing URLs (was included in Rails 4, but not 5)
+gem 'addressable'
 # Acts As List simplifies ordered lists of models:
 gem 'acts_as_list'
 # Parse Excel files:
