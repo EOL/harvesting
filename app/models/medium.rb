@@ -129,11 +129,9 @@ class Medium < ApplicationRecord
 
   def download_raw_data
     require 'open-uri'
-    # uri = URI.parse(sanitized_source_url)
     attempts = 0
     begin
-      # raw = uri.open(progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
-      raw = open(sanitized_source_url, progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
+      raw = URI.open(sanitized_source_url, progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
     rescue URI::InvalidURIError => e
       raise e if attempts.positive?
       fix_encoding_for_sanitized_source_url
