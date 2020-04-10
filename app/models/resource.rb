@@ -383,6 +383,7 @@ class Resource < ApplicationRecord
         log_info("[#{Time.now.strftime('%H:%M:%S.%3N')}] Batch #{times}...")
         klass.connection.
           execute("DELETE FROM #{klass.table_name} WHERE harvest_id IN (#{harvest_ids.join(',')}) LIMIT #{batch_size}")
+        Rails.logger.warn("Removed #{batch_size} out of #{total_count} rows from #{klass.table_name}. (#{times}/#{max_times})")
         times += 1
         sleep(0.5) # Being (moderately) nice.
       end while klass.where(harvest_id: harvest_ids).count > 0 && times < max_times
