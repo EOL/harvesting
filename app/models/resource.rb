@@ -378,12 +378,13 @@ class Resource < ApplicationRecord
       log_info("++ Batch removal of #{total_count} instances...")
       batch_size = 10_000
       times = 0
-      max_times = (total_count / batch_size) * 2 # No floating point math here, sloppiness okay.
+      expected_times = (total_count / batch_size)
+      max_times = expected_times * 2 # No floating point math here, sloppiness okay.
       begin
         log_info("[#{Time.now.strftime('%H:%M:%S.%3N')}] Batch #{times}...")
         klass.connection.
           execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id IN (#{harvest_ids.join(',')}) LIMIT #{batch_size}")
-        Rails.logger.warn("Removed #{batch_size} out of #{total_count} rows from #{klass.table_name}. (#{times}/#{max_times})")
+        Rails.logger.warn("Removed #{batch_size} out of #{total_count} rows from #{klass.table_name}. (#{times}/#{expected_times})")
         times += 1
         sleep(0.5) # Being (moderately) nice.
       end while klass.where(harvest_id: harvest_ids).count > 0 && times < max_times
