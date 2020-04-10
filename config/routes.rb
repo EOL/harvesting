@@ -36,5 +36,7 @@ Rails.application.routes.draw do
   end
   resources :traits, only: [:show]
 
+  get "/service/page_id_map" => "service/page_id_map#get", as: "page_id_map"
+
   match '/ping', to: 'resources#ping', via: :all
 end
