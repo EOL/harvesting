@@ -26,8 +26,7 @@ class Service::PageIdMapController < ApplicationController
 
   def get
     self.content_type = 'text/csv'
-    resource_id = params["resource"].to_i
-    r = Resource.find(resource_id)
+    r = Resource.find(params[:resource_id])
     if not r
       render json: payload.merge(:title => "Resource not found",
                                  :status => "404 Page Not Found"),
