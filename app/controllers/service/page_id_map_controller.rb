@@ -21,7 +21,7 @@
 
 require 'csv'
 
-class Service::PageIdMapController < ServicesController
+class Service::PageIdMapController < ApplicationController
   #before_action :require_power_user
 
   def get
