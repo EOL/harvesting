@@ -116,9 +116,8 @@ class WebDb < ApplicationRecord
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
       connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
-      connection.last_inserted_id(table)
+      connection.send :last_inserted_id, table
     end
-
 
     def update_resource(obj, logger = nil)
       web_id = resource_id(obj)
