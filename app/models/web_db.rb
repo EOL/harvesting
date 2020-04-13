@@ -116,7 +116,7 @@ class WebDb < ApplicationRecord
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
       connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
-      connection.send :last_inserted_id, table
+      connection.send(:last_inserted_id, table)
     end
 
     def update_resource(obj, logger = nil)
@@ -246,7 +246,7 @@ class WebDb < ApplicationRecord
       hash[:updated_at] = hash[:created_at] = now
       table = object.class.table_name
       raw_create(table, hash)
-      connection.last_inserted_id(table)
+      connection.send(:last_inserted_id, table)
     end
 
     def find_by_repo_id(table, id)
