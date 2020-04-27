@@ -25,8 +25,8 @@ module Store
       name = no_quotes.gsub(%r{[\"\/\\]}, '').gsub(%r{\s+}, ' ')
       if name != no_quotes
         @no_quote_warning_count ||= 0
+        @no_quote_warning_count += 1
         if @no_quote_warning_count < 30
-          @no_quote_warning_count += 1
           @models[:log] ||= []
           @models[:log] << "Filtered Scientific Name \`#{no_quotes}\` to \`#{name}\`"
         elsif @no_quote_warning_count == 30
