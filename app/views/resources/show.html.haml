@@ -13,28 +13,32 @@
   - elsif policy(@resource).update?
     .right.menu
       .item
-        .ui.buttons
-          - if @resource.harvests.completed.any?
+        - currently_harvesting = Delayed::Job.where(queue: 'harvest').where('locked_at IS NOT NULL').any? {|j| j.payload_object.resource_id == @resource.id }
+        - if currently_harvesting
+          .ui.text-capital= t("resources.actions.currently_harvesting")
+        - else
+          .ui.buttons
+            - if @resource.harvests.completed.any?
+              .ui.compact.button
+                = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
+            - elsif @resource.harvests.any?
+              .ui.compact.button
+                = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
+            - else
+              .ui.compact.button
+                = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
+            - if @resource.opendata_url
+              .ui.compact.button
+                = link_to(t("resources.actions.re_download_opendata_harvest"),
+                  resource_re_download_opendata_harvest_path(@resource),
+                  data: { confirm: t("resources.actions.re_download_confirm") })
             .ui.compact.button
-              = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
-          - elsif @resource.harvests.any?
+              = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
             .ui.compact.button
-              = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))
-          - else
-            .ui.compact.button
-              = link_to(t("resources.actions.harvest"), resource_harvest_path(@resource))
-          - if @resource.opendata_url
-            .ui.compact.button
-              = link_to(t("resources.actions.re_download_opendata_harvest"),
-                resource_re_download_opendata_harvest_path(@resource),
-                data: { confirm: t("resources.actions.re_download_confirm") })
-          .ui.compact.button
-            = link_to(t("resources.actions.re_create_tsv"), resource_re_create_tsv_path(@resource))
-          .ui.compact.button
-            = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
-          - if policy(@resource).destroy?
-            .ui.negative.button
-              = link_to(t("harvests.actions.destroy"), resource_path(@resource), method: :delete, style: 'color: white', data: { confirm: 'This is the resource, not the harvest. This CANNOT be undone. Are you SURE?' })
+              = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
+            - if policy(@resource).destroy?
+              .ui.negative.button
+                = link_to(t("harvests.actions.destroy"), resource_path(@resource), method: :delete, style: 'color: white', data: { confirm: 'This is the resource, not the harvest. This CANNOT be undone. Are you SURE?' })
 .ui.bottom.attached.segment
   .ui.list
     - unless @resource.abbr.blank?

@@ -179,6 +179,7 @@ en:
   resources:
     actions:
       back: "back to all resources"
+      currently_harvesting: "currently harvesting"
       harvest: "harvest"
       harvest_in_queue: "currently harvesting, wait..."
       publishing_side: "see in production"

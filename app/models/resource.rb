@@ -132,7 +132,14 @@ class Resource < ApplicationRecord
   end
 
   def lock
-    raise "Resource #{id} locked!" if lockfile_exists?
+    if lockfile_exists?
+      # TODO: Find a nice way to make this even more obvious. :\
+      log_error('*****')
+      log_error('***** HARVEST ATTEMPT FAILED: This resource is locked; assuming it is already running. '\
+                'Remove lock if not.')
+      log_error('*****')
+      raise "Resource #{id} locked!"
+    end
     lockfile = Lockfile.new(lockfile_name, timeout: 0.01)
     begin
       lockfile.lock

@@ -27,7 +27,7 @@ class ApplicationController < ActionController::Base
     fn = method[4..-2] # Strip out the "in ``"
     user = current_user&.email || '[ANONYMOUS]'
     ids = params.select { |p| p =~ /id$/ }.to_unsafe_h.map { |key, val| "#{key}: #{val}" }
-    access_logger.warn("#{user} (#{request.remote_ip}) calling #{source.titleize}Controller##{fn} +#{line} "\
+    access_logger.warn("#{user} calling #{source.titleize}Controller##{fn} +#{line} "\
       "{ #{ids.join(', ')} })")
   end
 
