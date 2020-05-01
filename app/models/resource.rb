@@ -355,7 +355,8 @@ class Resource < ApplicationRecord
   end
 
   def remove_from_searchkick
-    Node.select(:id).where(resource_id: id).find_in_batches(batch_size: 5000) do |nodes|
+    nodes = get_searchkick_nodes
+    while(nodes.count > 0)
       begin
         log_info("Starting batch with ID #{nodes.first.id}...")
         Node.searchkick_index.bulk_delete(nodes)
@@ -370,8 +371,14 @@ class Resource < ApplicationRecord
             raise "FAILED removing ElasticSearch index for Node #{node.id}: #{e.message}"
           end
         end
+      ensure
+        nodes = get_searchkick_nodes
       end
     end
+  end
+
+  def get_searchkick_nodes
+    Node.search('*', where: { resource_id: id }, limit: 5000)
   end
 
   # NOTE: using harvest ids because everything is indexed on those:

@@ -1,4 +1,4 @@
-%strong= "#{l(process.created_at.localtime, format: :short)}"
+%strong= "#{l(process.created_at.in_time_zone(Rails.configuration.time_zone), format: :short)}"
 - if process.method_breadcrumbs
   = process.method_breadcrumbs.split(',').join(" &rarr; ").html_safe
 - if process.current_group

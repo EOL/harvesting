@@ -102,10 +102,10 @@
         = "An admin has set this resource to Force Harvest."
     .item
       %strong= "Created:"
-      = I18n.l @resource.created_at.localtime, format: :short
+      = I18n.l @resource.created_at.in_time_zone(Rails.configuration.time_zone), format: :short
     .item
       %strong= "Last Updated:"
-      = I18n.l @resource.updated_at.localtime, format: :short
+      = I18n.l @resource.updated_at.in_time_zone(Rails.configuration.time_zone), format: :short
 
 %h2= "Expected File Format Definitions"
 - if @formats.empty?
