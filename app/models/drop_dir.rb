@@ -111,7 +111,8 @@ class DropDir
           puts "Moving #{subfile} to #{dir}"
           FileUtils.mv(subfile, dir)
         end
-        FileUtils.rmdir(subdir)
+        # NOTE: this is technically insecure, but I think we can manage the risk.
+        FileUtils.rm_rf(subdir)
       end
     end
   end
