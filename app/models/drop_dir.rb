@@ -99,7 +99,11 @@ class DropDir
     def remove_dot_files(dir)
       Dir.glob("#{dir}/.*").each do |file|
         next if File.basename(file).match?(/^\.*$/)
-        File.unlink(file)
+        begin
+          File.unlink(file)
+        rescue Errno::EBUSY => e
+          Rails.logger.error("Failed to remove file: #{e.message}")
+        end
       end
     end
 
@@ -112,7 +116,7 @@ class DropDir
           FileUtils.mv(subfile, dir)
         end
         # NOTE: this is technically insecure, but I think we can manage the risk.
-        FileUtils.rm_rf(subdir)
+        FileUtils.rm_rf(subdir, secure: true)
       end
     end
   end
