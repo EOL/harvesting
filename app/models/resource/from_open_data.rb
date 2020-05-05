@@ -5,8 +5,21 @@ class Resource
     end
 
     def self.reload(resource)
-      FileUtils.rm_rf("#{resource.path}/.", secure: true) # Remove all the old stuff!
+      remove_resource_files
       new(resource.opendata_url, resource).parse
+    end
+
+    def remove_resource_files(dir)
+      Dir.glob("#{resource.path}/*").each do |file|
+        next if File.basename(file).match?(/^\.*$/)
+        next if File.basename(file) == Resource.logfile_name
+        next if File.basename(file) == Resource.lockfile_name
+        begin
+          File.unlink(file)
+        rescue Errno::EBUSY => e
+          Rails.logger.error("Failed to remove file, possible NFS problem: #{e.message}")
+        end
+      end
     end
 
     def initialize(url, resource = nil)

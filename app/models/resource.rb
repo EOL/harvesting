@@ -1,4 +1,7 @@
 class Resource < ApplicationRecord
+  @logfile_name = 'process.log'
+  @lockfile_name = 'harvest.lock'
+
   belongs_to :partner, inverse_of: :resources
   belongs_to :default_license, class_name: 'License', inverse_of: :resources
 
@@ -24,75 +27,79 @@ class Resource < ApplicationRecord
 
   acts_as_list
 
-  def self.native
-    Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
-      Resource.where(abbr: 'dvdtg').first_or_create do |r|
-        r.name = 'EOL Dynamic Hierarchy 1.1'
-        r.partner = Partner.native
-        r.description = ''
-        r.abbr = 'dvdtg'
-        r.is_browsable = true
-        r.has_duplicate_nodes = false
-        r.nodes_count = 650000
-      end
-    end
-  end
+  class << self
+    attr_reader :logfile_name, :lockfile_name
 
-  def self.quick_define(options)
-    partner = if p_opts = options[:partner]
-                Partner.where(p_opts).first_or_create
-              else
-                Partner.first
-              end
-    resource = where(name: options[:name]).first_or_create do |r|
-      abbr = options[:abbr]
-      abbr ||= options[:name].gsub(/[^A-Z]/, "")
-      abbr ||= options[:name][0..3].upcase
-      r.name = options[:name]
-      r.pk_url = options[:pk_url] || "$PK"
-      r.abbr = abbr
-      r.partner_id = partner.id
-    end
-    pos = 1
-    options[:formats].each do |rep, f_def|
-      fmt = Format.where(
-            field_sep: options[:field_sep] || ",",
-            line_sep: options[:line_sep] || "\n",
-            resource_id: resource.id,
-            represents: rep).
-          abstract.
-          first_or_create do |f|
-        f.resource_id = resource.id
-        f.represents = rep
-        f.file_type = Format.file_types[options[:type]]
-        f.get_from = "#{options[:base_dir]}/#{f_def[:loc]}"
-      end
-      pos += 1
-      field_pos = 1
-      f_def[:fields].each do |field|
-        Field.where(format_id: fmt.id, position: field_pos).first_or_create do |f|
-          f.format_id = fmt.id
-          f.position = field_pos
-          f.expected_header = field.keys.first
-          f.mapping = field.values.first
-          f.submapping = field[:submapping]
-          f.unique_in_format = field[:is_unique] || false
-          f.can_be_empty = field.has_key?(:can_be_empty) ? field[:can_be_empty] : true
+    def native
+      Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
+        Resource.where(abbr: 'dvdtg').first_or_create do |r|
+          r.name = 'EOL Dynamic Hierarchy 1.1'
+          r.partner = Partner.native
+          r.description = ''
+          r.abbr = 'dvdtg'
+          r.is_browsable = true
+          r.has_duplicate_nodes = false
+          r.nodes_count = 650000
         end
-        field_pos += 1
       end
     end
-    resource
-  end
 
-  def self.from_xml(loc, resource = nil)
-    abbr = File.basename(loc)
-    # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
-    resource ||= create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
-    resource.partner = resource.fake_partner
-    resource.save
-    Resource::FromMetaXml.import(loc, resource)
-    resource
+    def quick_define(options)
+      partner = if p_opts = options[:partner]
+                  Partner.where(p_opts).first_or_create
+                else
+                  Partner.first
+                end
+      resource = where(name: options[:name]).first_or_create do |r|
+        abbr = options[:abbr]
+        abbr ||= options[:name].gsub(/[^A-Z]/, "")
+        abbr ||= options[:name][0..3].upcase
+        r.name = options[:name]
+        r.pk_url = options[:pk_url] || "$PK"
+        r.abbr = abbr
+        r.partner_id = partner.id
+      end
+      pos = 1
+      options[:formats].each do |rep, f_def|
+        fmt = Format.where(
+              field_sep: options[:field_sep] || ",",
+              line_sep: options[:line_sep] || "\n",
+              resource_id: resource.id,
+              represents: rep).
+            abstract.
+            first_or_create do |f|
+          f.resource_id = resource.id
+          f.represents = rep
+          f.file_type = Format.file_types[options[:type]]
+          f.get_from = "#{options[:base_dir]}/#{f_def[:loc]}"
+        end
+        pos += 1
+        field_pos = 1
+        f_def[:fields].each do |field|
+          Field.where(format_id: fmt.id, position: field_pos).first_or_create do |f|
+            f.format_id = fmt.id
+            f.position = field_pos
+            f.expected_header = field.keys.first
+            f.mapping = field.values.first
+            f.submapping = field[:submapping]
+            f.unique_in_format = field[:is_unique] || false
+            f.can_be_empty = field.has_key?(:can_be_empty) ? field[:can_be_empty] : true
+          end
+          field_pos += 1
+        end
+      end
+      resource
+    end
+
+    def from_xml(loc, resource = nil)
+      abbr = File.basename(loc)
+      # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
+      resource ||= create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
+      resource.partner = resource.fake_partner
+      resource.save
+      Resource::FromMetaXml.import(loc, resource)
+      resource
+    end
   end
 
   def complete
@@ -118,7 +125,7 @@ class Resource < ApplicationRecord
   end
 
   def lockfile_name
-    "#{path}/harvest.lock"
+    "#{path}/#{Resource.lockfile_name}"
   end
 
   # NOTE: why no #locked? ...Because it's not quite that simple. I didn't want to lull you into a false sense of the
@@ -177,7 +184,7 @@ class Resource < ApplicationRecord
   end
 
   def process_log
-    @log ||= ActiveSupport::TaggedLogging.new(Logger.new("#{path}/process.log"))
+    @log ||= ActiveSupport::TaggedLogging.new(Logger.new("#{path}/#{Resource.logfile_name}"))
   end
 
   # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.
