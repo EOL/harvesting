@@ -153,7 +153,7 @@ class Resource < ApplicationRecord
       yield
     ensure
       lockfile.unlock
-      rm_lockfile
+      rm_lockfile rescue nil # This *can* fail if the lockfile isn't there, and throw another error.
     end
   end
 
