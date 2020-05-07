@@ -8,7 +8,7 @@ class NameParser
   end
 
   def self.parse_names(harvest, names)
-    process = LoggedProcess.new(self)
+    process = LoggedProcess.new(harvest.resource)
     begin
       process.run_step('parse_names') do
         parser = NameParser.new(harvest, process)
@@ -69,8 +69,11 @@ class NameParser
           file = @harvest.resource.path.join('failed_names.json')
           File.unlink(file) if File.exist?(file)
           File.open(file, 'w') { |out| out.write(json) }
-          @process.warn("Failed to parse JSON: #{e.message[0..2048]} OUTPUT: #{file}")
-          raise(e)
+          error_limit = 10_000 # The size at which we notice it is probably spitting back the WHOLE RESPONSE.
+          message = e.message.size > error_limit ? "#{e.message[0..error_limit]}[snip]..." : e.message
+          @process.warn("Failed to parse JSON: #{message}")
+          @process.warn("Re-try with:  JSON.parse(File.read('#{file}'))")
+          raise(e) if e.message.size > error_limit # Sorry, something's gone REALLY bad.
         end
         update_names(updates) unless updates.empty?
       end
