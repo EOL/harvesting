@@ -69,7 +69,8 @@ class NameParser
           file = @harvest.resource.path.join('failed_names.json')
           File.unlink(file) if File.exist?(file)
           File.open(file, 'w') { |out| out.write(json) }
-          @process.warn("Failed to parse JSON: #{e} OUTPUT: #{file}")
+          @process.warn("Failed to parse JSON: #{e.message[0..2048]} OUTPUT: #{file}")
+          raise(e)
         end
         update_names(updates) unless updates.empty?
       end
