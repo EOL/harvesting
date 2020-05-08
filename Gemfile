@@ -76,6 +76,7 @@ group :development, :test do
   gem 'factory_bot_rails'
   # Testing framework:
   gem 'rspec-rails'
+  gem 'solargraph'
 end
 
 group :development do
