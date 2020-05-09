@@ -70,10 +70,11 @@ class NameParser
           File.unlink(file) if File.exist?(file)
           File.open(file, 'w') { |out| out.write(json) }
           error_limit = 10_000 # The size at which we notice it is probably spitting back the WHOLE RESPONSE.
-          message = e.message.size > error_limit ? "#{e.message[0..error_limit]}[snip]..." : e.message
+          bad_server = e.message.size > error_limit
+          message = bad_server ? "#{e.message[0..error_limit]}[snip]..." : e.message
           @process.warn("Failed to parse JSON: #{message}")
           @process.warn("Re-try with:  JSON.parse(File.read('#{file}'))")
-          raise(e) if e.message.size > error_limit # Sorry, something's gone REALLY bad.
+          raise('LOOKS LIKE GN SERVER IS NOT WORKING, please check!') if bad_server # It's all gone bad!
         end
         update_names(updates) unless updates.empty?
       end

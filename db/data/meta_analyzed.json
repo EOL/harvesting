@@ -842,5 +842,11 @@
 "represents":"to_nodes_landmark",
 "submapping":null,
 "is_unique":false,
+"is_required":false},
+{"term":"http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated",
+"for_format":"media",
+"represents":"to_media_description",
+"submapping":null,
+"is_unique":false,
 "is_required":false}
 ]

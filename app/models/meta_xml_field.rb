@@ -16,6 +16,13 @@ class MetaXmlField < ApplicationRecord
       import!(data, on_duplicate: :ignore)
     end
 
+    # json = %{{"term":"http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated",
+    # "for_format":"media",
+    # "represents":"to_media_description",
+    # "submapping":null,
+    # "is_unique":false,
+    # "is_required":false}}
+    # MetaXmlField.add_from_json(json)
     def add_from_json(json)
       data = JSON.parse(json)
       import!([data], on_duplicate: :ignore)
