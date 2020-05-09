@@ -91,14 +91,8 @@ class Resource < ApplicationRecord
       resource
     end
 
-    def from_xml(loc, resource = nil)
-      abbr = File.basename(loc)
-      # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
-      resource ||= create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
-      resource.partner = resource.fake_partner
-      resource.save
-      Resource::FromMetaXml.import(loc, resource)
-      resource
+    def from_xml(loc)
+      Resource::FromMetaXml.by_path(loc)
     end
   end
 

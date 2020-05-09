@@ -1,194 +1,95 @@
-# Read a meta.xml config file and create the resource file formats.
-class Resource::FromMetaXml
-  attr_accessor :resource, :path, :doc
+class Resource
+  # Read a meta.xml config file and create the resource file formats.
+  class FromMetaXml
+    attr_accessor :resource, :path, :doc
 
-  def self.import(path, resource = nil)
-    new(path, resource).import
-  end
-
-  def self.analyze
-    hashes = {}
-    Resource.find_each do |resource|
-      format = resource.formats.last
-      filename = format.get_from
-      basename = File.basename(filename)
-      filename = filename.sub(basename, 'meta.xml')
-      unless File.exist?(filename)
-        # puts "SKIPPING missing meta file for format: #{format.id}"
-        next
+    class << self
+      def self.by_path(path)
+        abbr = File.basename(loc)
+        # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
+        resource = if Resource.exists?(abbr: abbr.downcase)
+          Resource.find(abbr: abbr.downcase)
+        else
+          Resource.create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
+          resource.partner = resource.fake_partner
+          resource.save
+          resource
+        end
+        new(resource).import
       end
-      @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-      file_configs = @doc.css('archive table')
-      file_configs.each do |file_config|
-        location = file_config.css("location").first.text
-        puts "++ #{resource.name}/#{location}"
-        file_config.css('field').each do |field|
-          i = field['index'].to_i
-          format = resource.formats.where("get_from LIKE '%#{location}'")&.first
-          if format.nil?
-            # puts "SKIPPING missing format for #{location}"
+
+      # A method to re-generate the meta_xml_analyzed file. Basically this allows us to "learn" from past resources how
+      # future fields should be mapped. TODO: this should be extracted to its own class. :\ MetaXmlToFieldMapper
+      def self.analyze
+        hashes = {}
+        Resource.find_each do |resource|
+          format = resource.formats.last
+          filename = format.get_from
+          basename = File.basename(filename)
+          filename = filename.sub(basename, 'meta.xml')
+          unless File.exist?(filename)
+            # puts "SKIPPING missing meta file for format: #{format.id}"
             next
           end
-          db_field = format.fields[i]
-          if db_field.nil?
-            # puts "SKIPPING missing db field for format #{format.id}..."
-            next
-          end
-          key = "#{field['term']}/#{format.represents}"
-          if hashes.key? key
-            if hashes[key][:represents] == "to_ignored"
-              # puts ".. It was ignored; overriding..."
-            elsif hashes[key][:represents] == db_field.mapping
-              next
-            else
-              puts "!! I'm leaving the old value for #{key} of #{hashes[key][:represents]} and losing the value "\
-                "of #{db_field.mapping}"
-              next
+          # TODO: Some of this logic beglongs in the MetaXml class.
+          @doc = File.open(filename) { |f| Nokogiri::XML(f) }
+          @doc.css('archive table').each do |file_config|
+            location = file_config.css("location").first.text
+            puts "++ #{resource.name}/#{location}"
+            file_config.css('field').each do |field|
+              i = field['index'].to_i
+              format = resource.formats.where("get_from LIKE '%#{location}'")&.first
+              if format.nil?
+                # puts "SKIPPING missing format for #{location}"
+                next
+              end
+              db_field = format.fields[i]
+              if db_field.nil?
+                # puts "SKIPPING missing db field for format #{format.id}..."
+                next
+              end
+              key = "#{field['term']}/#{format.represents}"
+              if hashes.key? key
+                if hashes[key][:represents] == "to_ignored"
+                  # puts ".. It was ignored; overriding..."
+                elsif hashes[key][:represents] == db_field.mapping
+                  next
+                else
+                  puts "!! I'm leaving the old value for #{key} of #{hashes[key][:represents]} and losing the value "\
+                    "of #{db_field.mapping}"
+                  next
+                end
+              end
+              hashes[key] = {
+                term: field['term'],
+                for_format: format.represents,
+                represents: db_field.mapping,
+                submapping: db_field.submapping,
+                is_unique: db_field.unique_in_format,
+                is_required: !db_field.can_be_empty
+              }
             end
           end
-          hashes[key] = {
-            term: field['term'],
-            for_format: format.represents,
-            represents: db_field.mapping,
-            submapping: db_field.submapping,
-            is_unique: db_field.unique_in_format,
-            is_required: !db_field.can_be_empty
-          }
         end
+        File.open(Rails.root.join('db', 'data', 'meta_analyzed.json'),"w") do |f|
+          f.write(hashes.values.sort_by { |h| h[:term] }.to_json.gsub(/,/, ",\n"))
+        end
+        puts "Done. Created #{hashes.keys.size} hashes."
       end
     end
-    File.open(Rails.root.join('db', 'data', 'meta_analyzed.json'),"w") do |f|
-      f.write(hashes.values.sort_by { |h| h[:term] }.to_json.gsub(/,/, ",\n"))
-    end
-    puts "Done. Created #{hashes.keys.size} hashes."
-  end
 
-  def initialize(path, resource = nil)
-    @path = path
-    @resource = resource || Resource.create
-  end
-
-  def import
-    @resource.formats&.abstract&.delete_all
-    # YOU WERE HERE: replace with MetaXml.new(something).process ...and rename that method. :|
-    filename = "#{@path}/meta.xml"
-    return 'Missing meta.xml file' unless File.exist?(filename)
-    @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-    file_configs = @doc.css('archive table')
-    file_configs = @doc.css('archive core') if file_configs.empty?
-    ignored_fields = []
-    formats = []
-    file_configs.each do |file_config|
-      file_config_name = file_config.css('location').text
-      file_config_file = "#{@path}/#{file_config_name}"
-      unless File.exist?(file_config_file)
-        puts "!! SKIPPING missing file: #{file_config_file}"
-        next
-      end
-      # TODO: :attributions, :articles, :images, :js_maps, :links, :maps, :sounds, :videos
-      reps =
-        case file_config['rowType']
-        when "http://rs.tdwg.org/dwc/terms/Taxon"
-          :nodes
-        when "http://rs.tdwg.org/dwc/terms/Occurrence"
-          :occurrences
-        when "http://rs.tdwg.org/dwc/terms/MeasurementOrFact"
-          :measurements
-        when "http://eol.org/schema/reference/Reference"
-          :refs
-        when "http://eol.org/schema/agent/Agent"
-          :agents
-        when "http://eol.org/schema/media/Document"
-          :media
-        when "http://rs.gbif.org/terms/1.0/VernacularName"
-          :vernaculars
-        when "http://eol.org/schema/Association"
-          :assocs
-        when "http://rs.tdwg.org/dwc/terms/Event"
-          :skip
-        end
-      if reps == :skip
-        puts "SKIPPING #{file_config['rowType']} config (#{file_config_name})..."
-        next
-      end
-      reps ||=
-        case file_config_name.downcase
-        when /^agent/
-          :agents
-        when /^tax/
-          :nodes
-        when /^ref/
-          :refs
-        when /^med/
-          :media
-        when /^(vern|common)/
-          :vernaculars
-        when /occurr/
-          :occurrences
-        when /assoc/
-          :assocs
-        when /(measurement|data|fact)/
-          :measurements
-        when /^events/
-        else
-          raise "I cannot determine what #{file_config_name} represents!"
-        end
-      sep = YAML.safe_load(%(---\n"#{file_config['fieldsTerminatedBy']}"\n))
-      lines = YAML.safe_load(%(---\n"#{file_config['linesTerminatedBy']}"\n))
-      file_path = file_config_file.gsub(' ', '\\ ')
-      # Need to check for those stupid \r line endings that mac editors can use:
-      cr_count = `grep -o $'\\r' #{file_path} | wc -l`.chomp.to_i
-      lf_count = `grep -o $'\\n' #{file_path} | wc -l`.chomp.to_i
-      lines = "\r" if lf_count <= 1 && cr_count > 1
-      lines = "\n" if cr_count <= 1 && lf_count > 1
-      # (otherwise, trust what the XML file said ... we just USUALLY can't. Ugh.)
-      fmt = Format.create!(
-        resource_id: @resource.id,
-        harvest_id: nil,
-        header_lines: file_config['ignoreHeaderLines'],
-        data_begins_on_line: file_config['ignoreHeaderLines'],
-        file_type: :csv,
-        represents: reps,
-        get_from: "#{@path}/#{file_config_name}",
-        field_sep: sep,
-        line_sep: lines,
-        utf8: file_config['encoding'] =~ /^UTF/
-      )
-      headers = nil
-      unless file_config['ignoreHeaderLines'].to_i.zero?
-        headers = `cat #{file_path} | tr "\r" "\n" | head -n #{file_config['ignoreHeaderLines']}`.split(sep)
-        headers.last.chomp!
-      end
-      fields = []
-      file_config.css('field').each do |field|
-        assumption = MetaXmlField.where(term: field['term'], for_format: reps)&.first
-        a_submap = assumption&.submapping
-        a_submap = nil if a_submap == '0'
-        mapping_name = assumption&.represents || :to_ignored
-        index = field['index'].to_i
-        header_name = headers ? headers[index] : field['term'].split('/').last
-        if mapping_name == 'to_nodes_ancestor'
-          a_submap = header_name.downcase
-        end
-        fields[index] = {
-          format_id: fmt.id,
-          position: index + 1, # Looks like position now starts at 1 in the list gem.
-          validation: nil, # TODO...
-          mapping: Field.mappings[mapping_name],
-          special_handling: nil, # TODO...
-          submapping: a_submap,
-          expected_header: header_name,
-          unique_in_format: assumption ? assumption.is_unique : false,
-          can_be_empty: assumption ? !assumption.is_required : true
-        }
-        if mapping_name == 'to_ignored'
-          ignored_fields << { file: file_config_name, reps: reps, head: header_name, term: field['term'] }
-        end
-      end
-      Field.import!(fields)
+    def initialize(resource)
+      @resource = resource
     end
-    ignored_fields.each do |ignored|
-      puts "!! IGNORED #{ignored[:file]} (#{ignored[:reps]}) header: #{ignored[:head]} term: #{ignored[:term]}"
+
+    def import
+      process = LoggedProcess.new(@resource)
+      process.run_step('Parse meta.xml file and create formats with fields') do
+        @resource.formats&.abstract&.delete_all
+        meta_xml = MetaXml.new(@resource)
+        meta_xml.create_models
+        meta_xml.warnings.each { |warning| process.warn(warning) }
+      end
     end
   end
 end

@@ -1,8 +1,11 @@
-# Refactor of from_meta_xml.rb #import
+# Refactor of from_meta_xml.rb #import TODO: This class has too much in it. It should really just have the logic to read
+# the file and hand back the parsed XML. The logic for creating formats and fields belongs in other classes.
 class MetaXml
-  def initialize(resource, resource_path)
+  attr_reader :warnings
+
+  def initialize(resource)
     @resource = resource
-    filename = "#{resource_path}/meta.xml"
+    filename = "#{@resource.path}/meta.xml"
     raise 'Missing meta.xml file' unless File.exist?(filename)
 
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
@@ -17,7 +20,7 @@ class MetaXml
     end
   end
 
-  def process
+  def create_models
     @formats.each do |format|
       parse_xml(format[:xml])
       Field.import!(format[:fields])
