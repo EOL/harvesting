@@ -164,7 +164,7 @@ class Resource < ApplicationRecord
     path.join("publish_#{table}.tsv")
   end
 
-  def path(make_if_missing = false)
+  def path(make_if_missing = true)
     return @path if @path
     @path = Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
     unless File.exist?(@path)
