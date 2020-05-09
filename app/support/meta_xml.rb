@@ -139,7 +139,7 @@ class MetaXml
     format[:headers].last.chomp!
   end
 
-  def determine_fields
+  def determine_fields(format)
     format[:fields] = []
     format[:xml].css('field').each do |field|
       insight = field_insight(field, format)
