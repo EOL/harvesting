@@ -111,11 +111,11 @@ class DropDir
         next unless File.directory?(subdir)
 
         flatten_dirs(subdir)
+        remove_dot_files(subdir) # We don't want them.
         Dir.glob("#{subdir}/*").each do |subfile|
           puts "Moving #{subfile} to #{dir}"
           FileUtils.mv(subfile, dir)
         end
-        remove_dot_files(subdir) # We don't want them.
         begin
           FileUtils.rm_rf(subdir, secure: true)
         rescue Errno::ENOTEMPTY
