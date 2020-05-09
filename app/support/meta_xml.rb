@@ -16,7 +16,7 @@ class MetaXml
     format_xml.each do |xml|
       filename = xml.css('location').text
       path = "#{@path}/#{filename}"
-      @formats = { filename: filename, path: path.gsub(' ', '\\ '), xml: xml }
+      @formats << { filename: filename, path: path.gsub(' ', '\\ '), xml: xml }
     end
   end
 
