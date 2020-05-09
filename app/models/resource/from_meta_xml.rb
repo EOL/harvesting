@@ -70,6 +70,7 @@ class Resource::FromMetaXml
 
   def import
     @resource.formats&.abstract&.delete_all
+    # YOU WERE HERE: replace with MetaXml.new(something).process ...and rename that method. :|
     filename = "#{@path}/meta.xml"
     return 'Missing meta.xml file' unless File.exist?(filename)
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
