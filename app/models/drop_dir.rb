@@ -1,3 +1,4 @@
+# Manages the handling of archives placed in a drop dir (usually data/drop) intended to create a resource.
 class DropDir
   class << self
     def check
@@ -62,43 +63,41 @@ class DropDir
     def shorten(basename)
       abbr = basename.dup
       return abbr if abbr.size <= 16
+
       elements = abbr.split(/[^A-Za-z0-9]/)
       if elements.size > 2
         temp = elements.shift[0..3] + '-'
         final = elements.pop[0..3]
         # NOTE: 16 - 5 (four chrs plus a sep) = 11
-        while !elements.empty? && (temp.size + final.size <= 11)
-          temp += "#{elements.shift[0..3]}-"
-        end
+        temp += "#{elements.shift[0..3]}-" while !elements.empty? && (temp.size + final.size <= 11)
         abbr = temp + final
       elsif elements.size > 1
         abbr = "#{elements.first[0..7]}-#{elements.last[0..6]}"
-      else
-        if matches = abbr.scan(/^(.*)(\d+)$/).first
-          name = matches.first
-          digits = matches.last
-          allowed_size = 15 - digits.size
-          name = name[0..allowed_size]
-          abbr = "#{name}-#{digits}"
-        end
+      elsif (matches = abbr.scan(/^(.*)(\d+)$/).first)
+        name = matches.first
+        digits = matches.last
+        allowed_size = 15 - digits.size
+        name = name[0..allowed_size]
+        abbr = "#{name}-#{digits}"
       end
       abbr[0..15]
     end
 
     def untgz(file, dir)
-      res = `cd #{dir} && tar xvzf #{file}`
+      `cd #{dir} && tar xvzf #{file}`
     end
 
     def unzip(file, dir)
       # NOTE: -u for "update and create if necessary"
       # NOTE: -q for "quiet"
       # NOTE: -o for "overwrite files WITHOUT prompting"
-      res = `cd #{dir} && unzip -quo #{file}`
+      `cd #{dir} && unzip -quo #{file}`
     end
 
     def remove_dot_files(dir)
       Dir.glob("#{dir}/.*").each do |file|
         next if File.basename(file).match?(/^\.*$/)
+
         begin
           File.unlink(file)
         rescue Errno::EBUSY => e
@@ -110,13 +109,17 @@ class DropDir
     def flatten_dirs(dir)
       Dir.glob("#{dir}/*").each do |subdir|
         next unless File.directory?(subdir)
+
         flatten_dirs(subdir)
         Dir.glob("#{subdir}/*").each do |subfile|
           puts "Moving #{subfile} to #{dir}"
           FileUtils.mv(subfile, dir)
         end
-        # NOTE: this is technically insecure, but I think we can manage the risk.
-        FileUtils.rm_rf(subdir, secure: true)
+        begin
+          FileUtils.rm_rf(subdir, secure: true)
+        rescue Errno::ENOTEMPTY
+          Rails.logger.warn("Unable to remove #{subdir} because it was not empty. Please clean up.")
+        end
       end
     end
   end
