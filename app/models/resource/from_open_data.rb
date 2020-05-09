@@ -38,7 +38,7 @@ class Resource
         mammal: 'mam', mammals: 'mam', marine: 'mar', measurements: 'meas', national: 'ntl', naturalist: 'nat',
         nature: 'nat', north: 'n', ocean: 'oc', oceans: 'oc', oceanic: 'oc', pictures: 'pics', plant: 'pl',
         plants: 'pl', planet: 'p', protist: 'prot', protista: 'prot', protists: 'prot', public: 'pub', record: 'rec',
-        records: 'rec', register: 'reg', smithsonian: 'si', south: 's', species: 'sp', states: 's',
+        reference: 'ref', records: 'rec', register: 'reg', smithsonian: 'si', south: 's', species: 'sp', states: 's',
         structured: 'struct', summary: 'sum', test: 'tst', text: 'txt', university: 'u', universities: 'u', united: 'u',
         unitedstates: 'us', video: 'vid', videos: 'vid', wikimedia: 'wiki', wikipedia: 'wiki', west: 'w'
       }
@@ -92,6 +92,7 @@ class Resource
       desc = noko.css('.prose p,blockquote').map(&:text).map { |txt| strip_string(txt) }.join("\n")
       @resource = Resource.create(name: name, abbr: abbr, description: desc, notes: 'auto-harvested, requires editing.',
                                   opendata_url: @url)
+      FileUtils.mkdir_p(@resource.path) unless Dir.exist?(@resource.path)
     end
 
     def get_partner_info(link)
