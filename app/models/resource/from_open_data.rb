@@ -15,6 +15,7 @@ class Resource
           next if File.basename(file).match?(/^\.*$/)
           next if File.basename(file) == Resource.logfile_name
           next if File.basename(file) == Resource.lockfile_name
+
           begin
             File.unlink(file)
           rescue Errno::EBUSY => e
@@ -29,78 +30,20 @@ class Resource
       @url = url
       @partner = nil
       @abbreviations = {
-        america: 'am',
-        american: 'am',
-        arctic: 'arc',
-        archaebacteria: 'arc',
-        atlas: 'atl',
-        australia: 'aus',
-        australian: 'aus',
-        bacteria: 'bac',
-        biology: 'bio',
-        catalog: 'cat',
-        checklist: 'chk',
-        checklists: 'chk',
-        college: 'c',
-        data: 'dat',
-        database: 'db',
-        distribution: 'dist',
-        diversity: 'div',
-        east: 'e',
-        ecology: 'eco',
-        ecological: 'eco',
-        encyclopedia: 'enc',
-        eubacteria: 'eub',
-        fungi: 'fun',
-        habitat: 'hab',
-        harvard: 'hvd',
-        hierarchy: 'hier',
-        images: 'imgs',
-        international: 'intl',
-        interactions: 'int',
-        journal: 'j',
-        living: 'liv',
-        mammal: 'mam',
-        mammals: 'mam',
-        marine: 'mar',
-        measurements: 'meas',
-        national: 'ntl',
-        naturalist: 'nat',
-        nature: 'nat',
-        north: 'n',
-        ocean: 'oc',
-        oceans: 'oc',
-        oceanic: 'oc',
-        pictures: 'pics',
-        plant: 'pl',
-        plants: 'pl',
-        planet: 'p',
-        protist: 'prot',
-        protista: 'prot',
-        protists: 'prot',
-        public: 'pub',
-        record: 'rec',
-        records: 'rec',
-        register: 'reg',
-        smithsonian: 'si',
-        south: 's',
-        species: 'sp',
-        states: 's',
-        structured: 'struct',
-        summary: 'sum',
-        test: 'tst',
-        text: 'txt',
-        university: 'u',
-        universities: 'u',
-        united: 'u',
-        unitedstates: 'us',
-        video: 'vid',
-        videos: 'vid',
-        wikimedia: 'wiki',
-        wikipedia: 'wiki',
-        west: 'w'
+        america: 'am', american: 'am', arctic: 'arc', archaebacteria: 'arc', atlas: 'atl', australia: 'aus',
+        australian: 'aus', bacteria: 'bac', biology: 'bio', catalog: 'cat', checklist: 'chk', checklists: 'chk',
+        college: 'c', data: 'dat', database: 'db', distribution: 'dist', diversity: 'div', east: 'e', ecology: 'eco',
+        ecological: 'eco', encyclopedia: 'enc', eubacteria: 'eub', fungi: 'fun', habitat: 'hab', harvard: 'hvd',
+        hierarchy: 'hier', images: 'imgs', international: 'intl', interactions: 'int', journal: 'j', living: 'liv',
+        mammal: 'mam', mammals: 'mam', marine: 'mar', measurements: 'meas', national: 'ntl', naturalist: 'nat',
+        nature: 'nat', north: 'n', ocean: 'oc', oceans: 'oc', oceanic: 'oc', pictures: 'pics', plant: 'pl',
+        plants: 'pl', planet: 'p', protist: 'prot', protista: 'prot', protists: 'prot', public: 'pub', record: 'rec',
+        records: 'rec', register: 'reg', smithsonian: 'si', south: 's', species: 'sp', states: 's',
+        structured: 'struct', summary: 'sum', test: 'tst', text: 'txt', university: 'u', universities: 'u', united: 'u',
+        unitedstates: 'us', video: 'vid', videos: 'vid', wikimedia: 'wiki', wikipedia: 'wiki', west: 'w'
       }
-      @stopwords = %w[a about all are an and be by do know or of on out for in is the this to was with what excel dwc dwca]
+      @stopwords = %w[a about all are an and be by do know or of on out for in is the this to was with what excel dwc
+                      dwca]
       @resource = resource
       @partner = resource.partner if @resource
     end
@@ -108,24 +51,22 @@ class Resource
     def parse
       noko = noko_parse(@url)
       create_resource(noko) unless @resource
-      get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
-      file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
-      path = @resource.path(true)
-      already_exists = File.exist?("#{path}/meta.xml") && @resource.formats.any?
-      dir = DropDir.unpack_file(file)
-      if already_exists
-        log('...Resource already exists; re-reading XML...')
-        @resource.re_read_xml
-        log('...new data is now in place. You may harvest it.')
-      else
-        # TODO: Find Excel and write a .from_excel method much like .from_xml...
-        if File.exist?("#{dir}/meta.xml")
-          Resource.from_xml(dir, @resource)
-          # TODO: re-enable this. I turned it off so I could review the XML before harvesting big jobs!
-          # log("...Will harvest resource #{@resource.name} (#{@resource.id})")
-          # @resource.enqueue_harvest
+      @process = LoggedProcess.new(@resource)
+      @process.run_step('Creating resource from OpenData') do
+        get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
+        file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
+        path = @resource.path(true)
+        already_exists = File.exist?("#{path}/meta.xml") && @resource.formats.any?
+        dir = DropDir.unpack_file(file)
+        if already_exists
+          @process.warn('...Resource already exists; re-reading XML...')
+          @resource.re_read_xml
+          @process.info('...new data is now in place. You may harvest it.')
         else
-          fail_with(Exception.new("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!"))
+          # TODO: Find Excel and write a .from_excel method much like .from_xml...
+          fail_with("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!") unless
+            File.exist?("#{dir}/meta.xml")
+          @resource.re_read_xml
         end
       end
       @resource
@@ -134,11 +75,11 @@ class Resource
     def noko_parse(url)
       require 'open-uri'
       begin
-        raw = open(url)
+        raw = File.open(url)
       rescue Net::ReadTimeout => e
-        fail_with(e)
+        fail_with(e.message)
       end
-      fail_with(Exception.new('URL returned empty result.')) if raw.blank?
+      fail_with('URL returned empty result.') if raw.blank?
       Nokogiri::HTML(raw)
     end
 
@@ -154,6 +95,7 @@ class Resource
 
     def get_partner_info(link)
       return nil unless link
+
       partner_noko = noko_parse(URI.join(@url, link['href']).to_s)
       partner_name = strip_string(partner_noko.css('h1').first.text)
       partner_name.sub!(/\s*\(#{@resource.name}\)$/, '')
@@ -179,11 +121,12 @@ class Resource
       path = path.join("#{abbr}.#{ext}")
       require 'open-uri'
       File.open(path, 'wb') do |file|
-        open(link, 'rb') do |input|
+        File.open(link, 'rb') do |input|
           file.write(input.read)
         end
       end
       raise('Did not download') unless File.exist?(path) && File.size(path).positive?
+
       path
     end
 
@@ -193,6 +136,7 @@ class Resource
 
     def abbreviate(name)
       return name if name.size < 8
+
       # NOTE: the #titleize helps split CamelCase stuff.
       words = name.titleize.split.map(&:downcase)
       words.delete_if { |w| @stopwords.include?(w) }
@@ -221,27 +165,25 @@ class Resource
 
     def use_abbr(word, name)
       return name if name.match?(/#{word.upcase}/) # Acroynm; keep as-is.
+
       sym = word.to_sym
       @abbreviations.key?(sym) ? @abbreviations[sym] : word
     end
 
     def shorten(name)
       return name if name.size < 8
+
       words = name.split
       return words[0..1] if words.size > 4
+
       return name.sub(/[^A-Z]/, '') if name.sub(/[^A-Z]/, '').size >= 3
+
       name[0..15]
     end
 
-    def log(message, options = {})
-      options[:cat] ||= :starts
-      # for now...
-      puts "[#{Time.now.strftime('%H:%M:%S.%3N')}](#{options[:cat]}) #{message}"
-      STDOUT.flush
-    end
-
-    def fail_with(e)
-      log(e.message, cat: :errors)
+    def fail_with(message)
+      e = Exception.new(message)
+      @process.fail(e)
       raise e
     end
   end
