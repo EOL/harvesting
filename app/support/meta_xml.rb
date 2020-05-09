@@ -143,7 +143,7 @@ class MetaXml
     format[:fields] = []
     format[:xml].css('field').each do |field|
       insight = field_insight(field, format)
-      format[:fields][insight[:index]] = field_params(insight)
+      format[:fields][insight[:index]] = field_params(insight, format)
       if insight[:mapping_name] == 'to_ignored'
         @warnings << "(common) IGNORED #{format[:name]} (#{format[:represents]}) field header: #{insight[:header_name]} "\
                      "term: #{field['term']}"
@@ -160,7 +160,7 @@ class MetaXml
     insight
   end
 
-  def field_params(insight)
+  def field_params(insight, format)
     {
       format_id: format[:model].id,
       position: insight[:index] + 1, # Looks like position now starts at 1 in the list gem.
