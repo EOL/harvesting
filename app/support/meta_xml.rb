@@ -122,7 +122,7 @@ class MetaXml
       header_lines: format[:xml]['ignoreHeaderLines'],
       data_begins_on_line: format[:xml]['ignoreHeaderLines'],
       file_type: :csv,
-      represents: represents,
+      represents: format[:represents],
       get_from: "#{@resource.path}/#{format[:filename]}",
       field_sep: format[:sep],
       line_sep: format[:lines],
@@ -142,18 +142,18 @@ class MetaXml
   def determine_fields
     format[:fields] = []
     format[:xml].css('field').each do |field|
-      insight = field_insight(field)
+      insight = field_insight(field, format)
       format[:fields][insight[:index]] = field_params(insight)
       if insight[:mapping_name] == 'to_ignored'
-        @warnings << "(common) IGNORED #{format[:name]} (#{represents}) field header: #{insight[:header_name]} "\
+        @warnings << "(common) IGNORED #{format[:name]} (#{format[:represents]}) field header: #{insight[:header_name]} "\
                      "term: #{field['term']}"
       end
     end
   end
 
-  def field_insight(field)
+  def field_insight(field, format)
     insight = {}
-    insight[:assumption] = MetaXmlField.where(term: field['term'], for_format: represents)&.first
+    insight[:assumption] = MetaXmlField.where(term: field['term'], for_format: format[:represents])&.first
     insight[:mapping_name] = insight[:assumption]&.represents || :to_ignored
     insight[:index] = field['index'].to_i
     insight[:header_name] = format[:headers] ? format[:headers][insight[:index]] : field['term'].split('/').last
