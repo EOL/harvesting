@@ -15,7 +15,7 @@ class Resource
           resource.save
           resource
         end
-        new(resource).import
+        new(resource).create_models_from_xml
       end
 
       # A method to re-generate the meta_xml_analyzed file. Basically this allows us to "learn" from past resources how
@@ -82,7 +82,7 @@ class Resource
       @resource = resource
     end
 
-    def import
+    def create_models_from_xml
       process = LoggedProcess.new(@resource)
       process.run_step('Parse meta.xml file and create formats with fields') do
         @resource.formats&.abstract&.delete_all

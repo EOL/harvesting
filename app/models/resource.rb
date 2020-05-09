@@ -195,8 +195,7 @@ class Resource < ApplicationRecord
   end
 
   def re_read_xml
-    where = formats.any? ? File.dirname(formats.first.get_from) : path
-    Resource.from_xml(where, self)
+    Resource::FromMetaXml.new(self).create_models_from_xml
   end
 
   def re_download_opendata_and_harvest
