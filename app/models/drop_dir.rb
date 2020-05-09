@@ -115,6 +115,7 @@ class DropDir
           puts "Moving #{subfile} to #{dir}"
           FileUtils.mv(subfile, dir)
         end
+        remove_dot_files(subdir) # We don't want them.
         begin
           FileUtils.rm_rf(subdir, secure: true)
         rescue Errno::ENOTEMPTY
