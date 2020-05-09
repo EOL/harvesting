@@ -167,7 +167,7 @@ class MetaXml
       validation: nil, # TODO...
       mapping: Field.mappings[insight[:mapping_name]],
       special_handling: nil, # TODO...
-      submapping: determine_submapping(insight[:assumption], insight[:header_name], insight[:mapping_name]),
+      submapping: determine_submapping(insight),
       expected_header: insight[:header_name],
       unique_in_format: insight[:assumption] ? insight[:assumption].is_unique : false,
       can_be_empty: insight[:assumption] ? !insight[:assumption].is_required : true
@@ -175,10 +175,10 @@ class MetaXml
   end
 
   def determine_submapping(insight)
-    a_submap = insight[:assumption]&.submapping
-    a_submap = nil if a_submap == '0'
-    a_submap = insight[:header_name].downcase if insight[:mapping_name] == 'to_nodes_ancestor'
-    a_submap
+    submap = insight[:assumption]&.submapping
+    submap = nil if submap == '0'
+    submap = insight[:header_name].downcase if insight[:mapping_name] == 'to_nodes_ancestor'
+    submap
   end
 
   def show_warnings
