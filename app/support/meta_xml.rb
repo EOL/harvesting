@@ -16,14 +16,14 @@ class MetaXml
     format_xml.each do |xml|
       filename = xml.css('location').text
       path = "#{@resource.path}/#{filename}"
-      @formats << { filename: filename, path: path.gsub(' ', '\\ '), xml: xml }
+      @formats << { filename: filename, path: path, xml: xml }
     end
   end
 
   def create_models
     @formats.each do |format|
       parse_xml(format)
-      Field.import!(format[:fields])
+      Field.import!(format[:fields]) unless format[:fields].nil? # Skipped format.
     end
     show_warnings
   end
@@ -108,8 +108,9 @@ class MetaXml
   def determine_line_terminator(format)
     format[:lines] = YAML.safe_load(%(---\n"#{format[:xml]['linesTerminatedBy']}"\n))
     # Need to check for those stupid \r line endings that mac editors can use:
-    cr_count = `grep -o $'\\r' #{format[:path]} | wc -l`.chomp.to_i
-    lf_count = `grep -o $'\\n' #{format[:path]} | wc -l`.chomp.to_i
+    path = format[:path].gsub(' ', '\\ ')
+    cr_count = `grep -o $'\\r' #{path} | wc -l`.chomp.to_i
+    lf_count = `grep -o $'\\n' #{path} | wc -l`.chomp.to_i
     format[:lines] = "\r" if lf_count <= 1 && cr_count > 1
     format[:lines] = "\n" if cr_count <= 1 && lf_count > 1
     # (otherwise, trust what the XML file said ... we just USUALLY can't. Ugh.)
@@ -135,7 +136,7 @@ class MetaXml
     lines = format[:xml]['ignoreHeaderLines'].to_i
     return if lines.zero?
 
-    format[:headers] = `cat #{format[:path]} | tr "\r" "\n" | head -n #{lines}`.split(format[:sep])
+    format[:headers] = `cat #{format[:path].gsub(' ', '\\ ')} | tr "\r" "\n" | head -n #{lines}`.split(format[:sep])
     format[:headers].last.chomp!
   end
 
