@@ -9,7 +9,7 @@ class MetaXml
     raise 'Missing meta.xml file' unless File.exist?(filename)
 
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
-    @ignored_fields = []
+    @warnings = []
     @formats = []
     format_xml = @doc.css('archive table')
     format_xml = @doc.css('archive core') if format_xml.empty?
