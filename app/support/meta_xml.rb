@@ -22,7 +22,7 @@ class MetaXml
 
   def create_models
     @formats.each do |format|
-      parse_xml(format[:xml])
+      parse_xml(format)
       Field.import!(format[:fields])
     end
     show_warnings
