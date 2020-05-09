@@ -15,7 +15,7 @@ class MetaXml
     format_xml = @doc.css('archive core') if format_xml.empty?
     format_xml.each do |xml|
       filename = xml.css('location').text
-      path = "#{@path}/#{filename}"
+      path = "#{@resource.path}/#{filename}"
       @formats << { filename: filename, path: path.gsub(' ', '\\ '), xml: xml }
     end
   end
@@ -123,7 +123,7 @@ class MetaXml
       data_begins_on_line: format[:xml]['ignoreHeaderLines'],
       file_type: :csv,
       represents: represents,
-      get_from: "#{@path}/#{format[:filename]}",
+      get_from: "#{@resource.path}/#{format[:filename]}",
       field_sep: format[:sep],
       line_sep: format[:lines],
       utf8: format[:xml]['encoding'] =~ /^UTF/
