@@ -75,7 +75,8 @@ class Resource
     def noko_parse(url)
       require 'open-uri'
       begin
-        raw = File.open(url)
+        # TODO: we should probably move this to Net::HTTP.open or URI.open, which is more secure. Or just use wget.
+        raw = open(url)
       rescue Net::ReadTimeout => e
         fail_with(e.message)
       end
@@ -121,7 +122,8 @@ class Resource
       path = path.join("#{abbr}.#{ext}")
       require 'open-uri'
       File.open(path, 'wb') do |file|
-        File.open(link, 'rb') do |input|
+        # TODO: we should probably move this to Net::HTTP.open or URI.open, which is more secure. Or just use wget.
+        open(link, 'rb') do |input|
           file.write(input.read)
         end
       end

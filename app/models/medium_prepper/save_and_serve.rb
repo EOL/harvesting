@@ -34,7 +34,7 @@ module MediumPrepper
 
     def save_ogg(raw)
       filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
-      open(filename, 'wb') do |file|
+      File.open(filename, 'wb') do |file|
         file << raw.read
       end
     end
