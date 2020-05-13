@@ -128,7 +128,8 @@ class Resource < ApplicationRecord
     File.exist?(lockfile_name)
   end
 
-  def rm_lockfile
+  def unlock
+    Lockfile.new(lockfile_name, timeout: 0.01).unlock
     File.unlink(lockfile_name) if lockfile_exists?
   end
 
@@ -146,8 +147,7 @@ class Resource < ApplicationRecord
       lockfile.lock
       yield
     ensure
-      lockfile.unlock
-      rm_lockfile rescue nil # This *can* fail if the lockfile isn't there, and throw another error.
+      unlock
     end
   end
 

@@ -110,7 +110,7 @@ class Harvest < ApplicationRecord
     end
     update_attribute(:completed_at, Time.now) unless completed_at
     begin
-      resource.rm_lockfile
+      resource.unlock
     rescue => e
       puts "WARNING (non-fatal): #{e.message}"
     end

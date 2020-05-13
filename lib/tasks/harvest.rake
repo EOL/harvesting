@@ -1,7 +1,7 @@
 namespace :harvest do
   desc 'Harvest the last resource (by ID)'
   task last: :environment do
-    Resource.last.rm_lockfile if ENV['FORCE']
+    Resource.last.unlock if ENV['FORCE']
     Resource.last.harvest
   end
 
@@ -27,7 +27,7 @@ namespace :harvest do
   task redo: :environment do
     resource = ENV['ID'] ? Resource.find(ENV['ID']) : Resource.find_by_abbr(ENV['ABBR'])
     resource ||= Harvest.last.resource # No info given, so assume the last one we did!
-    resource.rm_lockfile if ENV['FORCE']
+    resource.unlock if ENV['FORCE']
     resource.re_harvest
   end
 
@@ -35,7 +35,7 @@ namespace :harvest do
   task resume: :environment do
     resource = ENV['ID'] ? Resource.find(ENV['ID']) : Resource.find_by_abbr(ENV['ABBR'])
     resource ||= Harvest.last.resource # No info given, so assume the last one we did!
-    resource.rm_lockfile if ENV['FORCE']
+    resource.unlock if ENV['FORCE']
     resource.resume
   end
 end
@@ -43,6 +43,6 @@ end
 desc 'Harvest the resource identified by ENV var: ID or ABBR.'
 task harvest: :environment do
   resource = ENV['ID'] ? Resource.find(ENV['ID']) : Resource.find_by_abbr(ENV['ABBR'])
-  resource.rm_lockfile if ENV['FORCE']
+  resource.unlock if ENV['FORCE']
   resource.harvest
 end
