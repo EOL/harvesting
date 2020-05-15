@@ -6,22 +6,8 @@ class Resource
       end
 
       def reload(resource)
-        remove_resource_files
+        EolFileUtils.clear_resource_dir(resource)
         new(resource.opendata_url, resource).parse
-      end
-
-      def remove_resource_files(dir)
-        Dir.glob("#{resource.path}/*").each do |file|
-          next if File.basename(file).match?(/^\.*$/)
-          next if File.basename(file) == Resource.logfile_name
-          next if File.basename(file) == Resource.lockfile_name
-
-          begin
-            File.unlink(file)
-          rescue Errno::EBUSY => e
-            Rails.logger.error("Failed to remove file, possible NFS problem: #{e.message}")
-          end
-        end
       end
     end
 

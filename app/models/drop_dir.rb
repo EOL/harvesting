@@ -54,8 +54,8 @@ class DropDir
         Rails.logger.error("DropDir: I don't know how to handle a #{ext}: #{basename}#{ext}")
         raise("Cannot extract #{basename}#{ext}")
       end
-      flatten_dirs(dir)
-      remove_dot_files(dir)
+      EolFileUtils.flatten_dirs(dir)
+      EolFileUtils.remove_dot_files(dir)
       File.unlink(file) # If we've gotten this far, we've extracted it. Now remove it.
       dir
     end
@@ -92,36 +92,6 @@ class DropDir
       # NOTE: -q for "quiet"
       # NOTE: -o for "overwrite files WITHOUT prompting"
       `cd #{dir} && unzip -quo #{file}`
-    end
-
-    def remove_dot_files(dir)
-      Dir.glob("#{dir}/.*").each do |file|
-        next if File.basename(file).match?(/^\.*$/)
-
-        begin
-          File.unlink(file)
-        rescue Errno::EBUSY => e
-          Rails.logger.error("Failed to remove file: #{e.message}")
-        end
-      end
-    end
-
-    def flatten_dirs(dir)
-      Dir.glob("#{dir}/*").each do |subdir|
-        next unless File.directory?(subdir)
-
-        flatten_dirs(subdir)
-        remove_dot_files(subdir) # We don't want them.
-        Dir.glob("#{subdir}/*").each do |subfile|
-          puts "Moving #{subfile} to #{dir}"
-          FileUtils.mv(subfile, dir)
-        end
-        begin
-          FileUtils.rm_rf(subdir, secure: true)
-        rescue Errno::ENOTEMPTY
-          Rails.logger.warn("Unable to remove #{subdir} because it was not empty. Please clean up.")
-        end
-      end
     end
   end
 end
