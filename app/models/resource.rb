@@ -130,6 +130,7 @@ class Resource < ApplicationRecord
 
   def unlock
     Lockfile.new(lockfile_name, timeout: 0.01).unlock
+  rescue
     File.unlink(lockfile_name) if lockfile_exists?
   end
 
