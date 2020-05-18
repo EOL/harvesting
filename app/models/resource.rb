@@ -129,8 +129,10 @@ class Resource < ApplicationRecord
   end
 
   def unlock
+    return nil unless lockfile_exists?
+
     Lockfile.new(lockfile_name, timeout: 0.01).unlock
-  rescue
+  rescue Lockfile::UnLockError
     File.unlink(lockfile_name) if lockfile_exists?
   end
 
