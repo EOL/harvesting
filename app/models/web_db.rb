@@ -115,6 +115,7 @@ class WebDb < ApplicationRecord
 
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
+      connection.reconnect! # Sure, this is wasteful in many cases, but useful in enough that it's worth it.
       connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
       connection.send(:last_inserted_id, table)
     end
