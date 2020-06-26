@@ -465,6 +465,11 @@ class Publisher
     meta_file = @resource.publish_table_path('metadata')
     start_traits_file(filename, @trait_heads)
     start_traits_file(meta_file, @meta_heads)
+    # Metadata FIRST, because some of it moves to the traits.
+    CSV.open(meta_file, 'ab') do |csv|
+      add_meta_to_csv(traits, csv)
+      add_meta_to_csv(assocs, csv)
+    end
     CSV.open(filename, 'ab') do |csv|
       traits.each do |trait|
         csv << @trait_heads.map { |field| trait.send(field) }
@@ -473,10 +478,6 @@ class Publisher
       assocs.select { |a| a.node && a.target_node }.each do |assoc|
         csv << @trait_heads.map { |field| assoc.send(field) }
       end
-    end
-    CSV.open(meta_file, 'ab') do |csv|
-      add_meta_to_csv(traits, csv)
-      add_meta_to_csv(assocs, csv)
     end
   end
 
@@ -493,7 +494,8 @@ class Publisher
     traits.each do |trait|
       trait.metadata.each do |meta|
         count += 1
-        csv << build_meta(meta, trait)
+        data = build_meta(meta, trait)
+        csv << data if data
       end
     end
     @process.info("#{count} metadata added.")
@@ -502,6 +504,14 @@ class Publisher
   def build_meta(meta, trait)
     predicate = nil
     literal = nil
+    moved_meta = moved_meta_map
+    predicate = meta.predicate_term&.uri
+    if meta_mapping = moved_meta[predicate]
+      value = meta.literal
+      value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
+      trait[meta_mapping[:to]] = value
+      return nil # Don't record this one.
+    end
     if meta.is_a?(Reference)
       # TODO: we should probably make this URI configurable:
       predicate = 'http://eol.org/schema/reference/referenceID'
@@ -510,7 +520,6 @@ class Publisher
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
     else
-      predicate = meta.predicate_term&.uri
       literal = meta.literal
     end
     # q.v.: @meta_heads for order, here:
@@ -526,6 +535,16 @@ class Publisher
       meta.respond_to?(:statistical_method_term) ? meta.statistical_method_term&.uri : nil,
       meta.respond_to?(:source) ? meta.source : nil
     ]
+  end
+
+  def moved_meta_map
+    @moved_meta_map ||= {
+      'http://eol.org/schema/terms/SampleSize' => { from: :measurement, to: :sample_size },
+      'http://purl.org/dc/terms/bibliographicCitation' => { to: :citation },
+      'http://purl.org/dc/terms/source' => { to: :source },
+      'http://rs.tdwg.org/dwc/terms/measurementRemarks' => { to: :remarks },
+      'http://rs.tdwg.org/dwc/terms/measurementMethod' => { to: :method }
+    }
   end
 
   # TODO: move this method up.
