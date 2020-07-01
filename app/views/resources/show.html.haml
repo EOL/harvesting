@@ -13,7 +13,7 @@
   - elsif policy(@resource).update?
     .right.menu
       .item
-        - currently_harvesting = Delayed::Job.where(queue: 'harvest').where('locked_at IS NOT NULL').any? {|j| j.payload_object.resource_id == @resource.id }
+        - currently_harvesting = Delayed::Job.where(queue: 'harvest').where('locked_at IS NOT NULL').any? {|j| j.payload_object&.resource_id == @resource.id }
         - if currently_harvesting
           .ui.text-capital= t("resources.actions.currently_harvesting")
         - else
