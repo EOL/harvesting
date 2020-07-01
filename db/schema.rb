@@ -741,6 +741,8 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.integer "occurrence_id"
     t.string "normal_units_uri"
     t.string "normal_measurement"
+    t.text "sample_size", comment: "http://eol.org/schema/terms/SampleSize"
+    t.text "citation", comment: "http://purl.org/dc/terms/bibliographicCitation"
     t.index ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk"
     t.index ["harvest_id", "resource_pk"], name: "index_traits_on_harvest_id_and_resource_pk"
     t.index ["harvest_id"], name: "index_traits_on_harvest_id"

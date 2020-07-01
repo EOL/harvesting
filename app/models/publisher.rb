@@ -29,7 +29,7 @@ class Publisher
     @limit = 10_000
     @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method source
                       object_page_id target_scientific_name value_uri literal measurement units normal_measurement
-                      normal_units_uri]
+                      normal_units_uri sample_size citation source remarks method]
     @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
                      statistical_method source]
 
@@ -509,7 +509,7 @@ class Publisher
     if meta_mapping = moved_meta[predicate]
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
-      trait[meta_mapping[:to]] = value
+      trait.send("#{meta_mapping[:to]}=", value)
       return nil # Don't record this one.
     end
     if meta.is_a?(Reference)
