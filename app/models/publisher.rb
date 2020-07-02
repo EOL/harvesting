@@ -475,11 +475,11 @@ class Publisher
       add_meta_to_csv(@assocs, csv)
     end
     CSV.open(filename, 'ab') do |csv|
-      @traits.each do |trait|
+      @traits.values.each do |trait|
         csv << @trait_heads.map { |field| trait.send(field) }
       end
       # Skip associations that don't have BOTH nodes defined (they are meaningless):
-      @assocs.select { |a| a.node && a.target_node }.each do |assoc|
+      @assocs.values.select { |a| a.node && a.target_node }.each do |assoc|
         csv << @trait_heads.map { |field| assoc.send(field) }
       end
     end
