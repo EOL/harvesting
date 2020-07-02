@@ -496,7 +496,7 @@ class Publisher
                    meta_traits: @meta_fields).find_each do |trait|
                      @traits[trait.id] = trait
                    end
-    @process.info("#{traits.size} Traits (filtered)...")
+    @process.info("#{@traits.size} Traits (filtered)...")
   end
 
   def assoc_map(node_ids)
@@ -509,7 +509,7 @@ class Publisher
                    meta_assocs: assoc_meta_fields).find_each do |assoc|
                      @assocs[assoc.id] = assoc
                    end
-    @process.info("#{assocs.size} Associations (filtered)...")
+    @process.info("#{@assocs.size} Associations (filtered)...")
   end
 
   def start_traits_file(filename, heads)
