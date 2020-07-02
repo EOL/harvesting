@@ -19,6 +19,8 @@ class Publisher
     @web_resource_id = nil
     @files = {}
     @nodes = {}
+    @traits = {}
+    @assocs = {}
     @pages = {}
     @referents = {} # This will store ALL of the referents (the acutal text), and will persist over batches.
     @stored_refs = {} # This will store ref keys that we're already loaded, so we don't do it twice... [sigh]
@@ -72,11 +74,12 @@ class Publisher
     @files.each_key do |file|
       begin
         sizes = `wc -l #{file}`
-      rescue Errno::ENOMEM => e
-        raise("OUT OF MEMORY. This is NOT a problem for this resource (really, it isn't), but means that you should have someone restart the containers!")
+      rescue Errno::ENOMEM
+        raise('OUT OF MEMORY. This is NOT a problem for this resource (really, it isn\'t), but means that you should '\
+              'have someone restart the containers!')
       end
       size = sizes.strip.split.first.to_i
-      @process.info("(#{size} lines) #{file.to_s}")
+      @process.info("(#{size} lines) #{file}")
     end
   end
 
@@ -109,6 +112,7 @@ class Publisher
     nodes.each do |node|
       build_page(node)
       next if @nodes_by_pk.key?(node.resource_pk)
+
       node_to_struct(node)
       build_identifiers(node)
       build_ancestors(node)
@@ -148,6 +152,7 @@ class Publisher
   def add_refs(object)
     object.references.each do |ref|
       next if @referents.key?(ref.id)
+
       t = Time.now.to_s(:db)
       referent = Struct::WebReferent.new
       referent.body = clean_values(ref.body)
@@ -168,6 +173,7 @@ class Publisher
   def add_attributions(object)
     object.content_attributions.each do |content_attribution|
       next unless content_attribution.attribution
+
       t = Time.now.to_s(:db)
       attribution = Struct::WebAttribution.new
       attribution.value = clean_values(content_attribution.attribution.body)
@@ -197,9 +203,11 @@ class Publisher
 
   def add_bib_cit(object, citation)
     return if citation.nil?
+
     # NOTE: THIS ID IS WRONG! This is the *harv_db* ID. We're going to update it later, we're using this as a bridge.
     object.bibliographic_citation_id = citation.id
     return if @bib_cits.key?(citation.id)
+
     t = Time.now.to_s(:db)
     bc = Struct::WebBibliographicCitation.new
     bc.body = clean_values(citation.body)
@@ -212,9 +220,11 @@ class Publisher
 
   def add_loc(object, loc)
     return if loc.nil?
+
     # NOTE: THIS ID IS WRONG! This is the *harv_db* ID. We're going to update it later, we're using this as a bridge.
     object.location_id = loc.id
     return if @locs.key?(loc.id)
+
     literal = "#{loc.lat_literal} #{loc.long_literal} #{loc.alt_literal} #{loc.locality}"
     loc_struct = Struct::WebLocation.new
     loc_struct.location = literal
@@ -239,43 +249,51 @@ class Publisher
 
   def build_page(node)
     if @pages.key?(node.page_id)
-      # I am not sure why this happens, but it does. (?)
-      @pages[node.page_id].nodes_count ||= 0
-      @pages[node.page_id].media_count ||= 0
-      @pages[node.page_id].articles_count ||= 0
-      @pages[node.page_id].vernaculars_count ||= 0
-      @pages[node.page_id].scientific_names_count ||= 0
-      @pages[node.page_id].referents_count ||= 0
-      @pages[node.page_id].nodes_count += 1
-      @pages[node.page_id].media_count += node.media.size
-      @pages[node.page_id].articles_count += node.articles.size
-      @pages[node.page_id].vernaculars_count += node.vernaculars.size
-      @pages[node.page_id].scientific_names_count += node.scientific_names.size
-      @pages[node.page_id].referents_count += node.references.size
-      # TODO: add counts for links, maps
+      update_page(node)
     else
-      @pages[node.page_id] = Struct::WebPage.new
-      @pages[node.page_id].id = node.page_id
-      t = Time.now.to_s(:db)
-      @pages[node.page_id].created_at = t
-      @pages[node.page_id].updated_at = t
-      @pages[node.page_id].articles_count = node.articles.size
-      @pages[node.page_id].nodes_count = 1 # This one, silly!
-      @pages[node.page_id].vernaculars_count = node.vernaculars.size
-      @pages[node.page_id].scientific_names_count = node.scientific_names.size
-      @pages[node.page_id].articles_count = node.articles.size
-      @pages[node.page_id].referents_count = node.references.size
-      # TODO: all of these 0s should be populated, once we have the associations included:
-      @pages[node.page_id].links_count = 0 # TODO
-      @pages[node.page_id].maps_count = 0 # TODO
-      # These are NOT used by our code, but are required by the database (and thus we avoid inserting nulls):
-      @pages[node.page_id].page_contents_count = 0
-      @pages[node.page_id].species_count = 0
-      @pages[node.page_id].is_extinct = 0
-      @pages[node.page_id].is_marine = 0
-      @pages[node.page_id].has_checked_extinct = 0
-      @pages[node.page_id].has_checked_marine = 0
+      build_new_page(node)
     end
+  end
+
+  def build_new_page(node)
+    @pages[node.page_id] = Struct::WebPage.new
+    @pages[node.page_id].id = node.page_id
+    t = Time.now.to_s(:db)
+    @pages[node.page_id].created_at = t
+    @pages[node.page_id].updated_at = t
+    @pages[node.page_id].articles_count = node.articles.size
+    @pages[node.page_id].nodes_count = 1 # This one, silly!
+    @pages[node.page_id].vernaculars_count = node.vernaculars.size
+    @pages[node.page_id].scientific_names_count = node.scientific_names.size
+    @pages[node.page_id].articles_count = node.articles.size
+    @pages[node.page_id].referents_count = node.references.size
+    # TODO: all of these 0s should be populated, once we have the associations included:
+    @pages[node.page_id].links_count = 0 # TODO
+    @pages[node.page_id].maps_count = 0 # TODO
+    # These are NOT used by our code, but are required by the database (and thus we avoid inserting nulls):
+    @pages[node.page_id].page_contents_count = 0
+    @pages[node.page_id].species_count = 0
+    @pages[node.page_id].is_extinct = 0
+    @pages[node.page_id].is_marine = 0
+    @pages[node.page_id].has_checked_extinct = 0
+    @pages[node.page_id].has_checked_marine = 0
+  end
+
+  def update_page(node)
+    # I am not sure why this happens, but it does. (?)
+    @pages[node.page_id].nodes_count ||= 0
+    @pages[node.page_id].media_count ||= 0
+    @pages[node.page_id].articles_count ||= 0
+    @pages[node.page_id].vernaculars_count ||= 0
+    @pages[node.page_id].scientific_names_count ||= 0
+    @pages[node.page_id].referents_count ||= 0
+    @pages[node.page_id].nodes_count += 1
+    @pages[node.page_id].media_count += node.media.size
+    @pages[node.page_id].articles_count += node.articles.size
+    @pages[node.page_id].vernaculars_count += node.vernaculars.size
+    @pages[node.page_id].scientific_names_count += node.scientific_names.size
+    @pages[node.page_id].referents_count += node.references.size
+    # TODO: add counts for links, maps
   end
 
   def build_identifiers(node)
@@ -439,59 +457,72 @@ class Publisher
   def build_traits(nodes)
     return unless Trait.where(node_id: nodes.map(&:id)).any? ||
                   Assoc.where(node_id: nodes.map(&:id)).any?
+
     @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
-    simple_meta_fields = %i[predicate_term object_term]
-    meta_fields = simple_meta_fields + %i[units_term statistical_method_term]
-    assoc_meta_fields = simple_meta_fields + %i[units_term]
-    property_fields = meta_fields + %i[sex_term lifestage_term references]
-    traits =
-      Trait.primary.published.matched.where(node_id: nodes.map(&:id))
-           .includes(property_fields,
-                     children: meta_fields,
-                     occurrence: { occurrence_metadata: meta_fields },
-                     node: :scientific_name,
-                     meta_traits: meta_fields)
-    @process.info("#{traits.size} Traits (filtered)...")
-    assocs =
-      Assoc.published.where(node_id: nodes.map(&:id))
-           .includes(:predicate_term, :sex_term, :lifestage_term, :references,
-                     occurrence: { occurrence_metadata: meta_fields },
-                     node: :scientific_name, target_node: :scientific_name,
-                     meta_assocs: assoc_meta_fields)
-
-    @process.info("#{assocs.size} Associations (filtered)...")
+    @simple_meta_fields = %i[predicate_term object_term]
+    @meta_fields = @simple_meta_fields + %i[units_term statistical_method_term]
+    node_ids = nodes.map(&:id)
+    trait_map(node_ids)
+    assoc_map(node_ids)
     filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
     start_traits_file(filename, @trait_heads)
     start_traits_file(meta_file, @meta_heads)
     # Metadata FIRST, because some of it moves to the traits.
     CSV.open(meta_file, 'ab') do |csv|
-      add_meta_to_csv(traits, csv)
-      add_meta_to_csv(assocs, csv)
+      add_meta_to_csv(@traits, csv)
+      add_meta_to_csv(@assocs, csv)
     end
     CSV.open(filename, 'ab') do |csv|
-      traits.each do |trait|
+      @traits.each do |trait|
         csv << @trait_heads.map { |field| trait.send(field) }
       end
       # Skip associations that don't have BOTH nodes defined (they are meaningless):
-      assocs.select { |a| a.node && a.target_node }.each do |assoc|
+      @assocs.select { |a| a.node && a.target_node }.each do |assoc|
         csv << @trait_heads.map { |field| assoc.send(field) }
       end
     end
   end
 
+  def trait_map(node_ids)
+    @traits = {}
+    property_fields = @meta_fields + %i[sex_term lifestage_term references]
+    Trait.primary.published.matched.where(node_id: node_ids)
+         .includes(property_fields,
+                   children: @meta_fields,
+                   occurrence: { occurrence_metadata: @meta_fields },
+                   node: :scientific_name,
+                   meta_traits: @meta_fields).find_each do |trait|
+                     @traits[trait.id] = trait
+                   end
+    @process.info("#{traits.size} Traits (filtered)...")
+  end
+
+  def assoc_map(node_ids)
+    @assocs = {}
+    assoc_meta_fields = @simple_meta_fields + %i[units_term]
+    Assoc.published.where(node_id: node_ids)
+         .includes(:predicate_term, :sex_term, :lifestage_term, :references,
+                   occurrence: { occurrence_metadata: @meta_fields },
+                   node: :scientific_name, target_node: :scientific_name,
+                   meta_assocs: assoc_meta_fields).find_each do |assoc|
+                     @assocs[assoc.id] = assoc
+                   end
+    @process.info("#{assocs.size} Associations (filtered)...")
+  end
+
   def start_traits_file(filename, heads)
-    unless File.exist?(filename)
-      FileUtils.touch(filename)
-      File.open(filename, 'w') { |file| file.write(heads.join(',') + "\n") }
-      @files[filename] = true
-    end
+    return if File.exist?(filename)
+
+    FileUtils.touch(filename)
+    File.open(filename, 'w') { |file| file.write(heads.join(',') + "\n") }
+    @files[filename] = true
   end
 
   def add_meta_to_csv(traits, csv)
     count = 0
-    traits.each do |trait|
+    traits.each do |_, trait|
       trait.metadata.each do |meta|
         count += 1
         data = build_meta(meta, trait)
@@ -502,7 +533,6 @@ class Publisher
   end
 
   def build_meta(meta, trait)
-    predicate = nil
     literal = nil
     moved_meta = moved_meta_map
     predicate = meta.predicate_term&.uri
@@ -513,7 +543,7 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif meta_mapping = moved_meta[predicate]
+    elsif (meta_mapping = moved_meta[predicate])
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
       trait.send("#{meta_mapping[:to]}=", value)
@@ -522,7 +552,8 @@ class Publisher
       literal = meta.literal
     end
     # q.v.: @meta_heads for order, here:
-    [ "#{meta.class.name}-#{meta.id}",
+    [
+      "#{meta.class.name}-#{meta.id}",
       trait.eol_pk,
       predicate,
       literal,
@@ -623,6 +654,7 @@ class Publisher
     count = {}
     @nodes_by_pk.each_value do |node|
       next unless node.parent_resource_pk
+
       count[node.parent_resource_pk] ||= 0
       count[node.parent_resource_pk] += 1
     end
@@ -633,6 +665,7 @@ class Publisher
 
   def load_hashes_from_array(array, options = {})
     return nil if array.blank?
+
     table = options[:table] || array.first.class.name.split(':').last.underscore.pluralize.sub('web_', '')
     # @process.info("Loading #{array.size} #{table}...")
     write_local_csv(table, array, options)
