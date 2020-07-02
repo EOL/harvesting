@@ -543,7 +543,7 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif (meta_mapping = moved_meta[predicate])
+    elsif (meta_mapping = moved_meta[meta.predicate_term&.uri])
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
       trait.send("#{meta_mapping[:to]}=", value)
