@@ -534,8 +534,8 @@ class Publisher
 
   def build_meta(meta, trait)
     literal = nil
+    predicate = nil
     moved_meta = moved_meta_map
-    predicate = meta.predicate_term&.uri
     if meta.is_a?(Reference)
       # TODO: we should probably make this URI configurable:
       predicate = 'http://eol.org/schema/reference/referenceID'
@@ -550,6 +550,7 @@ class Publisher
       return nil # Don't record this one.
     else
       literal = meta.literal
+      predicate = meta.predicate_term&.uri
     end
     # q.v.: @meta_heads for order, here:
     [
