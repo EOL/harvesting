@@ -145,7 +145,7 @@ class Resource < ApplicationRecord
       log_error('*****')
       raise "Resource #{id} locked!"
     end
-    lockfile = Lockfile.new(lockfile_name, timeout: 0.01)
+    lockfile = Lockfile.new(lockfile_name, timeout: 0.1)
     begin
       lockfile.lock
       yield
