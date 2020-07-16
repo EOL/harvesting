@@ -318,14 +318,13 @@ class ResourceHarvester
             @headers.each do |header|
               field = fields[header]
               if row[header].blank?
-                if field.default_when_blank
-                  row[header] = field.default_when_blank
-                else
-                  next # Skip this value.
-                end
+                next unless field.default_when_blank
+
+                row[header] = field.default_when_blank
               end
               next if field.to_ignored?
-              raise "NO HANDLER FOR '#{field.mapping}'!" unless self.respond_to?(field.mapping)
+              raise "NO HANDLER FOR '#{field.mapping}'!" unless respond_to?(field.mapping)
+
               # NOTE: that these methods are defined in the Store::* mixins:
               send(field.mapping, field, row[header])
             end
