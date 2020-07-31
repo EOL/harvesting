@@ -49,6 +49,10 @@ RUN touch /tmp/supervisor.sock
 RUN chmod 777 /tmp/supervisor.sock
 RUN ln -s /tmp /app/tmp
 
+rm /tmp/unicorn.pid &&
+
 EXPOSE 3000
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+ENTRYPOINT rake assets:precompile && rm -f /tmp/unicorn.pid && /usr/bin/supervisord
+
+CMD ["-c", "/etc/supervisord.conf"]
