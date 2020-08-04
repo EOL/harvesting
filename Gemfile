@@ -67,6 +67,7 @@ gem 'uglifier'
 gem 'unicode-emoji'
 # Use Unicorn as the app server
 gem 'unicorn'
+gem 'unicorn-worker-killer'
 # Our own crontab. Read https://github.com/javan/whenever foe details.
 gem 'whenever', :require => false
 
