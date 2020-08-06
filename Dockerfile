@@ -51,10 +51,6 @@ RUN ln -s /tmp /app/tmp
 
 EXPOSE 3000
 
-[root@eol-node1 docker]# rm -f /data/eol-repo-app/tmp/nginx-std*
-[root@eol-node1 docker]# rm -f /data/eol-repo-app/tmp/unicorn-std*
-[root@eol-node1 docker]# rm -f /data/eol-repo-app/tmp/pids/*
-
 ENTRYPOINT rake assets:precompile && rm -f /tmp/*.pid /tmp/*.sock && /usr/bin/supervisord
 
 CMD ["-c", "/etc/supervisord.conf"]
