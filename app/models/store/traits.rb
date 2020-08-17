@@ -53,22 +53,16 @@ module Store
 
     def to_traits_units(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:meta] ||= {}
-      @models[:trait][:meta]['http://rs.tdwg.org/dwc/terms/measurementUnit'] = val
       @models[:trait][:units] = val
     end
 
     def to_traits_statistical_method(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:meta] ||= {}
-      @models[:trait][:meta]['http://eol.org/schema/terms/statisticalMethod'] = val
       @models[:trait][:statistical_method] = val
     end
 
     def to_traits_source(_, val)
       @models[:trait] ||= {}
-      @models[:trait][:meta] ||= {}
-      @models[:trait][:meta]['http://purl.org/dc/terms/source'] = val
       @models[:trait][:source] = val
     end
 
