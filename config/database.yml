@@ -8,7 +8,7 @@ common: &common
 default: &default
   <<: *common
   username: root
-  password:
+  password: <%= Rails.application.secrets.db[:password] || "" %>
   socket: /tmp/mysql.sock
 
 development:
