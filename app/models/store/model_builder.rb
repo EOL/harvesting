@@ -391,7 +391,7 @@ module Store
         datum[:predicate_term_id] = predicate_term.id
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
-        datum[:trait_resource_pk] = assoc.resource_pk
+        datum[:assoc_resource_fk] = assoc.resource_pk
         datum = convert_meta_value(datum, value, predicate: predicate_term)
         prepare_model_for_store(MetaAssoc, datum)
       end
