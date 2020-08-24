@@ -1,5 +1,8 @@
 source "https://rubygems.org"
 
+# "Interal" EOL gems:
+gem 'eol_terms', git: 'git://github.com/EOL/eol_terms.git'
+
 # Because we are going to create many, many records!
 gem 'activerecord-import'
 # Used when parsing URLs (was included in Rails 4, but not 5)
