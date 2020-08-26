@@ -26,6 +26,7 @@ class HarvestProcess < ApplicationRecord
   end
 
   def finished_group
+    return [] if current_group_times.nil?
     all_times = current_group_times.split(/,/).map(&:to_f)
     update_attribute(:current_group_size, 0)
     update_attribute(:current_group_times, '')
