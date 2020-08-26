@@ -525,12 +525,11 @@ class ResourceHarvester
     propagate_id(Assoc, fk: 'occurrence_id', other: 'occurrences.id',
                         set: 'lifestage_term_id', with: 'lifestage_term_id')
     # MetaAssoc to assocs:
-    # TODO: this is not handled during harvest, yet.
-    # @process.info('MetaAssoc to assocs...')
-    propagate_id(MetaAssoc, fk: 'assoc_resource_pk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
+    @process.info('MetaAssoc to assocs...')
+    propagate_id(MetaAssoc, fk: 'assoc_resource_fk', other: 'assocs.resource_pk', set: 'assoc_id', with: 'id')
     resolve_references(AssocsReference, 'assoc')
-    # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
-    # it somewhere, and that’s all that matters for mvp"
+    # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you're putting
+    # it somewhere, and that's all that matters for mvp"
     # resolve_attributions(Assoc)
     # TODO: transfer the lat, long, and locality from occurrences to traits and assocs... (I don't think we caputure
     # these yet)
