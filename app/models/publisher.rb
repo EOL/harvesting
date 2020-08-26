@@ -1,6 +1,13 @@
 # Publish to the website database as quick as you can, please. NOTE: We will NOT publish Terms in this code.
+require "set"
+
 class Publisher
   attr_accessor :resource
+
+  SKIP_METADATA_PRED_URIS = Set.new([
+    "http://rs.tdwg.org/dwc/terms/lifeStage",
+    "http://rs.tdwg.org/dwc/terms/sex"
+  ])
 
   def self.by_resource(resource_in, process, options = {})
     new(options.merge(resource: resource_in, process: process)).by_resource
@@ -543,6 +550,8 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
+    elsif SKIP_METADATA_PRED_URIS.include?(meta.predicate_term&.uri)
+      return nil # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in ResourceHarvester#resolve_trait_keys)
     elsif (meta_mapping = moved_meta[meta.predicate_term&.uri])
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
