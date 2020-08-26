@@ -34,10 +34,11 @@ class Resource < ApplicationRecord
       Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
         Resource.where(abbr: 'dvdtg').first_or_create do |r|
           r.name = 'EOL Dynamic Hierarchy 1.1'
-          r.partner = nil#Partner.native
+          r.partner = nil
           r.description = ''
           r.abbr = 'dvdtg'
           r.is_browsable = true
+          r.might_have_duplicate_taxa = false
           r.nodes_count = 650000
         end
       end
