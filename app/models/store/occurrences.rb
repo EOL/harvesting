@@ -31,7 +31,8 @@ module Store
     end
 
     def get_meta_field(cache, uri, meta_uri)
-      return uri unless Term.uri?(uri)
+      raise "URI invalid: #{uri}" unless Term.uri?(uri)
+
       @models[:occurrence][:meta] ||= {}
       @models[:occurrence][:meta][meta_uri] = uri
       uri

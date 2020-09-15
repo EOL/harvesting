@@ -489,7 +489,8 @@ module Store
           units_term = find_or_create_term(units, type: 'units')
           instance[:units_term_id] = units_term.id
         elsif !units.blank?
-          @process.warn("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
+          raise("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
+
         end
         # TODO: Ideally, we need to know whether the source file users commas or periods as a delimiter.
         instance[:measurement] = value&.tr(',', '')
