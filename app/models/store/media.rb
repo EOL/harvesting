@@ -41,7 +41,7 @@ module Store
         @process.warn(%Q{Could not find a media type (subclass) of "#{norm_val}"}) unless
           @missing_media_types.key?(norm_val)
         @missing_media_types[norm_val] = true
-        :image
+        nil
       end
       @models[:medium][:subclass] = type
       @models[:medium][:is_article] = true if type == :article
@@ -55,15 +55,14 @@ module Store
         'image/jpeg' => :jpg,
         'image/gif' => :jpg, # It will be converted.
         'video/x-youtube' => :youtube,
-        'application/x-shockwave-flash' => :flash, # NOTE: we don't actually have a PLAYER for these anymore! :S
         'video/vimeo' => :vimeo,
         'video/mp4' => :mp4,
         'video/quicktime' => :mov,
-        'video/ogg' => :ogg,
         'application/javascript' => :map_js,
         'audio/mpeg' => :mp3, # NOTE: this one is "best".
         'audio/mp3' => :mp3,
         'audio/ogg' => :ogg, # NOTE: this one is "best"
+        'video/ogg' => :ogg,
         'application/ogg' => :ogg,
         'audio/wav' => :wav,
         'audio/x-wav' => :wav,
@@ -78,7 +77,7 @@ module Store
                @process.warn(%Q{Could not find a media subtype (format) of "#{norm_val}"}) unless
                  @missing_media_types.key?(norm_val)
                @missing_media_types[norm_val] = true
-               :jpg
+               nil
              end
       if type == :map_image
         @models[:medium][:subclass] = type # Maps are a SUBCLASS in this code, but were a "format" in v2...

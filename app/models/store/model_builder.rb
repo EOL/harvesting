@@ -170,6 +170,11 @@ module Store
     end
 
     def build_medium
+      if !medium_types_valid?
+        @process.warn("skipping invalid medium: #{@models[:medium]}")
+        return
+      end
+
       @models[:medium][:resource_pk] = fake_pk(:medium) unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
@@ -186,6 +191,11 @@ module Store
       else
         build_true_medium
       end
+    end
+
+    def medium_types_valid?
+      @models[:medium][:subclass].present? &&
+        (@models[:medium][:is_article] || @models[:medium][:format].present?)
     end
 
     def build_article
@@ -223,8 +233,6 @@ module Store
 
     def build_true_medium
       @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:resource_pk]}"
-      @models[:medium][:subclass] ||= :image
-      @models[:medium][:format] ||= :jpg
       build_references(:medium, MediaReference)
       build_attributions(Medium, @models[:medium])
       # TODO: generalize this. We'll likely want to truncate other fields...
