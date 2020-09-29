@@ -171,10 +171,12 @@ module Store
 
     def build_medium
       if !medium_types_valid?
-        @process.warn("skipping invalid medium: #{@models[:medium]}")
+        @process.warn("skipping invalid medium with resource_pk #{@models[:medium][:resource_pk]}, subclass #{@models[:medium][:subclass]} (from #{@models[:medium][:original_type]}), format #{@models[:medium][:format]} (from #{@models[:medium][:original_format]})")
         return
       end
 
+      delete_extra_medium_fields
+      
       @models[:medium][:resource_pk] = fake_pk(:medium) unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
@@ -191,6 +193,11 @@ module Store
       else
         build_true_medium
       end
+    end
+
+    def delete_extra_medium_fields
+      @models[:medium].delete(:original_type)
+      @models[:medium].delete(:original_format)
     end
 
     def medium_types_valid?

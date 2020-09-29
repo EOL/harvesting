@@ -43,6 +43,7 @@ module Store
         @missing_media_types[norm_val] = true
         nil
       end
+      @models[:medium][:original_type] = norm_val
       @models[:medium][:subclass] = type
       @models[:medium][:is_article] = true if type == :article
     end
@@ -79,6 +80,7 @@ module Store
                @missing_media_types[norm_val] = true
                nil
              end
+      @models[:medium][:original_format] = norm_val
       if type == :map_image
         @models[:medium][:subclass] = type # Maps are a SUBCLASS in this code, but were a "format" in v2...
       else
