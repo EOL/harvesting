@@ -63,7 +63,7 @@ module Store
         'audio/mpeg' => :mp3, # NOTE: this one is "best".
         'audio/mp3' => :mp3,
         'audio/ogg' => :ogg, # NOTE: this one is "best"
-        'video/ogg' => :ogv,
+        'video/ogg' => :ogg,
         'application/ogg' => :ogg,
         'audio/wav' => :wav,
         'audio/x-wav' => :wav,
