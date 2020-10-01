@@ -5,24 +5,13 @@ module MediumPrepper
     def initialize(medium, raw)
       @downloaded_at = Time.now
       @medium = medium
-      get_ext(raw.base_uri)
+      get_ext
       save_ogg(raw)
     end
 
-    def get_ext(base_uri)
-      @ext = begin
-               File.extname(base_uri.path).downcase.gsub(/^\./, '')
-             rescue => e
-               raise "Unable to parse #{base_uri} for ext (#{e.class}: #{e.message})"
-             end
-      valid_exts = %w[mp3 ogg wav mp4 ogv mov svg webm]
-      return if valid_exts.include?(@ext)
-      # Well, shoot, we ended up with a file but it came from a funny-lookin URL. We'll skip the guessing and use the
-      # format, if we have one:
-      raise "Cannot determine a valid format for #{base_uri} (got #{@ext})" if @medium.format.nil?
-      # Really, we probably won't save and serve these anyway (we'll more likely embed them remotely):
-      raise "Don't know the ext used for #{@medium.format}!" if @medium.youtube? || @medium.flash? || @medium.vimeo?
-      @ext = @medium.format
+    def get_ext
+      @ext = @medium.video_file_ext
+      raise TypeError, "failed to get ext for Medium (#{@medium.id}, #{@medium.subclass}, #{@medium.format}" if @ext.nil?
     end
 
     def prep_medium

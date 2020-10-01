@@ -13,7 +13,7 @@ module MediumPrepper
       # NOTE: you can try changing this to make for faster downloads (smaller values, down to 10) or better
       # representation of the original (higher values, up to 100)
       @our_quality = 60
-      @ext = 'jpg'
+      @ext = medium.file_ext
       read_image(raw)
     end
 

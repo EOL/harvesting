@@ -79,6 +79,24 @@ class Medium < ApplicationRecord
     "#{path}/#{basename}"
   end
 
+  def default_unmodified_url
+    "#{default_base_url}.#{file_ext}"
+  end
+
+  def embedded_video?
+    youtube? || vimeo?
+  end
+
+  def file_ext
+    if js_map? || embedded_video?
+      nil
+    elsif video? && ogg?
+      'ogv'
+    else
+      format
+    end
+  end
+
   def basename
     "#{resource_id}.#{resource_pk&.tr('^-_A-Za-z0-9', '_')}"
   end
