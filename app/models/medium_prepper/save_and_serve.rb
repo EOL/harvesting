@@ -10,7 +10,7 @@ module MediumPrepper
     end
 
     def get_ext
-      @ext = @medium.video_file_ext
+      @ext = @medium.file_ext
       raise TypeError, "failed to get ext for Medium (#{@medium.id}, #{@medium.subclass}, #{@medium.format}" if @ext.nil?
     end
 
