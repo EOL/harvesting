@@ -47,7 +47,7 @@
     .item
       .content
         .header predicate
-        .description= @trait.predicate_term.uri
+        .description= @trait.predicate_term_uri
     .item
       .content
         .header value_uri
@@ -135,11 +135,11 @@
           .item
             .content
               .header sex
-              .description= meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term
+              .description= meta.sex_term_uri if meta.respond_to?(:sex_term) && meta.sex_term
           .item
             .content
               .header lifestage
-              .description= meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
+              .description= meta.lifestage_term_uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
           .item
             .content
               .header source

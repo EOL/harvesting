@@ -7,7 +7,7 @@ json.assocs @assocs.select { |a| a.node && a.target_node } do |assoc|
   json.target_scientific_name assoc.target_node.scientific_name.italicized
   json.eol_pk "R#{assoc.resource_id}-PK#{assoc.id}"
   json.resource_pk assoc.resource_pk
-  json.predicate assoc.predicate_term.uri
+  json.predicate assoc.predicate_term_uri
   json.sex assoc.sex_term.try(:uri)
   json.lifestage assoc.lifestage_term.try(:uri)
   json.source assoc.source

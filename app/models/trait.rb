@@ -56,7 +56,7 @@ class Trait < ApplicationRecord
   end
 
   def predicate
-    predicate_term.uri
+    predicate_term_uri
   end
 
   def sex
@@ -90,11 +90,11 @@ class Trait < ApplicationRecord
   def convert_measurement
     return unless measurement
     num = measurement_to_num
-    if num.is_a?(Numeric) && units_term && !units_term.uri.blank?
-      (n_val, n_unit) = UnitConversions.convert(num, units_term.uri)
+    if num.is_a?(Numeric) && units_term && !units_term_uri.blank?
+      (n_val, n_unit) = UnitConversions.convert(num, units_term_uri)
       update_attributes(normal_measurement: n_val, normal_units_uri: n_unit)
-    elsif units_term && !units_term.uri.blank?
-      update_attributes(normal_measurement: num, normal_units_uri: units_term.uri)
+    elsif units_term && !units_term_uri.blank?
+      update_attributes(normal_measurement: num, normal_units_uri: units_term_uri)
     else
       update_attributes(normal_measurement: num, normal_units_uri: '')
     end

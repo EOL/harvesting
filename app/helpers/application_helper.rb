@@ -20,8 +20,8 @@ module ApplicationHelper
       json.value_uri meta.object_term.try(:uri)
       json.measurement meta.measurement if meta.respond_to?(:measurement)
       json.literal meta.literal
-      json.sex meta.sex_term.uri if meta.respond_to?(:sex_term) && meta.sex_term
-      json.lifestage meta.lifestage_term.uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
+      json.sex meta.sex_term_uri if meta.respond_to?(:sex_term) && meta.sex_term
+      json.lifestage meta.lifestage_term_uri if meta.respond_to?(:lifestage_term) && meta.lifestage_term
       json.source meta.source if meta.respond_to?(:source)
     end
   end

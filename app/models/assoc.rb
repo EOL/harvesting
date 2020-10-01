@@ -37,7 +37,7 @@ class Assoc < ApplicationRecord
   end
 
   def predicate
-    predicate_term.uri
+    predicate_term_uri
   end
 
   def sex
