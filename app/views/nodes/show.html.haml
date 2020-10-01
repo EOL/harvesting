@@ -139,10 +139,9 @@
         - if trait.object_term
           = trait.object_term.name
           = "(#{trait.object_term_uri})"
-        - elsif trait.units_term
+        - elsif trait.units_term_uri
           = trait.measurement
-          = trait.units_term.name
-          = "(#{trait.units_term_uri})"
+          = trait.units_term_uri
         - else
           = trait.literal
           (literal value)

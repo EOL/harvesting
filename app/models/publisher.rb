@@ -467,8 +467,6 @@ class Publisher
 
     @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
-    @simple_meta_fields = %i[predicate_term object_term]
-    @meta_fields = @simple_meta_fields + %i[units_term statistical_method_term]
     node_ids = nodes.map(&:id)
     trait_map(node_ids)
     assoc_map(node_ids)
@@ -494,13 +492,12 @@ class Publisher
 
   def trait_map(node_ids)
     @traits = {}
-    property_fields = @meta_fields + %i[sex_term lifestage_term references]
     Trait.primary.published.matched.where(node_id: node_ids)
          .includes(property_fields,
-                   children: @meta_fields,
-                   occurrence: { occurrence_metadata: @meta_fields },
+                   children: :references,
+                   occurrence: { occurrence_metadata: :references },
                    node: :scientific_name,
-                   meta_traits: @meta_fields).find_each do |trait|
+                   meta_traits: :references).find_each do |trait|
                      @traits[trait.id] = trait
                    end
     @process.info("#{@traits.size} Traits (filtered)...")
@@ -508,12 +505,10 @@ class Publisher
 
   def assoc_map(node_ids)
     @assocs = {}
-    assoc_meta_fields = @simple_meta_fields + %i[units_term]
     Assoc.published.where(node_id: node_ids)
-         .includes(:predicate_term, :sex_term, :lifestage_term, :references,
-                   occurrence: { occurrence_metadata: @meta_fields },
-                   node: :scientific_name, target_node: :scientific_name,
-                   meta_assocs: assoc_meta_fields).find_each do |assoc|
+         .includes(:predicate_term, :sex_term, :lifestage_term, :references, :meta_assocs,
+                   occurrence: :occurrence_metadata,
+                   node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
                      @assocs[assoc.id] = assoc
                    end
     @process.info("#{@assocs.size} Associations (filtered)...")
@@ -568,11 +563,11 @@ class Publisher
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
-      meta.respond_to?(:object_term) ? meta.object_term&.uri : nil,
-      meta.respond_to?(:units_term) ? meta.units_term&.uri : nil,
-      meta.respond_to?(:sex_term) ? meta.sex_term&.uri : nil,
-      meta.respond_to?(:lifestage_term) ? meta.lifestage_term&.uri : nil,
-      meta.respond_to?(:statistical_method_term) ? meta.statistical_method_term&.uri : nil,
+      meta&.object_term_uri,
+      meta&.units_term_uri,
+      meta&.sex_term_uri,
+      meta&.lifestage_term_uri,
+      meta&.statistical_method_term_uri,
       meta.respond_to?(:source) ? meta.source : nil
     ]
   end

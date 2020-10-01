@@ -1,20 +1,14 @@
 class TraitsController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show, :search]
 
-  @@simple_meta_fields = %i[predicate_term object_term]
-  @@meta_fields = @@simple_meta_fields + %i[units_term statistical_method_term]
-  @@property_fields = @@meta_fields + %i[sex_term lifestage_term references]
-
   def index
     @resource = Resource.find(params[:resource_id])
     # NOTE: you may want to add to these terms later!
     @traits = prep_for_api(
       @resource.traits.primary.published.matched
-               .includes(@@property_fields,
-                         children: @@meta_fields,
-                         occurrence: { occurrence_metadata: @@simple_meta_fields },
-                         node: :scientific_name,
-                         meta_traits: @@meta_fields)
+               .includes(:references, :children, :meta_traits,
+                         occurrence: :occurrence_metadata,
+                         node: :scientific_name)
     )
     respond_to do |fmt|
       fmt.json { render 'index', traits: @traits }
@@ -23,11 +17,9 @@ class TraitsController < ApplicationController
 
   def show
     @trait = Trait.where(id: params[:id])
-                  .includes(@@property_fields,
-                            children: @@meta_fields,
-                            occurrence: { occurrence_metadata: @@simple_meta_fields },
-                            node: :scientific_name,
-                            meta_traits: @@meta_fields)
+                  .includes(:references, :children, :meta_traits
+                            occurrence: :occurrence_metadata,
+                            node: :scientific_name)
                   .first
     @resource = @trait.resource
     @harvest = @trait.harvest

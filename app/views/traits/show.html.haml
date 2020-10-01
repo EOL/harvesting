@@ -51,7 +51,7 @@
     .item
       .content
         .header value_uri
-        .description= @trait.object_term.try(:uri)
+        .description= @trait&.object_term_uri
     .item
       .content
         .header measurement
@@ -63,19 +63,19 @@
     .item
       .content
         .header units
-        .description= @trait.units_term.try(:uri)
+        .description= @trait&.units_term_uri
     .item
       .content
         .header statistical_method
-        .description= @trait.statistical_method_term.try(:uri)
+        .description= @trait&.statistical_method_term_uri
     .item
       .content
         .header sex
-        .description= @trait.sex_term.try(:uri)
+        .description= @trait&.sex_term_uri
     .item
       .content
         .header lifestage
-        .description= @trait.lifestage_term.try(:uri)
+        .description= @trait&.lifestage_term_uri
     .item
       .content
         .header source
@@ -111,19 +111,19 @@
           .item
             .content
               .header predicate
-              .description= meta.predicate_term.try(:uri)
+              .description= meta&.predicate_term_uri
           .item
             .content
               .header units
-              .description= meta.units_term.try(:uri) if meta.respond_to?(:units_term)
+              .description= meta&.units_term_uri if meta.respond_to?(:units_term_uri)
           .item
             .content
               .header statistical_method
-              .description= meta.statistical_method_term.try(:uri) if meta.respond_to?(:statistical_method_term)
+              .description= meta&.statistical_method_term_uri if meta.respond_to?(:statistical_method_term)
           .item
             .content
               .header value_uri
-              .description= meta.object_term.try(:uri)
+              .description= meta&.object_term_uri
           .item
             .content
               .header measurement

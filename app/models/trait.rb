@@ -8,12 +8,6 @@ class Trait < ApplicationRecord
   belongs_to :harvest, inverse_of: :traits
   belongs_to :node, inverse_of: :traits
   belongs_to :object_node, class_name: 'Node', inverse_of: :traits
-  belongs_to :predicate_term, class_name: 'Term'
-  belongs_to :object_term, class_name: 'Term'
-  belongs_to :units_term, class_name: 'Term'
-  belongs_to :statistical_method_term, class_name: 'Term'
-  belongs_to :sex_term, class_name: 'Term'
-  belongs_to :lifestage_term, class_name: 'Term'
   belongs_to :occurrence, inverse_of: 'traits'
 
   has_many :meta_traits, inverse_of: :trait
@@ -84,16 +78,17 @@ class Trait < ApplicationRecord
   end
 
   def units
-    units_term&.uri
+    units_term_uri
   end
 
   def convert_measurement
     return unless measurement
+
     num = measurement_to_num
-    if num.is_a?(Numeric) && units_term && !units_term_uri.blank?
+    if num.is_a?(Numeric) && !units_term_uri.blank?
       (n_val, n_unit) = UnitConversions.convert(num, units_term_uri)
       update_attributes(normal_measurement: n_val, normal_units_uri: n_unit)
-    elsif units_term && !units_term_uri.blank?
+    elsif !units_term_uri.blank?
       update_attributes(normal_measurement: num, normal_units_uri: units_term_uri)
     else
       update_attributes(normal_measurement: num, normal_units_uri: '')
