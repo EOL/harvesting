@@ -7,7 +7,8 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
     bad_uris = {}
     Term.find_each do |term|
       # raise "Missing EolTerm for #{term.uri}" unless term_uris.key?(term.uri)
-      bad_uri[term.uri] = term.id
+      bad_uris[term.uri] = term.id
+      next unless term_uris.key?(term.uri)
 
       term_uris[term.uri] = term.id
     end
