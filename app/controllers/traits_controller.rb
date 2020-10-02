@@ -17,7 +17,7 @@ class TraitsController < ApplicationController
 
   def show
     @trait = Trait.where(id: params[:id])
-                  .includes(:references, :children, :meta_traits
+                  .includes(:references, :children, :meta_traits,
                             occurrence: :occurrence_metadata,
                             node: :scientific_name)
                   .first
