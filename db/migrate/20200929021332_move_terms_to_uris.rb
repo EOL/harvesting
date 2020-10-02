@@ -4,8 +4,10 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
     EolTerms.list.each do |term|
       term_uris[term['uri']] = nil
     end
+    bad_uris = {}
     Term.find_each do |term|
-      raise "Missing EolTerm for #{term.uri}" unless term_uris.key?(term.uri)
+      # raise "Missing EolTerm for #{term.uri}" unless term_uris.key?(term.uri)
+      bad_uri[term.uri] = term.id
 
       term_uris[term.uri] = term.id
     end
@@ -52,5 +54,13 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
     end
 
     # Aaaaaactually, I think I'll delete the _ids in a second migration after I'm happy with these.
+
+    unless bad_uris.empty?
+      puts 'THERE WERE Terms WHICH ARE NOT RECOGNIZED:'
+      puts 'It is NOT okay to publish resources that use these terms, you will have to manually handle them.'
+      bad_uris.each do |uri, id|
+        puts "#{uri} { Term.find(#{id}) }"
+      end
+    end
   end
 end
