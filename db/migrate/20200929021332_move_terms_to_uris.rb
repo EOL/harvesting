@@ -21,7 +21,7 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       #
       # add_column :assocs, :predicate_term_uri, :string
       # add_column :assocs, :sex_term_uri, :string
-      # add_column :assocs, :lifestage_term_uri, :string
+      add_column :assocs, :lifestage_term_uri, :string
       #
       # add_column :occurrence_metadata, :predicate_term_uri, :string
       # add_column :occurrence_metadata, :object_term_uri, :string
@@ -37,18 +37,18 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
 
       puts "#{term_uris.size} URIs to update..."
       print "AssocTrait."
-      AssocTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
-      print '.'
-      AssocTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
-      print '.'
-      AssocTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
-      print '.'
-      AssocTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
+      # AssocTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      # print '.'
+      # AssocTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      # print '.'
+      # AssocTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      # print '.'
+      # AssocTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
       print 'Assoc.'
-      Assoc.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
-      print '.'
-      Assoc.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
-      print '.'
+      # Assoc.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      # print '.'
+      # Assoc.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
+      # print '.'
       Assoc.propagate_id(fk: 'lifestatge_term_id', other: 'terms.id', set: 'lifestatge_term_uri', with: 'uri')
       print 'OccMeta.'
       OccurrenceMetadatum.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
@@ -76,11 +76,11 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
 
     ensure
       unless bad_uris.empty?
-        puts 'THERE WERE Terms WHICH ARE NOT RECOGNIZED:'
+        puts "THERE WERE #{bad_uris.size} Terms WHICH ARE NOT RECOGNIZED:"
         puts 'It is NOT okay to publish resources that use these terms, you will have to manually handle them.'
-        bad_uris.each do |uri, id|
-          puts "#{uri} { Term.find(#{id}) }"
-        end
+        # bad_uris.each do |uri, id|
+        #   puts "#{uri} { Term.find(#{id}) }"
+        # end
       end
     end
   end
