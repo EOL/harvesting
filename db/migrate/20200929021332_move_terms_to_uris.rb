@@ -36,7 +36,7 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :traits, :lifestage_term_uri, :string
 
       puts "#{term_uris.size} URIs to update..."
-      print "#{id}: AssocTrait."
+      print "AssocTrait."
       AssocTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
       print '.'
       AssocTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
