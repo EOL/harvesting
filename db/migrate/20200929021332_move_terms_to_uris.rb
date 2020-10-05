@@ -35,24 +35,43 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :traits, :sex_term_uri, :string
       # add_column :traits, :lifestage_term_uri, :string
 
+      puts "#{term_uris.size} URIs to update..."
       term_uris.each do |uri, id|
-        # AssocTrait.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
-        # AssocTrait.where(object_term_id: id).update_all(object_term_uri: uri)
-        # AssocTrait.where(units_term_id: id).update_all(units_term_uri: uri)
-        # AssocTrait.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
-        # Assoc.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
-        # Assoc.where(sex_term_id: id).update_all(sex_term_uri: uri)
-        # Assoc.where(lifestage_term_id: id).update_all(lifestage_term_uri: uri)
+        print "#{id}: AssocTrait."
+        AssocTrait.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
+        print '.'
+        AssocTrait.where(object_term_id: id).update_all(object_term_uri: uri)
+        print '.'
+        AssocTrait.where(units_term_id: id).update_all(units_term_uri: uri)
+        print '.'
+        AssocTrait.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
+        print 'Assoc.'
+        Assoc.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
+        print '.'
+        Assoc.where(sex_term_id: id).update_all(sex_term_uri: uri)
+        print '.'
+        Assoc.where(lifestage_term_id: id).update_all(lifestage_term_uri: uri)
+        print 'OccMeta.'
         OccurrenceMetadatum.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
+        print '.'
         OccurrenceMetadatum.where(object_term_id: id).update_all(object_term_uri: uri)
+        print '.'
         OccurrenceMetadatum.where(units_term_id: id).update_all(units_term_uri: uri)
+        print '.'
         OccurrenceMetadatum.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
+        print 'Trait.'
         Trait.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
+        print '.'
         Trait.where(object_term_id: id).update_all(object_term_uri: uri)
+        print '.'
         Trait.where(units_term_id: id).update_all(units_term_uri: uri)
+        print '.'
         Trait.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
+        print '.'
         Trait.where(sex_term_id: id).update_all(sex_term_uri: uri)
+        print '.'
         Trait.where(lifestage_term_id: id).update_all(lifestage_term_uri: uri)
+        puts "\n"
       end
 
       # Aaaaaactually, I think I'll delete the _ids in a second migration after I'm happy with these.
