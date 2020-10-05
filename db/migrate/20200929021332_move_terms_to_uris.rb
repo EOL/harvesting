@@ -59,7 +59,7 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # print '.'
       # OccurrenceMetadatum.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
       print 'Trait.'
-      Trait.propagate_id(fk: 'predicTraitate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
       print '.'
       Trait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
       print '.'
