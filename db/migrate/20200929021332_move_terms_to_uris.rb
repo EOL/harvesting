@@ -21,7 +21,7 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       #
       # add_column :assocs, :predicate_term_uri, :string
       # add_column :assocs, :sex_term_uri, :string
-      add_column :assocs, :lifestage_term_uri, :string
+      # add_column :assocs, :lifestage_term_uri, :string
       #
       # add_column :occurrence_metadata, :predicate_term_uri, :string
       # add_column :occurrence_metadata, :object_term_uri, :string
@@ -49,7 +49,7 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # print '.'
       # Assoc.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
       # print '.'
-      Assoc.propagate_id(fk: 'lifestatge_term_id', other: 'terms.id', set: 'lifestatge_term_uri', with: 'uri')
+      Assoc.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
       print 'OccMeta.'
       OccurrenceMetadatum.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
       print '.'
