@@ -36,43 +36,41 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :traits, :lifestage_term_uri, :string
 
       puts "#{term_uris.size} URIs to update..."
-      term_uris.each do |uri, id|
-        print "#{id}: AssocTrait."
-        AssocTrait.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
-        print '.'
-        AssocTrait.where(object_term_id: id).update_all(object_term_uri: uri)
-        print '.'
-        AssocTrait.where(units_term_id: id).update_all(units_term_uri: uri)
-        print '.'
-        AssocTrait.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
-        print 'Assoc.'
-        Assoc.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
-        print '.'
-        Assoc.where(sex_term_id: id).update_all(sex_term_uri: uri)
-        print '.'
-        Assoc.where(lifestage_term_id: id).update_all(lifestage_term_uri: uri)
-        print 'OccMeta.'
-        OccurrenceMetadatum.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
-        print '.'
-        OccurrenceMetadatum.where(object_term_id: id).update_all(object_term_uri: uri)
-        print '.'
-        OccurrenceMetadatum.where(units_term_id: id).update_all(units_term_uri: uri)
-        print '.'
-        OccurrenceMetadatum.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
-        print 'Trait.'
-        Trait.where(predicate_term_id: id).update_all(predicate_term_uri: uri)
-        print '.'
-        Trait.where(object_term_id: id).update_all(object_term_uri: uri)
-        print '.'
-        Trait.where(units_term_id: id).update_all(units_term_uri: uri)
-        print '.'
-        Trait.where(statistical_method_term_id: id).update_all(statistical_method_term_uri: uri)
-        print '.'
-        Trait.where(sex_term_id: id).update_all(sex_term_uri: uri)
-        print '.'
-        Trait.where(lifestage_term_id: id).update_all(lifestage_term_uri: uri)
-        puts "\n"
-      end
+      print "#{id}: AssocTrait."
+      AssocTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      print '.'
+      AssocTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      print '.'
+      AssocTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      print '.'
+      AssocTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
+      print 'Assoc.'
+      Assoc.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      print '.'
+      Assoc.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
+      print '.'
+      Assoc.propagate_id(fk: 'lifestatge_term_id', other: 'terms.id', set: 'lifestatge_term_uri', with: 'uri')
+      print 'OccMeta.'
+      OccurrenceMetadatum.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      print '.'
+      OccurrenceMetadatum.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      print '.'
+      OccurrenceMetadatum.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      print '.'
+      OccurrenceMetadatum.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
+      print 'Trait.'
+      Term.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      print '.'
+      Term.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      print '.'
+      Term.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      print '.'
+      Term.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
+      print '.'
+      Term.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
+      print '.'
+      Term.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
+      puts "\n"
 
       # Aaaaaactually, I think I'll delete the _ids in a second migration after I'm happy with these.
 
