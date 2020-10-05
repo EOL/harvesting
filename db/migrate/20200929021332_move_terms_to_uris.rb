@@ -36,7 +36,7 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :traits, :lifestage_term_uri, :string
 
       puts "#{term_uris.size} URIs to update..."
-      print "AssocTrait."
+      # print "AssocTrait."
       # AssocTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
       # print '.'
       # AssocTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
@@ -44,32 +44,32 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # AssocTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
       # print '.'
       # AssocTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
-      print 'Assoc.'
+      # print 'Assoc.'
       # Assoc.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
       # print '.'
       # Assoc.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
       # print '.'
-      Assoc.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
-      print 'OccMeta.'
-      OccurrenceMetadatum.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
-      print '.'
-      OccurrenceMetadatum.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
-      print '.'
-      OccurrenceMetadatum.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
-      print '.'
-      OccurrenceMetadatum.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
+      # Assoc.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
+      # print 'OccMeta.'
+      # OccurrenceMetadatum.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      # print '.'
+      # OccurrenceMetadatum.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      # print '.'
+      # OccurrenceMetadatum.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      # print '.'
+      # OccurrenceMetadatum.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
       print 'Trait.'
-      Term.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'predicTraitate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
       print '.'
-      Term.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
       print '.'
-      Term.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
       print '.'
-      Term.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
       print '.'
-      Term.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
       print '.'
-      Term.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
+      Trait.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
       puts "\n"
 
       # Aaaaaactually, I think I'll delete the _ids in a second migration after I'm happy with these.
