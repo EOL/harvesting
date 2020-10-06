@@ -88,9 +88,27 @@ class Medium < ApplicationRecord
     '%02x' % (mod % Medium.bucket_size)
   end
 
+  def embedded_video?
+    youtube? || vimeo?
+  end
+
   def default_base_url
     "#{path}/#{basename}"
   end
+
+  def default_unmodified_url
+    if embedded_video?
+      ''
+    else
+      "#{default_base_url}.#{file_ext}"
+    end
+  end
+
+  def file_ext
+    raise TypeError, "file_ext undefined for embedded videos" if embedded_video?
+    format
+  end
+
 
   def basename
     "#{resource_id}.#{resource_pk&.tr('^-_A-Za-z0-9', '_')}"
