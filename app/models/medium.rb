@@ -15,7 +15,20 @@ class Medium < ApplicationRecord
 
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
   enum subclass: %i[image video sound map_image js_map]
-  enum format: %i[jpg youtube flash vimeo mp3 ogg wav mp4 ogv mov svg webm]
+  enum format: {
+    jpg: 0, 
+    youtube: 1, 
+    flash: 2, # deprecated
+    vimeo: 3,
+    mp3: 4, 
+    ogg: 5,
+    wav: 6,
+    mp4: 7, 
+    ogv: 8,
+    mov: 9, # deprecated
+    svg: 10, 
+    webm: 11
+  }
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where('base_url IS NULL') }

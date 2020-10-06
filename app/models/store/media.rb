@@ -63,15 +63,14 @@ module Store
         'audio/mpeg' => :mp3, # NOTE: this one is "best".
         'audio/mp3' => :mp3,
         'audio/ogg' => :ogg, # NOTE: this one is "best"
-        'video/ogg' => :ogg,
-        'application/ogg' => :ogg,
+        'video/ogg' => :ogv,
         'audio/wav' => :wav,
         'audio/x-wav' => :wav,
         'text/html' => nil, # Nothing needed; this is just an article!
         'map' => :map_image,
         'map_image' => :map_image
       }
-      norm_val = val.downcase
+      norm_val = fix_subtype_val(val.downcase, @models[:medium][:subclass])
       type = if @media_subtype_mappings.key?(norm_val)
                @media_subtype_mappings[norm_val]
              else
@@ -188,6 +187,20 @@ module Store
       return nil if val.nil?
       return '' if val.blank?
       val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"\s*(.*)\s*\"$/, '\\1')
+    end
+
+    def fix_subtype_val(val, subclass)
+      fixed_val = val
+
+      if val == 'application/ogg'
+        if subclass == :video
+          fixed_val = 'video/ogg'
+        elsif subclass == :sound
+          fixed_val = 'audio/ogg'
+        end
+      end
+
+      fixed_val
     end
   end
 end
