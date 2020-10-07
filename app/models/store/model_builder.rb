@@ -524,7 +524,10 @@ module Store
     end
 
     def fail_on_bad_uri(uri)
+      return nil if uri.blank?
+
       raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri)
+
       uri.downcase # This is perhaps SLIGHTLY dangerous, but: URIs are SUPPOSED to be case-insensitive!
     end
 
