@@ -39,7 +39,6 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :meta_traits, :object_term_uri, :string
       # add_column :meta_traits, :units_term_uri, :string
       # add_column :meta_traits, :statistical_method_term_uri, :string
-      # add_column :meta_traits, :sex_term_uri, :string
       # add_column :meta_traits, :lifestage_term_uri, :string
 
       puts "#{term_uris.size} URIs to update..."
@@ -79,15 +78,13 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # Trait.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
       # puts "\n"
       print 'MetaTrait.'
-      MetaTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
-      print '.'
-      MetaTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
-      print '.'
-      MetaTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
-      print '.'
-      MetaTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
-      print '.'
-      MetaTrait.propagate_id(fk: 'sex_term_id', other: 'terms.id', set: 'sex_term_uri', with: 'uri')
+      # MetaTrait.propagate_id(fk: 'predicate_term_id', other: 'terms.id', set: 'predicate_term_uri', with: 'uri')
+      # print '.'
+      # MetaTrait.propagate_id(fk: 'object_term_id', other: 'terms.id', set: 'object_term_uri', with: 'uri')
+      # print '.'
+      # MetaTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
+      # print '.'
+      # MetaTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
       print '.'
       MetaTrait.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
       puts "\n"
