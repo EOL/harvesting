@@ -351,7 +351,13 @@ module Store
       units = @models[:trait].delete(:units)
       @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
 
-      @models[:trait] = convert_trait_value(@models[:trait], predicate: @models[:trait][:predicate_term_uri])
+      # TEMP:
+      begin
+        @models[:trait] = convert_trait_value(@models[:trait], predicate: @models[:trait][:predicate_term_uri])
+      rescue => e
+        puts "Failed to convert value for #{@models[:trait][:predicate_term_uri]}"
+        raise e
+      end
 
       if @models[:trait][:statistical_method]
         stat_m = @models[:trait].delete(:statistical_method)
