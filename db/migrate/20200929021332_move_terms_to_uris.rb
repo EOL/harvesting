@@ -35,12 +35,12 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :traits, :sex_term_uri, :string
       # add_column :traits, :lifestage_term_uri, :string
 
-      add_column :meta_traits, :predicate_term_uri, :string
-      add_column :meta_traits, :object_term_uri, :string
-      add_column :meta_traits, :units_term_uri, :string
-      add_column :meta_traits, :statistical_method_term_uri, :string
-      add_column :meta_traits, :sex_term_uri, :string
-      add_column :meta_traits, :lifestage_term_uri, :string
+      # add_column :meta_traits, :predicate_term_uri, :string
+      # add_column :meta_traits, :object_term_uri, :string
+      # add_column :meta_traits, :units_term_uri, :string
+      # add_column :meta_traits, :statistical_method_term_uri, :string
+      # add_column :meta_traits, :sex_term_uri, :string
+      # add_column :meta_traits, :lifestage_term_uri, :string
 
       puts "#{term_uris.size} URIs to update..."
       # print "AssocTrait."
