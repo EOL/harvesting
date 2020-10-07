@@ -329,6 +329,7 @@ module Store
     def build_trait
       parent = @models[:trait][:parent_pk]
       occurrence = @models[:trait][:occurrence_resource_pk]
+      dup_model = @models[:trait].dup # TEMP:
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon] && parent
@@ -347,7 +348,9 @@ module Store
       # 368000 grams on its basal metabolic rate of 113712 mL/hr O2.
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?  # Convenience flag to denote occurrence metadata.
       predicate = @models[:trait].delete(:predicate)
+      puts "PREDICATE: #{predicate}"
       @models[:trait][:predicate_term_uri] = fail_on_bad_uri(predicate)
+      puts "PRED URI: #{@models[:trait][:predicate_term_uri]}"
       units = @models[:trait].delete(:units)
       @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
 
@@ -356,6 +359,7 @@ module Store
         @models[:trait] = convert_trait_value(@models[:trait], predicate: @models[:trait][:predicate_term_uri])
       rescue => e
         puts "Failed to convert value for #{@models[:trait][:predicate_term_uri]}"
+        pp dup_model
         raise e
       end
 
@@ -532,7 +536,7 @@ module Store
     def fail_on_bad_uri(uri)
       return nil if uri.blank?
 
-      raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri)
+      raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri.downcase)
 
       uri.downcase # This is perhaps SLIGHTLY dangerous, but: URIs are SUPPOSED to be case-insensitive!
     end
