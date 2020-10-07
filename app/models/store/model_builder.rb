@@ -318,7 +318,7 @@ module Store
         datum = {}
         datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
         datum[:predicate_term_uri] = fail_on_bad_uri(key)
-        datum = convert_meta_value(datum, value, predicate: predicate_term)
+        datum = convert_meta_value(datum, value)
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum.delete(:source) # TODO: we should allow (and show) this. :S
@@ -351,7 +351,7 @@ module Store
       units = @models[:trait].delete(:units)
       @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
 
-      @models[:trait] = convert_trait_value(@models[:trait], predicate: predicate_term)
+      @models[:trait] = convert_trait_value(@models[:trait], predicate: @models[:trait][:predicate_term_uri])
 
       if @models[:trait][:statistical_method]
         stat_m = @models[:trait].delete(:statistical_method)
@@ -372,7 +372,7 @@ module Store
         datum[:harvest_id] = @harvest.id
         datum[:trait_resource_pk] = trait.resource_pk unless occ_meta
         datum[:predicate_term_uri] = fail_on_bad_uri(key)
-        datum = convert_meta_value(datum, value, predicate: predicate_term)
+        datum = convert_meta_value(datum, value)
         klass = MetaTrait
         if !@models[:trait][:of_taxon] && parent.blank?
           klass = OccurrenceMetadatum
@@ -401,7 +401,7 @@ module Store
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
         datum[:assoc_resource_fk] = assoc.resource_pk
-        datum = convert_meta_value(datum, value, predicate: predicate_term)
+        datum = convert_meta_value(datum, value)
         prepare_model_for_store(MetaAssoc, datum)
       end
     end
@@ -483,7 +483,7 @@ module Store
 
     def convert_trait_value(instance, options = {})
       value = instance.delete(:value)
-      if options[:predicate]&.is_verbatim_only?
+      if options[:predicate] && EolTerms.by_uri(options[:predicate])['is_text_only']
         instance[:literal] = value
         return instance
       end
@@ -511,7 +511,7 @@ module Store
 
     # Simpler:
     def convert_meta_value(datum, value, options = {})
-      if options[:predicate]&.is_verbatim_only?
+      if datum[:predicate_term_uri] && EolTerms.by_uri(datum[:predicate_term_uri])['is_text_only']
         datum[:literal] = value
         return datum
       end
