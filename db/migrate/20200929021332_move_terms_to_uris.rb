@@ -39,7 +39,6 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # add_column :meta_traits, :object_term_uri, :string
       # add_column :meta_traits, :units_term_uri, :string
       # add_column :meta_traits, :statistical_method_term_uri, :string
-      # add_column :meta_traits, :lifestage_term_uri, :string
 
       puts "#{term_uris.size} URIs to update..."
       # print "AssocTrait."
@@ -85,8 +84,6 @@ class MoveTermsToUris < ActiveRecord::Migration[5.2]
       # MetaTrait.propagate_id(fk: 'units_term_id', other: 'terms.id', set: 'units_term_uri', with: 'uri')
       # print '.'
       # MetaTrait.propagate_id(fk: 'statistical_method_term_id', other: 'terms.id', set: 'statistical_method_term_uri', with: 'uri')
-      print '.'
-      MetaTrait.propagate_id(fk: 'lifestage_term_id', other: 'terms.id', set: 'lifestage_term_uri', with: 'uri')
       puts "\n"
 
       # Aaaaaactually, I think I'll delete the _ids in a second migration after I'm happy with these.
