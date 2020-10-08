@@ -493,11 +493,10 @@ class Publisher
   def trait_map(node_ids)
     @traits = {}
     Trait.primary.published.matched.where(node_id: node_ids)
-         .includes(:references,
+         .includes(:references, :meta_traits,
                    children: :references,
                    occurrence: { occurrence_metadata: :references },
-                   node: :scientific_name,
-                   meta_traits: :references).find_each do |trait|
+                   node: :scientific_name).find_each do |trait|
                      @traits[trait.id] = trait
                    end
     @process.info("#{@traits.size} Traits (filtered)...")
