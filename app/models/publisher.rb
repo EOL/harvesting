@@ -561,11 +561,11 @@ class Publisher
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
-      meta&.object_term_uri,
-      meta&.units_term_uri,
-      meta&.sex_term_uri,
-      meta&.lifestage_term_uri,
-      meta&.statistical_method_term_uri,
+      meta.respond_to?(:object_term_uri) ? meta&.object_term_uri : nil,
+      meta.respond_to?(:units_term_uri) ? meta&.units_term_uri : nil,
+      meta.respond_to?(:sex_term_uri) ? meta&.sex_term_uri : nil,
+      meta.respond_to?(:lifestage_term_uri) ? meta&.lifestage_term_uri : nil,
+      meta.respond_to?(:statistical_method_term_uri) ? meta&.statistical_method_term_uri : nil,
       meta.respond_to?(:source) ? meta.source : nil
     ]
   end
