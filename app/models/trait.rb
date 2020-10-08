@@ -54,15 +54,15 @@ class Trait < ApplicationRecord
   end
 
   def sex
-    sex_term&.uri
+    sex_term_uri
   end
 
   def lifestage
-    lifestage_term&.uri
+    lifestage_term_uri
   end
 
   def statistical_method
-    statistical_method_term&.uri
+    statistical_method_term_uri
   end
 
   def object_page_id
@@ -74,7 +74,7 @@ class Trait < ApplicationRecord
   end
 
   def value_uri
-    object_term&.uri
+    object_term_uri
   end
 
   def units

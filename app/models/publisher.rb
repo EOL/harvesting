@@ -544,16 +544,16 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif SKIP_METADATA_PRED_URIS.include?(meta.predicate_term&.uri)
+    elsif SKIP_METADATA_PRED_URIS.include?(meta.predicate_term_uri)
       return nil # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in ResourceHarvester#resolve_trait_keys)
-    elsif (meta_mapping = moved_meta[meta.predicate_term&.uri])
+    elsif (meta_mapping = moved_meta[meta.predicate_term_uri])
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
       trait.send("#{meta_mapping[:to]}=", value)
       return nil # Don't record this one.
     else
       literal = meta.literal
-      predicate = meta.predicate_term&.uri
+      predicate = meta.predicate_term_uri
     end
     # q.v.: @meta_heads for order, here:
     [

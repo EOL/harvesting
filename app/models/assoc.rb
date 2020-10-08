@@ -41,11 +41,11 @@ class Assoc < ApplicationRecord
   end
 
   def sex
-    sex_term&.uri
+    sex_term_uri
   end
 
   def lifestage
-    lifestage_term&.uri
+    lifestage_term_uri
   end
 
   def statistical_method
