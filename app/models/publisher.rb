@@ -493,7 +493,7 @@ class Publisher
   def trait_map(node_ids)
     @traits = {}
     Trait.primary.published.matched.where(node_id: node_ids)
-         .includes(property_fields,
+         .includes(:references,
                    children: :references,
                    occurrence: { occurrence_metadata: :references },
                    node: :scientific_name,
@@ -506,7 +506,7 @@ class Publisher
   def assoc_map(node_ids)
     @assocs = {}
     Assoc.published.where(node_id: node_ids)
-         .includes(:predicate_term, :sex_term, :lifestage_term, :references, :meta_assocs,
+         .includes(:references, :meta_assocs,
                    occurrence: :occurrence_metadata,
                    node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
                      @assocs[assoc.id] = assoc
