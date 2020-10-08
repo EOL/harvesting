@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_12_174303) do
+ActiveRecord::Schema.define(version: 2020_10_08_162730) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -64,7 +64,7 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.integer "resource_id", null: false
     t.integer "harvest_id", null: false
     t.integer "trait_id"
-    t.integer "predicate_term_id", null: false
+    t.integer "predicate_term_id"
     t.integer "object_term_id"
     t.integer "units_term_id"
     t.integer "statistical_method_term_id"
@@ -73,6 +73,10 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.string "measurement"
     t.text "literal"
     t.text "source"
+    t.string "predicate_term_uri"
+    t.string "object_term_uri"
+    t.string "units_term_uri"
+    t.string "statistical_method_term_uri"
     t.index ["harvest_id", "trait_resource_pk"], name: "index_assoc_traits_on_harvest_id_and_trait_resource_pk"
     t.index ["harvest_id"], name: "index_assoc_traits_on_harvest_id"
     t.index ["resource_id"], name: "index_assoc_traits_on_resource_id"
@@ -82,7 +86,7 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.integer "resource_id", null: false
     t.integer "harvest_id", null: false
     t.integer "removed_by_harvest_id"
-    t.integer "predicate_term_id", null: false
+    t.integer "predicate_term_id"
     t.integer "node_id"
     t.integer "target_node_id"
     t.integer "sex_term_id"
@@ -95,6 +99,9 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.datetime "updated_at", null: false
     t.integer "occurrence_id"
     t.integer "target_occurrence_id"
+    t.string "predicate_term_uri"
+    t.string "sex_term_uri"
+    t.string "lifestage_term_uri"
     t.index ["harvest_id"], name: "index_assocs_on_harvest_id"
     t.index ["node_id"], name: "index_assocs_on_node_id"
     t.index ["occurrence_id"], name: "index_assocs_on_occurrence_id"
@@ -421,7 +428,7 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.integer "harvest_id", null: false
     t.integer "removed_by_harvest_id"
     t.integer "assoc_id"
-    t.integer "predicate_term_id", null: false
+    t.integer "predicate_term_id"
     t.integer "object_term_id"
     t.integer "units_term_id"
     t.integer "statistical_method_term_id"
@@ -437,7 +444,7 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.integer "harvest_id", null: false
     t.integer "removed_by_harvest_id"
     t.integer "trait_id"
-    t.integer "predicate_term_id", null: false
+    t.integer "predicate_term_id"
     t.integer "object_term_id"
     t.integer "units_term_id"
     t.integer "statistical_method_term_id"
@@ -445,6 +452,10 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.string "measurement"
     t.text "literal"
     t.text "source"
+    t.string "predicate_term_uri"
+    t.string "object_term_uri"
+    t.string "units_term_uri"
+    t.string "statistical_method_term_uri"
     t.index ["harvest_id", "trait_resource_pk"], name: "index_meta_traits_on_harvest_id_and_trait_resource_pk"
     t.index ["trait_id"], name: "index_meta_traits_on_trait_id"
   end
@@ -525,6 +536,10 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.string "measurement"
     t.string "occurrence_resource_pk"
     t.text "source"
+    t.string "predicate_term_uri"
+    t.string "object_term_uri"
+    t.string "units_term_uri"
+    t.string "statistical_method_term_uri"
     t.index ["harvest_id", "occurrence_resource_pk"], name: "index_occurrence_metadata_on_harvest_id_and_occurrence_resourc"
     t.index ["harvest_id", "resource_pk"], name: "index_occurrence_metadata_on_harvest_id_and_resource_pk"
     t.index ["harvest_id"], name: "index_occurrence_metadata_on_harvest_id"
@@ -538,6 +553,8 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.string "sex_term_id"
     t.string "lifestage_term_id"
     t.integer "resource_id"
+    t.string "sex_term_uri"
+    t.string "lifestage_term_uri"
     t.index ["harvest_id", "node_resource_pk"], name: "index_occurrences_on_harvest_id_and_node_resource_pk"
     t.index ["harvest_id"], name: "index_occurrences_on_harvest_id"
     t.index ["resource_pk"], name: "index_occurrences_on_resource_pk"
@@ -721,7 +738,7 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.integer "parent_id"
     t.integer "harvest_id", null: false
     t.integer "node_id"
-    t.integer "predicate_term_id", null: false
+    t.integer "predicate_term_id"
     t.integer "object_term_id"
     t.integer "units_term_id"
     t.integer "statistical_method_term_id"
@@ -735,14 +752,17 @@ ActiveRecord::Schema.define(version: 2020_03_12_174303) do
     t.string "resource_pk", null: false
     t.string "measurement"
     t.text "literal"
-    t.text "source"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "occurrence_id"
     t.string "normal_units_uri"
     t.string "normal_measurement"
-    t.text "sample_size", comment: "http://eol.org/schema/terms/SampleSize"
-    t.text "citation", comment: "http://purl.org/dc/terms/bibliographicCitation"
+    t.string "predicate_term_uri"
+    t.string "object_term_uri"
+    t.string "units_term_uri"
+    t.string "statistical_method_term_uri"
+    t.string "sex_term_uri"
+    t.string "lifestage_term_uri"
     t.index ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk"
     t.index ["harvest_id", "resource_pk"], name: "index_traits_on_harvest_id_and_resource_pk"
     t.index ["harvest_id"], name: "index_traits_on_harvest_id"
