@@ -15,7 +15,20 @@ class Medium < ApplicationRecord
 
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
   enum subclass: %i[image video sound map_image js_map]
-  enum format: %i[jpg youtube flash vimeo mp3 ogg wav mp4 ogv mov svg webm]
+  enum format: {
+    jpg: 0, 
+    youtube: 1, 
+    flash: 2, # deprecated
+    vimeo: 3,
+    mp3: 4, 
+    ogg: 5,
+    wav: 6,
+    mp4: 7, 
+    ogv: 8,
+    mov: 9, # deprecated
+    svg: 10, 
+    webm: 11
+  }
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where('base_url IS NULL') }
@@ -75,9 +88,27 @@ class Medium < ApplicationRecord
     '%02x' % (mod % Medium.bucket_size)
   end
 
+  def embedded_video?
+    youtube? || vimeo?
+  end
+
   def default_base_url
     "#{path}/#{basename}"
   end
+
+  def default_unmodified_url
+    if embedded_video?
+      ''
+    else
+      "#{default_base_url}.#{file_ext}"
+    end
+  end
+
+  def file_ext
+    raise TypeError, "file_ext undefined for embedded videos" if embedded_video?
+    format
+  end
+
 
   def basename
     "#{resource_id}.#{resource_pk&.tr('^-_A-Za-z0-9', '_')}"
