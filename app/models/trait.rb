@@ -85,7 +85,10 @@ class Trait < ApplicationRecord
     uri = send(method)
     return nil if uri.blank?
 
-    EolTerms.by_uri(uri)
+    term = EolTerms.by_uri(uri)
+    return nil unless term.is_a?(Hash)
+
+    term['uri']
   end
 
   def convert_measurement

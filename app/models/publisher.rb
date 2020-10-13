@@ -580,7 +580,10 @@ class Publisher
     uri = meta.send(method)
     return nil if uri.blank?
 
-    EolTerms.by_uri(uri)
+    term = EolTerms.by_uri(uri)
+    return nil unless term.is_a?(Hash)
+
+    term['uri']
   end
 
   def moved_meta_map
