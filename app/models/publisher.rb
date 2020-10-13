@@ -543,16 +543,20 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif SKIP_METADATA_PRED_URIS.include?(meta.predicate_term_uri)
-      return nil # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in ResourceHarvester#resolve_trait_keys)
+    elsif SKIP_METADATA_PRED_URIS.include?(eol_terms_uri(meta, :predicate_term_uri))
+      # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in
+      # ResourceHarvester#resolve_trait_keys)
+      return nil
+
     elsif (meta_mapping = moved_meta[meta.predicate_term_uri])
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
       trait.send("#{meta_mapping[:to]}=", value)
       return nil # Don't record this one.
+
     else
       literal = meta.literal
-      predicate = meta.predicate_term_uri
+      predicate = eol_terms_uri(meta, :predicate_term_uri)
     end
     # q.v.: @meta_heads for order, here:
     [
@@ -561,13 +565,22 @@ class Publisher
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
-      meta.respond_to?(:object_term_uri) ? meta&.object_term_uri : nil,
-      meta.respond_to?(:units_term_uri) ? meta&.units_term_uri : nil,
-      meta.respond_to?(:sex_term_uri) ? meta&.sex_term_uri : nil,
-      meta.respond_to?(:lifestage_term_uri) ? meta&.lifestage_term_uri : nil,
-      meta.respond_to?(:statistical_method_term_uri) ? meta&.statistical_method_term_uri : nil,
-      meta.respond_to?(:source) ? meta.source : nil
+      eol_terms_uri(meta, :object_term_uri),
+      eol_terms_uri(meta, :units_term_uri),
+      eol_terms_uri(meta, :sex_term_uri),
+      eol_terms_uri(meta, :lifestage_term_uri),
+      eol_terms_uri(meta, :statistical_method_term_uri),
+      eol_terms_uri(meta, :source)
     ]
+  end
+
+  def eol_terms_uri(meta, method)
+    return nil unless meta.respond_to?(method)
+
+    uri = meta.send(method)
+    return nil if uri.blank?
+
+    EolTerms.by_uri(uri)
   end
 
   def moved_meta_map
