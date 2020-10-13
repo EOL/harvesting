@@ -37,15 +37,15 @@ class Assoc < ApplicationRecord
   end
 
   def predicate
-    eol_terms_uri(:predicate_term_uri)
+    UrisAreEolTerms.new(self).uri(:predicate_term_uri)
   end
 
   def sex
-    eol_terms_uri(:sex_term_uri)
+    UrisAreEolTerms.new(self).uri(:sex_term_uri)
   end
 
   def lifestage
-    eol_terms_uri(:lifestage_term_uri)
+    UrisAreEolTerms.new(self).uri(:lifestage_term_uri)
   end
 
   def statistical_method
@@ -82,15 +82,5 @@ class Assoc < ApplicationRecord
 
   def normal_measurement
     nil
-  end
-
-  def eol_terms_uri(method)
-    uri = send(method)
-    return nil if uri.blank?
-
-    term = EolTerms.by_uri(uri)
-    return nil unless term.is_a?(Hash)
-
-    term['uri']
   end
 end

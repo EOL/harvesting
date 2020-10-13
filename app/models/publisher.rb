@@ -543,7 +543,7 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif SKIP_METADATA_PRED_URIS.include?(eol_terms_uri(meta, :predicate_term_uri))
+    elsif SKIP_METADATA_PRED_URIS.include?(UrisAreEolTerms.new(meta).uri(:predicate_term_uri))
       # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in
       # ResourceHarvester#resolve_trait_keys)
       return nil
@@ -556,7 +556,7 @@ class Publisher
 
     else
       literal = meta.literal
-      predicate = eol_terms_uri(meta, :predicate_term_uri)
+      predicate = UrisAreEolTerms.new(meta).uri(:predicate_term_uri)
     end
     # q.v.: @meta_heads for order, here:
     [
@@ -565,25 +565,13 @@ class Publisher
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
-      eol_terms_uri(meta, :object_term_uri),
-      eol_terms_uri(meta, :units_term_uri),
-      eol_terms_uri(meta, :sex_term_uri),
-      eol_terms_uri(meta, :lifestage_term_uri),
-      eol_terms_uri(meta, :statistical_method_term_uri),
-      eol_terms_uri(meta, :source)
+      UrisAreEolTerms.new(meta).uri(:object_term_uri),
+      UrisAreEolTerms.new(meta).uri(:units_term_uri),
+      UrisAreEolTerms.new(meta).uri(:sex_term_uri),
+      UrisAreEolTerms.new(meta).uri(:lifestage_term_uri),
+      UrisAreEolTerms.new(meta).uri(:statistical_method_term_uri),
+      UrisAreEolTerms.new(meta).uri(:source)
     ]
-  end
-
-  def eol_terms_uri(meta, method)
-    return nil unless meta.respond_to?(method)
-
-    uri = meta.send(method)
-    return nil if uri.blank?
-
-    term = EolTerms.by_uri(uri)
-    return nil unless term.is_a?(Hash)
-
-    term['uri']
   end
 
   def moved_meta_map

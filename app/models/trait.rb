@@ -50,19 +50,19 @@ class Trait < ApplicationRecord
   end
 
   def predicate
-    eol_terms_uri(:predicate_term_uri)
+    UrisAreEolTerms.new(self).uri(:predicate_term_uri)
   end
 
   def sex
-    eol_terms_uri(:sex_term_uri)
+    UrisAreEolTerms.new(self).uri(:sex_term_uri)
   end
 
   def lifestage
-    eol_terms_uri(:lifestage_term_uri)
+    UrisAreEolTerms.new(self).uri(:lifestage_term_uri)
   end
 
   def statistical_method
-    eol_terms_uri(:statistical_method_term_uri)
+    UrisAreEolTerms.new(self).uri(:statistical_method_term_uri)
   end
 
   def object_page_id
@@ -74,21 +74,11 @@ class Trait < ApplicationRecord
   end
 
   def value_uri
-    eol_terms_uri(:object_term_uri)
+    UrisAreEolTerms.new(self).uri(:object_term_uri)
   end
 
   def units
-    eol_terms_uri(:units_term_uri)
-  end
-
-  def eol_terms_uri(method)
-    uri = send(method)
-    return nil if uri.blank?
-
-    term = EolTerms.by_uri(uri)
-    return nil unless term.is_a?(Hash)
-
-    term['uri']
+    UrisAreEolTerms.new(self).uri(:units_term_uri)
   end
 
   def convert_measurement
