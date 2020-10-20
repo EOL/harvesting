@@ -247,7 +247,7 @@ class Publisher
     val = src.dup
     if val.respond_to?(:gsub!)
       val.gsub!("\t", '&nbsp;') # Sorry, no tabs allowed.
-      val.gsub!('"', '&quot;')  # This may cause some display issues, so we should probably restore then on import.
+      val.gsub!('"', '\\"')  # This may cause some display issues, so we should probably restore then on import.
     end
     val = 1 if val.class == TrueClass
     val = 0 if val.class == FalseClass
