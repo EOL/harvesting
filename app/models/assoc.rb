@@ -16,7 +16,7 @@ class Assoc < ApplicationRecord
   has_many :references, through: :assocs_references
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
-  
+
   # These are used during the CSV-writing stage of pre-publishing (copied from Trait)
   attr_accessor :sample_size, :citation, :remarks, :method
 
@@ -37,15 +37,15 @@ class Assoc < ApplicationRecord
   end
 
   def predicate
-    predicate_term.uri
+    UrisAreEolTerms.new(self).uri(:predicate_term_uri)
   end
 
   def sex
-    sex_term&.uri
+    UrisAreEolTerms.new(self).uri(:sex_term_uri)
   end
 
   def lifestage
-    lifestage_term&.uri
+    UrisAreEolTerms.new(self).uri(:lifestage_term_uri)
   end
 
   def statistical_method

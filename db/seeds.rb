@@ -27,8 +27,6 @@ else
   puts "NO datasets file found (#{file}), skipping. Your names attributions may be missing."
 end
 
-Term.from_file(Rails.public_path.join('data', 'terms.json'), flush: true)
-
 eol_attrs = {
   name: 'Encyclopedia of Life',
   abbr: 'EOL',

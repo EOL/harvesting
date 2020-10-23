@@ -176,7 +176,7 @@ module Store
       end
 
       delete_extra_medium_fields
-      
+
       @models[:medium][:resource_pk] = fake_pk(:medium) unless @models[:medium][:resource_pk]
       raise 'MISSING TAXA IDENTIFIER (FK) FOR MEDIUM!' unless @models[:medium][:node_resource_pk]
       @models[:medium][:resource_id] = @resource.id
@@ -306,20 +306,19 @@ module Store
       meta = @models[:occurrence].delete(:meta) || {}
       if @models[:occurrence][:sex]
         sex = @models[:occurrence].delete(:sex)
-        @models[:occurrence][:sex_term_id] = find_or_create_term(sex, type: 'sex').try(:id)
+        @models[:occurrence][:sex_term_uri] = fail_on_bad_uri(sex)
       end
       if @models[:occurrence][:lifestage]
         lifestage = @models[:occurrence].delete(:lifestage)
-        @models[:occurrence][:lifestage_term_id] = find_or_create_term(lifestage, type: 'lifestage').try(:id)
+        @models[:occurrence][:lifestage_term_uri] = fail_on_bad_uri(lifestage)
       end
       # TODO: there are some other normalizations and checks we should do here, # I expect.
       prepare_model_for_store(Occurrence, @models[:occurrence])
       meta.each do |key, value|
         datum = {}
         datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
-        predicate_term = find_or_create_term(key, type: 'meta-predicate')
-        datum[:predicate_term_id] = predicate_term.id
-        datum = convert_meta_value(datum, value, predicate: predicate_term)
+        datum[:predicate_term_uri] = fail_on_bad_uri(key)
+        datum = convert_meta_value(datum, value)
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum.delete(:source) # TODO: we should allow (and show) this. :S
@@ -330,6 +329,7 @@ module Store
     def build_trait
       parent = @models[:trait][:parent_pk]
       occurrence = @models[:trait][:occurrence_resource_pk]
+      dup_model = @models[:trait].dup # TEMP:
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon] && parent
@@ -348,17 +348,24 @@ module Store
       # 368000 grams on its basal metabolic rate of 113712 mL/hr O2.
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?  # Convenience flag to denote occurrence metadata.
       predicate = @models[:trait].delete(:predicate)
-      predicate_term = find_or_create_term(predicate, type: 'predicate')
-      @models[:trait][:predicate_term_id] = predicate_term.id
+      puts "PREDICATE: #{predicate}"
+      @models[:trait][:predicate_term_uri] = fail_on_bad_uri(predicate)
+      puts "PRED URI: #{@models[:trait][:predicate_term_uri]}"
       units = @models[:trait].delete(:units)
-      units_term = find_or_create_term(units, type: 'units')
-      @models[:trait][:units_term_id] = units_term.try(:id)
+      @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
 
-      @models[:trait] = convert_trait_value(@models[:trait], predicate: predicate_term)
+      # TEMP:
+      begin
+        @models[:trait] = convert_trait_value(@models[:trait], predicate: @models[:trait][:predicate_term_uri])
+      rescue => e
+        puts "Failed to convert value for #{@models[:trait][:predicate_term_uri]}"
+        pp dup_model
+        raise e
+      end
 
       if @models[:trait][:statistical_method]
         stat_m = @models[:trait].delete(:statistical_method)
-        @models[:trait][:statistical_method_term_id] = find_or_create_term(stat_m, type: 'statistical method').try(:id)
+        @models[:trait][:statistical_method_term_uri] = fail_on_bad_uri(stat_m)
       end
       meta = @models[:trait].delete(:meta) || {}
       klass = Trait
@@ -374,9 +381,8 @@ module Store
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum[:trait_resource_pk] = trait.resource_pk unless occ_meta
-        predicate_term = find_or_create_term(key, type: 'meta-predicate')
-        datum[:predicate_term_id] = predicate_term.id
-        datum = convert_meta_value(datum, value, predicate: predicate_term)
+        datum[:predicate_term_uri] = fail_on_bad_uri(key)
+        datum = convert_meta_value(datum, value)
         klass = MetaTrait
         if !@models[:trait][:of_taxon] && parent.blank?
           klass = OccurrenceMetadatum
@@ -391,8 +397,7 @@ module Store
       @models[:assoc][:resource_id] = @resource.id
       @models[:assoc][:harvest_id] = @harvest.id
       predicate = @models[:assoc].delete(:predicate)
-      predicate_term = find_or_create_term(predicate, type: 'predicate')
-      @models[:assoc][:predicate_term_id] = predicate_term.id
+      @models[:assoc][:predicate_term_uri] = fail_on_bad_uri(predicate)
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:assoc, AssocsReference)
@@ -402,12 +407,11 @@ module Store
       assoc = prepare_model_for_store(Assoc, @models[:assoc])
       meta.each do |key, value|
         datum = {}
-        predicate_term = find_or_create_term(key, type: 'meta-predicate')
-        datum[:predicate_term_id] = predicate_term.id
+        datum[:predicate_term_uri] = fail_on_bad_uri(key)
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
         datum[:assoc_resource_fk] = assoc.resource_pk
-        datum = convert_meta_value(datum, value, predicate: predicate_term)
+        datum = convert_meta_value(datum, value)
         prepare_model_for_store(MetaAssoc, datum)
       end
     end
@@ -489,20 +493,18 @@ module Store
 
     def convert_trait_value(instance, options = {})
       value = instance.delete(:value)
-      if options[:predicate]&.is_verbatim_only?
+      if options[:predicate] && EolTerms.by_uri(options[:predicate])['is_text_only']
         instance[:literal] = value
         return instance
       end
       if Term.uri?(value)
-        object_term = find_or_create_term(value, type: 'value')
-        instance[:object_term_id] = object_term.id
+        instance[:object_term_uri] = fail_on_bad_uri(value)
       end
       # NOTE we have to check both for units AND for a numeric value to see if it's "numeric"
       if instance[:units] || (!Float(value&.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
         units = instance.delete(:units)
         if Term.uri?(units)
-          units_term = find_or_create_term(units, type: 'units')
-          instance[:units_term_id] = units_term.id
+          instance[:units_term_uri] = fail_on_bad_uri(units)
         elsif !units.blank?
           raise("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
 
@@ -519,37 +521,24 @@ module Store
 
     # Simpler:
     def convert_meta_value(datum, value, options = {})
-      if options[:predicate]&.is_verbatim_only?
+      if datum[:predicate_term_uri] && EolTerms.by_uri(datum[:predicate_term_uri])['is_text_only']
         datum[:literal] = value
         return datum
       end
       if Term.uri?(value)
-        object_term = find_or_create_term(value, type: 'meta-value')
-        datum[:object_term_id] = object_term.id
+        datum[:object_term_uri] = fail_on_bad_uri(value)
       else
         datum[:literal] = value
       end
       datum
     end
 
-    def find_or_create_term(uri, options = {})
+    def fail_on_bad_uri(uri)
       return nil if uri.blank?
-      # TODO: again, this is slow to do one-at-a-time. We should get a full list
-      # and query for all of them:
-      term = @terms[uri] || Term.where(uri: uri).first
-      if term.nil?
-        # Quick and dirty. A Human will have to do better later:
-        name = uri.gsub(%r{^.*/}, '').gsub(/[^A-Za-z0-9]+/, ' ')
-        term = Term.create(
-          uri: uri, name: name, definition: I18n.t('terms.auto_created'),
-          comment: "Auto-added during harvest ##{@harvest.id}. A human needs to edit this.",
-          attribution: @resource.name, is_hidden_from_overview: true,
-          is_hidden_from_glossary: true
-        )
-        # TODO: This isn't necessarily a problem with the measurements file; it could be the occurrences. :S
-        @process.warn("Created #{options[:type] || '(unspecified type of)'} term for #{uri}!")
-      end
-      term
+
+      raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri.downcase)
+
+      uri.downcase # This is perhaps SLIGHTLY dangerous, but: URIs are SUPPOSED to be case-insensitive!
     end
 
     def find_or_create_language(lang_code)

@@ -134,15 +134,14 @@
     - @node.traits.published.each do |trait|
       .item
         = trait.predicate_term.name
-        = "(#{trait.predicate_term.uri})"
+        = "(#{trait.predicate_term_uri})"
         &rarr;
         - if trait.object_term
           = trait.object_term.name
-          = "(#{trait.object_term.uri})"
-        - elsif trait.units_term
+          = "(#{trait.object_term_uri})"
+        - elsif trait.units_term_uri
           = trait.measurement
-          = trait.units_term.name
-          = "(#{trait.units_term.uri})"
+          = trait.units_term_uri
         - else
           = trait.literal
           (literal value)
@@ -155,7 +154,7 @@
     - @node.assocs.published.each do |assoc|
       .item
         = assoc.predicate_term.name
-        = "(#{assoc.predicate_term.uri})"
+        = "(#{assoc.predicate_term_uri})"
         &rarr;
         - if assoc.target_node
           = link_to(assoc.target_node.name, assoc.target_node)

@@ -71,7 +71,7 @@ class Resource
     end
 
     def create_resource(noko)
-      name = strip_string(noko.css('h1').first.text)
+      name = strip_string(noko.css('h1')&.first&.text)
       # Lots of names are super-lame. In those cases, let's just re-use the partner name:
       name = strip_string(noko.css('.breadcrumb li a')[-2].text) if name.match?(/resource/i)
       abbr = abbreviate(name)

@@ -70,37 +70,35 @@ class ResourceHarvester
     @process = LoggedProcess.new(@resource)
     Searchkick.disable_callbacks
     @resource.lock do
-      begin
-        fast_forward = @harvest && !@harvest.stage.nil?
-        Harvest.stages.each_key do |stage|
-          if fast_forward && harvest.stage != stage
-            @process.info("Already completed stage #{stage}, skipping...")
-            next
-          # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
-          elsif Harvest.where(resource_id: @resource.id).running.count > 1
-            harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
-            raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
-          end
-          fast_forward = false
-          @harvest.send("#{stage}!") if @harvest # there isn't a @harvest on the first step.
-          @process.run_step(stage) { send(stage) }
+      fast_forward = @harvest && !@harvest.stage.nil?
+      Harvest.stages.each_key do |stage|
+        if fast_forward && harvest.stage != stage
+          @process.info("Already completed stage #{stage}, skipping...")
+          next
+        # NOTE I'm not calling @resource.harvests here, since I want the query to run, not use cache:
+        elsif Harvest.where(resource_id: @resource.id).running.count > 1
+          harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
+          raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
         end
-      rescue Lockfile::TimeoutLockError => e
-        log_err(Exception.new('Already running!'))
-      rescue => e
-        @resource.stop_adding_media_jobs if @resource
-        log_err(e)
-      ensure
-        Searchkick.enable_callbacks
-        time = @process.exit
-        @harvest.update_attribute(:time_in_minutes, (time / 60.0).ceil) unless fast_forward
+        fast_forward = false
+        @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
+        @process.run_step(stage) { send(stage) }
       end
+    rescue Lockfile::TimeoutLockError => e
+      log_err(Exception.new('Already running!'))
+    rescue => e
+      @resource&.stop_adding_media_jobs
+      log_err(e)
+    ensure
+      Searchkick.enable_callbacks
+      time = @process.exit
+      @harvest.update_attribute(:time_in_minutes, (time / 60.0).ceil) unless fast_forward
     end
   end
 
   def log_err(e)
     @process.fail(e)
-    @harvest.fail if @harvest
+    @harvest&.fail
     raise e
   end
 
@@ -111,9 +109,8 @@ class ResourceHarvester
 
   # grab the file from each format
   def fetch_files
-    unless @resource.any_files_changed?
-      raise 'No files have changed!'
-    end
+    raise 'No files have changed!' unless @resource.any_files_changed?
+
     # TODO: we should compress the files.
     # https://stackoverflow.com/questions/9204423/how-to-unzip-a-file-in-ruby-on-rails
     Harvest::Fetcher.fetch_format_files(@harvest)
@@ -156,6 +153,7 @@ class ResourceHarvester
     @format.fields.each_with_index do |field, i|
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
+
       actual_header = strip_quotes(@headers[i])
       unless strip_quotes(field.expected_header).downcase == actual_header.downcase
         raise(Exceptions::ColumnMismatch, "COLUMN MISMATCH: #{@format.represents} expected "\
@@ -188,6 +186,7 @@ class ResourceHarvester
   def check_header(csv_row, fields, row, header)
     check = fields[header]
     return unless check
+
     val = row[header]
     if val.blank?
       unless check.can_be_empty?
@@ -231,7 +230,7 @@ class ResourceHarvester
       cmd = "/usr/bin/sort #{path} > #{path}_sorted"
       @process.cmd(cmd)
       # NOTE: the LC_ALL fixes a problem with unicode characters.
-      if system({'LC_ALL' => 'C'}, cmd)
+      if system({ 'LC_ALL' => 'C' }, cmd)
         FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
       else
         raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
@@ -241,6 +240,7 @@ class ResourceHarvester
 
   def uri_exists?(uri)
     return true if @uris.key?(uri)
+
     if Term.where(uri: uri).exists?
       @uris[uri] = true
     else
@@ -271,7 +271,7 @@ class ResourceHarvester
     cmd = "/usr/bin/diff #{old_fmt.converted_csv_path} "\
       "#{@format.converted_csv_path} > #{@format.diff}"
     # TODO: We can't trust the exit code! diff exits 0 if the files are the same, and 1 if not.
-    run_cmd(cmd, {'LC_ALL' => 'C'})
+    run_cmd(cmd, { 'LC_ALL' => 'C' })
   end
 
   def fake_diff_from_nothing
@@ -361,14 +361,14 @@ class ResourceHarvester
   end
 
   def find_orphan_parent_nodes
-    # TODO - if the resource gave us parent IDs, we *could* have unresolved ids that we need to flag.
+    # TODO: if the resource gave us parent IDs, we *could* have unresolved ids that we need to flag.
   end
 
   def find_duplicate_nodes
-    # TODO - look for shared parents and primary keys.
+    # TODO: look for shared parents and primary keys.
   end
 
-  # TODO - extract to Store::Storage
+  # TODO: extract to Store::Storage
   def store_new
     @new.each do |klass, models|
       size = models.size

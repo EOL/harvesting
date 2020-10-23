@@ -29,11 +29,6 @@ Rails.application.routes.draw do
     resources :assocs, only: [:index]
     resources :vernaculars, only: [:index]
   end
-  resources :terms do
-    get :new_bulk, on: :collection
-    post :bulk_import, on: :collection
-    get :search, on: :collection
-  end
   resources :traits, only: [:show]
 
   get "/service/page_id_map/:resource_id" => "service/page_id_map#get", as: "page_id_map", defaults: { format: 'csv' }

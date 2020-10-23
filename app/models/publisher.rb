@@ -247,7 +247,6 @@ class Publisher
     val = src.dup
     if val.respond_to?(:gsub!)
       val.gsub!("\t", '&nbsp;') # Sorry, no tabs allowed.
-      val.gsub!('"', '&quot;')  # This may cause some display issues, so we should probably restore then on import.
     end
     val = 1 if val.class == TrueClass
     val = 0 if val.class == FalseClass
@@ -463,8 +462,6 @@ class Publisher
 
     @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
-    @simple_meta_fields = %i[predicate_term object_term]
-    @meta_fields = @simple_meta_fields + %i[units_term statistical_method_term]
     node_ids = nodes.map(&:id)
     trait_map(node_ids)
     assoc_map(node_ids)
@@ -490,13 +487,10 @@ class Publisher
 
   def trait_map(node_ids)
     @traits = {}
-    property_fields = @meta_fields + %i[sex_term lifestage_term references]
     Trait.primary.published.matched.where(node_id: node_ids)
-         .includes(property_fields,
-                   children: @meta_fields,
-                   occurrence: { occurrence_metadata: @meta_fields },
-                   node: :scientific_name,
-                   meta_traits: @meta_fields).find_each do |trait|
+         .includes(:references, :meta_traits,
+                   children: :references, occurrence: :occurrence_metadata,
+                   node: :scientific_name).find_each do |trait|
                      @traits[trait.id] = trait
                    end
     @process.info("#{@traits.size} Traits (filtered)...")
@@ -504,12 +498,10 @@ class Publisher
 
   def assoc_map(node_ids)
     @assocs = {}
-    assoc_meta_fields = @simple_meta_fields + %i[units_term]
     Assoc.published.where(node_id: node_ids)
-         .includes(:predicate_term, :sex_term, :lifestage_term, :references,
-                   occurrence: { occurrence_metadata: @meta_fields },
-                   node: :scientific_name, target_node: :scientific_name,
-                   meta_assocs: assoc_meta_fields).find_each do |assoc|
+         .includes(:references, :meta_assocs,
+                   occurrence: :occurrence_metadata,
+                   node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
                      @assocs[assoc.id] = assoc
                    end
     @process.info("#{@assocs.size} Associations (filtered)...")
@@ -546,16 +538,20 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif SKIP_METADATA_PRED_URIS.include?(meta.predicate_term&.uri)
-      return nil # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in ResourceHarvester#resolve_trait_keys)
-    elsif (meta_mapping = moved_meta[meta.predicate_term&.uri])
+    elsif SKIP_METADATA_PRED_URIS.include?(UrisAreEolTerms.new(meta).uri(:predicate_term_uri))
+      # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in
+      # ResourceHarvester#resolve_trait_keys)
+      return nil
+
+    elsif (meta_mapping = moved_meta[meta.predicate_term_uri])
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
       trait.send("#{meta_mapping[:to]}=", value)
       return nil # Don't record this one.
+
     else
       literal = meta.literal
-      predicate = meta.predicate_term&.uri
+      predicate = UrisAreEolTerms.new(meta).uri(:predicate_term_uri)
     end
     # q.v.: @meta_heads for order, here:
     [
@@ -564,12 +560,12 @@ class Publisher
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
-      meta.respond_to?(:object_term) ? meta.object_term&.uri : nil,
-      meta.respond_to?(:units_term) ? meta.units_term&.uri : nil,
-      meta.respond_to?(:sex_term) ? meta.sex_term&.uri : nil,
-      meta.respond_to?(:lifestage_term) ? meta.lifestage_term&.uri : nil,
-      meta.respond_to?(:statistical_method_term) ? meta.statistical_method_term&.uri : nil,
-      meta.respond_to?(:source) ? meta.source : nil
+      UrisAreEolTerms.new(meta).uri(:object_term_uri),
+      UrisAreEolTerms.new(meta).uri(:units_term_uri),
+      UrisAreEolTerms.new(meta).uri(:sex_term_uri),
+      UrisAreEolTerms.new(meta).uri(:lifestage_term_uri),
+      UrisAreEolTerms.new(meta).uri(:statistical_method_term_uri),
+      UrisAreEolTerms.new(meta).uri(:source)
     ]
   end
 
