@@ -1,7 +1,7 @@
 # An measurement formed by combining a 'measurment or fact' with an 'occurrence'.
 class Trait < ApplicationRecord
   # These are used during the CSV-writing stage of pre-publishing:
-  attr_accessor :sample_size, :citation, :source, :remarks, :method
+  attr_accessor :remarks, :method
 
   belongs_to :parent, inverse_of: :children, class_name: 'Trait', foreign_key: 'parent_id'
   belongs_to :resource, inverse_of: :traits

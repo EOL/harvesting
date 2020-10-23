@@ -36,7 +36,7 @@ class Publisher
     @locs = {} # This will store ALL of the locations (the acutal values), and will persist.
     @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
     @limit = 10_000
-    @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method source
+    @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method
                       object_page_id target_scientific_name value_uri literal measurement units normal_measurement
                       normal_units_uri sample_size citation source remarks method]
     @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage

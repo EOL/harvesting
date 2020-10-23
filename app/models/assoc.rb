@@ -18,7 +18,7 @@ class Assoc < ApplicationRecord
   scope :published, -> { where(removed_by_harvest_id: nil) }
   
   # These are used during the CSV-writing stage of pre-publishing (copied from Trait)
-  attr_accessor :sample_size, :citation, :source, :remarks, :method
+  attr_accessor :sample_size, :citation, :remarks, :method
 
   def metadata
     (meta_assocs + references + occurrence.occurrence_metadata).compact
