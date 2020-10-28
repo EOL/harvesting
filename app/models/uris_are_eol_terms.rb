@@ -4,6 +4,7 @@ class UrisAreEolTerms
   end
 
   def uri(method)
+    return nil if @klass.nil? # Sometimes we ask for a non-existent occurrence!
     return nil unless @klass.respond_to?(method)
 
     uri = @klass.send(method)

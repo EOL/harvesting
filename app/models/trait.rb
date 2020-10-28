@@ -54,11 +54,13 @@ class Trait < ApplicationRecord
   end
 
   def sex
-    UrisAreEolTerms.new(self).uri(:sex_term_uri)
+    UrisAreEolTerms.new(self).uri(:sex_term_uri) ||
+      UrisAreEolTerms.new(occurrence).uri(:sex_term_uri)
   end
 
   def lifestage
-    UrisAreEolTerms.new(self).uri(:lifestage_term_uri)
+    UrisAreEolTerms.new(self).uri(:lifestage_term_uri)||
+      UrisAreEolTerms.new(occurrence).uri(:lifestage_term_uri)
   end
 
   def statistical_method

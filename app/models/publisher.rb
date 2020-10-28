@@ -553,6 +553,10 @@ class Publisher
       literal = meta.literal
       predicate = UrisAreEolTerms.new(meta).uri(:predicate_term_uri)
     end
+
+    sex_term = UrisAreEolTerms.new(meta).uri(:sex_term_uri)
+    lifestage_term = UrisAreEolTerms.new(meta).uri(:lifestage_term_uri)
+
     # q.v.: @meta_heads for order, here:
     [
       "#{meta.class.name}-#{meta.id}",
@@ -562,8 +566,8 @@ class Publisher
       meta.respond_to?(:measurement) ? meta.measurement : nil,
       UrisAreEolTerms.new(meta).uri(:object_term_uri),
       UrisAreEolTerms.new(meta).uri(:units_term_uri),
-      UrisAreEolTerms.new(meta).uri(:sex_term_uri),
-      UrisAreEolTerms.new(meta).uri(:lifestage_term_uri),
+      sex_term,
+      lifestage_term,
       UrisAreEolTerms.new(meta).uri(:statistical_method_term_uri),
       UrisAreEolTerms.new(meta).uri(:source)
     ]
