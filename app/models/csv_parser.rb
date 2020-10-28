@@ -17,12 +17,14 @@ class CsvParser
   def line_at_a_time
     i = 0
     return false unless File.exist?(@path_to_file)
+
     quote = '"'
     quote = "\x00" if @col_sep == "\t" # Turns out they like to use "naked" quotes in tab-delimited files.
     @tried = {}
     begin
       CSV.foreach(@path_to_file, col_sep: @col_sep, row_sep: @row_sep, quote_char: quote, encoding: 'UTF-8') do |row|
         next if row.compact.empty?
+
         yield(row, i)
         i += 1
       end
@@ -49,6 +51,7 @@ class CsvParser
 
   def headers
     return @headers if @headers
+
     headers = []
     offset = 0
     line_at_a_time do |row, i|
@@ -57,6 +60,7 @@ class CsvParser
         next
       end
       break if i >= (@header_lines + offset)
+
       row.each_with_index do |cell, j|
         headers[j] ||= []
         headers[j] << cell&.tr("\r", ' ')&.tr("\n", ' ')
@@ -77,6 +81,7 @@ class CsvParser
     line_at_a_time do |row, i|
       offset += 1 if row.size == 1 && hash.nil?
       next if i < (@data_begins_on_line + offset)
+
       debugging = row.last == 'DEBUG'
       hash = Hash[headers.zip(row)]
       hash[:debug] = true if debugging

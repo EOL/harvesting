@@ -221,7 +221,10 @@ class ResourceHarvester
               val = strip_quotes(row[header])
               csv_row << val
             end
-            csv_row << 'DEBUG' if row[:debug]
+            if row[:debug]
+              csv_row << 'DEBUG'
+              @process.debug("DEBUGGING line #{line}")
+            end
             csv << csv_row
           end
         end

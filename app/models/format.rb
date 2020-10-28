@@ -115,17 +115,17 @@ class Format < ApplicationRecord
 
   def file_parser
     raise "File missing: #{file}" unless File.exist?(file)
-    parser =
-      if excel?
-        ExcelParser.new(file, sheet: sheet, header_lines: header_lines, data_begins_on_line: data_begins_on_line)
-      elsif csv?
-        headers = nil
-        headers = fields.map(&:expected_header) if data_begins_on_line.zero?
-        CsvParser.new(file, field_sep: field_sep, line_sep: line_sep, header_lines: header_lines,
-                            data_begins_on_line: data_begins_on_line, headers: headers)
-      else
-        raise "I don't know how to read formats of #{file_type}!"
-      end
+
+    if excel?
+      ExcelParser.new(file, sheet: sheet, header_lines: header_lines, data_begins_on_line: data_begins_on_line)
+    elsif csv?
+      headers = nil
+      headers = fields.map(&:expected_header) if data_begins_on_line.zero?
+      CsvParser.new(file, field_sep: field_sep, line_sep: line_sep, header_lines: header_lines,
+                          data_begins_on_line: data_begins_on_line, headers: headers)
+    else
+      raise "I don't know how to read formats of #{file_type}!"
+    end
   end
 
   def diff_parser
