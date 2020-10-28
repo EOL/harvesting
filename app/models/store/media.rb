@@ -127,7 +127,7 @@ module Store
       @models[:medium][:description_verbatim] = clean_string(val)
       @process.debug("Set medium description_verbatim to #{@models[:medium][:description_verbatim]}") if field.debugging
       @models[:medium][:description] = sanitize(@models[:medium][:description_verbatim])
-      @process.debug("Set medium description to #{@models[:medium][:description}") if field.debugging
+      @process.debug("Set medium description to #{@models[:medium][:description]}") if field.debugging
     end
 
     # http://rs.tdwg.org/ac/terms/accessURI (where to fetch the media file)
