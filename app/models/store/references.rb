@@ -1,27 +1,27 @@
 module Store
   module References
-    def to_refs_pk(field, val)
+    def to_refs_pk(_, val)
       @models[:reference] ||= {}
       @models[:reference][:resource_pk] = val
     end
 
-    def to_refs_body(field, val)
+    def to_refs_body(_, val)
       @models[:reference] ||= {}
       @models[:reference][:body] = remove_emojis(val)
     end
 
-    def to_refs_part(field, val)
+    def to_refs_part(_, val)
       @models[:reference] ||= {}
       @models[:reference][:parts] ||= []
       @models[:reference][:parts] << val
     end
 
-    def to_refs_url(field, val)
+    def to_refs_url(_, val)
       @models[:reference] ||= {}
       @models[:reference][:url] = val
     end
 
-    def to_refs_doi(field, val)
+    def to_refs_doi(_, val)
       @models[:reference] ||= {}
       @models[:reference][:doi] = val
     end

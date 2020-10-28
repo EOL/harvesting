@@ -77,7 +77,9 @@ class CsvParser
     line_at_a_time do |row, i|
       offset += 1 if row.size == 1 && hash.nil?
       next if i < (@data_begins_on_line + offset)
+      debugging = row.last == 'DEBUG'
       hash = Hash[headers.zip(row)]
+      hash[:debug] = true if debugging
       yield(hash, i)
     end
   end
@@ -131,6 +133,8 @@ class CsvParser
         row.first.sub!(/^< /, '')
       end
     end
-    Hash[headers.zip(row)]
+    hash = Hash[headers.zip(row)]
+    hash[:debug] = true if row.last == 'DEBUG'
+    hash
   end
 end

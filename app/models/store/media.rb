@@ -21,7 +21,10 @@ module Store
     # Sets subclass. NOT format.
     def to_media_type(field, val)
       @models[:medium] ||= {}
-      return if @models[:medium].key?(:subclass) # We've already got one.
+      if @models[:medium].key?(:subclass) # We've already got one.
+        @process.debug("Skipping media type {#{val}}; already specified.") if field.debugging
+        return
+      end
       @media_type_mappings ||= {
         'image' => :image,
         'video' => :video,
@@ -35,17 +38,23 @@ module Store
         'http://purl.org/dc/dcmitype/sound' => :sound
       }
       norm_val = val.downcase
-      type = if @media_type_mappings.key?(norm_val)
-        @media_type_mappings[norm_val]
-      else
-        @process.warn(%Q{Could not find a media type (subclass) of "#{norm_val}"}) unless
-          @missing_media_types.key?(norm_val)
-        @missing_media_types[norm_val] = true
-        nil
-      end
+      type =
+        if @media_type_mappings.key?(norm_val)
+          @media_type_mappings[norm_val]
+        else
+          @process.warn(%Q{Could not find a media type (subclass) of "#{norm_val}"}) unless
+            @missing_media_types.key?(norm_val)
+          @missing_media_types[norm_val] = true
+          nil
+        end
       @models[:medium][:original_type] = norm_val
+      @process.debug("Set original_type to #{norm_val}") if field.debugging
       @models[:medium][:subclass] = type
-      @models[:medium][:is_article] = true if type == :article
+      @process.debug("Set subclass to #{type}") if field.debugging
+      return unless type == :article
+
+      @models[:medium][:is_article] = true
+      @process.debug('Set is_article to true') if field.debugging
     end
 
     # http://rs.tdwg.org/audubon_core/subtype
@@ -80,10 +89,13 @@ module Store
                nil
              end
       @models[:medium][:original_format] = norm_val
+      @process.debug("Set medium original_format to #{norm_val}") if field.debugging
       if type == :map_image
         @models[:medium][:subclass] = type # Maps are a SUBCLASS in this code, but were a "format" in v2...
+        @process.debug("Set medium subclass to #{type}") if field.debugging
       else
         @models[:medium][:format] = type
+        @process.debug("Set medium format to #{type}") if field.debugging
       end
     end
 
@@ -100,10 +112,12 @@ module Store
     def to_media_name(field, val)
       @models[:medium] ||= {}
       @models[:medium][:name_verbatim] = clean_string(val)
+      @process.debug("Set medium name_verbatim to #{@models[:medium][:name_verbatim]}") if field.debugging
       @models[:medium][:name] = sanitize(@models[:medium][:name_verbatim])
+      @process.debug("Set medium name to #{@models[:medium][:name]}") if field.debugging
     end
 
-    def to_media_license(field, val)
+    def to_media_license(_, val)
       @models[:medium] ||= {}
       @models[:medium][:license_url] = val
     end
@@ -111,32 +125,34 @@ module Store
     def to_media_description(field, val)
       @models[:medium] ||= {}
       @models[:medium][:description_verbatim] = clean_string(val)
+      @process.debug("Set medium description_verbatim to #{@models[:medium][:description_verbatim]}") if field.debugging
       @models[:medium][:description] = sanitize(@models[:medium][:description_verbatim])
+      @process.debug("Set medium description to #{@models[:medium][:description}") if field.debugging
     end
 
     # http://rs.tdwg.org/ac/terms/accessURI (where to fetch the media file)
-    def to_media_source_url(field, val)
+    def to_media_source_url(_, val)
       @models[:medium] ||= {}
       @models[:medium][:source_url] = clean_string(val)
     end
 
     # http://rs.tdwg.org/ac/terms/furtherInformationURL (where the link accompanying the media object should point)
-    def to_media_source_page_url(field, val)
+    def to_media_source_page_url(_, val)
       @models[:medium] ||= {}
       @models[:medium][:source_page_url] = clean_string(val)
     end
 
-    def to_media_owner(field, val)
+    def to_media_owner(_, val)
       @models[:medium] ||= {}
       @models[:medium][:owner] = clean_string(val)
     end
 
-    def to_media_rights_statement(field, val)
+    def to_media_rights_statement(_, val)
       @models[:medium] ||= {}
       @models[:medium][:rights_statement] = clean_string(val)
     end
 
-    def to_media_usage_statement(field, val)
+    def to_media_usage_statement(_, val)
       @models[:medium] ||= {}
       @models[:medium][:usage_statement] = clean_string(val)
     end
@@ -144,31 +160,33 @@ module Store
     def to_media_ref_fks(field, val)
       @models[:medium] ||= {}
       @models[:medium][:ref_sep] ||= field.submapping
+      @process.debug("Set medium ref_sep to #{field.submapping}") if field.debugging
       @models[:medium][:ref_fks] = val
     end
 
     def to_media_attributions_fk(field, val)
       @models[:medium] ||= {}
       @models[:medium][:attribution_sep] ||= field.submapping
+      @process.debug("Set medium attribution_sep to #{field.submapping}") if field.debugging
       @models[:medium][:attributions] = val
     end
 
-    def to_media_lat(field, val)
+    def to_media_lat(_, val)
       @models[:location] ||= {}
       @models[:location][:lat] = val
     end
 
-    def to_media_long(field, val)
+    def to_media_long(_, val)
       @models[:location] ||= {}
       @models[:location][:long] = val
     end
 
-    def to_media_lat_literal(field, val)
+    def to_media_lat_literal(_, val)
       @models[:location] ||= {}
       @models[:location][:lat_literal] = val
     end
 
-    def to_media_long_literal(field, val)
+    def to_media_long_literal(_, val)
       @models[:location] ||= {}
       @models[:location][:long_literal] = val
     end
@@ -178,7 +196,7 @@ module Store
     # The distinction is usually explained with the example of a photographer on a mountain, with a telephoto lens,
     # photographing a mountain goat on the neighboring mountain. The first field is the location of the camera. The
     # second, the location of the goat.
-    def to_media_locality(field, val)
+    def to_media_locality(_, val)
       @models[:location] ||= {}
       @models[:location][:locality] = val
     end

@@ -106,6 +106,11 @@ class LoggedProcess
     @log.flush
   end
 
+  def debug(message)
+    @log.tagged('DEBUG') { log(message) }
+    @log.flush
+  end
+
   def warn(message)
     @log.tagged('WARN') { log(message) }
     @log.flush

@@ -29,6 +29,7 @@ module Store
       @models[:attribution] ||= {}
       @models[:attribution][:other_info] ||= {}
       @models[:attribution][:other_info][field.submapping] = val
+      @process.debug("Set other_info #{field.submapping}.") if field.debugging
     end
   end
 end

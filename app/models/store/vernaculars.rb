@@ -1,11 +1,11 @@
 module Store
   module Vernaculars
-    def to_vernacular_nodes_fk(field, val)
-      @models[:vernacular] ||= { }
+    def to_vernacular_nodes_fk(_, val)
+      @models[:vernacular] ||= {}
       @models[:vernacular][:node_resource_pk] = val
     end
 
-    def to_vernaculars_verbatim(field, val)
+    def to_vernaculars_verbatim(_, val)
       @models[:vernacular] ||= {}
       @models[:vernacular][:verbatim] = remove_emojis(val)
     end
@@ -15,21 +15,24 @@ module Store
       lang = val.dup
       lang = field.submapping if lang.blank?
       @models[:vernacular][:language_code_verbatim] = lang
+      @process.debug("Set vernacular language_code_verbatim to #{lang}") if field.debugging
     end
 
     def to_vernaculars_preferred(field, val)
       @models[:vernacular] ||= {}
-      @models[:vernacular][:is_preferred] = Store.is_truthy?(val)
+      is_preferred = Store.is_truthy?(val)
+      @process.debug("Set is_preferred to #{is_preferred} (from {#{val}})") if field.debugging
+      @models[:vernacular][:is_preferred] = is_preferred
     end
 
-    def to_vernaculars_remarks(field, val)
+    def to_vernaculars_remarks(_, val)
       @models[:vernacular] ||= {}
       @models[:vernacular][:remarks] = val
     end
 
-    def to_vernaculars_source(field, val)
+    def to_vernaculars_source(_, val)
       @models[:vernacular] ||= {}
-      @models[:vernacular][:source] = val # TODO: I actually think this is supposed to be a reference ID, but I'm not sure.
+      @models[:vernacular][:source] = val
     end
   end
 end

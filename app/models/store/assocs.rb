@@ -28,12 +28,14 @@ module Store
     def to_associations_ref_fks(field, val)
       @models[:assoc] ||= {}
       @models[:assoc][:ref_sep] ||= field.submapping
+      @process.debug("Set ref_sep to #{field.submapping}") if field.debugging
       @models[:assoc][:ref_fks] = val
     end
 
     def to_associations_meta(field, val)
       @models[:assoc] ||= {}
       @models[:assoc][:meta] ||= {}
+      @process.debug("Set meta #{field.submapping} value") if field.debugging
       @models[:assoc][:meta][field.submapping] = val
     end
 

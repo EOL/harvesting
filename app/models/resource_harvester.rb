@@ -221,6 +221,7 @@ class ResourceHarvester
               val = strip_quotes(row[header])
               csv_row << val
             end
+            csv_row << 'DEBUG' if row[:debug]
             csv << csv_row
           end
         end
@@ -252,13 +253,13 @@ class ResourceHarvester
     # TODO: really this dir name (and the one in format.rb) should be configurable
     Dir.mkdir(Rails.public_path.join('diff')) unless
       Dir.exist?(Rails.public_path.join('diff'))
-    each_format(type: :converted) do
+    each_format do
       @format.update_attribute(:diff, @format.diff_path)
       other_fmt = @previous_harvest ? @previous_harvest.formats.find { |f| f.represents == @format.represents } : nil
       @file = @format.diff # We're now reading from the diff...
       # There's no diff if the previous format failed!
       if other_fmt && File.exist?(other_fmt.converted_csv_path)
-        diff(other_fmt)
+        run_diff(other_fmt)
       else
         fake_diff_from_nothing
       end
@@ -266,7 +267,7 @@ class ResourceHarvester
     @harvest.update_attribute(:deltas_created_at, Time.now)
   end
 
-  def diff(old_fmt)
+  def run_diff(old_fmt)
     File.unlink(@format.diff) if File.exist?(@format.diff)
     cmd = "/usr/bin/diff #{old_fmt.converted_csv_path} "\
       "#{@format.converted_csv_path} > #{@format.diff}"
@@ -317,15 +318,32 @@ class ResourceHarvester
           begin
             @headers.each do |header|
               field = fields[header]
+              field.debugging =
+                if row[:debug] # usually nil, which is fine.
+                  @process.debug("object #{i} field {#{header}}")
+                  @models[:debug] = true
+                  true
+                else
+                  false
+                end
               if row[header].blank?
-                next unless field.default_when_blank
+                unless field.default_when_blank
+                  @process.debug('skipping; blank') if field.debugging
+                  next
+                end
 
+                @process.debug("setting value to {#{field.default_when_blank}} because blank.") if
+                  field.debugging
                 row[header] = field.default_when_blank
               end
-              next if field.to_ignored?
+              if field.to_ignored?
+                @process.debug('skipping; field is to be ignored') if field.debugging
+                next
+              end
               raise "NO HANDLER FOR '#{field.mapping}'!" unless respond_to?(field.mapping)
 
               # NOTE: that these methods are defined in the Store::* mixins:
+              @process.debug("calling {#{field.mapping}}") if field.debugging
               send(field.mapping, field, row[header])
             end
           rescue => e
@@ -645,7 +663,7 @@ class ResourceHarvester
     @harvest.complete
   end
 
-  def each_format(options = {}, &block)
+  def each_format(&block)
     @harvest.formats.each do |fmt|
       @format = fmt
       fid = @format.id

@@ -53,4 +53,6 @@ class Field < ApplicationRecord
       # these.
 
   enum special_handling: %i[iso_639_1 iso_639_3]
+
+  attr_accessor :debugging
 end

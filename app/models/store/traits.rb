@@ -25,9 +25,12 @@ module Store
       @models[:trait][:resource_pk] = val
     end
 
-    def to_traits_occurrence_fk(_, val)
+    def to_traits_occurrence_fk(field, val)
       @models[:trait] ||= {}
-      return if @models[:trait][:parent_pk] # Not allowed! Ignore it.
+      if @models[:trait][:parent_pk] # Not allowed! Ignore it.
+        @process.debug('SKIPPING occurrence FK. Not allowed; parent_pk present!') if field.debugging
+        return
+      end
       @models[:trait][:occurrence_resource_pk] = val
     end
 
@@ -69,6 +72,7 @@ module Store
     def to_traits_ref_fks(field, val)
       @models[:trait] ||= {}
       @models[:trait][:ref_sep] ||= field.submapping
+      @process.debug("Set ref_sep to #{field.submapping}") if field.debugging
       @models[:trait][:ref_fks] = val
     end
 
@@ -80,6 +84,7 @@ module Store
     def to_traits_meta(field, val)
       @models[:trait] ||= {}
       @models[:trait][:meta] ||= {}
+      @process.debug("Set meta #{field.submapping}.") if field.debugging
       @models[:trait][:meta][field.submapping] = val
     end
 
