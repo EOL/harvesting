@@ -5,7 +5,7 @@ class LoggedProcess
     @process = HarvestProcess.create(resource_id: @resource.id)
     @log = resource.process_log
     @start_time = Time.now
-    starting("logged process")
+    starting("logged process: #{`cd #{Rails.root} && git rev-parse HEAD`}")
   end
 
   def run_step(method_name = nil)
