@@ -177,10 +177,10 @@ class ResourceHarvester
       @process.debug("#validate_csv Debugging: #{debugging}")
       @line_num = line
       csv_row = []
+      csv_row << 'DEBUG' if debugging
       @headers.each do |header|
         check_header(csv_row, fields, row, header)
       end
-      csv_row << 'DEBUG' if debugging
       csv << csv_row
     end
   end
