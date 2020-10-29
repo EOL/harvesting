@@ -174,6 +174,7 @@ class ResourceHarvester
 
   def validate_csv(csv, fields)
     @parser.rows_as_hashes do |row, line, debugging|
+      @process.debug("#validate_csv Debugging: #{debugging}")
       @line_num = line
       csv_row = []
       @headers.each do |header|
@@ -215,6 +216,7 @@ class ResourceHarvester
         @file = @format.converted_csv_path
         CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
           @parser.rows_as_hashes do |row, line, debugging|
+            @process.debug("#convert_to_csv Debugging: #{debugging}")
             @line_num = line
             csv_row = []
             if debugging
@@ -311,6 +313,7 @@ class ResourceHarvester
       time = Time.now
       @process.enter_group(@format.diff_size) do |harv_proc|
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
+          @process.debug("#parse_diff_and_store Debugging: #{debugging}")
           i += 1
           if (i % 10_000).zero?
             harv_proc.update_group(i, Time.now - time)
@@ -329,22 +332,21 @@ class ResourceHarvester
               end
               if row[header].blank?
                 unless field.default_when_blank
-                  @process.debug('skipping; blank') if field.debugging
+                  @process.debug('skipping; blank') if debugging
                   next
                 end
 
-                @process.debug("setting value to {#{field.default_when_blank}} because blank.") if
-                  field.debugging
+                @process.debug("setting value to {#{field.default_when_blank}} because blank.") if debugging
                 row[header] = field.default_when_blank
               end
               if field.to_ignored?
-                @process.debug('skipping; field is to be ignored') if field.debugging
+                @process.debug('skipping; field is to be ignored') if debugging
                 next
               end
               raise "NO HANDLER FOR '#{field.mapping}'!" unless respond_to?(field.mapping)
 
               # NOTE: that these methods are defined in the Store::* mixins:
-              @process.debug("calling {#{field.mapping}}") if field.debugging
+              @process.debug("calling {#{field.mapping}}") if debugging
               send(field.mapping, field, row[header])
             end
           rescue => e
