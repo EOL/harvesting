@@ -216,14 +216,14 @@ class ResourceHarvester
           @parser.rows_as_hashes do |row, line|
             @line_num = line
             csv_row = []
+            if row[:debug]
+              csv_row << 'DEBUG'
+              @process.debug("DEBUGGING line #{line}")
+            end
             @headers.each do |header|
               # Un-quote values; we use a special quote char:
               val = strip_quotes(row[header])
               csv_row << val
-            end
-            if row[:debug]
-              csv_row << 'DEBUG'
-              @process.debug("DEBUGGING line #{line}")
             end
             csv << csv_row
           end
