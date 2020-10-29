@@ -434,7 +434,7 @@ module Store
       # build_attributions(Trait, @models[:trait])
       trait = prepare_model_for_store(klass, @models[:trait])
       meta.each do |key, value|
-        @process.debug("setting met #{key} to #{value}") if @models[:debug]
+        @process.debug("setting meta #{key} to #{value}") if @models[:debug]
         datum = {}
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
