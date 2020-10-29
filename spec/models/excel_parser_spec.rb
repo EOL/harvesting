@@ -27,7 +27,7 @@ RSpec.describe ExcelParser do
       let(:row) {
         i = 0
         row = nil
-        @parser.rows_as_hashes do |r, _|
+        @parser.rows_as_hashes do |r, _, _|
           row = r
           break if i > 5
           i += 1

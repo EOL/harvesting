@@ -85,8 +85,7 @@ class CsvParser
       debugging = row.first == 'DEBUG'
       row.shift if debugging
       hash = Hash[headers.zip(row)]
-      hash[:debug] = true if debugging
-      yield(hash, i)
+      yield(hash, i, debugging)
     end
   end
 
@@ -102,7 +101,14 @@ class CsvParser
         next
       end
       next if ignore_row?(row.first, row.size)
-      yield(row_as_diff(row, db_headers))
+
+      debugging = if row.first == 'DEBUG'
+                    row.shift
+                    true
+                  else
+                    false
+                  end
+      yield(row_as_diff(row, db_headers), debugging)
     end
     any_diff
   end
@@ -139,9 +145,7 @@ class CsvParser
         row.first.sub!(/^< /, '')
       end
     end
-    debugging = true if row.first == 'DEBUG'
     hash = Hash[headers.zip(row)]
-    hash[:debug] = true if debugging
     hash
   end
 end

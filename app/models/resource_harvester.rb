@@ -173,12 +173,13 @@ class ResourceHarvester
   end
 
   def validate_csv(csv, fields)
-    @parser.rows_as_hashes do |row, line|
+    @parser.rows_as_hashes do |row, line, debugging|
       @line_num = line
       csv_row = []
       @headers.each do |header|
         check_header(csv_row, fields, row, header)
       end
+      csv_row << 'DEBUG' if debugging
       csv << csv_row
     end
   end
@@ -213,10 +214,10 @@ class ResourceHarvester
       unless @converted[@format.id]
         @file = @format.converted_csv_path
         CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
-          @parser.rows_as_hashes do |row, line|
+          @parser.rows_as_hashes do |row, line, debugging|
             @line_num = line
             csv_row = []
-            if row[:debug]
+            if debugging
               csv_row << 'DEBUG'
               @process.debug("DEBUGGING line #{line}")
             end
@@ -309,7 +310,7 @@ class ResourceHarvester
       i = 0
       time = Time.now
       @process.enter_group(@format.diff_size) do |harv_proc|
-        any_diff = @parser.diff_as_hashes(@headers) do |row|
+        any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
           i += 1
           if (i % 10_000).zero?
             harv_proc.update_group(i, Time.now - time)
@@ -321,14 +322,11 @@ class ResourceHarvester
           begin
             @headers.each do |header|
               field = fields[header]
-              field.debugging =
-                if row[:debug] # usually nil, which is fine.
-                  @process.debug("object #{i} field {#{header}}")
-                  @models[:debug] = true
-                  true
-                else
-                  false
-                end
+              field.debugging = debugging
+              if debugging
+                @process.debug("object #{i} field {#{header}}")
+                @models[:debug] = true
+              end
               if row[header].blank?
                 unless field.default_when_blank
                   @process.debug('skipping; blank') if field.debugging

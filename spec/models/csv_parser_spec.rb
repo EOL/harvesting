@@ -14,7 +14,7 @@ RSpec.describe CsvParser do
     describe "#rows_as_hashes has expected values" do
       let(:row) {
         row = nil
-        @parser.rows_as_hashes do |r, _|
+        @parser.rows_as_hashes do |r, _, _|
           row = r
           break
         end

@@ -107,7 +107,7 @@ class LoggedProcess
   end
 
   def debug(message)
-    @log.tagged('DEBUG') { log(message) }
+    @log.tagged('DBG') { log(message) }
     @log.flush
   end
 

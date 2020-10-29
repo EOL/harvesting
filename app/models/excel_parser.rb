@@ -54,7 +54,7 @@ class ExcelParser
     @sheet.rows.each_with_index do |row, i|
       next if i < @data_begins_on_line
       hash = Hash[headers.zip(row.values)]
-      yield(hash, i)
+      yield(hash, i, false)
     end
   end
 end
