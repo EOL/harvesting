@@ -20,6 +20,23 @@ class Trait < ApplicationRecord
   scope :matched, -> { where('node_id IS NOT NULL') }
   scope :unmatched, -> { where('node_id IS NULL') }
 
+  before_validation :resolve_parent_eol_pk
+
+  EOL_PK_REGEXP = /^R(\d+)-PK(\d+)$/
+
+  class << self
+    def parse_eol_pk(pk)
+      match = EOL_PK_REGEXP.match(pk)
+
+      return nil unless match
+
+      {
+        resource_id: match[1],
+        trait_id: match[2]
+      }
+    end
+  end
+
   def metadata
     (meta_traits + references + children + occurrence.occurrence_metadata).compact
   end
@@ -106,5 +123,17 @@ class Trait < ApplicationRecord
     rescue ArgumentError, TypeError
       measurement
     end
+  end
+
+  private
+  # TODO: log if eol_pk can't be parsed or refers to a Trait that doesn't exist in the harvesting db
+  def resolve_parent_eol_pk
+    return unless parent_eol_pk.present?
+
+    ids = self.class.parse_eol_pk(parent_eol_pk)
+    return unless ids
+
+    parent_trait = Trait.find_by(resource_id: ids[:resource_id], id: ids[:trait_id])
+    self.parent = parent_trait if parent_trait
   end
 end
