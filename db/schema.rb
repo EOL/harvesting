@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_08_162730) do
+ActiveRecord::Schema.define(version: 2020_11_18_214003) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -436,6 +436,10 @@ ActiveRecord::Schema.define(version: 2020_10_08_162730) do
     t.string "measurement"
     t.text "literal"
     t.text "source"
+    t.string "predicate_term_uri"
+    t.string "object_term_uri"
+    t.string "units_term_uri"
+    t.string "statistical_method_term_uri"
     t.index ["harvest_id", "assoc_resource_fk"], name: "index_meta_assocs_on_harvest_id_and_assoc_resource_fk"
   end
 
@@ -752,17 +756,21 @@ ActiveRecord::Schema.define(version: 2020_10_08_162730) do
     t.string "resource_pk", null: false
     t.string "measurement"
     t.text "literal"
+    t.text "source"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "occurrence_id"
     t.string "normal_units_uri"
     t.string "normal_measurement"
+    t.text "sample_size", comment: "http://eol.org/schema/terms/SampleSize"
+    t.text "citation", comment: "http://purl.org/dc/terms/bibliographicCitation"
     t.string "predicate_term_uri"
     t.string "object_term_uri"
     t.string "units_term_uri"
     t.string "statistical_method_term_uri"
     t.string "sex_term_uri"
     t.string "lifestage_term_uri"
+    t.string "parent_eol_pk"
     t.index ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk"
     t.index ["harvest_id", "resource_pk"], name: "index_traits_on_harvest_id_and_resource_pk"
     t.index ["harvest_id"], name: "index_traits_on_harvest_id"

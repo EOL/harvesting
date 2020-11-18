@@ -44,6 +44,12 @@ module Store
       @models[:trait][:parent_pk] = val
     end
 
+    def to_traits_parent_eol_pk(_, val)
+      @models[:trait] ||= {}
+      @models[:trait][:occurrence_resource_pk] = nil # Not allowed!
+      @models[:trait][:parent_eol_pk] = val
+    end
+
     def to_traits_predicate(_, val)
       @models[:trait] ||= {}
       @models[:trait][:predicate] = val
