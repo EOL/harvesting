@@ -20,8 +20,6 @@ class Trait < ApplicationRecord
   scope :matched, -> { where('node_id IS NOT NULL') }
   scope :unmatched, -> { where('node_id IS NULL') }
 
-  before_validation :resolve_parent_eol_pk
-
   EOL_PK_REGEXP = /^R(\d+)-PK(\d+)$/
 
   class << self
@@ -125,15 +123,29 @@ class Trait < ApplicationRecord
     end
   end
 
+  def prepare_for_store(log)
+    resolve_parent_eol_pk(log)
+  end
+
   private
   # TODO: log if eol_pk can't be parsed or refers to a Trait that doesn't exist in the harvesting db
-  def resolve_parent_eol_pk
+  def resolve_parent_eol_pk(log)
     return unless parent_eol_pk.present?
 
     ids = self.class.parse_eol_pk(parent_eol_pk)
-    return unless ids
+
+    if ids.nil?
+      @log.warn("failed to parse parent_eol_pk #{parent_eol_pk} for trait with resource_pk #{resource_pk}")
+      return
+    end
 
     parent_trait = Trait.find_by(resource_id: ids[:resource_id], id: ids[:trait_id])
-    self.parent = parent_trait if parent_trait
+
+    if parent_trait.nil?
+      @log.warn("parent trait with resource #{ids[:resource_id]} and id #{ids[:trait]} id doesn't exist (for trait #{resource_pk})")
+      return
+    end
+
+    self.parent = parent_trait
   end
 end
