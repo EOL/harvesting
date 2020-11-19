@@ -469,10 +469,17 @@ class Publisher
     meta_file = @resource.publish_table_path('metadata')
     start_traits_file(filename, @trait_heads)
     start_traits_file(meta_file, @meta_heads)
+
+    # metadata (child Traits) with parent Traits from resources other than the current one (with parent_eol_pk in this one)
+    external_trait_metas = @resource.traits.published
+      .includes(:parent, :references)
+      .where.not('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
+
     # Metadata FIRST, because some of it moves to the traits.
     CSV.open(meta_file, 'ab') do |csv|
-      add_meta_to_csv(@traits, csv)
-      add_meta_to_csv(@assocs, csv)
+      add_trait_meta_to_csv(@traits, csv)
+      add_trait_meta_to_csv(@assocs, csv)
+      add_meta_to_csv(external_trait_metas, csv)
     end
     CSV.open(filename, 'ab') do |csv|
       @traits.values.each do |trait|
@@ -515,19 +522,38 @@ class Publisher
     @files[filename] = true
   end
 
-  def add_meta_to_csv(traits, csv)
+  def add_meta_to_csv(metas, csv, trait = nil)
     count = 0
-    traits.each do |_, trait|
-      trait.metadata.each do |meta|
+
+    metas.each do |meta|
+      data = build_meta(meta, trait)
+
+      if data
         count += 1
-        data = build_meta(meta, trait)
-        csv << data if data
+        csv << data
       end
     end
+
+    count
+  end
+
+  # traits - hash keyed by id
+  def add_trait_meta_to_csv(traits, csv)
+    count = 0
+
+    traits.each do |_, trait|
+      count += add_meta_to_csv(trait.metadata, csv, trait)
+    end
+
     @process.info("#{count} metadata added.")
   end
 
-  def build_meta(meta, trait)
+  # in_harvest_trait should always be passed in the case that the trait that meta belongs to belongs to the current harvest. Otherwise, it must be nil. 
+  #
+  # If in_harvest_trait is nil, an error will be raised in the case that
+  # 1) meta.parent is nil OR 
+  # 2) meta's predicate is a member of @moved_meta_map
+  def build_meta(meta, in_harvest_trait = nil)
     literal = nil
     predicate = nil
     moved_meta = moved_meta_map
@@ -544,9 +570,10 @@ class Publisher
       return nil
 
     elsif (meta_mapping = moved_meta[meta.predicate_term_uri])
+      raise TypeError, "moved meta encountered without an in-harvest trait" if in_harvest_trait.nil?
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
-      trait.send("#{meta_mapping[:to]}=", value)
+      in_harvest_trait.send("#{meta_mapping[:to]}=", value)
       return nil # Don't record this one.
 
     else
@@ -560,7 +587,7 @@ class Publisher
     # q.v.: @meta_heads for order, here:
     [
       "#{meta.class.name}-#{meta.id}",
-      trait.eol_pk,
+      (in_harvest_trait || meta.parent).eol_pk, 
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
