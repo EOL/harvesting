@@ -692,6 +692,7 @@ module Store
       @new[klass] ||= []
       new_model = klass.send(:new, model)
       @new[klass] << new_model
+      new_model.prepare_for_store(@process) if new_model.respond_to?(:prepare_for_store)
       new_model
     end
 

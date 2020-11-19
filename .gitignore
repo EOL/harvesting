@@ -37,3 +37,6 @@ docker/resources/secrets.yml
 
 # Docker environment file is secret:
 docker/.env
+
+# vim swap files
+*.swp
