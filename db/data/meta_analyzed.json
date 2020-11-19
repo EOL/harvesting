@@ -28,7 +28,7 @@
 "submapping":null,
 "is_unique":false,
 "is_required":false},
-{"term":"http://eol.org/schema/parentEolPk",
+{"term":"http://eol.org/schema/parentMeasurementEolPk",
 "for_format":"measurements",
 "represents":"to_traits_parent_eol_pk",
 "submapping":null,
