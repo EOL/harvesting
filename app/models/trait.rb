@@ -39,6 +39,11 @@ class Trait < ApplicationRecord
     (meta_traits + references + children + occurrence.occurrence_metadata).compact
   end
 
+  # Is this Trait a child Trait (metadata) whose parent belongs to a different resource?
+  def external_meta?
+    parent_eol_pk.present?
+  end
+
   # NOTE: yes, it makes me nervous that we're pegging the EOL identifier on the harvesting DB ID. In theory, this should
   # be the PK from the partner. But after discussing things with Jen, we determined that data will ALWAYS be nuked and
   # re-created for a resource, because the PK cannot ever actually be trusted. No "updates" are available for data, only
