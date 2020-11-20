@@ -40,7 +40,7 @@ class Publisher
                       object_page_id target_scientific_name value_uri literal measurement units normal_measurement
                       normal_units_uri sample_size citation source remarks method]
     @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
-                     statistical_method source]
+                     statistical_method source is_external]
 
     reset_vars
   end
@@ -596,7 +596,8 @@ class Publisher
       sex_term,
       lifestage_term,
       UrisAreEolTerms.new(meta).uri(:statistical_method_term_uri),
-      UrisAreEolTerms.new(meta).uri(:source)
+      UrisAreEolTerms.new(meta).uri(:source),
+      meta.respond_to?(:external_meta?) ? meta.external_meta? : false
     ]
   end
 
