@@ -12,6 +12,7 @@ class MetaXmlField < ApplicationRecord
       end
       data.delete_if { |d| have.key?("#{d['for_format']}:#{d['term']}") }
       return nil if data.empty?
+
       puts "** ADDING #{data.size} new meta xml fields"
       import!(data, on_duplicate: :ignore)
     end
