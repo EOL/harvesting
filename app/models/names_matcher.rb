@@ -215,7 +215,7 @@ class NamesMatcher
   end
 
   def map_if_needed(node)
-    @logs << '#map_if_needed'
+    @logs = []
     if skip_blank_canonical(node)
       unmapped(node, 'blank_canonical')
     elsif node.needs_to_be_mapped?
@@ -364,13 +364,11 @@ class NamesMatcher
       top_scores[0..4].reverse.each { |k, v| simple_scores[k['id']] = v }
     end
     if best_score < 0.1
-      @logs << "best score was too low: #{simple_scores.inspect}"
-      unmapped(node)
+      unmapped(node, "best score was too low: #{simple_scores.inspect}")
     elsif tie
-      @logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
+      unmapped(node, "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
         "#{best_match['id']} = #{simple_scores[best_match['id']].inspect} "\
-        "VS #{tie['id']} = #{simple_scores[best_match['id']].inspect}"
-      unmapped(node)
+        "VS #{tie['id']} = #{simple_scores[best_match['id']].inspect}")
     else
       @logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match['page_id']} (#{best_match['canonical']}): "\
         "#{simple_scores.inspect}"
@@ -388,8 +386,8 @@ class NamesMatcher
   end
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
-  def unmapped(node, message = nil)
-    @logs << message if message
+  def unmapped(node, message)
+    @logs << message
     @unmatched << "#{node.canonical} (##{node.id})"
     @in_unmapped_area = false if @resource.native?
     node.assign_attributes(
