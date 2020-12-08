@@ -47,7 +47,7 @@ class NamesMatcher
     matcher = new(node.harvest, LoggedProcess.new(node.resource))
     node_id = node.id
     matcher.instance_eval do
-      @logs = [] ; @have_names = true ; @ancestor = nil ; @ancestors = [] ; inode = Node.find(node_id)
+      @logs = []; @have_names = true; @ancestor = nil; @ancestors = []; inode = Node.find(node_id)
       map_node(inode, ancestor_depth: 0, strategy: pick_first_strategy(inode))
       inode.matching_log = @logs.join(';')
       inode.save
@@ -196,10 +196,12 @@ class NamesMatcher
     @logs = []
     @explain = true
     return if skip_blank_canonical(node)
+
     @ancestors = node.node_ancestors.map(&:ancestor)
     @in_unmapped_area = @ancestors.empty? || @ancestors.select(&:is_on_page_in_dynamic_hierarchy).empty?
     return @process.info("CANNOT MATCH NAMES. You haven't harvested the Dynamic Hierarchy.") unless
       Harvest.completed.any?
+
     @have_names = true
     map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
     @node_updates
@@ -207,12 +209,13 @@ class NamesMatcher
 
   def skip_blank_canonical(node)
     return false unless node.canonical.blank?
+
     @process.warn("cannot match node with blank canonical: Node##{node.id}")
     true
   end
 
   def map_if_needed(node)
-    @logs = []
+    @logs << '#map_if_needed'
     if skip_blank_canonical(node)
       unmapped(node, 'blank_canonical')
     elsif node.needs_to_be_mapped?
@@ -223,6 +226,7 @@ class NamesMatcher
       map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
     end
     return unless node.children.any?
+
     @ancestors.push(node)
     # Some nodes can have hundreds of thousands of children (ITIS's Animalia has 485,935), so we do children in batches:
     node.children.pluck(:id).in_groups_of(1000) do |node_ids|
@@ -388,7 +392,12 @@ class NamesMatcher
     @logs << message if message
     @unmatched << "#{node.canonical} (##{node.id})"
     @in_unmapped_area = false if @resource.native?
-    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: @logs.join('; ')[-65_500..-1])
+    node.assign_attributes(
+      page_id: new_page_id,
+      is_on_page_in_dynamic_hierarchy: @resource.native? || !@in_unmapped_area,
+      in_unmapped_area: @in_unmapped_area,
+      matching_log: @logs.join('; ')[-65_500..-1]
+    )
     update_node(node)
     tick_progress
   end

@@ -102,7 +102,7 @@ class Resource < ApplicationRecord
   end
 
   def native?
-    id = Resource.native.id?
+    id == Resource.native.id?
   end
 
   def stop_adding_media_jobs
