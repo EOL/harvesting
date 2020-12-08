@@ -81,7 +81,7 @@ services:
   web:
     build: ..
     image: harvester_v3
-    container_name: harv_app
+    container_name: harv_web
     restart: always
     volumes:
       - ./resources/secrets.yml:/app/config/secrets.yml
