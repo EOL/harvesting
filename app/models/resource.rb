@@ -1,6 +1,7 @@
 class Resource < ApplicationRecord
   @logfile_name = 'process.log'
   @lockfile_name = 'harvest.lock'
+  @unmatched_file_name = 'unmatched_nodes.txt'
 
   belongs_to :partner, inverse_of: :resources
   belongs_to :default_license, class_name: 'License', inverse_of: :resources
@@ -28,7 +29,7 @@ class Resource < ApplicationRecord
   acts_as_list
 
   class << self
-    attr_reader :logfile_name, :lockfile_name
+    attr_reader :logfile_name, :lockfile_name, :unmatched_file_name
 
     def native
       Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
@@ -156,6 +157,7 @@ class Resource < ApplicationRecord
 
   def any_files_changed?
     return true if harvests.complete_non_failed.blank?
+
     last_harvest = harvests.complete_non_failed.last.created_at
     formats.each do |fmt|
       return true if File.mtime(fmt.get_from) > last_harvest
@@ -190,7 +192,11 @@ class Resource < ApplicationRecord
   end
 
   def process_log_path
-    "#{path}/process.log"
+    "#{path}/#{Resource.logfile_name}"
+  end
+
+  def unmatched_node_log_path
+    "#{path}/#{Resource.unmatched_file_name}"
   end
 
   def move_files(to)

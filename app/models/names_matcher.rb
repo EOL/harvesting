@@ -465,7 +465,9 @@ class NamesMatcher
     if @unmatched.blank?
       @process.info("ZERO unmatched nodes (of #{@resource_nodes_count})! Nicely done.")
     elsif @unmatched.size > 10
-      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource_nodes_count})! That's too many to output. "\
+      File.open(@resource.unmatched_node_log_path, 'w') { |file| file.write(@unmatched.join("\n") + "\n") }
+      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource_nodes_count})! "\
+        "That's too many to output. Full list in #{@resource.unmatched_node_log_path} ; "\
         "First 10: #{@unmatched[0..9].join('; ')}")
     else
       @process.info("Unmatched nodes (#{@unmatched.size} of #{@resource_nodes_count}): #{@unmatched.join('; ')}")
