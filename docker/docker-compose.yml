@@ -88,13 +88,13 @@ services:
       - ${EOL_ROOT_DIR}/eol-repo-app:/app/public/data
       - ${EOL_ROOT_DIR}/eol-repo-app/tmp:/tmp
     depends_on:
-      - eol-repo-elasticsearch
-      - eol-repo-mysql
-      - eol-repo-memcached
+      - elasticsearch
+      - mysql
+      - memcached
     links:
-      - eol-repo-elasticsearch:elasticsearch
-      - eol-repo-memcached:memcached
-      - eol-repo-mysql:mysql
+      - elasticsearch
+      - memcached
+      - mysql
     env_file:
       - resources/staging.env
     ports:
