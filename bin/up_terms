@@ -1,0 +1,3 @@
+#!/bin/sh
+bundle update eol_terms
+./stop_work

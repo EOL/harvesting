@@ -47,7 +47,7 @@ class NamesMatcher
     matcher = new(node.harvest, LoggedProcess.new(node.resource))
     node_id = node.id
     matcher.instance_eval do
-      @logs = [] ; @have_names = true ; @ancestor = nil ; @ancestors = [] ; inode = Node.find(node_id)
+      @logs = []; @have_names = true; @ancestor = nil; @ancestors = []; inode = Node.find(node_id)
       map_node(inode, ancestor_depth: 0, strategy: pick_first_strategy(inode))
       inode.matching_log = @logs.join(';')
       inode.save
@@ -196,10 +196,12 @@ class NamesMatcher
     @logs = []
     @explain = true
     return if skip_blank_canonical(node)
+
     @ancestors = node.node_ancestors.map(&:ancestor)
     @in_unmapped_area = @ancestors.empty? || @ancestors.select(&:is_on_page_in_dynamic_hierarchy).empty?
     return @process.info("CANNOT MATCH NAMES. You haven't harvested the Dynamic Hierarchy.") unless
       Harvest.completed.any?
+
     @have_names = true
     map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
     @node_updates
@@ -207,6 +209,7 @@ class NamesMatcher
 
   def skip_blank_canonical(node)
     return false unless node.canonical.blank?
+
     @process.warn("cannot match node with blank canonical: Node##{node.id}")
     true
   end
@@ -223,6 +226,7 @@ class NamesMatcher
       map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
     end
     return unless node.children.any?
+
     @ancestors.push(node)
     # Some nodes can have hundreds of thousands of children (ITIS's Animalia has 485,935), so we do children in batches:
     node.children.pluck(:id).in_groups_of(1000) do |node_ids|
@@ -360,13 +364,11 @@ class NamesMatcher
       top_scores[0..4].reverse.each { |k, v| simple_scores[k['id']] = v }
     end
     if best_score < 0.1
-      @logs << "best score was too low: #{simple_scores.inspect}"
-      unmapped(node)
+      unmapped(node, "best score was too low: #{simple_scores.inspect}")
     elsif tie
-      @logs << "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
+      unmapped(node, "Node #{node.id} (#{node.canonical}) had a TIE (#{best_score}) for best matching name: "\
         "#{best_match['id']} = #{simple_scores[best_match['id']].inspect} "\
-        "VS #{tie['id']} = #{simple_scores[best_match['id']].inspect}"
-      unmapped(node)
+        "VS #{tie['id']} = #{simple_scores[best_match['id']].inspect}")
     else
       @logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match['page_id']} (#{best_match['canonical']}): "\
         "#{simple_scores.inspect}"
@@ -384,11 +386,16 @@ class NamesMatcher
   end
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
-  def unmapped(node, message = nil)
-    @logs << message if message
+  def unmapped(node, message)
+    @logs << message
     @unmatched << "#{node.canonical} (##{node.id})"
     @in_unmapped_area = false if @resource.native?
-    node.assign_attributes(page_id: new_page_id, in_unmapped_area: @in_unmapped_area, matching_log: @logs.join('; ')[-65_500..-1])
+    node.assign_attributes(
+      page_id: new_page_id,
+      is_on_page_in_dynamic_hierarchy: @resource.native? || !@in_unmapped_area,
+      in_unmapped_area: @in_unmapped_area,
+      matching_log: @logs.join('; ')[-65_500..-1]
+    )
     update_node(node)
     tick_progress
   end
@@ -456,7 +463,9 @@ class NamesMatcher
     if @unmatched.blank?
       @process.info("ZERO unmatched nodes (of #{@resource_nodes_count})! Nicely done.")
     elsif @unmatched.size > 10
-      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource_nodes_count})! That's too many to output. "\
+      File.open(@resource.unmatched_node_log_path, 'w') { |file| file.write(@unmatched.join("\n") + "\n") }
+      @process.info("#{@unmatched.size} Unmatched nodes (of #{@resource_nodes_count})! "\
+        "That's too many to output. Full list in #{@resource.unmatched_node_log_path} ; "\
         "First 10: #{@unmatched[0..9].join('; ')}")
     else
       @process.info("Unmatched nodes (#{@unmatched.size} of #{@resource_nodes_count}): #{@unmatched.join('; ')}")
