@@ -83,8 +83,8 @@ class WebDb < ApplicationRecord
     def language(language, process)
       return nil if language.blank?
       return @languages[language.code] if @languages.key?(language.code)
-      process.log("Encountered new language, please assign it to a language group and give it a name: #{language.code}")
-      @languages[language.code] = raw_create('languages', code: language.code, group: language.group_code)
+      process.log("Encountered new language, please assign it to a Locale and give it a name: #{language.code}")
+      @languages[language.code] = raw_create('languages', code: language.code)
     end
 
     def taxonomic_status(full_name, process)
