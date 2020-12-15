@@ -2,10 +2,18 @@
 class LoggedProcess
   def initialize(resource)
     @resource = resource
-    @process = HarvestProcess.create(resource_id: @resource.id)
+    @process = recent_or_new_process
     @log = resource.process_log
     @start_time = Time.now
     starting("logged process: #{`cd #{Rails.root} && git rev-parse HEAD`}")
+  end
+
+  def recent_or_new_process
+    if HarvestProcess.exists?(['resource_id = ? AND created_at > ?', @resource.id, 5.minute.ago])
+      @resource.harvest_processes.last
+    else
+      HarvestProcess.create(resource_id: @resource.id)
+    end
   end
 
   def run_step(method_name = nil)
