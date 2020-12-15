@@ -326,10 +326,6 @@ class Resource < ApplicationRecord
     delay(queue: 'media').download_missing_images # NOTE: this *could* cause a kind of infinite loop...
   end
 
-  def convert_trait_units
-    traits.where('measurement IS NOT NULL AND units_term_id IS NOT NULL').find_each(&:convert_measurement)
-  end
-
   # Because this happens often enough that it was worth making a method out of it. TODO: rename the @!#$*& fields:
   def swap_media_source_urls
     media.update_all('source_url=@tmp:=source_url, source_url=source_page_url, source_page_url=@tmp')
