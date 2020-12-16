@@ -8,7 +8,7 @@
   - if policy(@resource).update?
     .item= link_to(t("edit"), edit_resource_path(@resource))
     .item= link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
-    .item= link_to(t("unlock"), unlock_resource_path(@resource), data: { confirm: t("are_you_sure_unlock") })
+    .item= link_to(t("unlock"), resource_unlock_path(@resource), data: { confirm: t("are_you_sure_unlock") })
   - if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
     .item= t("resources.actions.harvest_in_queue")
   - elsif policy(@resource).update?
