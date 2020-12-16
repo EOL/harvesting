@@ -4,7 +4,7 @@ class Resource
     attr_accessor :resource, :path, :doc
 
     class << self
-      def self.by_path(path)
+      def by_path(path)
         abbr = File.basename(loc)
         # NOTE: the type is :csv because we don't have XML defining an Excel spreadsheet.
         resource = if Resource.exists?(abbr: abbr.downcase)
@@ -20,7 +20,7 @@ class Resource
 
       # A method to re-generate the meta_xml_analyzed file. Basically this allows us to "learn" from past resources how
       # future fields should be mapped. TODO: this should be extracted to its own class. :\ MetaXmlToFieldMapper
-      def self.analyze
+      def analyze
         hashes = {}
         Resource.find_each do |resource|
           format = resource.formats.last

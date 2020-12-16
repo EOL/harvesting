@@ -153,13 +153,14 @@ class MetaXml
   end
 
   def field_insight(field, format)
-    insight = {}
+    insight = { term: field['term'], for_format: format[:represents] }
     insight[:assumption] = MetaXmlField.where(term: field['term'], for_format: format[:represents])&.first
     raise "I don't know how to handle a meta.xml field of type #{field['term']}!" if insight[:assumption].nil?
 
     insight[:mapping_name] = insight[:assumption]&.represents || :to_ignored
     insight[:index] = field['index'].to_i
-    insight[:header_name] = format[:headers] ? format[:headers][insight[:index]] : field['term'].split('/').last
+    insight[:header_name] = format[:headers][insight[:index]]
+    insight[:header_name] ||= field['term'].split('/').last
     insight
   end
 
@@ -181,6 +182,13 @@ class MetaXml
     submap = insight[:assumption]&.submapping
     submap = nil if submap == '0'
     submap = insight[:header_name].downcase if insight[:mapping_name] == 'to_nodes_ancestor'
+    if insight[:mapping_name] == 'to_nodes_ancestor'
+      if insight[:header_name].nil?
+        raise 'I have a node-ancestor field that I cannot find a taxonomic level for. '\
+              "Missing an index or term: #{insight.inspect}"
+      end
+      submap = insight[:header_name].downcase
+    end
     submap
   end
 
