@@ -5,7 +5,7 @@ class MetaXmlField < ApplicationRecord
       # delete_all
       filename = Rails.root.join('db', 'data', 'meta_analyzed.json')
       raise("File missing: #{filename}") unless File.exist?(filename)
-
+      
       data = JSON.parse(File.read(filename))
       have = {}
       all.each do |mxf|
