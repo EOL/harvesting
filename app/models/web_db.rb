@@ -122,12 +122,7 @@ class WebDb < ApplicationRecord
 
     def update_resource(obj, logger = nil)
       web_id = resource_id(obj)
-        if logger.nil?
-          logger = ''
-          def logger.log(msg, options = {})
-            logger = msg
-          end
-        end
+      logger = obj.process_log if logger.nil?
       lic = license(License.find(obj.dataset_license_id).source_url, logger) if obj.dataset_license_id
       hash = {
         name: obj.name,
@@ -144,7 +139,7 @@ class WebDb < ApplicationRecord
         abbr: obj.abbr,
         classification: obj.classification
       }
-      attrs = hash.map { |k,v| "#{k}=#{quote_value(v)}" }.join(', ')
+      attrs = hash.map { |k, v| "#{k}=#{quote_value(v)}" }.join(', ')
       connection.exec_update("UPDATE resources SET #{attrs} WHERE id = #{web_id}", 'SQL', attrs)
       logger
     end
@@ -155,6 +150,7 @@ class WebDb < ApplicationRecord
       return val if val.is_a?(Numeric)
       return 1 if val.is_a? TrueClass
       return 0 if val.is_a? FalseClass
+
       "'#{val.to_s.gsub(/'/, "''")}'"
     end
 
@@ -213,12 +209,14 @@ class WebDb < ApplicationRecord
     def resource_id(resource)
       id = find_by_repo_id(:resources, resource.id)
       return id unless id.nil?
+
       create_resource(resource)
     end
 
     def partner_id(partner)
       id = find_by_repo_id(:partners, partner.id)
       return id unless id.nil?
+
       create_partner(partner)
     end
 
