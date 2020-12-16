@@ -5,12 +5,14 @@ en:
       resource:
         opendata_url: "TODO: this didn't work: URL of OpenData resource (NOT the file, the resource page)"
   are_you_sure: "Are you sure? This action cannot be undone."
+  are_you_sure_unlock: "Are you sure? If the resource is still harvesting, this can cause BIG problems."
   boolean:
     true: "True"
     false: "Fakse"
   cancel: "cancel"
   edit: "edit"
   delete: "delete"
+  unlock: "unlock"
   fields:
     create:
       actions:
