@@ -155,6 +155,8 @@ class MetaXml
   def field_insight(field, format)
     insight = {}
     insight[:assumption] = MetaXmlField.where(term: field['term'], for_format: format[:represents])&.first
+    raise "I don't know how to handle a meta.xml field of type #{field['term']}!" if insight[:assumption].nil?
+
     insight[:mapping_name] = insight[:assumption]&.represents || :to_ignored
     insight[:index] = field['index'].to_i
     insight[:header_name] = format[:headers] ? format[:headers][insight[:index]] : field['term'].split('/').last

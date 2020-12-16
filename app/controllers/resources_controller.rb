@@ -99,7 +99,7 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:id])
     log_auth(@resource)
     if @resource.update(resource_params)
-      resp = WebDb.update_resource(@resource, logger = nil)
+      resp = WebDb.update_resource(@resource)
       flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
       flash[:notice] += " (#{resp})" unless resp.blank?
       redirect_to @resource

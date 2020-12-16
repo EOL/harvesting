@@ -267,6 +267,7 @@ class Resource < ApplicationRecord
 
   def fake_partner
     return partner unless partner.nil?
+
     Partner.create(
       name: name || abbr.titleize,
       abbr: abbr.downcase,
@@ -280,7 +281,8 @@ class Resource < ApplicationRecord
   def create_harvest_instance
     harvest = Harvest.create(resource_id: id)
     harvests << harvest
-    Rails.logger.error('###=-> ' + formats.abstract.first.fields.sort_by(&:position).map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
+    Rails.logger.error('###=-> ' +
+      abstract_fields.map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
     formats.abstract.each do |fmt|
       Rails.logger.error("###=-> (Outer) Copying Format #{fmt.id} to Harvest #{harvest.id}.")
       fmt.copy_to_harvest(harvest)
@@ -288,8 +290,13 @@ class Resource < ApplicationRecord
     harvest
   end
 
+  def abstract_fields
+    formats.abstract.first.fields.sort_by(&:position)
+  end
+
   def name_brief
     return @name_brief if @name_brief
+
     @name_brief = abbr.blank? ? name : abbr
     @name_brief.gsub(/[^a-z0-9\-]+/i, '_').sub(/_+$/, '').downcase
     @name_brief
