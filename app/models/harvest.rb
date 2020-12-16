@@ -58,7 +58,7 @@ class Harvest < ApplicationRecord
   end
 
   def convert_trait_units
-    traits.where('measurement IS NOT NULL AND units_term_id IS NOT NULL').find_each(&:convert_measurement)
+    traits.where('measurement IS NOT NULL AND units_term_uri IS NOT NULL').find_each(&:convert_measurement)
   end
 
   def fail

@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_11_18_214003) do
-
+ActiveRecord::Schema.define(version: 2020_12_15_201433) do
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
     t.string "resource_pk", null: false
@@ -744,7 +743,6 @@ ActiveRecord::Schema.define(version: 2020_11_18_214003) do
     t.integer "node_id"
     t.integer "predicate_term_id"
     t.integer "object_term_id"
-    t.integer "units_term_id"
     t.integer "statistical_method_term_id"
     t.integer "sex_term_id"
     t.integer "lifestage_term_id"
