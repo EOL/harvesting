@@ -470,10 +470,10 @@ class Publisher
     start_traits_file(filename, @trait_heads)
     start_traits_file(meta_file, @meta_heads)
 
-    # metadata (child Traits) with parent Traits from resources other than the current one (with parent_eol_pk in this one)
+    # metadata (child Traits) with parent Traits from resources other than the current one (specified by parent_eol_pk)
     external_trait_metas = @resource.traits.published
       .includes(:parent, :references)
-      .where.not('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
+      .where('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
 
     # Metadata FIRST, because some of it moves to the traits.
     CSV.open(meta_file, 'ab') do |csv|

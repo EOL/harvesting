@@ -133,7 +133,6 @@ class Trait < ApplicationRecord
   end
 
   private
-  # TODO: log if eol_pk can't be parsed or refers to a Trait that doesn't exist in the harvesting db
   def resolve_parent_eol_pk(log)
     return unless parent_eol_pk.present?
 
