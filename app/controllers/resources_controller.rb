@@ -119,7 +119,7 @@ class ResourcesController < ApplicationController
   end
 
   def unlock
-    @resource = Resource.find(params[:id])
+    @resource = Resource.find(params[:resource_id])
     log_auth(@resource)
     @resource.unlock
     flash[:notice] = "It should be unlocked now. You can try re-harvesting or resuming."
