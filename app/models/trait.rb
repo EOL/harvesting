@@ -139,14 +139,14 @@ class Trait < ApplicationRecord
     ids = self.class.parse_eol_pk(parent_eol_pk)
 
     if ids.nil?
-      @log.warn("failed to parse parent_eol_pk #{parent_eol_pk} for trait with resource_pk #{resource_pk}")
+      log.warn("failed to parse parent_eol_pk #{parent_eol_pk} for trait with resource_pk #{resource_pk}")
       return
     end
 
     parent_trait = Trait.find_by(resource_id: ids[:resource_id], id: ids[:trait_id])
 
     if parent_trait.nil?
-      @log.warn("parent trait with resource #{ids[:resource_id]} and id #{ids[:trait]} id doesn't exist (for trait #{resource_pk})")
+      log.warn("parent trait with resource #{ids[:resource_id]} and id #{ids[:trait]} id doesn't exist (for trait #{resource_pk})")
       return
     end
 
