@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   resources :bibliographic_citations, only: [:show]
   resources :resources do
     get :harvest
+    get :unlock
     get :re_harvest
     get :resume_harvest
     get :re_download_opendata_harvest

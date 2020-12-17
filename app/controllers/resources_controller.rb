@@ -118,6 +118,14 @@ class ResourcesController < ApplicationController
     redirect_to resources_path
   end
 
+  def unlock
+    @resource = Resource.find(params[:resource_id])
+    log_auth(@resource)
+    @resource.unlock
+    flash[:notice] = "It should be unlocked now. You can try re-harvesting or resuming."
+    redirect_to resources_path
+  end
+
   private
 
   def enqueue_harvest(type = '')
