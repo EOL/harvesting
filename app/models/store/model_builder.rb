@@ -380,14 +380,14 @@ module Store
 
     def build_trait
       @process.debug('#build_trait') if @models[:debug]
-      parent = @models[:trait][:parent_pk]
+      parent = @models[:trait][:parent_pk] || @models[:trait][:parent_eol_pk]
       occurrence = @models[:trait][:occurrence_resource_pk]
       dup_model = @models[:trait].dup # TEMP:
       @models[:trait][:resource_id] = @resource.id
       @models[:trait][:harvest_id] = @harvest.id
       if @models[:trait][:of_taxon] && parent
         return @process.warn("IGNORING a measurement of a taxon (#{@models[:trait][:resource_pk]}) WITH a "\
-                           "parentMeasurementID #{parent}")
+                           "parentMeasurementID or parentEolPk #{parent}")
       end
       if !@models[:trait][:of_taxon] && parent.blank? && occurrence.blank?
         puts @models[:trait].inspect
