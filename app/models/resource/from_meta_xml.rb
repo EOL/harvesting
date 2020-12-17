@@ -71,7 +71,7 @@ class Resource
             end
           end
         end
-        File.open(Rails.root.join('db', 'data', 'meta_analyzed.json'),"w") do |f|
+        File.open(Rails.root.join('db', 'data', 'meta_analyzed.json'), 'w') do |f|
           f.write(hashes.values.sort_by { |h| h[:term] }.to_json.gsub(/,/, ",\n"))
         end
         puts "Done. Created #{hashes.keys.size} hashes."
