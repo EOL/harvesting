@@ -340,7 +340,9 @@ class ResourceHarvester
                 @process.debug('skipping; field is to be ignored') if debugging
                 next
               end
-              raise "NO HANDLER FOR '#{field.mapping}'!" unless respond_to?(field.mapping)
+              raise "BAD FIELD: no mapping ##{field&.id} for #{@format.represents} format" if field.mapping.nil?
+              raise "NO HANDLER FOR '#{field.mapping}' for #{@format.represents} format!" unless
+                respond_to?(field.mapping)
 
               # NOTE: that these methods are defined in the Store::* mixins:
               @process.debug("calling {#{field.mapping}}") if debugging
