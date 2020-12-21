@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # "Interal" EOL gems:
-gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git'
+gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git', branch: 'main'
 
 # Because we are going to create many, many records!
 gem 'activerecord-import'
