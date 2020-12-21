@@ -146,7 +146,7 @@ class Trait < ApplicationRecord
     parent_trait = Trait.find_by(resource_id: ids[:resource_id], id: ids[:trait_id])
 
     if parent_trait.nil?
-      log.warn("parent trait with resource #{ids[:resource_id]} and id #{ids[:trait]} id doesn't exist (for trait #{resource_pk})")
+      log.warn("IGNORING CHILD TRAIT: parent trait with resource #{ids[:resource_id]} and id #{ids[:trait_id]} doesn't exist (for trait #{resource_pk})")
       return
     end
 
