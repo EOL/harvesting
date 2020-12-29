@@ -849,5 +849,11 @@
 "represents":"to_media_description",
 "submapping":null,
 "is_unique":false,
+"is_required":false},
+{"term":"http://rs.tdwg.org/dwc/terms/basisOfRecord",
+"for_format":"occurrences",
+"represents":"to_ignored",
+"submapping":nil,
+"is_unique":false,
 "is_required":false}
 ]
