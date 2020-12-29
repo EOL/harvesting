@@ -3,6 +3,19 @@
 class MetaXml
   attr_reader :warnings
 
+  class << self
+    def ignore(uri, format)
+      MetaXmlField.create(
+        "term": uri,
+        "for_format": format,
+        "represents": 'to_ignored',
+        "submapping": nil,
+        "is_unique": false,
+        "is_required": false
+      )
+    end
+  end
+
   def initialize(resource)
     @resource = resource
     filename = "#{@resource.path}/meta.xml"
@@ -155,7 +168,8 @@ class MetaXml
   def field_insight(field, format)
     insight = { term: field['term'], for_format: format[:represents] }
     insight[:assumption] = MetaXmlField.where(term: field['term'], for_format: format[:represents])&.first
-    raise "I don't know how to handle a meta.xml field of type #{field['term']}!" if insight[:assumption].nil?
+    raise %Q(I don't know how to handle a meta.xml field of type "#{field['term']}" for format #{format[:represents]}!) if
+      insight[:assumption].nil?
 
     insight[:mapping_name] = insight[:assumption]&.represents || :to_ignored
     insight[:index] = field['index'].to_i
