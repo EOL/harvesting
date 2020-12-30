@@ -26,6 +26,8 @@ class Resource < ApplicationRecord
   # it. Also translations in en.yml
   enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending removing_content]
 
+  after_save :propagate_to_publishing
+
   acts_as_list
 
   class << self
@@ -43,6 +45,10 @@ class Resource < ApplicationRecord
           r.nodes_count = 650000
         end
       end
+    end
+
+    def propagate_to_publishing
+      WebDb.update_resource(self) # NOTE: this WILL create it, if missing.
     end
 
     def quick_define(options)
