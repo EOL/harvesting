@@ -170,6 +170,8 @@ class MetaXml
                      "term: #{field['term']}"
       end
     end
+    raise "Missing a field definition, check that your indexes start at 0" if
+      format[:fields].any?(nil)
   end
 
   def field_insight(field, format)
