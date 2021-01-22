@@ -36,7 +36,14 @@ class MetaXml
   def create_models
     @formats.each do |format|
       parse_xml(format)
-      Field.import!(format[:fields]) unless format[:fields].nil? # Skipped format.
+      next if format[:fields].nil? # Skipped format.
+      begin
+        Field.import!(format[:fields])
+      rescue ArgumentError => e
+        puts "Unable to add these fields:"
+        pp format[:fields]
+        raise e
+      end
     end
     show_warnings
   end
