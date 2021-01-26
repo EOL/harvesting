@@ -957,7 +957,6 @@
 "represents":"to_ignored",
 "submapping":null,
 "is_unique":false,
-"is_required":false}
 "is_required":false},
 {"term":"http://rs.tdwg.org/dwc/terms/scientificNameAuthorship",
 "for_format":"nodes",

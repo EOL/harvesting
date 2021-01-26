@@ -8,7 +8,6 @@ class MetaXmlField < ApplicationRecord
       data = JSON.parse(File.read(filename))
       puts "I see #{data.size} items."
 
-
       # remove things from the list if we already know about them:
       have = {}
       all.each do |mxf|
