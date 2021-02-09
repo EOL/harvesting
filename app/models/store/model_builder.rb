@@ -580,7 +580,12 @@ module Store
       @process.debug('#convert_trait_value') if @models[:debug]
       value = instance.delete(:value)
       if options[:predicate] && EolTerms.by_uri(options[:predicate])['is_text_only']
-        @process.debug('predicate flagged as text-only, setting literal only') if @models[:debug]
+        if instance[:units]
+          @process.warn("Units are set on trait, but predicate #{options[:predicate]} is flagged as text-only! This trait will have a literal and not a measurement.")
+        elsif @models[:debug]
+          @process.debug('predicate flagged as text-only, setting literal only')
+        end
+
         instance[:literal] = value
         return instance
       end
