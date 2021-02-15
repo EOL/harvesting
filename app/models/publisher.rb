@@ -5,7 +5,7 @@ class Publisher
   attr_accessor :resource
 
   SKIP_METADATA_PRED_URIS = Set.new([
-    "http://rs.tdwg.org/dwc/terms/lifeStage",
+    "http://rs.tdwg.org/dwc/terms/lifestage",
     "http://rs.tdwg.org/dwc/terms/sex"
   ])
 
@@ -556,7 +556,7 @@ class Publisher
   def build_meta(meta, in_harvest_trait = nil)
     literal = nil
     predicate = nil
-    moved_meta = moved_meta_map
+
     if meta.is_a?(Reference)
       # TODO: we should probably make this URI configurable:
       predicate = 'http://eol.org/schema/reference/referenceID'
@@ -564,18 +564,16 @@ class Publisher
       body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
       body += " #{meta.doi}" unless meta.doi.blank?
       literal = body
-    elsif SKIP_METADATA_PRED_URIS.include?(UrisAreEolTerms.new(meta).uri(:predicate_term_uri))
+    elsif SKIP_METADATA_PRED_URIS.include?(UrisAreEolTerms.new(meta).uri(:predicate_term_uri)&.downcase)
       # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in
       # ResourceHarvester#resolve_trait_keys)
       return nil
-
-    elsif (meta_mapping = moved_meta[meta.predicate_term_uri])
+    elsif (meta_mapping = moved_meta_mapping(meta.predicate_term_uri))
       raise TypeError, "moved meta encountered without an in-harvest trait" if in_harvest_trait.nil?
       value = meta.literal
       value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
       in_harvest_trait.send("#{meta_mapping[:to]}=", value)
       return nil # Don't record this one.
-
     else
       literal = meta.literal
       predicate = UrisAreEolTerms.new(meta).uri(:predicate_term_uri)
@@ -601,14 +599,16 @@ class Publisher
     ]
   end
 
-  def moved_meta_map
+  def moved_meta_mapping(uri)
     @moved_meta_map ||= {
-      'http://eol.org/schema/terms/SampleSize' => { from: :measurement, to: :sample_size },
-      'http://purl.org/dc/terms/bibliographicCitation' => { to: :citation },
+      'http://eol.org/schema/terms/samplesize' => { from: :measurement, to: :sample_size },
+      'http://purl.org/dc/terms/bibliographiccitation' => { to: :citation },
       'http://purl.org/dc/terms/source' => { to: :source },
-      'http://rs.tdwg.org/dwc/terms/measurementRemarks' => { to: :remarks },
-      'http://rs.tdwg.org/dwc/terms/measurementMethod' => { to: :method }
+      'http://rs.tdwg.org/dwc/terms/measurementremarks' => { to: :remarks },
+      'http://rs.tdwg.org/dwc/terms/measurementmethod' => { to: :method }
     }
+
+    @moved_meta_map[uri.downcase]
   end
 
   # TODO: move this method up.
