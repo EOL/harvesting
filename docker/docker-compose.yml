@@ -30,7 +30,7 @@ services:
       - cluster.name=eol-search-${RAILS_ENV}
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=[eol-backend-elasticsearch,eol-backend-elasticsearch3]"
+      - "discovery.zen.ping.unicast.hosts=[elasticsearch,elasticsearch3]"
     ulimits:
       memlock:
         soft: -1
@@ -48,7 +48,7 @@ services:
       - cluster.name=eol-search-${RAILS_ENV}
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=[eol-backend-elasticsearch,eol-backend-elasticsearch2]"
+      - "discovery.zen.ping.unicast.hosts=[elasticsearch,elasticsearch2]"
     ulimits:
       memlock:
         soft: -1
