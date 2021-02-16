@@ -15,8 +15,6 @@ gem 'creek'
 gem 'crono', '~> 1.1'
 # Required to run bin/delayed_job:
 gem 'daemons'
-# Dalli store:
-gem 'dalli'
 # Background jobs:
 gem 'delayed_job', '~> 4.1.8'
 gem 'delayed_job_active_record'
