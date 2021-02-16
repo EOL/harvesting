@@ -150,7 +150,7 @@ class Resource < ApplicationRecord
       lockfile.lock
       yield
     ensure
-      unlock
+      lockfile.unlock
     end
   end
 

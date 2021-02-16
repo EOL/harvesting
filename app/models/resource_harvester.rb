@@ -93,7 +93,6 @@ class ResourceHarvester
       Searchkick.enable_callbacks
       time = @process.exit
       @harvest.update_attribute(:time_in_minutes, (time / 60.0).ceil) unless fast_forward
-      @resource.unlock
     end
   end
 
