@@ -64,6 +64,7 @@ class Harvest < ApplicationRecord
   def fail
     now = Time.now
     update_attributes(failed_at: now, completed_at: now)
+    unlock
   end
 
   def incomplete
