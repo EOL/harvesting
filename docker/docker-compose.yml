@@ -85,7 +85,7 @@ services:
     restart: always
     volumes:
       - ./resources/secrets.yml:/app/config/secrets.yml
-      - ${EOL_ROOT_DIR}/web/app/public/data
+      - ${EOL_ROOT_DIR}/web:/app/public/data
       - ${EOL_ROOT_DIR}/web/tmp:/tmp
     depends_on:
       - elasticsearch
