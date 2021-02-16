@@ -999,5 +999,18 @@
 "represents":"to_ignored",
 "submapping":null,
 "is_unique":false,
+"is_required":false},
+{"term":"http://eol.org/schema/terms/SampleSize",
+"for_format":"occurrences",
+"represents":"to_occurrences_meta",
+"submapping":"http://eol.org/schema/terms/SampleSize",
+"is_unique":false,
 "is_required":false}
+
+MetaXmlField.create("term" => "http://eol.org/schema/terms/SampleSize",
+"for_format" => "occurrences",
+"represents" => "to_occurrences_meta",
+"submapping" => "http://eol.org/schema/terms/SampleSize",
+"is_unique" => false,
+"is_required" => false)
 ]
