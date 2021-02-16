@@ -18,6 +18,8 @@ gem 'creek', '~> 2.5'
 gem 'crono', '~> 1.1'
 # Required to run bin/delayed_job:
 gem 'daemons', '~> 1.3'
+# mem_cache_store needs this:
+gem 'dalli', '~> 2.7'
 # Background jobs:
 gem 'delayed_job', '~> 4.1.9'
 gem 'delayed_job_active_record', '~> 4.1'
