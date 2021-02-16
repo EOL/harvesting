@@ -27,7 +27,7 @@ module Store
       @models[:vernacular][:remarks] = val
     end
 
-    def to_vernaculars_locallity(field, val)
+    def to_vernaculars_locality(field, val)
       @models[:vernacular] ||= {}
       @models[:vernacular][:locality] = val
     end
