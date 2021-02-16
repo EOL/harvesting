@@ -1005,12 +1005,17 @@
 "represents":"to_occurrences_meta",
 "submapping":"http://eol.org/schema/terms/SampleSize",
 "is_unique":false,
+"is_required":false},
+{"term":"http://purl.obolibrary.org/obo/PATO_0000146",
+"for_format":"occurrences",
+"represents":"to_occurrences_meta",
+"submapping":"http://purl.obolibrary.org/obo/PATO_0000146",
+"is_unique":false,
 "is_required":false}
-
-MetaXmlField.create("term" => "http://eol.org/schema/terms/SampleSize",
-"for_format" => "occurrences",
-"represents" => "to_occurrences_meta",
-"submapping" => "http://eol.org/schema/terms/SampleSize",
-"is_unique" => false,
-"is_required" => false)
+{"term":"http://purl.obolibrary.org/obo/EO_0007196",
+"for_format":"occurrences",
+"represents":"to_occurrences_meta",
+"submapping":"http://purl.obolibrary.org/obo/EO_0007196",
+"is_unique":false,
+"is_required":false}
 ]
