@@ -1,6 +1,6 @@
 version: '3.0' # Note that the verison is NOT for this document, but for the version of docker-compose itself. Keep.
 services:
-  eol-repo-elasticsearch:
+  elasticsearch:
     image: elasticsearch:6.4.0
     container_name: harv_search
     restart: always
@@ -15,14 +15,14 @@ services:
         hard: -1
     volumes:
       - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch/data:/var/data/elasticsearch
-      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch/log:/var/log/elasticsearch
+      - ${EOL_ROOT_DIR}/elasticsearch/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/elasticsearch/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
     ports:
       - 9200:9200
       - 9300:9300
-  eol-repo-elasticsearch2:
+  elasticsearch2:
     image: elasticsearch:6.4.0
     container_name: harv_search2
     environment:
@@ -37,11 +37,11 @@ services:
         hard: -1
     volumes:
       - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch2/data:/var/data/elasticsearch
-      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch2/log:/var/log/elasticsearch
+      - ${EOL_ROOT_DIR}/elasticsearch2/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/elasticsearch2/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
-  eol-repo-elasticsearch3:
+  elasticsearch3:
     image: elasticsearch:6.4.0
     container_name: harv_search3
     environment:
@@ -55,11 +55,11 @@ services:
         hard: -1
     volumes:
       - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch3/data:/var/data/elasticsearch
-      - ${EOL_ROOT_DIR}/eol-repo-elasticsearch3/log:/var/log/elasticsearch
+      - ${EOL_ROOT_DIR}/elasticsearch3/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/elasticsearch3/log:/var/log/elasticsearch
     networks:
       - docker_eolnet
-  eol-repo-memcached:
+  memcached:
     image: memcached
     container_name: harv_cache
     restart: always
@@ -68,33 +68,33 @@ services:
     command: memcached -m 4096m
     networks:
       - docker_eolnet
-  eol-repo-mysql:
+  mysql:
     image: mysql:5.7.12
     container_name: harv_db
     restart: always
     env_file:
       - resources/staging.env
     volumes:
-      - ${EOL_ROOT_DIR}/eol-repo-mysql:/var/lib/mysql
+      - ${EOL_ROOT_DIR}/mysql:/var/lib/mysql
     networks:
       - docker_eolnet
-  eol-repo-app:
+  web:
     build: ..
     image: harvester_v3
-    container_name: harv_app
+    container_name: web
     restart: always
     volumes:
       - ./resources/secrets.yml:/app/config/secrets.yml
-      - ${EOL_ROOT_DIR}/eol-repo-app:/app/public/data
-      - ${EOL_ROOT_DIR}/eol-repo-app/tmp:/tmp
+      - ${EOL_ROOT_DIR}/web/app/public/data
+      - ${EOL_ROOT_DIR}/web/tmp:/tmp
     depends_on:
-      - eol-repo-elasticsearch
-      - eol-repo-mysql
-      - eol-repo-memcached
+      - elasticsearch
+      - mysql
+      - memcached
     links:
-      - eol-repo-elasticsearch:elasticsearch
-      - eol-repo-memcached:memcached
-      - eol-repo-mysql:mysql
+      - elasticsearch
+      - memcached
+      - mysql
     env_file:
       - resources/staging.env
     ports:
