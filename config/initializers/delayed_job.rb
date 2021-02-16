@@ -8,8 +8,30 @@ Delayed::Worker.max_run_time = 7.days # Yes, really. We watch the long-running j
 Delayed::Worker.max_attempts = 2
 
 # Because of https://github.com/collectiveidea/delayed_job_active_record/issues/63
-Delayed::Backend::ActiveRecord.configure do |config|
-  config.reserve_sql_strategy = :default_sql
+module Delayed
+  module Backend
+    module ActiveRecord
+      class Job < ::ActiveRecord::Base
+        def save(*)
+          retries = 0
+
+          begin
+            super
+          rescue ::ActiveRecord::Deadlocked => e
+            if retries < 100
+              logger.info "ActiveRecord::Deadlocked rescued: #{e.message}"
+              logger.info 'Retrying...'
+
+              retries += 1
+              retry
+            else
+              raise
+            end
+          end
+        end
+      end
+    end
+  end
 end
 
 # TODO: You should really move these to a jobs folder.
