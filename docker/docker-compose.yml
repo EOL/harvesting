@@ -103,4 +103,4 @@ services:
       - harvesting_network
 networks:
   harvesting_network:
-    external: true
+    driver: bridge
