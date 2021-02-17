@@ -49,7 +49,7 @@ gem 'pundit'
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
 gem 'rails', '5.2.4.1'
 # Image resizing and manipulation:
-gem 'rmagick'
+gem 'rmagick', '~> 4.2'
 # Use SCSS for stylesheets
 gem 'sass-rails'
 # ElasticSearch:
@@ -59,8 +59,6 @@ gem 'elasticsearch', '~> 6' # Needs to be in sync with the version of ES you are
 gem 'sdoc'
 # Making forms simpler:
 gem 'simple_form'
-# JS runtime
-gem 'therubyracer', '0.12.3'
 # Turbolinks makes following links in your web application faster. Read more:
 # https://github.com/rails/turbolinks
 gem 'turbolinks'
