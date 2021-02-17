@@ -4,7 +4,7 @@ source "https://rubygems.org"
 gem 'rails', '5.2.4.4'
 
 # "Interal" EOL gems:
-gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git'
+gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git', branch: 'main'
 
 # Because we are going to create many, many records!
 gem 'activerecord-import', '~> 1.0'
@@ -60,8 +60,6 @@ gem 'elasticsearch', '~> 6.8' # Needs to be in sync with the version of ES you a
 gem 'sdoc', '~> 1.1'
 # Making forms simpler:
 gem 'simple_form', '~> 5.1'
-# JS runtime
-gem 'therubyracer', '~> 0.12'
 # Turbolinks makes following links in your web application faster. Read more:
 # https://github.com/rails/turbolinks
 gem 'turbolinks', '~> 5.2'
