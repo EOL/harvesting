@@ -19,7 +19,7 @@ full-fledged list of functions, their parameters, and the expected return values
 ## Referential Integrity
 
 The following referential integrity must be preserved; rows that fail one of these tests should be ignored, and added to
-a list of "warnings" for the harvest that an admin or master curator can read and address.
+a list of "warnings" for the harvest that an admin can read and address.
 
 - nodes that have parent_resource_pk values that do NOT have a matching resource_pk
 - scientific_names that have node_resource_pk values that do NOT have a matching nodes.resource_pk

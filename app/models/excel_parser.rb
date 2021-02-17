@@ -2,7 +2,6 @@ class ExcelParser
   # There are many options for gems to use to implement this:
   # https://github.com/pythonicrubyist/creek
   # https://github.com/roo-rb/roo
-  # https://github.com/zdavatz/spreadsheet/blob/master/GUIDE.md
   # https://github.com/zenkay/simple-spreadsheet
   # https://github.com/woahdae/simple_xlsx_reader
   #
