@@ -77,7 +77,7 @@ module MediumPrepper
       orig_filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
       return if File.exist?(orig_filename)
       local_quality = @our_quality
-      @image.write(orig_filename) { self.quality = local_quality }
+      @image.write(orig_filename) { |img| img.quality = local_quality }
       FileUtils.chmod(0o644, orig_filename)
     end
 
@@ -105,7 +105,7 @@ module MediumPrepper
       new_h = this_image.rows
       this_image.strip! # Cleans up properties
       local_quality = @our_quality
-      this_image.write(filename) { self.quality = local_quality }
+      this_image.write(filename) { |img| img.quality = local_quality }
       this_image.destroy! # Reclaim memory.
       # Note: we *should* honor crops. But none of these will have been cropped (yet), so I am skipping it for now.
       FileUtils.chmod(0o644, filename)
