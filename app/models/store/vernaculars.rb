@@ -34,5 +34,10 @@ module Store
       @models[:vernacular] ||= {}
       @models[:vernacular][:source] = val
     end
+
+    def to_vernaculars_locality(field, val)
+      @models[:vernacular] ||= {}
+      @models[:vernacular][:locality] = val
+    end
   end
 end
