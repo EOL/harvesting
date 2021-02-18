@@ -93,9 +93,5 @@ module Store
       @process.debug("Set meta #{field.submapping}.") if field.debugging
       @models[:trait][:meta][field.submapping] = val
     end
-
-    # NOTE: JH said it's okay to skip these for MVP.
-    # def to_traits_attributions_fk(field, val)
-    # end
   end
 end
