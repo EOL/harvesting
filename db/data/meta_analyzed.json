@@ -1024,4 +1024,11 @@
 "submapping":"",
 "is_unique":false,
 "is_required":false}
+"is_required":false},
+{"term":"http://eol.org/schema/agent/agentID",
+"for_format":"assocs",
+"represents":"to_ignored",
+"submapping":"",
+"is_unique":false,
+"is_required":false}
 ]
