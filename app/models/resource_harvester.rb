@@ -259,11 +259,10 @@ class ResourceHarvester
       Dir.exist?(Rails.public_path.join('diff'))
     each_format do
       @format.update_attribute(:diff, @format.diff_path)
-      other_fmt = @previous_harvest ? @previous_harvest.formats.find { |f| f.represents == @format.represents } : nil
       @file = @format.diff # We're now reading from the diff...
       # There's no diff if the previous format failed!
       if other_fmt && File.exist?(other_fmt.converted_csv_path)
-        run_diff(other_fmt)
+        run_diff(@format)
       else
         fake_diff_from_nothing
       end
@@ -666,7 +665,7 @@ class ResourceHarvester
   end
 
   def each_format(&block)
-    @harvest.formats.each do |fmt|
+    @resource.formats.each do |fmt|
       @format = fmt
       fid = @format.id
       unless @formats.key?(fid)
@@ -688,7 +687,7 @@ class ResourceHarvester
   # This is very much like #each_format, but reads the diff file and ignores the
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
-    @harvest.formats.each do |fmt|
+    @resource.formats.each do |fmt|
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)

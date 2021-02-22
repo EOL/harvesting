@@ -24,7 +24,7 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(params[:id])
-    @formats = Format.where(resource_id: @resource.id).abstract
+    @formats = Format.where(resource_id: @resource.id)
     respond_to do |fmt|
       fmt.html do
         @root_nodes = @resource.nodes.published.root.order('canonical, resource_pk').page(params[:page] || 1)

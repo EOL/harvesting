@@ -69,7 +69,6 @@ class Resource < ApplicationRecord
               line_sep: options[:line_sep] || "\n",
               resource_id: resource.id,
               represents: rep).
-            abstract.
             first_or_create do |f|
           f.resource_id = resource.id
           f.represents = rep
@@ -289,16 +288,8 @@ class Resource < ApplicationRecord
     harvest = Harvest.create(resource_id: id)
     harvests << harvest
     Rails.logger.error('###=-> ' +
-      abstract_fields.map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
-    formats.abstract.each do |fmt|
-      Rails.logger.error("###=-> (Outer) Copying Format #{fmt.id} to Harvest #{harvest.id}.")
-      fmt.copy_to_harvest(harvest)
-    end
+      fields.map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
     harvest
-  end
-
-  def abstract_fields
-    formats.abstract.first.fields.sort_by(&:position)
   end
 
   def name_brief

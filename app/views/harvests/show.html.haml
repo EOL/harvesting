@@ -73,19 +73,6 @@
       %strong Time to Harvest:
       = distance_of_time_in_words(@harvest.time_in_minutes)
 
-%h2 Expected File Format Definitions
-- if @harvest.formats.empty?
-  "This harvest has no file format definitions yet, and cannot be processed."
-- else
-  %ul
-    - @harvest.formats.each do |fmt|
-      %li
-        %strong= "#{link_to(fmt.represents, fmt)}:".html_safe
-        = fmt.file ? fmt.file : fmt.get_from
-        - if fmt.excel?
-          = ", sheet ##{fmt.sheet}"
-        = "(#{fmt.fields.size} fields)"
-
 %h2 Harvesting Log (most recent first)
 - if @logs.empty?
   %p The logs for this harvest are empty.

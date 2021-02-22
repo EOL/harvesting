@@ -1,4 +1,4 @@
-# Each resourvce needs to have several file formats defined... e.g.: taxa, agents, refs, etc. ...This model represents
+# Each resource needs to have several file formats defined... e.g.: taxa, agents, refs, etc. ...This model represents
 # those file format definitions.
 class Format < ApplicationRecord
   default_scope { order(represents: :asc) }
@@ -8,7 +8,6 @@ class Format < ApplicationRecord
   has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :delete_all
   has_many :hlogs, inverse_of: :format # NOTE: not removing...
 
-  belongs_to :harvest, inverse_of: :formats, optional: true
   belongs_to :resource, inverse_of: :formats
 
   enum file_type: %i[excel csv]
@@ -19,8 +18,6 @@ class Format < ApplicationRecord
     agents refs attributions nodes articles images js_maps links media maps sounds videos vernaculars scientific_names
     occurrences assocs measurements
   ]
-
-  scope :abstract, -> { where('harvest_id IS NULL') }
 
   def model_fks # rubocop:disable Metrics/MethodLength Metrics/CyclomaticComplexity
     if articles?
@@ -60,20 +57,6 @@ class Format < ApplicationRecord
 
   def converted_csv_path
     special_path('converted_csv', 'csv')
-  end
-
-  def copy_to_harvest(new_harvest)
-    new_format = self.dup # rubocop:disable Style/RedundantSelf
-    new_harvest.formats << new_format
-    weird_zero_position_bug = fields.any? { |f| f.position.zero? }
-    fields.each do |field|
-      new_field = field.dup
-      new_field.position += 1 if weird_zero_position_bug
-      new_format.fields << new_field
-      new_field.save!
-    end
-    new_format.save!
-    new_format
   end
 
   def diff_path
@@ -138,11 +121,5 @@ class Format < ApplicationRecord
   def remove_files
     File.unlink(converted_csv_path) if File.exist?(converted_csv_path)
     File.unlink(diff_path) if File.exist?(diff_path)
-  end
-
-  def remove_content
-    # I'm actually going to retain the logs... so nothing there...
-    fields.delete_all
-    remove_files
   end
 end

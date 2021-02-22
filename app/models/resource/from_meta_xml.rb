@@ -85,7 +85,7 @@ class Resource
     def create_models_from_xml
       process = LoggedProcess.new(@resource)
       process.run_step('Parse meta.xml file and create formats with fields') do
-        @resource.formats&.abstract&.delete_all
+        @resource.formats&.delete_all
         meta_xml = MetaXml.new(@resource)
         meta_xml.create_models
         meta_xml.warnings.each { |warning| process.warn(warning) }

@@ -74,7 +74,6 @@ resource = Resource.where(name: 'Test CSV').first_or_create do |r|
 end
 
 fmt = Format.where(resource_id: resource.id, represents: Format.represents[:nodes])
-            .abstract
             .first_or_create do |f|
               f.resource_id = resource.id
               f.represents = Format.represents[:nodes]
@@ -221,7 +220,6 @@ end
 fmt = Format.where(
       resource_id: excel_resource.id,
       represents: Format.represents[:nodes]).
-    abstract.
     first_or_create do |f|
   f.resource_id = excel_resource.id
   f.represents = Format.represents[:nodes]

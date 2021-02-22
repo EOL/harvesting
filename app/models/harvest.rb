@@ -1,6 +1,5 @@
 class Harvest < ApplicationRecord
   belongs_to :resource, inverse_of: :harvests
-  has_many :formats, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :hlogs, inverse_of: :harvest # destroyed via formats
   has_many :nodes, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :scientific_names, through: :nodes, source: 'scientific_names'
@@ -99,7 +98,7 @@ class Harvest < ApplicationRecord
        klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id = #{id}")
        # puts "#{klass}: #{klass.where(harvest_id: id).count}"
      end
-    formats.each(&:remove_content)
+    resource.formats.each(&:remove_files)
     # NOTE: halved the size of these batches in Apr 2019 because of timeouts.
     nodes.pluck(:id).in_groups_of(2500, false) do |batch|
       remove_ancestors_natively(batch)

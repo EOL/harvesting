@@ -6,10 +6,6 @@
     = link_to(t("delete"), @format, method: :delete, data: { confirm: t("are_you_sure") })
 
 .ui.list
-  - if @format.harvest
-    .item
-      %strong= "This format was used for harvest on"
-      = l(@format.harvest.created_at, format: :short)
   - if @format.excel?
     .item
       %strong= "Sheet:"
