@@ -232,9 +232,7 @@ en:
         one: "One pending media download."
         other: "%{count} pending media downloads."
       no_harvest: "No harvests (yet)."
-      no_log: "No logs (yet)."
       most_recent_harvest: "Most recent harvest:"
-      most_recent_log: "Most recent log:"
     publish_status:
       deprecated: "deprecated (will never harvest)"
       harvest_pending: "pending"

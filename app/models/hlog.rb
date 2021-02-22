@@ -1,8 +1,0 @@
-class Hlog < ApplicationRecord
-  belongs_to :harvest, inverse_of: :hlogs
-  belongs_to :format, inverse_of: :hlogs
-
-  enum category: %i[errors warns infos progs loops starts ends counts queries commands names_matches downloads]
-
-  scope :non_download, -> { where(['category != ?', Hlog.categories[:downloads]]) }
-end

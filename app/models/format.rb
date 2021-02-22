@@ -6,7 +6,6 @@ class Format < ApplicationRecord
   before_destroy :remove_files
 
   has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :delete_all
-  has_many :hlogs, inverse_of: :format # NOTE: not removing...
 
   belongs_to :resource, inverse_of: :formats
 

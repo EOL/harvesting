@@ -1,6 +1,5 @@
 class Harvest < ApplicationRecord
   belongs_to :resource, inverse_of: :harvests
-  has_many :hlogs, inverse_of: :harvest # destroyed via formats
   has_many :nodes, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :scientific_names, through: :nodes, source: 'scientific_names'
   has_many :occurrences, inverse_of: :harvest # destroyed via nodes
@@ -67,15 +66,6 @@ class Harvest < ApplicationRecord
 
   def incomplete
     update_attributes(failed_at: nil, completed_at: nil)
-  end
-
-  # TODO: these two methods are obsolete. Remove them and their calls.
-  def started_matching_at
-    hlogs.where(category: Hlog.categories[:starts]).where('message LIKE "%match_nodes"')&.first&.created_at
-  end
-
-  def finished_matching_at
-    hlogs.where(category: Hlog.categories[:starts]).where('message LIKE "%reindex_search"')&.first&.created_at
   end
 
   def complete
