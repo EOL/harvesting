@@ -116,6 +116,7 @@ class Harvest < ApplicationRecord
   def diff_size(format)
     file = diff_path(format) || format.get_from
     return 0 unless File.exist?(file)
+    `wc -l #{file}`.chomp
   end
 
   # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
