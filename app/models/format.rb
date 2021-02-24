@@ -3,8 +3,6 @@
 class Format < ApplicationRecord
   default_scope { order(represents: :asc) }
 
-  before_destroy :remove_files
-
   has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :delete_all
 
   belongs_to :resource, inverse_of: :formats
@@ -54,29 +52,15 @@ class Format < ApplicationRecord
     end
   end
 
-  def converted_csv_path
-    special_path('converted_csv', 'csv')
+  def diff_parser
+    headers = nil
+    headers = fields.map(&:expected_header) if data_begins_on_line.zero?
+    CsvParser.new(harvest.diff_path(self), headers: headers)
   end
 
-  def diff_path
-    special_path('diff', 'diff')
-  end
-
-  def diff_size
-    return line_count if line_count
-    file = diff || get_from
-    return 0 unless File.exist?(file)
-    self[:line_count] = `wc #{file.gsub(' ', '\\ ')}`.to_i
-    save! if changed?
-  end
-
-  # You can pass in :cat, :e, :line as options
+  # You can pass in :cat, :e, :line as options (q.v. Harvest)
   def log(message, options = {})
     harvest.log(message, options.merge(format: self))
-  end
-
-  def special_path(dir, ext)
-    Rails.public_path.join(dir, "#{resource.abbr}_#{represents}_#{id}.#{ext}")
   end
 
   def warn(message, line = nil)
@@ -89,10 +73,6 @@ class Format < ApplicationRecord
 
   def headers
     fields.sort_by(&:position).map(&:expected_header)
-  end
-
-  def open_converted_csv
-    CSV.read(converted_csv_path, encoding: 'UTF-8')
   end
 
   def file_parser
@@ -108,17 +88,5 @@ class Format < ApplicationRecord
     else
       raise "I don't know how to read formats of #{file_type}!"
     end
-  end
-
-  def diff_parser
-    headers = nil
-    headers = fields.map(&:expected_header) if data_begins_on_line.zero?
-    CsvParser.new(diff, headers: headers)
-  end
-
-  # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
-  def remove_files
-    File.unlink(converted_csv_path) if File.exist?(converted_csv_path)
-    File.unlink(diff_path) if File.exist?(diff_path)
   end
 end

@@ -1,6 +1,12 @@
 class RemoveHarevstIdFromFormats < ActiveRecord::Migration[5.2]
-  def change
+  def up
+    remove_column :formats, :harvest_id
+    remove_column :formats, :diff, :string
     Format.where('harvest_id IS NOT NULL').delete_all
-    remove_column :harvest_id, :formats
+  end
+
+  def down
+    add_column :formats, :harvest_id, :integer
+    add_column :formats, :diff, :string
   end
 end

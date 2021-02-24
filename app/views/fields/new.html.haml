@@ -1,5 +1,0 @@
-%h1.ui.block.header
-  = t("fields.create.header", url: resource_format_path(@field.format, resource_id: @field.format.resource_id), name: t("formats.create.represents.#{@field.format.represents}")).html_safe
-= render("form")
-.ui.section
-  = link_to(t("fields.create.actions.cancel"), resource_format_path(@field.format, resource_id: @field.format.resource_id))

@@ -138,7 +138,7 @@ class ResourceHarvester
         fields = {}
         @format.fields.each { |f| fields[f.expected_header] = f }
       end
-      @file = @format.converted_csv_path
+      @file = @harvest.converted_csv_path(@format)
       CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
         validate_csv(csv, fields)
       end
@@ -212,7 +212,7 @@ class ResourceHarvester
   def convert_to_csv
     each_format do
       unless @converted[@format.id]
-        @file = @format.converted_csv_path
+        @file = @harvest.converted_csv_path(@format)
         CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
           @parser.rows_as_hashes do |row, line, debugging|
             @line_num = line
@@ -231,12 +231,12 @@ class ResourceHarvester
         end
         @converted[@format.id] = true # Shouldn't need this, but being safe
       end
-      path = @format.converted_csv_path.to_s.gsub(' ', '\\ ')
+      path = @harvest.converted_csv_path(@format).to_s.gsub(' ', '\\ ')
       cmd = "/usr/bin/sort #{path} > #{path}_sorted"
       @process.cmd(cmd)
       # NOTE: the LC_ALL fixes a problem with unicode characters.
       if system({ 'LC_ALL' => 'C' }, cmd)
-        FileUtils.mv("#{@format.converted_csv_path}_sorted", @format.converted_csv_path)
+        FileUtils.mv("#{@harvest.converted_csv_path(@format)}_sorted", @harvest.converted_csv_path(@format))
       else
         raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
       end
@@ -258,11 +258,10 @@ class ResourceHarvester
     Dir.mkdir(Rails.public_path.join('diff')) unless
       Dir.exist?(Rails.public_path.join('diff'))
     each_format do
-      @format.update_attribute(:diff, @format.diff_path)
       @file = @format.diff # We're now reading from the diff...
       # There's no diff if the previous format failed!
-      if other_fmt && File.exist?(other_fmt.converted_csv_path)
-        run_diff(@format)
+      if false
+        # TODO... We can't handle "real" diffs, yet.
       else
         fake_diff_from_nothing
       end
@@ -270,17 +269,9 @@ class ResourceHarvester
     @harvest.update_attribute(:deltas_created_at, Time.now)
   end
 
-  def run_diff(old_fmt)
-    File.unlink(@format.diff) if File.exist?(@format.diff)
-    cmd = "/usr/bin/diff #{old_fmt.converted_csv_path} "\
-      "#{@format.converted_csv_path} > #{@format.diff}"
-    # TODO: We can't trust the exit code! diff exits 0 if the files are the same, and 1 if not.
-    run_cmd(cmd, { 'LC_ALL' => 'C' })
-  end
-
   def fake_diff_from_nothing
     diff = @format.diff.to_s.gsub(' ', '\\ ')
-    csv = @format.converted_csv_path.to_s.gsub(' ', '\\ ')
+    csv = @harvest.converted_csv_path(@format).to_s.gsub(' ', '\\ ')
     run_cmd("echo \"0a\" > #{diff}")
     if @format.data_begins_on_line.zero?
       run_cmd("cat #{csv} >> #{diff}")
@@ -304,11 +295,11 @@ class ResourceHarvester
   def parse_diff_and_store
     clear_storage_vars
     each_diff do
-      @process.info("Loading #{@format.represents} diff file into memory (#{@format.diff_size} lines)...")
+      @process.info("Loading #{@format.represents} diff file into memory (#{@harvest.diff_size(@format)} lines)...")
       fields = build_fields
       i = 0
       time = Time.now
-      @process.enter_group(@format.diff_size) do |harv_proc|
+      @process.enter_group(@harvest.diff_size(@format)) do |harv_proc|
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
           i += 1
           if (i % 10_000).zero?
@@ -692,7 +683,7 @@ class ResourceHarvester
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = @format.diff_parser
+        @formats[fid][:parser] = @harvest.diff_parser(@format)
         @formats[fid][:headers] = @format.headers
       end
       @parser = @formats[fid][:parser]

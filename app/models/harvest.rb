@@ -88,7 +88,7 @@ class Harvest < ApplicationRecord
        klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE harvest_id = #{id}")
        # puts "#{klass}: #{klass.where(harvest_id: id).count}"
      end
-    resource.formats.each(&:remove_files)
+    remove_files
     # NOTE: halved the size of these batches in Apr 2019 because of timeouts.
     nodes.pluck(:id).in_groups_of(2500, false) do |batch|
       remove_ancestors_natively(batch)
@@ -111,5 +111,34 @@ class Harvest < ApplicationRecord
 
   def remove_nodes_natively(node_ids)
     Node.connection.execute("DELETE FROM nodes WHERE id IN (#{node_ids.join(',')})")
+  end
+
+  def diff_size(format)
+    file = diff_path(format) || format.get_from
+    return 0 unless File.exist?(file)
+  end
+
+  # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
+  def remove_files
+    formats.each do |fmt|
+      converted_csv = converted_csv_path(fmt)
+      File.unlink(converted_csv) if File.exist?(converted_csv)
+      diff = diff_path(fmt)
+      File.unlink(diff) if File.exist?(diff)
+    end
+  end
+
+  def converted_csv_path(format)
+    special_path(format, 'converted_csv', 'csv')
+  end
+
+  def diff_path(format)
+    special_path(format, 'diff', 'diff')
+  end
+
+private
+
+  def special_path(format, subdir, ext)
+    Rails.public_path.join(subdir, "#{resource.abbr}_#{format.represents}_#{id}.#{ext}")
   end
 end

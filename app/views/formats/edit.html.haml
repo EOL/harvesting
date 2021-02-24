@@ -1,5 +1,0 @@
-%h1.ui.block.header
-  = t("formats.edit.header", type: @format.represents.titleize, resource: link_to(@format.resource.name, @format.resource)).html_safe
-= render("form")
-.ui.section
-  = link_to(t("cancel"), resource_format_path(@format, resource_id: @format.resource_id))

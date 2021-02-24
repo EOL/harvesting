@@ -2,9 +2,7 @@ Rails.application.routes.draw do
   devise_for :users
   root 'resources#index'
 
-  resources :formats, only: [:show, :destroy] do
-    resources :fields, only: [:create, :new, :edit]
-  end
+  resources :formats, only: [:show]
   resources :harvests
   resources :media, only: [:show]
   resources :nodes, only: [:show] do
@@ -22,7 +20,7 @@ Rails.application.routes.draw do
     get :re_download_opendata_harvest
     get :re_read_xml
     get :re_create_tsv
-    resources :formats, except: [:destroy]
+    resources :formats, only: [:show]
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]
     resources :scientific_names, only: [:index]
