@@ -1,9 +1,5 @@
 %h1.ui.header
   = t("formats.show.header", type: @format.represents.titleize, resource: link_to(@format.resource.name, @format.resource)).html_safe
-  .sub.header
-    = link_to(t("edit"), edit_resource_format_path(@format, resource_id: @format.resource_id))
-    •
-    = link_to(t("delete"), @format, method: :delete, data: { confirm: t("are_you_sure") })
 
 .ui.list
   - if @format.excel?

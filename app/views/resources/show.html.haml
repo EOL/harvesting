@@ -122,8 +122,6 @@
         = "(#{fmt.fields.size} fields)"
         - lines = `wc -l #{fmt.get_from.gsub(/(\s)/, "\\\1")}`.split.first
         = "(#{lines} lines)"
-.ui.section
-  = link_to(t("resources.show.add_format"), new_resource_format_path(@resource))
 %h2= "Harvests"
 - if @resource.removing_content?
   .ui.raised.segment
