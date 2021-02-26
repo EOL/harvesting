@@ -139,7 +139,6 @@ class MetaXml
   def format_params(format)
     format[:params] = {
       resource_id: @resource.id,
-      harvest_id: nil,
       header_lines: format[:xml]['ignoreHeaderLines'],
       data_begins_on_line: format[:xml]['ignoreHeaderLines'],
       file_type: :csv,
