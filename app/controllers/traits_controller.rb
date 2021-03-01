@@ -23,7 +23,7 @@ class TraitsController < ApplicationController
                   .first
     @resource = @trait.resource
     @harvest = @trait.harvest
-    @format = @harvest.formats.where(represents: Format.represents[:measurements]).first
+    @format = @resource.formats.where(represents: Format.represents[:measurements]).first
     @heads = `head -n 1 #{@format.get_from}`
     @cmd =
       if @trait.resource_pk == @trait.resource_pk.to_i.to_s

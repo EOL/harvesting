@@ -8,7 +8,7 @@ class Harvest::Fetcher
   end
 
   def fetch
-    @harvest.formats.each do |fmt|
+    @harvest.resource.formats.each do |fmt|
       # If it's in an archive
         # TODO: we need to allow archives on resources
         # Create a public archive dir, if it doesn't exist
