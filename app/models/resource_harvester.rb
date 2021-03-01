@@ -271,7 +271,7 @@ class ResourceHarvester
   end
 
   def fake_diff_from_nothing
-    diff = @format.diff.to_s.gsub(' ', '\\ ')
+    diff = @harvest.diff_path(@format).to_s.gsub(' ', '\\ ')
     csv = @harvest.converted_csv_path(@format).to_s.gsub(' ', '\\ ')
     run_cmd("echo \"0a\" > #{diff}")
     if @format.data_begins_on_line.zero?
