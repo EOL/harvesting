@@ -38,9 +38,9 @@ class ResourceHarvester
     @converted = {}
     # Placeholders to mark where we "currently are":
     @diff = nil
-    @line_num = 0
+    @line_num = 0 # This is really just used for debugging.
     @format = 'none'
-    @file = '/dev/null'
+    @file = '/dev/null' # This is really just used for debugging.
     @parser = nil
     @headers = []
   end
@@ -258,7 +258,7 @@ class ResourceHarvester
     Dir.mkdir(Rails.public_path.join('diff')) unless
       Dir.exist?(Rails.public_path.join('diff'))
     each_format do
-      @file = @format.diff # We're now reading from the diff...
+      @file = @harvest.diff_path(@format) # We're now reading from the diff...
       # There's no diff if the previous format failed!
       if false
         # TODO... We can't handle "real" diffs, yet.
@@ -661,7 +661,6 @@ class ResourceHarvester
       fid = @format.id
       unless @formats.key?(fid)
         @formats[fid] = {}
-        @file = @format.file
         @formats[fid][:parser] = @format.file_parser
         @formats[fid][:headers] = @formats[fid][:parser].headers
         # If we made it here, the file is parse-able, so we should save the row_sep/line_sep, if different (so we don't
@@ -688,7 +687,7 @@ class ResourceHarvester
       end
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
-      @file = @format.diff
+      @file = @harvest.diff_path(@format)
       yield
     end
   end
