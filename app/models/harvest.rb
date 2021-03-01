@@ -121,7 +121,7 @@ class Harvest < ApplicationRecord
 
   # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
   def remove_files
-    formats.each do |fmt|
+    resource.formats.each do |fmt|
       converted_csv = converted_csv_path(fmt)
       File.unlink(converted_csv) if File.exist?(converted_csv)
       diff = diff_path(fmt)
