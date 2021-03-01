@@ -287,8 +287,6 @@ class Resource < ApplicationRecord
   def create_harvest_instance
     harvest = Harvest.create(resource_id: id)
     harvests << harvest
-    Rails.logger.error('###=-> ' +
-      fields.map { |f| "[#{f.id}] #{f.expected_header}(#{f.mapping})" }.join(', '))
     harvest
   end
 
