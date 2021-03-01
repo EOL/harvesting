@@ -113,12 +113,6 @@ class Harvest < ApplicationRecord
     Node.connection.execute("DELETE FROM nodes WHERE id IN (#{node_ids.join(',')})")
   end
 
-  def diff_size(format)
-    file = diff_path(format) || format.get_from
-    return 0 unless File.exist?(file)
-    `wc -l #{file}`.chomp
-  end
-
   # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
   def remove_files
     resource.formats.each do |fmt|
@@ -131,6 +125,18 @@ class Harvest < ApplicationRecord
 
   def converted_csv_path(format)
     special_path(format, 'converted_csv', 'csv')
+  end
+
+  def diff_size(format)
+    file = diff_path(format) || format.get_from
+    return 0 unless File.exist?(file)
+    `wc -l #{file}`.chomp
+  end
+
+  def diff_parser(format)
+    headers = nil
+    headers = fields.map(&:expected_header) if data_begins_on_line.zero?
+    CsvParser.new(diff_path(format), headers: headers)
   end
 
   def diff_path(format)

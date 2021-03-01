@@ -52,12 +52,6 @@ class Format < ApplicationRecord
     end
   end
 
-  def diff_parser
-    headers = nil
-    headers = fields.map(&:expected_header) if data_begins_on_line.zero?
-    CsvParser.new(harvest.diff_path(self), headers: headers)
-  end
-
   # You can pass in :cat, :e, :line as options (q.v. Harvest)
   def log(message, options = {})
     harvest.log(message, options.merge(format: self))

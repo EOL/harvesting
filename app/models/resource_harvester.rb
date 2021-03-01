@@ -685,7 +685,7 @@ class ResourceHarvester
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = @format.diff_parser
+        @formats[fid][:parser] = @harvest.diff_parser(@format)
         @formats[fid][:headers] = @format.headers
       end
       @parser = @formats[fid][:parser]
