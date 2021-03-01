@@ -83,6 +83,7 @@ class ResourceHarvester
         fast_forward = false
         @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
         @process.run_step(stage) { send(stage) }
+        @resource.connection.reconnect! # These things can take a long time. Best to be safe.
       end
     rescue Lockfile::TimeoutLockError => e
       log_err(Exception.new('Already running!'))
@@ -657,6 +658,7 @@ class ResourceHarvester
 
   def each_format(&block)
     @resource.formats.each do |fmt|
+      @resource.connection.reconnect! # These things can take a long time. Best to be safe.
       @format = fmt
       fid = @format.id
       unless @formats.key?(fid)
@@ -678,6 +680,7 @@ class ResourceHarvester
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
     @resource.formats.each do |fmt|
+      @resource.connection.reconnect! # These things can take a long time. Best to be safe.
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
