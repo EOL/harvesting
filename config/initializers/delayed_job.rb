@@ -24,6 +24,10 @@ HarvestJob = Struct.new(:resource_id) do
   def error(job, exception)
     Rails.logger.error("** HARVEST JOB ERROR: #{exception.message} TRACE: #{exception.backtrace.join("\n")}")
   end
+
+  def after(_job)
+    Resource.find(resource_id).unlock rescue nil
+  end
 end
 
 ReHarvestJob = Struct.new(:resource_id) do
@@ -37,6 +41,10 @@ ReHarvestJob = Struct.new(:resource_id) do
 
   def max_attempts
     1
+  end
+
+  def after(_job)
+    Resource.find(resource_id).unlock rescue nil
   end
 end
 
@@ -52,6 +60,10 @@ ResumeHarvestJob = Struct.new(:resource_id) do
   def max_attempts
     1
   end
+
+  def after(_job)
+    Resource.find(resource_id).unlock rescue nil
+  end
 end
 
 ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
@@ -65,6 +77,10 @@ ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
 
   def max_attempts
     1
+  end
+
+  def after(_job)
+    Resource.find(resource_id).unlock rescue nil
   end
 end
 
