@@ -50,7 +50,7 @@
             .content
               .header
                 = "#{field.position}."
-                = link_to("#{field.expected_header}", edit_format_field_path(@format, field))
+                = field.expected_header
                 \&rarr;
                 - unless field.mapping.blank?
                   = field.mapping
