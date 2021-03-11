@@ -1,4 +1,4 @@
-class RemoveHarevstIdFromFormats < ActiveRecord::Migration[5.2]
+class RemoveHlogs < ActiveRecord::Migration[5.2]
   def up
     drop_table :hlogs
   end
