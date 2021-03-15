@@ -137,10 +137,11 @@ class Resource < ApplicationRecord
 
   def unlock
     return nil unless lockfile_exists?
-
-    Lockfile.new(lockfile_name, timeout: 0.01).unlock
-  rescue Lockfile::UnLockError
-    File.unlink(lockfile_name) if lockfile_exists?
+    Rails.logger.info("Unlocking #{lockfile_name}")
+    Lockfile.new(lockfile_name, timeout: 0.1).unlock
+  rescue
+    Rails.logger.warn("Failed to remove #{lockfile_name} politely, retrying manually.")
+    File.unlink(lockfile_name) rescue nil
   end
 
   def lock

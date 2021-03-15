@@ -26,6 +26,7 @@ HarvestJob = Struct.new(:resource_id) do
   end
 
   def after(_job)
+    Rails.logger.info("Finished HarvestJob for Resource##{resource_id}")
     Resource.find(resource_id).unlock rescue nil
   end
 end
@@ -44,6 +45,7 @@ ReHarvestJob = Struct.new(:resource_id) do
   end
 
   def after(_job)
+    Rails.logger.info("Finished ReHarvestJob for Resource##{resource_id}")
     Resource.find(resource_id).unlock rescue nil
   end
 end
@@ -62,6 +64,7 @@ ResumeHarvestJob = Struct.new(:resource_id) do
   end
 
   def after(_job)
+    Rails.logger.info("Finished ResumeHarvestJob for Resource##{resource_id}")
     Resource.find(resource_id).unlock rescue nil
   end
 end
@@ -80,6 +83,7 @@ ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
   end
 
   def after(_job)
+    Rails.logger.info("Finished ReDownloadOpendataHarvestJob for Resource##{resource_id}")
     Resource.find(resource_id).unlock rescue nil
   end
 end
