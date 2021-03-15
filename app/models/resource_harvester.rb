@@ -66,10 +66,11 @@ class ResourceHarvester
       '>'
   end
 
+  # I am trying to re-arrange things. You MUST now call this wrapped in a Resource.with_lock:
   def start
     @process = LoggedProcess.new(@resource)
     Searchkick.disable_callbacks
-    @resource.lock do
+    begin
       fast_forward = @harvest && !@harvest.stage.nil?
       Harvest.stages.each_key do |stage|
         if fast_forward && harvest.stage != stage
@@ -85,8 +86,6 @@ class ResourceHarvester
         @process.run_step(stage) { send(stage) }
         @resource.connection.reconnect! # These things can take a long time. Best to be safe.
       end
-    rescue Lockfile::TimeoutLockError => e
-      log_err(Exception.new('Already running!'))
     rescue => e
       @resource&.stop_adding_media_jobs
       log_err(e)

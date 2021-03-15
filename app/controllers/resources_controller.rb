@@ -123,7 +123,7 @@ class ResourcesController < ApplicationController
     log_auth(@resource)
     @resource.unlock
     flash[:notice] = "It should be unlocked now. You can try re-harvesting or resuming."
-    redirect_to resources_path
+    redirect_to resource_path(@resource)
   end
 
   private

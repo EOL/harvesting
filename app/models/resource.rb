@@ -96,6 +96,22 @@ class Resource < ApplicationRecord
     def from_xml(loc)
       Resource::FromMetaXml.by_path(loc)
     end
+
+    def with_lock(resource_id)
+      resource = Resource.find(resource_id)
+      process = LoggedProcess.new(resource)
+      resource.lock do
+        begin
+          yield(process)
+        rescue Lockfile::TimeoutLockError => e
+          process.fail(Exception.new('Already running!'))
+          raise e
+        rescue => e
+          process.fail(e)
+          raise e
+        end
+      end
+    end
   end
 
   def propagate_to_publishing
@@ -297,12 +313,6 @@ class Resource < ApplicationRecord
     @name_brief = abbr.blank? ? name : abbr
     @name_brief.gsub(/[^a-z0-9\-]+/i, '_').sub(/_+$/, '').downcase
     @name_brief
-  end
-
-  def start_harvest
-    harvester = ResourceHarvester.new(self)
-    harvester.start
-    harvester
   end
 
   # TODO: I'm not sure where this is called. (?)
