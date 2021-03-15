@@ -13,6 +13,7 @@ en:
   edit: "edit"
   delete: "delete"
   unlock: "unlock"
+  unlocked: "no lock"
   fields:
     create:
       actions:
