@@ -65,5 +65,4 @@
                 = field.can_be_empty? ? nil : "(must not be empty)"
 - if user_signed_in?
   .ui.section
-    .ui.button= link_to(t("formats.show.actions.add_field"), new_format_field_path(@format))
     .ui.button= link_to(t("formats.show.actions.return"), resource_path(@format.resource))
