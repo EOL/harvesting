@@ -97,6 +97,7 @@ GEM
     elasticsearch-transport (6.8.3)
       faraday (~> 1)
       multi_json
+    emoji_regex (3.2.2)
     enum_help (0.0.17)
       activesupport (>= 3.0.0)
     erubi (1.10.0)
@@ -336,9 +337,6 @@ GEM
     uglifier (4.2.0)
       execjs (>= 0.3.0, < 3)
     unicode-display_width (2.0.0)
-    unicode-emoji (2.7.1)
-      unicode-version (~> 1.0)
-    unicode-version (1.1.0)
     unicorn (5.8.0)
       kgio (~> 2.6)
       raindrops (~> 0.7)
@@ -376,6 +374,7 @@ DEPENDENCIES
   delayed_job_active_record (~> 4.1)
   devise (~> 4.7)
   elasticsearch (~> 6.8)
+  emoji_regex (~> 3.2)
   enum_help (~> 0.0)
   eol_terms!
   factory_bot_rails (~> 5.2)
@@ -403,7 +402,6 @@ DEPENDENCIES
   spring (~> 2.1)
   turbolinks (~> 5.2)
   uglifier (~> 4.2)
-  unicode-emoji (~> 2.7)
   unicorn (~> 5.8)
   unicorn-worker-killer (~> 0.4)
   web-console (~> 3.7)
