@@ -638,14 +638,19 @@ class ResourceHarvester
 
   # I have hijacked this method for some basic sanity-checking
   def calculate_statistics
+    # TODO: move these to SanityChecks
     log_err(Exception.new('ZERO NODES! That is probably... bad.')) if @harvest.nodes.count.zero?
     unmapped_pages = @harvest.nodes.where(page_id: nil).count
     unless unmapped_pages.zero?
       bad_nodes = @harvest.nodes.where(page_id: nil).limit(10).pluck(:id)
       log_err(Exception.new("Unmapped page_ids for #{unmapped_pages} nodes (IDs: #{bad_nodes.join(', ')})! That is unacceptable."))
     end
-    @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?') if
-      @resource.node_ancestors.count.zero?
+
+    if @resource.node_ancestors.count.zero?
+      @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?') 
+    end
+      
+    SanityChecks.new(@harvest, @process).perform_all
   end
 
   # TODO: this is a LOUSY place to put the publishing, but it's a real pain to add new steps to harvesting. I'll do it
