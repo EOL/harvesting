@@ -37,7 +37,7 @@ class SanityChecks
 
   def log_duplicate_trait_ids
     trait_id_q = <<~SQL
-      SELECT t1.id, t2.id FROM
+      SELECT t1.resource_pk, t1.id, t2.resource_pk, t2.id FROM
       traits t1 JOIN traits t2
       ON 
       coalesce(t1.node_id, 'n') = coalesce(t2.node_id, 'n') AND
@@ -55,10 +55,10 @@ class SanityChecks
 
     result = Trait.connection.execute(trait_id_q)
 
-    @process.log("Duplicate trait id pairs (up to 100):") 
+    @process.log("Duplicate trait pairs (up to 100):") 
     
     result.each do |r|
-      @process.log("[#{r.join(", ")}]")
+      @process.log("(resource_pk: #{r[0]}, id: #{r[1]}), (resource_pk: #{r[2]}, id: #{r[3]})")
     end
   end
 end
