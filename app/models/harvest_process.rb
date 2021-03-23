@@ -21,6 +21,8 @@ class HarvestProcess < ApplicationRecord
   end
 
   def update_group(position, time = nil)
+    # this happens to be a prudent time to reconnect the database ...
+    ActiveRecord::Base.connection.reconnect!
     record_time(time) if time
     update_attribute(:current_group, position)
   end
