@@ -181,8 +181,9 @@ class MetaXml
 
     insight[:mapping_name] = insight[:assumption]&.represents || :to_ignored
     insight[:index] = field['index'].to_i
-    insight[:header_name] = format[:headers][insight[:index]]
-    insight[:header_name] ||= field['term'].split('/').last
+    insight[:header_name] = format[:headers].nil? ?
+      field['term'].split('/').last :
+      format[:headers][insight[:index]]
     insight
   end
 
