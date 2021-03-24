@@ -28,7 +28,11 @@ class SanityChecks
   def perform_all
     check_for_duplicate_traits
     check_for_duplicate_assocs
+    check_for_no_provenance(Trait, 'trait', 'trait', ['source', 'citation'])
+    check_for_no_provenance(Assoc, 'assoc', 'association', ['source'])
   end
+
+  private
 
   def check_for_duplicate_traits
     check_for_duplicates(Trait, 'trait', 'trait', TRAIT_COMPARISON_COLS)
@@ -38,17 +42,44 @@ class SanityChecks
     check_for_duplicates(Assoc, 'assoc', 'association', ASSOC_COMPARISON_COLS)
   end
 
-  def log_duplicates(klass, type, name, cols)
-    table = type + 's'
+  def check_for_no_provenance(klass, type, name, cols)
+    count_q = <<~SQL
+      SELECT count(*)
+      #{no_provenance_query_common(type, name, cols)}
+    SQL
 
+    count = klass.connection.execute(count_q).first.first
+
+    unless count == 0
+      @process.log("TRAITS WITHOUT PROVENANCE FOUND! There are #{count} traits w/o #{cols.join(', ')} or references.")
+      log_no_provenance(klass, type, name, cols)
+    end
+  end
+
+  def log_no_provenance(klass, type, name, cols)
+    q = <<~SQL
+      SELECT #{table(type)}.resource_pk, #{table(type)}.id 
+      #{no_provenance_query_common(type, name, cols)}
+    SQL
+
+    result = klass.connection.execute(q)
+
+    @process.log("#{name}s w/o provenance (up to 100):") 
+
+    result.each do |r|
+      @process.log("(resource_pk: #{r[0]}, id: #{r[1]})")
+    end
+  end
+
+  def log_duplicates(klass, type, name, cols)
     q = <<~SQL
       SELECT t1.resource_pk, t1.id, t2.resource_pk, t2.id
-      FROM #{table} t1 JOIN #{table} t2 ON 
+      FROM #{table(type)} t1 JOIN #{table(type)} t2 ON 
       #{cols.map { |c| "coalesce(t1.#{c}, 'null') = coalesce(t2.#{c}, 'null')" }.join("AND\n")} AND
       t1.id < t2.id AND
       t1.harvest_id = #{@harvest.id} AND t2.harvest_id = #{@harvest.id}
-      LEFT OUTER JOIN #{table}_references r1 ON r1.#{type}_id = t1.id 
-      LEFT OUTER JOIN #{table}_references r2 ON r2.#{type}_id = t2.id
+      LEFT OUTER JOIN #{table(type)}_references r1 ON r1.#{type}_id = t1.id 
+      LEFT OUTER JOIN #{table(type)}_references r2 ON r2.#{type}_id = t2.id
       WHERE r1.reference_id <=> r2.reference_id
       LIMIT 100
     SQL
@@ -63,18 +94,17 @@ class SanityChecks
   end
 
   def check_for_duplicates(klass, type, name, cols)
-    table = type + 's'
-    ref_join_table = "#{table}_references"
+    ref_join_table = "#{table(type)}_references"
 
-    all_count = @harvest.send(table).count
+    all_count = @harvest.send(table(type)).count
     count_q = <<~SQL
       SELECT count(DISTINCT
         concat_ws(',',
-          #{cols.map { |c| "coalesce(#{table}.#{c}, 'null')" }.join(",\n")},
+          #{cols.map { |c| "coalesce(#{table(type)}.#{c}, 'null')" }.join(",\n")},
           coalesce(#{ref_join_table}.reference_id, 'null')
         ))
-      FROM #{table} LEFT OUTER JOIN #{ref_join_table} ON #{table}.id = #{ref_join_table}.#{type}_id
-      WHERE #{table}.harvest_id = #{@harvest.id}
+      FROM #{table(type)} LEFT OUTER JOIN #{ref_join_table} ON #{table(type)}.id = #{ref_join_table}.#{type}_id
+      WHERE #{table(type)}.harvest_id = #{@harvest.id}
     SQL
 
     uniq_count = klass.connection.execute(count_q).first.first
@@ -84,6 +114,22 @@ class SanityChecks
       @process.log("DUPLICATE TRAITS FOUND! There are only #{uniq_count} (of #{all_count} total) unique #{name}s.")
       log_duplicates(klass, type, name, cols)
     end
+  end
+
+  def no_provenance_query_common(type, name, cols)
+    ref_join_table = "#{table(type)}_references"
+
+    <<~SQL
+      FROM #{table(type)} LEFT OUTER JOIN #{ref_join_table}
+      ON #{table(type)}.id = #{ref_join_table}.#{type}_id
+      WHERE #{table(type)}.harvest_id = #{@harvest.id}
+      AND #{cols.map { |col| "(#{table(type)}.#{col} IS NULL OR #{table(type)}.#{col} = '')"}.join(" AND ") }
+      AND #{ref_join_table}.reference_id IS NULL
+    SQL
+  end
+
+  def table(type)
+    type + 's'
   end
 end
 
