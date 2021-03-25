@@ -105,6 +105,7 @@ class ResourceHarvester
   def create_harvest_instance
     @harvest = @resource.create_harvest_instance
     @harvest.create_harvest_instance!
+    @process.info("Created harvest instance ##{@harvest.id}")
   end
 
   # grab the file from each format
@@ -113,7 +114,8 @@ class ResourceHarvester
 
     # TODO: we should compress the files.
     # https://stackoverflow.com/questions/9204423/how-to-unzip-a-file-in-ruby-on-rails
-    Harvest::Fetcher.fetch_format_files(@harvest)
+    files = Harvest::Fetcher.fetch_format_files(@harvest)
+    @process.info("Fetched #{files.size} files.")
     @harvest.update_attribute(:fetched_at, Time.now)
   end
 
@@ -124,8 +126,11 @@ class ResourceHarvester
     # @harvest.update_attribute(:consistency_checked_at, Time.now)
     # TODO: I don't think the mkdirs belong here. I wasn't sure where would be best. TODO: really the dir names
     # here (and the one in format.rb) should be configurable
-    Dir.mkdir(Rails.public_path.join('converted_csv')) unless
-      Dir.exist?(Rails.public_path.join('converted_csv'))
+    folder = Rails.public_path.join('converted_csv')
+    unless Dir.exist?(folder)
+      Dir.mkdir(folder)
+      @process.info("Created new folder: #{folder}")
+    end
     each_format do
       fields = nil # scope.
       if @format.header_lines.positive?
@@ -142,6 +147,7 @@ class ResourceHarvester
       CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
         validate_csv(csv, fields)
       end
+      @process.info("Valid: #{@file} (#{@file.readlines.size} lines)")
       @converted[@format.id] = true
     end
     @harvest.update_attribute(:validated_at, Time.now)
@@ -234,12 +240,14 @@ class ResourceHarvester
       path = @harvest.converted_csv_path(@format).to_s.gsub(' ', '\\ ')
       cmd = "/usr/bin/sort #{path} > #{path}_sorted"
       @process.cmd(cmd)
+      file = @harvest.converted_csv_path(@format)
       # NOTE: the LC_ALL fixes a problem with unicode characters.
       if system({ 'LC_ALL' => 'C' }, cmd)
-        FileUtils.mv("#{@harvest.converted_csv_path(@format)}_sorted", @harvest.converted_csv_path(@format))
+        FileUtils.mv("#{@harvest.converted_csv_path(@format)}_sorted", file)
       else
         raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
       end
+      @process.info("Converted: #{path} (#{file.readlines.size} lines)")
     end
   end
 
@@ -254,9 +262,11 @@ class ResourceHarvester
   end
 
   def calculate_delta
-    # TODO: really this dir name (and the one in format.rb) should be configurable
-    Dir.mkdir(Rails.public_path.join('diff')) unless
-      Dir.exist?(Rails.public_path.join('diff'))
+    diff_dir = Rails.public_path.join('diff')
+    unless Dir.exist?(diff_dir)
+      Dir.mkdir(diff_dir)
+      @process.info("Created diff dir: #{diff_dir}")
+    end
     each_format do
       @file = @harvest.diff_path(@format) # We're now reading from the diff...
       # There's no diff if the previous format failed!
@@ -264,6 +274,7 @@ class ResourceHarvester
         # TODO... We can't handle "real" diffs, yet.
       else
         fake_diff_from_nothing
+        @process.info("Created diff: #{@file} (#{@file.readlines.size} lines)")
       end
     end
     @harvest.update_attribute(:deltas_created_at, Time.now)
@@ -283,12 +294,8 @@ class ResourceHarvester
 
   def run_cmd(cmd, env = {})
     @process.cmd(cmd)
-    # NOTE: the LC_ALL fixes a problem with diff.
-    if env.blank?
-      system(cmd)
-    else
-      system(env, cmd)
-    end
+    # NOTE: the LC_ALL fixes a problem with unicode and diff.
+    system(env.merge('LC_ALL' => 'C'), cmd)
   end
 
   # read the raw new/updated data into the database, TODO: log curation conflicts
@@ -690,6 +697,7 @@ class ResourceHarvester
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       @file = @harvest.diff_path(@format)
+      @process.info("Handling diff: #{@file} (#{@file.readlines.size} lines)")
       yield
     end
   end
