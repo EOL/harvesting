@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
-gem 'rails', '5.2.4.4'
+gem 'rails', '5.2.4.5'
 
 # "Interal" EOL gems:
 gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git', branch: 'main'
@@ -34,7 +34,7 @@ gem 'iso-639', '~> 0.3'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'jbuilder', '~> 2.11'
 # Use jquery as the JavaScript library
-gem 'jquery-rails', '~> 4.3'
+gem 'jquery-rails', '~> 4.4'
 # Pagination!
 gem 'kaminari', '~> 1.2'
 # Helps lock processes safely (maybe not REALLY needed for our purposes, but I feel safer with it):
