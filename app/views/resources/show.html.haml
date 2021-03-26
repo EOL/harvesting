@@ -8,6 +8,7 @@
   - if policy(@resource).update?
     .item= link_to(t("edit"), edit_resource_path(@resource))
     .item= link_to(t("delete"), @resource, method: :delete, data: { confirm: t("are_you_sure") })
+    .item= link_to(t("resources.actions.remove_content"), remove_content_resource_path(@resource), data: { confirm: t("are_you_sure") })
     .item
       - if @resource.lockfile_exists?
         = link_to(t("unlock"), resource_unlock_path(@resource), data: { confirm: t("are_you_sure_unlock") })

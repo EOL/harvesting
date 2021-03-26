@@ -186,12 +186,13 @@ en:
       harvest_in_queue: "currently harvesting, wait..."
       publishing_side: "see in production"
       re_harvest: "re-harvest"
-      resume_harvest: "resume harvest"
       re_download_opendata_harvest: "Re-download OpenData and harvest"
       re_harvest_confirm: "Are you sure? This will delete all current data before re-trying!"
       re_download_confirm: "Are you sure? This will delete all current data before re-trying!"
       re_read_xml: "re-read XML"
       re_create_tsv: "re-create TSV"
+      remove_content: "remove content"
+      resume_harvest: "resume harvest"
       show_all: "Include un-harvested"
     create:
       action: "create a new resource"
@@ -206,6 +207,7 @@ en:
         one: "Added harvest job to the queue; there is only one job ahead of it."
         other: "Added harvest job to the queue, with %{count} jobs ahead of it."
       imported: "Created a new resource from opendata.eol.org!"
+      remove_content_enqueued: "Added remove_content job to the queue. Check back later!"
       re_read_xml: "Formats updated to latest version of meta.xml file."
       re_create_tsv_enqueued: "The publishing TSV files will be re-created in the background."
       updated: "Saved changes to <a href=%{path}>%{name}</a>"
@@ -242,8 +244,6 @@ en:
       unpublished: "unharvested"
       updated_files: "new files!"
       removing_content: "REMOVING CONTENT!"
-    show:
-      add_format: "Add a file format definition"
     stats:
       articles: "articles"
       associations: "associations"

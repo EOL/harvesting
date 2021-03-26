@@ -17,6 +17,7 @@ Rails.application.routes.draw do
     get :unlock
     get :re_harvest
     get :resume_harvest
+    get :remove_content
     get :re_download_opendata_harvest
     get :re_read_xml
     get :re_create_tsv

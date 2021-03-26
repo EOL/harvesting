@@ -101,3 +101,19 @@ DownloadMediumJob = Struct.new(:medium_id) do
     1 # We handle this elsewhere.
   end
 end
+
+RemoveContentJob = Struct.new(:resource_id) do
+  def perform
+    resource = Resource.find(resource_id)
+    message = "!! REMOVING CONTENT for resource #{resource.name} (##{resource.id})"
+    Rails.logger.warn(message)
+    Delayed::Worker.logger.warn(message)
+    resource.remove_content
+    resource.harvests.each &:delete
+    `echo "!! Reset log via RemoveContentJob on #{Time.now}" > #{resource.process_log_path}`
+  end
+
+  def queue_name
+    'harvest'
+  end
+end

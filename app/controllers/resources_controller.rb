@@ -126,6 +126,14 @@ class ResourcesController < ApplicationController
     redirect_to resource_path(@resource)
   end
 
+  def remove_content
+    @resource = Resource.find(params[:resource_id])
+    log_auth(@resource)
+    Delayed::Job.enqueue(RemoveContentJob.new(@resource.id))
+    flash[:notice] = t('resources.flash.remove_content_enqueued', count: count)
+    redirect_to @resource
+  end
+
   private
 
   def enqueue_harvest(type = '')
