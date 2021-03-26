@@ -10,7 +10,7 @@ class Resource
         resource = if Resource.exists?(abbr: abbr.downcase)
           Resource.find(abbr: abbr.downcase)
         else
-          Resource.create(name: abbr.titleize, abbr: abbr.downcase, pk_url: '$PK')
+          Resource.create(name: abbr.titleize, abbr: abbr.sub(/\s+/, '_ ').downcase, pk_url: '$PK')
           resource.partner = resource.fake_partner
           resource.save
           resource

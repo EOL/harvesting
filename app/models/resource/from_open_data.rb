@@ -124,7 +124,7 @@ class Resource
     end
 
     def abbreviate(name)
-      return name if name.size < 8
+      return name.gsub(/\s+/, '_').downcase if name.size < 8
 
       # NOTE: the #titleize helps split CamelCase stuff.
       words = name.titleize.split.map(&:downcase)

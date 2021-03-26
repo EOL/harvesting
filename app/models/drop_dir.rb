@@ -78,7 +78,7 @@ class DropDir
         digits = matches.last
         allowed_size = 15 - digits.size
         name = name[0..allowed_size]
-        abbr = "#{name}-#{digits}"
+        abbr = "#{name}-#{digits}".gsub(/\s+/, '_').downcase
       end
       abbr[0..15]
     end
