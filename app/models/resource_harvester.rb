@@ -110,13 +110,7 @@ class ResourceHarvester
 
   # grab the file from each format
   def fetch_files
-    raise 'No files have changed!' unless @resource.any_files_changed?
-
-    # TODO: we should compress the files.
-    # https://stackoverflow.com/questions/9204423/how-to-unzip-a-file-in-ruby-on-rails
-    files = Harvest::Fetcher.fetch_format_files(@resource)
-    raise "No files!" if files.size.zero?
-    @process.info("Fetched #{files.size} files.")
+    # I'm just holding this slot for future features. Nothing to do now.
     @harvest.update_attribute(:fetched_at, Time.now)
   end
 
@@ -664,9 +658,9 @@ class ResourceHarvester
   end
 
   def each_format(&block)
-    raise "No formats!" if @resource.formats.zero?
+    @resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
+    raise "No formats!" if @resource.formats.count.zero?
     @resource.formats.each do |fmt|
-      @resource.connection.reconnect! # These things can take a long time. Best to be safe.
       @format = fmt
       fid = @format.id
       unless @formats.key?(fid)
@@ -681,6 +675,7 @@ class ResourceHarvester
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       yield
+      @resource.connection.reconnect! # These things can take a long time. Best to be safe.
     end
   end
 

@@ -70,6 +70,7 @@ class Format < ApplicationRecord
   end
 
   def file_parser
+    use_original_file if file.nil?
     raise "File missing: #{file}" unless File.exist?(file)
 
     if excel?
@@ -82,5 +83,9 @@ class Format < ApplicationRecord
     else
       raise "I don't know how to read formats of #{file_type}!"
     end
+  end
+
+  def use_original_file
+    update_attribute(:file, get_from)
   end
 end
