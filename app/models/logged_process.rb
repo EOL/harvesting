@@ -5,7 +5,13 @@ class LoggedProcess
     @process = recent_or_new_process
     @log = resource.process_log
     @start_time = Time.now
-    last_non_merge_log = `cd #{Rails.root} && git log --pretty=oneline | head -n 2 | tail -n 1`
+    git_logs = `cd #{Rails.root} && git log --pretty=oneline`.split("\n")
+    current_version = git_logs.first.split.first[0..7]
+    index = 1
+    while(git_logs[index] =~ / Merge branch/)
+      index += 1
+    end
+    last_non_merge_log = git_logs[index]
     starting("logged process: #{last_non_merge_log}")
   end
 
