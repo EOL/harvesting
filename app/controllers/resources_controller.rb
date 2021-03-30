@@ -136,6 +136,13 @@ class ResourcesController < ApplicationController
     redirect_to @resource
   end
 
+  def kill_workers
+    `#{Rails.root}/bin/stop_work`
+    `#{Rails.root}/bin/stop_media`
+    flash[:notice] = t('resources.flash.killed_workers')
+    redirect_to resources_path
+  end
+
   private
 
   def enqueue_harvest(type = '')

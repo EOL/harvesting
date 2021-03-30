@@ -194,6 +194,7 @@ en:
       remove_content: "remove content"
       resume_harvest: "resume harvest"
       show_all: "Include un-harvested"
+      kill_workers: "restart workers"
     create:
       action: "create a new resource"
       header: "Create a Resource"
@@ -207,6 +208,7 @@ en:
         one: "Added harvest job to the queue; there is only one job ahead of it."
         other: "Added harvest job to the queue, with %{count} jobs ahead of it."
       imported: "Created a new resource from opendata.eol.org!"
+      killed_workers: "Restart message sent to harvest and media workers. Note that this will not stop a running harvest."
       remove_content_enqueued: "Added remove_content job to the queue. Check back later!"
       re_read_xml: "Formats updated to latest version of meta.xml file."
       re_create_tsv_enqueued: "The publishing TSV files will be re-created in the background."

@@ -28,6 +28,9 @@ Rails.application.routes.draw do
     resources :traits, only: [:index]
     resources :assocs, only: [:index]
     resources :vernaculars, only: [:index]
+    collection do
+      get 'kill_workers'
+    end
   end
   resources :traits, only: [:show]
 
