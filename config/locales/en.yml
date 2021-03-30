@@ -228,6 +228,7 @@ en:
         zero: "No pending harvests."
         one: "One pending harvest."
         other: "%{count} pending harvests."
+      harvest_pids: "Harvest PIDs:"
       header: "Resource Harvesting Control Panel"
       harvest_header: "Log Summary:"
       list_header: "The Resources:"
@@ -235,6 +236,7 @@ en:
         zero: "No pending media downloads."
         one: "One pending media download."
         other: "%{count} pending media downloads."
+      media_pids: "Media PIDs:"
       no_harvest: "No harvests (yet)."
       most_recent_harvest: "Most recent harvest:"
     publish_status:
