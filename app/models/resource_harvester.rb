@@ -658,7 +658,14 @@ class ResourceHarvester
   end
 
   def each_format(&block)
+    @process.info("Size before reconnect: #{@resource.formats.size}")
+    @process.info("Count before reconnect: #{@resource.formats.count}")
     Resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
+    @process.info("Size after reconnect: #{@resource.formats.size}")
+    @process.info("Count after reconnect: #{@resource.formats.count}")
+    @resource.reload
+    @process.info("Size after reload: #{@resource.formats.size}")
+    @process.info("Count after reload: #{@resource.formats.count}")
     count = @resource.formats.size
     raise "No formats!" if count.zero?
     @process.info("Looping over #{count} formats...")
