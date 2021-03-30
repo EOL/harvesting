@@ -5,7 +5,8 @@ class LoggedProcess
     @process = recent_or_new_process
     @log = resource.process_log
     @start_time = Time.now
-    starting("logged process: #{`cd #{Rails.root} && git log --pretty=oneline | head -n 1`}")
+    last_non_merge_log = `cd #{Rails.root} && git log --pretty=oneline | head -n 2 | tail -n 1`
+    starting("logged process: #{last_non_merge_log}")
   end
 
   def recent_or_new_process

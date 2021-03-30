@@ -659,9 +659,12 @@ class ResourceHarvester
 
   def each_format(&block)
     @resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
-    raise "No formats!" if @resource.formats.count.zero?
+    count = @resource.formats.count
+    raise "No formats!" if count.zero?
+    @process.info("Looping over #{count} formats...")
     @resource.formats.each do |fmt|
       @format = fmt
+      @process.info("...#{fmt.represents} (#{fmt.get_from})")
       fid = @format.id
       unless @formats.key?(fid)
         @formats[fid] = {}
