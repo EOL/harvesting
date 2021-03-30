@@ -84,7 +84,7 @@ class ResourceHarvester
         fast_forward = false
         @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
         @process.run_step(stage) { send(stage) }
-        @resource.connection.reconnect! # These things can take a long time. Best to be safe.
+        Resource.connection.reconnect! # These things can take a long time. Best to be safe.
       end
     rescue => e
       @resource&.stop_adding_media_jobs
@@ -658,7 +658,7 @@ class ResourceHarvester
   end
 
   def each_format(&block)
-    @resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
+    Resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
     count = @resource.formats.size
     raise "No formats!" if count.zero?
     @process.info("Looping over #{count} formats...")
@@ -678,7 +678,7 @@ class ResourceHarvester
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       yield
-      @resource.connection.reconnect! # These things can take a long time. Best to be safe.
+      Resource.connection.reconnect! # These things can take a long time. Best to be safe.
     end
   end
 
@@ -686,7 +686,7 @@ class ResourceHarvester
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
     @resource.formats.each do |fmt|
-      @resource.connection.reconnect! # These things can take a long time. Best to be safe.
+      Resource.connection.reconnect! # These things can take a long time. Best to be safe.
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
