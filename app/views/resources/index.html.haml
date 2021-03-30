@@ -17,13 +17,13 @@
     %i.image.icon
     = t("resources.index.media_jobs", count: Delayed::Job.where(queue: 'media', locked_at: nil).count)
   .ui.label
-    - pids = `ps -ef | grep Worker | grep media | awk '{print $2;}'`.split
+    - pids = `ps -ef | grep Worker | grep media | grep -v grep | awk '{print $2;}'`.split
     %i.cog.icon
     = t("resources.index.media_pids")
     .uk-text-small
       = pids.join(", ")
   .ui.label
-    - pids = `ps -ef | grep Worker | grep harvest | awk '{print $2;}'`.split
+    - pids = `ps -ef | grep Worker | grep harvest | grep -v grep | awk '{print $2;}'`.split
     %i.cog.icon
     = t("resources.index.harvest_pids")
     .uk-text-small
