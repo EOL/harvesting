@@ -1,15 +1,15 @@
 class Harvest::Fetcher
-  def self.fetch_format_files(harvest)
-    self.new(harvest).fetch
+  def self.fetch_format_files(resource)
+    self.new(resource).fetch
   end
 
-  def initialize(harvest)
-    @harvest = harvest
+  def initialize(resource)
+    @resource = resource
   end
 
   def fetch
     files = []
-    @harvest.resource.formats.each do |fmt|
+    @resource.formats.each do |fmt|
       # If it's in an archive
         # TODO: we need to allow archives on resources
         # Create a public archive dir, if it doesn't exist
