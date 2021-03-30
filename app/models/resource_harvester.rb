@@ -115,6 +115,7 @@ class ResourceHarvester
     # TODO: we should compress the files.
     # https://stackoverflow.com/questions/9204423/how-to-unzip-a-file-in-ruby-on-rails
     files = Harvest::Fetcher.fetch_format_files(@harvest)
+    raise "No files!" if files.size.zero?
     @process.info("Fetched #{files.size} files.")
     @harvest.update_attribute(:fetched_at, Time.now)
   end

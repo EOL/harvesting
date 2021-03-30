@@ -8,6 +8,7 @@ class Harvest::Fetcher
   end
 
   def fetch
+    files = []
     @harvest.resource.formats.each do |fmt|
       # If it's in an archive
         # TODO: we need to allow archives on resources
@@ -32,7 +33,10 @@ class Harvest::Fetcher
           # Delete the tmp dir
       # Otherwise, throw an error (we don't know where to find this)
       # Update the record to point to the new loc, e.g.
-      fmt.update_attribute(:file, fmt.get_from)
+      file = fmt.get_from
+      files << file
+      fmt.update_attribute(:file, file)
+      files
     end
   end
 end
