@@ -664,6 +664,7 @@ class ResourceHarvester
   end
 
   def each_format(&block)
+    raise "No formats!" if @resource.formats.zero?
     @resource.formats.each do |fmt|
       @resource.connection.reconnect! # These things can take a long time. Best to be safe.
       @format = fmt
