@@ -104,13 +104,12 @@ class ResourceHarvester
 
   def create_harvest_instance
     @harvest = @resource.create_harvest_instance
-    @harvest.create_harvest_instance!
+    @harvest.create_harvest_instance! # This just sets the current "status"
     @process.info("Created harvest instance ##{@harvest.id}")
   end
 
-  # grab the file from each format
+  # I'm just holding this slot for future features. Nothing to do now.
   def fetch_files
-    # I'm just holding this slot for future features. Nothing to do now.
     @harvest.update_attribute(:fetched_at, Time.now)
   end
 
@@ -126,6 +125,8 @@ class ResourceHarvester
       Dir.mkdir(folder)
       @process.info("Created new folder: #{folder}")
     end
+    # Leave this in! It solves a bug where the formats were missing. :S
+    @resource.reload
     each_format do
       fields = nil # scope.
       if @format.header_lines.positive?
@@ -658,14 +659,7 @@ class ResourceHarvester
   end
 
   def each_format(&block)
-    @process.info("Size before reconnect: #{@resource.formats.size}")
-    @process.info("Count before reconnect: #{@resource.formats.count}")
     Resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
-    @process.info("Size after reconnect: #{@resource.formats.size}")
-    @process.info("Count after reconnect: #{@resource.formats.count}")
-    @resource.reload
-    @process.info("Size after reload: #{@resource.formats.size}")
-    @process.info("Count after reload: #{@resource.formats.count}")
     count = @resource.formats.size
     raise "No formats!" if count.zero?
     @process.info("Looping over #{count} formats...")
