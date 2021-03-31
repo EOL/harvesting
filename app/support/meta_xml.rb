@@ -4,15 +4,19 @@ class MetaXml
   attr_reader :warnings
 
   class << self
-    def ignore(uri, format)
-      MetaXmlField.create(
+    # e.g.: MetaXml.ignore('http://purl.org/dc/terms/publisher', :media)
+    def ignore(uri, format, submapping = '')
+      params = {
         "term": uri,
         "for_format": format,
         "represents": 'to_ignored',
-        "submapping": nil,
+        "submapping": submapping,
         "is_unique": false,
         "is_required": false
-      )
+      }
+      MetaXmlField.create(params)
+      # This helps to add the ignored field to the meta_analyzed.json
+      puts ",\n#{params.to_json.gsub(',', ",\n")}"
     end
   end
 
