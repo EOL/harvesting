@@ -16,17 +16,17 @@ class Medium < ApplicationRecord
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
   enum subclass: %i[image video sound map_image js_map]
   enum format: {
-    jpg: 0, 
-    youtube: 1, 
+    jpg: 0,
+    youtube: 1,
     flash: 2, # deprecated
     vimeo: 3,
-    mp3: 4, 
+    mp3: 4,
     ogg: 5,
     wav: 6,
-    mp4: 7, 
+    mp4: 7,
     ogv: 8,
     mov: 9, # deprecated
-    svg: 10, 
+    svg: 10,
     webm: 11
   }
 
@@ -138,7 +138,6 @@ class Medium < ApplicationRecord
       ensure_dir_exists
       abort_if_filetype_unreadable
       raw = download_raw_data
-      # TODO: This is where we need to branch out and handle other media types...
       prepper = get_prepper(raw)
       raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
       prepper.prep_medium

@@ -133,12 +133,13 @@ class Resource < ApplicationRecord
   end
 
   def undownloaded_media_count
-    media.where(downloaded_at: nil).count
+    media.published.missing.count
   end
 
   def fix_downloaded_media_count
-    update_attribute(:downloaded_media_count, media.where('downloaded_at IS NOT NULL').count)
-    update_attribute(:failed_downloaded_media_count, 0)
+    missing = undownloaded_media_count
+    update_attribute(:downloaded_media_count, media.count - missing)
+    update_attribute(:failed_downloaded_media_count, missing)
   end
 
   def lockfile_name
