@@ -38,6 +38,7 @@ ENV LAST_SOURCE_REBUILD 2018-08-20
 COPY . /app
 COPY config/nginx-sites.conf /etc/nginx/sites-enabled/default
 COPY config/nginx.conf /etc/nginx/nginx.conf
+COPY config/imagemagick_policy.xml /etc/ImageMagick-6/policy.xml
 # NOTE: supervisorctl and supervisord *service* doesn't work with custom config files, so just use default:
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY Gemfile ./
