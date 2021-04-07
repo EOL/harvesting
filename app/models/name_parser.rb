@@ -50,7 +50,6 @@ class NameParser
         updates = []
         begin
           parsed = JSON.parse(json)
-          parsed = parsed['namesJson'] if parsed.is_a?(Hash) && parsed.key?('namesJson')
           parsed.each_with_index do |result, i|
             verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
             if @names[verbatim].nil?
@@ -114,7 +113,7 @@ class NameParser
   end
 
   def request_parser(body)
-    uri = URI('https://parser.globalnames.org/api')
+    uri = URI('https://parser.globalnames.org/api/v1')
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
@@ -129,7 +128,7 @@ class NameParser
   end
 
   def run_parser_on_names(verbatims)
-    request_parser(Array(verbatims).to_json)
+    request_parser({names: Array(verbatims), withDetails: true}.to_json)
   end
 
   # Examples of the types of results you will get may be found by doing:
@@ -163,35 +162,28 @@ class NameParser
               attributes[k] = v['value']
             rescue => e
               @process.warn("ERROR: no '#{k}' value for attributes: #{v.inspect}")
-              raise e
             end
             add_authorship(authorships, v)
           end
         end
       end
     end
-    if result.key?('canonicalName')
-      canonical = result['canonicalName']
+    if result.key?('canonical')
+      canonical = result['canonical']
       canon =
-        if canonical.is_a?(String)
-          canonical
-        elsif canonical.is_a?(Hash)
-          if canonical.key?('valueRanked')
-            canonical['valueRanked']
-          elsif canonical.key?('value')
-            canonical['value']
-          elsif canonical.key?('extended')
-            canonical['extended']
-          elsif canonical.key?('simple')
-            canonical['simple']
-          elsif canonical.key?('full')
-            canonical['full']
-          end
+        if canonical.key?('simple')
+          canonical['simple']
+        elsif canonical.key?('stemmed')
+          canonical['stemmed']
+        elsif canonical.key?('full')
+          canonical['full']
         end
     end
     if result['parsed']
       warns = if result.key?('qualityWarnings')
-        result['qualityWarnings'].map { |a| a[1] }.join('; ')
+        result['qualityWarnings']['warning']
+      else
+        ''
       end
       quality = result['quality'] ? result['quality'].to_i : 0
       norm = result['normalized'] ? result['normalized'] : nil
