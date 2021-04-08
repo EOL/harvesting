@@ -26,6 +26,7 @@ class Resource < ApplicationRecord
   # it. Also translations in en.yml
   enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending removing_content]
 
+  before_create :fix_abbr
   #after_save :propagate_to_publishing
 
   acts_as_list
@@ -133,12 +134,13 @@ class Resource < ApplicationRecord
   end
 
   def undownloaded_media_count
-    media.where(downloaded_at: nil).count
+    media.published.missing.count
   end
 
   def fix_downloaded_media_count
-    update_attribute(:downloaded_media_count, media.where('downloaded_at IS NOT NULL').count)
-    update_attribute(:failed_downloaded_media_count, 0)
+    missing = undownloaded_media_count
+    update_attribute(:downloaded_media_count, media.count - missing)
+    update_attribute(:failed_downloaded_media_count, missing)
   end
 
   def lockfile_name
@@ -454,5 +456,11 @@ class Resource < ApplicationRecord
       index += batch_size
       break if index > max
     end
+  end
+
+  private
+  def fix_abbr
+    self.abbr.gsub!(/\s+/, '_') # No spaces allowed in this field! Ever!
+    self.abbr.downcase! # No caps allowed in this field! Ever!
   end
 end

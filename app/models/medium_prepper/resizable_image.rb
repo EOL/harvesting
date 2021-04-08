@@ -3,6 +3,7 @@ module MediumPrepper
   # versions, resizing it for others, and then storing information about it in the DB.
   class ResizableImage
     include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
+    # NOTE: if you want to use this at a prompt, replace Image with Magick::Image
 
     def initialize(medium, raw)
       @downloaded_at = Time.now
@@ -42,7 +43,7 @@ module MediumPrepper
       begin
         @image = get_image(raw)
       rescue Magick::ImageMagickError => e
-        mess = "Couldn't parse image for Medium ##{self[:id]} (#{e.message})"
+        mess = "Couldn't parse image for Medium ##{@medium.id} (#{e.message})"
         Delayed::Worker.logger.error(mess)
         @medium.resource.log_error(mess)
         raise 'unparsable'
@@ -54,7 +55,8 @@ module MediumPrepper
     def get_image(raw)
       # NOTE: #first because no animations are supported!
       if raw.respond_to?(:to_io)
-        Image.read(raw.path).first
+        # NOTE: if you want to use this at a prompt, replace Image with Magick::Image
+        Magick::Image.read(raw.path).first
       else
         raw.rewind
         Image.from_blob(raw.read).first

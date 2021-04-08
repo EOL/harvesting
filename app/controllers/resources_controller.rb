@@ -80,8 +80,7 @@ class ResourcesController < ApplicationController
   def create
     @resource = Resource.new(resource_params)
     log_auth(@resource)
-    @resource.abbr.gsub!(/\s+/, '_') # No spaces allowed in this field! Ever!
-    @resource.abbr.downcase! # No caps allowed in this field! Ever!
+
     if @resource.opendata_url
       @resource = Resource::FromOpenData.url(@resource.opendata_url)
       flash[:notice] = I18n.t('resources.flash.imported', name: @resource.name,
