@@ -10,7 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_12_15_201433) do
+ActiveRecord::Schema.define(version: 2021_04_06_100007) do
+
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
     t.string "resource_pk", null: false
@@ -219,11 +220,12 @@ ActiveRecord::Schema.define(version: 2020_12_15_201433) do
     t.boolean "unique_in_format", default: false, null: false
     t.boolean "can_be_empty", default: true, null: false
     t.string "default_when_blank"
+    t.index ["format_id", "position"], name: "IndexByFormatAndPosition"
+    t.index ["format_id"], name: "index_fields_on_format_id"
   end
 
   create_table "formats", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "resource_id", null: false
-    t.integer "harvest_id"
     t.integer "sheet", default: 1, null: false
     t.integer "header_lines", default: 1, null: false
     t.integer "data_begins_on_line", default: 1, null: false
@@ -231,12 +233,10 @@ ActiveRecord::Schema.define(version: 2020_12_15_201433) do
     t.integer "represents", null: false
     t.string "get_from", null: false
     t.string "file"
-    t.string "diff"
     t.string "field_sep", limit: 4, default: ","
     t.string "line_sep", limit: 4, default: "\n"
     t.boolean "utf8", default: false, null: false
     t.integer "line_count"
-    t.index ["harvest_id"], name: "index_formats_on_harvest_id"
   end
 
   create_table "harvest_processes", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -272,17 +272,6 @@ ActiveRecord::Schema.define(version: 2020_12_15_201433) do
     t.integer "nodes_count"
     t.integer "identifiers_count"
     t.integer "scientific_names_count"
-  end
-
-  create_table "hlogs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
-    t.integer "harvest_id", null: false
-    t.integer "format_id"
-    t.integer "category"
-    t.text "message"
-    t.text "backtrace"
-    t.integer "line"
-    t.datetime "created_at"
-    t.index ["harvest_id"], name: "index_hlogs_on_harvest_id"
   end
 
   create_table "identifiers", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -824,7 +813,7 @@ ActiveRecord::Schema.define(version: 2020_12_15_201433) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
-  create_table "vernaculars", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
+  create_table "vernaculars", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.integer "resource_id", null: false
     t.integer "harvest_id", null: false
     t.integer "node_id"

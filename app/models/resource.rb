@@ -26,6 +26,7 @@ class Resource < ApplicationRecord
   # it. Also translations in en.yml
   enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending removing_content]
 
+  before_create :fix_abbr
   #after_save :propagate_to_publishing
 
   acts_as_list
@@ -455,5 +456,11 @@ class Resource < ApplicationRecord
       index += batch_size
       break if index > max
     end
+  end
+
+  private
+  def fix_abbr
+    self.abbr.gsub!(/\s+/, '_') # No spaces allowed in this field! Ever!
+    self.abbr.downcase! # No caps allowed in this field! Ever!
   end
 end
