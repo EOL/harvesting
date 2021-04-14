@@ -8,8 +8,7 @@ class SanityChecks
     'lifestage_term_uri',
     'measurement',
     'literal',
-    'source',
-    'citation',
+    'source'
   ]
 
   ASSOC_COMPARISON_COLS = [
@@ -28,8 +27,8 @@ class SanityChecks
   def perform_all
     check_for_duplicate_traits
     check_for_duplicate_assocs
-    check_for_no_provenance(Trait, 'trait', 'trait', ['source', 'citation'])
-    check_for_no_provenance(Assoc, 'assoc', 'association', ['source'])
+    check_for_no_source(Trait, 'trait', 'trait')
+    check_for_no_source(Assoc, 'assoc', 'association')
   end
 
   private
@@ -42,29 +41,29 @@ class SanityChecks
     check_for_duplicates(Assoc, 'assoc', 'association', ASSOC_COMPARISON_COLS)
   end
 
-  def check_for_no_provenance(klass, type, name, cols)
+  def check_for_no_source(klass, type, name)
     count_q = <<~SQL
       SELECT count(*)
-      #{no_provenance_query_common(type, name, cols)}
+      #{no_source_query_common(type, name)}
     SQL
 
     count = klass.connection.execute(count_q).first.first
 
     unless count == 0
-      @process.log("TRAITS WITHOUT PROVENANCE FOUND! There are #{count} traits w/o #{cols.join(', ')} or references.")
-      log_no_provenance(klass, type, name, cols)
+      @process.log("WARNING: #{count} #{name}(s) without source found! Please confirm that this is intentional.")
+      log_no_source(klass, type, name)
     end
   end
 
-  def log_no_provenance(klass, type, name, cols)
+  def log_no_source(klass, type, name)
     q = <<~SQL
       SELECT #{table(type)}.resource_pk, #{table(type)}.id 
-      #{no_provenance_query_common(type, name, cols)}
+      #{no_source_query_common(type, name)}
     SQL
 
     result = klass.connection.execute(q)
 
-    @process.log("#{name}s w/o provenance (up to 100):") 
+    @process.log("#{name}s w/o source (up to 100):") 
 
     result.each do |r|
       @process.log("(resource_pk: #{r[0]}, id: #{r[1]})")
@@ -86,7 +85,7 @@ class SanityChecks
 
     result = klass.connection.execute(q)
 
-    @process.log("Duplicate #{name} pairs (up to 100):") 
+    @process.log("(Near) duplicate #{name} pairs (up to 100):") 
     
     result.each do |r|
       @process.log("(resource_pk: #{r[0]}, id: #{r[1]}), (resource_pk: #{r[2]}, id: #{r[3]})")
@@ -111,19 +110,19 @@ class SanityChecks
     diff = all_count - uniq_count 
 
     unless diff == 0
-      @process.log("DUPLICATE TRAITS FOUND! There are only #{uniq_count} (of #{all_count} total) unique #{name}s.")
+      @process.log("(NEAR) DUPLICATE TRAITS FOUND! There are only #{uniq_count} (of #{all_count} total) unique #{name}s.")
       log_duplicates(klass, type, name, cols)
     end
   end
 
-  def no_provenance_query_common(type, name, cols)
+  def no_source_query_common(type, name)
     ref_join_table = "#{table(type)}_references"
 
     <<~SQL
       FROM #{table(type)} LEFT OUTER JOIN #{ref_join_table}
       ON #{table(type)}.id = #{ref_join_table}.#{type}_id
       WHERE #{table(type)}.harvest_id = #{@harvest.id}
-      AND #{cols.map { |col| "(#{table(type)}.#{col} IS NULL OR #{table(type)}.#{col} = '')"}.join(" AND ") }
+      AND (#{table(type)}.source IS NULL OR #{table(type)}.source = '')
       AND #{ref_join_table}.reference_id IS NULL
     SQL
   end
