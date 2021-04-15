@@ -7,7 +7,7 @@ ENV LAST_FULL_REBUILD 2021-02-17
 # Install packages (note we update / clean up at the end of EACH run, because each gets an image)
 RUN apt-get update -q && \
     apt-get install -qq -y build-essential libpq-dev curl wget \
-    apache2-utils nodejs procps supervisor vim nginx logrotate \
+    apache2-utils nodejs procps supervisor vim nginx \
     libmagickwand-dev imagemagick zip unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
