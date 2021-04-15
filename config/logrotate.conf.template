@@ -1,4 +1,4 @@
-/app/log/*.log {
+/PATH/TO/app/log/*.log {
   daily
   missingok
   rotate 5
