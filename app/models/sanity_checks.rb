@@ -59,6 +59,7 @@ class SanityChecks
     q = <<~SQL
       SELECT #{table(type)}.resource_pk, #{table(type)}.id 
       #{no_source_query_common(type, name)}
+      LIMIT 100
     SQL
 
     result = klass.connection.execute(q)
@@ -77,9 +78,6 @@ class SanityChecks
       #{cols.map { |c| "coalesce(t1.#{c}, 'null') = coalesce(t2.#{c}, 'null')" }.join("AND\n")} AND
       t1.id < t2.id AND
       t1.harvest_id = #{@harvest.id} AND t2.harvest_id = #{@harvest.id}
-      LEFT OUTER JOIN #{table(type)}_references r1 ON r1.#{type}_id = t1.id 
-      LEFT OUTER JOIN #{table(type)}_references r2 ON r2.#{type}_id = t2.id
-      WHERE r1.reference_id <=> r2.reference_id
       LIMIT 100
     SQL
 
@@ -93,16 +91,13 @@ class SanityChecks
   end
 
   def check_for_duplicates(klass, type, name, cols)
-    ref_join_table = "#{table(type)}_references"
-
     all_count = @harvest.send(table(type)).count
     count_q = <<~SQL
       SELECT count(DISTINCT
         concat_ws(',',
-          #{cols.map { |c| "coalesce(#{table(type)}.#{c}, 'null')" }.join(",\n")},
-          coalesce(#{ref_join_table}.reference_id, 'null')
+          #{cols.map { |c| "coalesce(#{table(type)}.#{c}, 'null')" }.join(",\n")}
         ))
-      FROM #{table(type)} LEFT OUTER JOIN #{ref_join_table} ON #{table(type)}.id = #{ref_join_table}.#{type}_id
+      FROM #{table(type)}
       WHERE #{table(type)}.harvest_id = #{@harvest.id}
     SQL
 
