@@ -51,14 +51,14 @@ class SanityChecks
 
     unless count == 0
       @process.log("WARNING: #{count} #{name}(s) without source found! Please confirm that this is intentional.")
-      log_no_source(klass, type, name)
+      log_no_source(klass, type, name, has_parent_id)
     end
   end
 
-  def log_no_source(klass, type, name)
+  def log_no_source(klass, type, name, has_parent_id)
     q = <<~SQL
       SELECT #{table(type)}.resource_pk, #{table(type)}.id 
-      #{no_source_query_common(type, name)}
+      #{no_source_query_common(type, name, has_parent_id)}
       LIMIT 100
     SQL
 
