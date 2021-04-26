@@ -28,3 +28,9 @@ rake reset:all_harvests
 ## Background services
 
 `bin/delayed_job run`
+
+## NOTES:
+
+- The logs can get quite large over time. It is recommended you set up logrotate
+  on the host / hypervisor to clean out `log/*log`. There is a file in the
+  `config` folder called `logrotate.conf.template` which you can customize.
