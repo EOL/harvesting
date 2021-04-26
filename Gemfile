@@ -14,8 +14,6 @@ gem 'addressable', '~> 2.7'
 gem 'acts_as_list', '~> 1.0'
 # Parse Excel files:
 gem 'creek', '~> 2.5'
-# Cron jobs:
-gem 'crono', '~> 1.1'
 # Required to run bin/delayed_job:
 gem 'daemons', '~> 1.3'
 # mem_cache_store needs this:
