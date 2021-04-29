@@ -93,7 +93,8 @@ class SanityChecks
   end
 
   def check_for_duplicates(klass, type, name, cols, has_parent)
-    all_count = @harvest.send(table(type)).count
+    all_count_where = has_parent ? { parent_pk: nil, parent_eol_pk: nil } : {}
+    all_count = @harvest.send(table(type)).where(all_count_where).count
     count_q = <<~SQL
       SELECT count(DISTINCT
         concat_ws(',',
