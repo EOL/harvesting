@@ -41,24 +41,24 @@ class SanityChecks
     check_for_duplicates(Assoc, 'assoc', 'association', ASSOC_COMPARISON_COLS, false)
   end
 
-  def check_for_no_source(klass, type, name, has_parent_id)
+  def check_for_no_source(klass, type, name, has_parent)
     count_q = <<~SQL
       SELECT count(*)
-      #{no_source_query_common(type, name, has_parent_id)}
+      #{no_source_query_common(type, name, has_parent)}
     SQL
 
     count = klass.connection.execute(count_q).first.first
 
     unless count == 0
       @process.log("WARNING: #{count} #{name}(s) without source found! Please confirm that this is intentional.")
-      log_no_source(klass, type, name, has_parent_id)
+      log_no_source(klass, type, name, has_parent)
     end
   end
 
-  def log_no_source(klass, type, name, has_parent_id)
+  def log_no_source(klass, type, name, has_parent)
     q = <<~SQL
       SELECT #{table(type)}.resource_pk, #{table(type)}.id 
-      #{no_source_query_common(type, name, has_parent_id)}
+      #{no_source_query_common(type, name, has_parent)}
       LIMIT 100
     SQL
 
@@ -71,14 +71,15 @@ class SanityChecks
     end
   end
 
-  def log_duplicates(klass, type, name, cols, has_parent_id)
+  def log_duplicates(klass, type, name, cols, has_parent)
     q = <<~SQL
       SELECT t1.resource_pk, t1.id, t2.resource_pk, t2.id
       FROM #{table(type)} t1 JOIN #{table(type)} t2 ON 
       #{cols.map { |c| "coalesce(t1.#{c}, 'null') = coalesce(t2.#{c}, 'null')" }.join("AND\n")} AND
       t1.id < t2.id AND
       t1.harvest_id = #{@harvest.id} AND t2.harvest_id = #{@harvest.id}
-      #{has_parent_id ? 'AND t1.parent_id IS NULL AND t2.parent_id IS NULL' : ''}
+      #{child_filter_clause('t1', has_parent)}
+      #{child_filter_clause('t2', has_parent)}
       LIMIT 100
     SQL
 
@@ -91,7 +92,7 @@ class SanityChecks
     end
   end
 
-  def check_for_duplicates(klass, type, name, cols, has_parent_id)
+  def check_for_duplicates(klass, type, name, cols, has_parent)
     all_count = @harvest.send(table(type)).count
     count_q = <<~SQL
       SELECT count(DISTINCT
@@ -100,7 +101,7 @@ class SanityChecks
         ))
       FROM #{table(type)}
       WHERE #{table(type)}.harvest_id = #{@harvest.id}
-      #{has_parent_id ? "AND #{table(type)}.parent_id IS NULL" : ''}
+      #{child_filter_clause(table(type), has_parent)} 
     SQL
 
     uniq_count = klass.connection.execute(count_q).first.first
@@ -108,11 +109,11 @@ class SanityChecks
 
     unless diff == 0
       @process.log("(NEAR) DUPLICATE TRAITS FOUND! There are only #{uniq_count} (of #{all_count} total) unique #{name}s.")
-      log_duplicates(klass, type, name, cols, has_parent_id)
+      log_duplicates(klass, type, name, cols, has_parent)
     end
   end
 
-  def no_source_query_common(type, name, has_parent_id)
+  def no_source_query_common(type, name, has_parent)
     ref_join_table = "#{table(type)}_references"
 
     <<~SQL
@@ -121,12 +122,18 @@ class SanityChecks
       WHERE #{table(type)}.harvest_id = #{@harvest.id}
       AND (#{table(type)}.source IS NULL OR #{table(type)}.source = '')
       AND #{ref_join_table}.reference_id IS NULL
-      #{has_parent_id ? "AND #{table(type)}.parent_id IS NULL" : ''}
+      #{child_filter_clause(table(type), has_parent)}
     SQL
   end
 
   def table(type)
     type + 's'
+  end
+
+  def child_filter_clause(table, has_parent)
+    has_parent ? 
+      "AND #{table}.parent_pk IS NULL AND #{table}.parent_eol_pk IS NULL" :
+      ''
   end
 end
 
