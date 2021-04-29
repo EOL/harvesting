@@ -87,7 +87,7 @@ services:
       - ./resources/secrets.yml:/app/config/secrets.yml
       - ${EOL_ROOT_DIR}/harvesting_web:/app/public/data
       - ${EOL_ROOT_DIR}/harvesting_web/tmp:/tmp
-      - ${EOL_ROOT_DIR}/harvesting_web/log:/app/log
+      - ${EOL_ROOT_DIR}/harvesting_web_log:/app/log
     depends_on:
       - elasticsearch
       - mysql
