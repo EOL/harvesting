@@ -156,6 +156,7 @@ class Resource < ApplicationRecord
   def unlock
     return nil unless lockfile_exists?
     Rails.logger.info("Unlocking #{lockfile_name}")
+    Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"}).delete_all
     Lockfile.new(lockfile_name, timeout: 0.1).unlock
   rescue
     Rails.logger.warn("Failed to remove #{lockfile_name} politely, retrying manually.")
