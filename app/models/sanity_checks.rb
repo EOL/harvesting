@@ -116,13 +116,17 @@ class SanityChecks
 
   def no_source_query_common(type, name, has_parent)
     ref_join_table = "#{table(type)}_references"
+    meta_join_table = "meta_#{table(type)}"
 
     <<~SQL
       FROM #{table(type)} LEFT OUTER JOIN #{ref_join_table}
       ON #{table(type)}.id = #{ref_join_table}.#{type}_id
+      LEFT OUTER JOIN #{meta_join_table}
+      ON #{meta_join_table}.#{type}_id = #{table(type)}.id AND LOWER(#{meta_join_table}.predicate_term_uri) = 'http://purl.org/dc/terms/bibliographiccitation'
       WHERE #{table(type)}.harvest_id = #{@harvest.id}
       AND (#{table(type)}.source IS NULL OR #{table(type)}.source = '')
       AND #{ref_join_table}.reference_id IS NULL
+      AND #{meta_join_table}.id IS NULL
       #{child_filter_clause(table(type), has_parent)}
     SQL
   end
