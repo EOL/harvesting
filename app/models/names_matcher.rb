@@ -388,7 +388,7 @@ class NamesMatcher
   # TODO: in_unmapped_area ...if there are no matching ancestors...
   def unmapped(node, message)
     @logs << message
-    @unmatched << "#{node.canonical} (##{node.id})"
+    @unmatched << "Canonical: #{node.canonical}; Node##{node.id}; ResourceID: #{node.resource_pk}"
     @in_unmapped_area = false if @resource.native?
     node.assign_attributes(
       page_id: new_page_id,
