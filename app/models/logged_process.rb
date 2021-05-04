@@ -15,6 +15,14 @@ class LoggedProcess
     starting("logged process: #{last_non_merge_log}")
   end
 
+  def clear_log
+    require 'fileutils'
+    old_log_name = "#{process_log_path}.old"
+    File.unlink(old_log_name) if File.exist?(old_log_name)
+    FileUtils.mv(@resource.process_log_path, old_log_name)
+    FileUtils.touch(@resource.process_log_path)
+  end
+
   def recent_or_new_process
     if HarvestProcess.exists?(['resource_id = ? AND created_at > ?', @resource.id, 5.minute.ago])
       @resource.harvest_processes.last
