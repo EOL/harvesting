@@ -17,7 +17,7 @@ class LoggedProcess
 
   def clear_log
     require 'fileutils'
-    old_log_name = "#{process_log_path}.old"
+    old_log_name = "#{@resource.process_log_path}.old"
     File.unlink(old_log_name) if File.exist?(old_log_name)
     FileUtils.mv(@resource.process_log_path, old_log_name)
     FileUtils.touch(@resource.process_log_path)
