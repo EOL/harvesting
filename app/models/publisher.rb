@@ -38,7 +38,7 @@ class Publisher
     @limit = 10_000
     @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method
                       object_page_id target_scientific_name value_uri literal measurement units normal_measurement
-                      normal_units_uri sample_size citation source remarks method]
+                      normal_units_uri sample_size citation source remarks method contributor_uri]
     @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
                      statistical_method source is_external]
 
