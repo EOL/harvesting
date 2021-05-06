@@ -1017,7 +1017,7 @@
 "represents":"to_occurrences_meta",
 "submapping":"http://purl.obolibrary.org/obo/PATO_0000146",
 "is_unique":false,
-"is_required":false}
+"is_required":false},
 {"term":"http://purl.obolibrary.org/obo/EO_0007196",
 "for_format":"occurrences",
 "represents":"to_occurrences_meta",
@@ -1029,7 +1029,6 @@
 "represents":"to_ignored",
 "submapping":"",
 "is_unique":false,
-"is_required":false}
 "is_required":false},
 {"term":"http://eol.org/schema/agent/agentID",
 "for_format":"assocs",

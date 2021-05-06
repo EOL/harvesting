@@ -8,21 +8,40 @@ class MetaXmlField < ApplicationRecord
       data = JSON.parse(File.read(filename))
       puts "I see #{data.size} items."
 
-      # remove things from the list if we already know about them:
       have = {}
       all.each do |mxf|
-        have["#{mxf.for_format}:#{mxf.term}"] = true
-      end
-      data.delete_if { |d| have.key?("#{d['for_format']}:#{d['term']}") }
-
-      puts "After removing known fields, I now have #{data.size} items."
-      if data.empty?
-        puts "** NOTHING NEW TO ADD. No action taken."
-        return nil
+        have["#{mxf.for_format}:#{mxf.term}"] = mxf
       end
 
-      puts "** ADDING #{data.size} new meta xml fields"
-      import!(data, on_duplicate: :ignore)
+      to_import = []
+      to_update = {}
+
+      data.each do |datum|
+        key = "#{datum['for_format']}:#{datum['term']}"
+
+        if !have.include?(key)
+          to_import << datum
+        else
+          existing = have[key]
+          clean_datum = datum.compact
+          clean_attrs = existing.attributes.compact
+          clean_attrs.delete('id')
+
+          to_update[existing.id] = datum unless clean_datum == clean_attrs
+        end
+      end
+
+      puts "I have #{to_import.length} new mappings to import and #{to_update.length} records to update"
+
+      if to_import.any?
+        puts "** ADDING #{to_import.length} new meta xml fields"
+        import!(to_import, on_duplicate: :ignore)
+      end
+
+      if to_update.any?
+        puts "** UPDATING #{to_update.length} existing meta xml fields"
+        update(to_update.keys, to_update.values)
+      end
     end
 
     # json = %{{"term":"http://iptc.org/std/Iptc4xmpExt/1.0/xmlns/LocationCreated",
