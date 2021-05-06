@@ -65,6 +65,11 @@ module Store
       @models[:trait][:units] = val
     end
 
+    def to_traits_contributor(_, val)
+      @models[:trait] ||= {}
+      @models[:trait][:contributor] = val
+    end
+
     def to_traits_statistical_method(_, val)
       @models[:trait] ||= {}
       @models[:trait][:statistical_method] = val

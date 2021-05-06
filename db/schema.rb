@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_06_100007) do
+ActiveRecord::Schema.define(version: 2021_05_06_193457) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -102,6 +102,7 @@ ActiveRecord::Schema.define(version: 2021_04_06_100007) do
     t.string "predicate_term_uri"
     t.string "sex_term_uri"
     t.string "lifestage_term_uri"
+    t.string "contributor_uri"
     t.index ["harvest_id"], name: "index_assocs_on_harvest_id"
     t.index ["node_id"], name: "index_assocs_on_node_id"
     t.index ["occurrence_id"], name: "index_assocs_on_occurrence_id"
@@ -758,6 +759,7 @@ ActiveRecord::Schema.define(version: 2021_04_06_100007) do
     t.string "sex_term_uri"
     t.string "lifestage_term_uri"
     t.string "parent_eol_pk"
+    t.string "contributor_uri"
     t.index ["assoc_resource_pk"], name: "index_traits_on_assoc_resource_pk"
     t.index ["harvest_id", "resource_pk"], name: "index_traits_on_harvest_id_and_resource_pk"
     t.index ["harvest_id"], name: "index_traits_on_harvest_id"

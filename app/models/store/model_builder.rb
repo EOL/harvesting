@@ -409,6 +409,7 @@ module Store
       puts "PRED URI: #{@models[:trait][:predicate_term_uri]}"
       units = @models[:trait].delete(:units)
       @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
+      @models[:trait][:contributor_uri] = fail_on_bad_uri(@models[:trait].delete(:contributor))
 
       # TEMP:
       begin
@@ -459,6 +460,7 @@ module Store
       @models[:assoc][:predicate_term_uri] = fail_on_bad_uri(predicate)
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
+      @models[:assoc][:contributor_uri] = fail_on_bad_uri(@models[:assoc].delete(:contributor))
       build_references(:assoc, AssocsReference)
       # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
       # it somewhere, and that’s all that matters for mvp"

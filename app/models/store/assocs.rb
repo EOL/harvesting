@@ -32,6 +32,11 @@ module Store
       @models[:assoc][:ref_fks] = val
     end
 
+    def to_associations_contributor(_, val)
+      @models[:assoc] ||= {}
+      @models[:assoc][:contributor] = val
+    end
+
     def to_associations_meta(field, val)
       @models[:assoc] ||= {}
       @models[:assoc][:meta] ||= {}
