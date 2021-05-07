@@ -45,7 +45,7 @@ class Field < ApplicationRecord
         to_associations_source to_associations_ref_fks to_associations_meta
 
         to_attributions_other to_traits_attributions_fk to_associations_attributions_fk to_nodes_dataset_name
-        to_nodes_name_according_to to_traits_parent_eol_pk
+        to_nodes_name_according_to to_traits_parent_eol_pk to_traits_contributor
 
       ]
       # SORRY! It has become unreasonable to attempt to keep these in order, so everything after the "to_associations*"
