@@ -209,7 +209,7 @@ class Resource < ApplicationRecord
   end
 
   def process_log
-    @log ||= ActiveSupport::TaggedLogging.new(Logger.new("#{path}/#{Resource.logfile_name}"))
+    @log ||= ActiveSupport::TaggedLogging.new(Logger.new(process_log_path))
   end
 
   # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.

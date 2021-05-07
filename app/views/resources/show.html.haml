@@ -203,3 +203,5 @@
   .ui.list
     - @root_nodes.each do |root_node|
       .item= link_to(root_node.canonical || root_node.resource_pk, root_node)
+  %p
+    = link_to("unmatched nodes list", "/data/#{@resource.abbr}/unmatched_nodes.txt")

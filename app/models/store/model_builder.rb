@@ -557,7 +557,7 @@ module Store
       @process.debug('#find_section') if @models[:debug]
       return nil if orig_value.blank?
 
-      @process.debug("original value not blank ({#{orig_value}}), continuing...")
+      # @process.debug("original value not blank ({#{orig_value}}), continuing...")
       value = orig_value.gsub(/\s+\Z/, '').gsub(/\A\s+/, '') # Strip space, of course.
       @section_values ||= {}
       return @section_values[value] if @section_values.key?(value)
