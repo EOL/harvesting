@@ -410,6 +410,8 @@ module Store
       units = @models[:trait].delete(:units)
       @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
       @models[:trait][:contributor_uri] = fail_on_bad_uri(@models[:trait].delete(:contributor))
+      @models[:trait][:compiler_uri] = fail_on_bad_uri(@models[:trait].delete(:compiler))
+      @models[:trait][:determined_by_uri] = fail_on_bad_uri(@models[:trait].delete(:determined_by))
 
       # TEMP:
       begin
@@ -461,6 +463,8 @@ module Store
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
       @models[:assoc][:contributor_uri] = fail_on_bad_uri(@models[:assoc].delete(:contributor))
+      @models[:assoc][:compiler_uri] = fail_on_bad_uri(@models[:assoc].delete(:compiler))
+      @models[:assoc][:determined_by_uri] = fail_on_bad_uri(@models[:assoc].delete(:determined_by))
       build_references(:assoc, AssocsReference)
       # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
       # it somewhere, and that’s all that matters for mvp"
