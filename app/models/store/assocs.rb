@@ -37,6 +37,16 @@ module Store
       @models[:assoc][:contributor] = val
     end
 
+    def to_associations_determined_by(_, val)
+      @models[:assoc] ||= {}
+      @models[:assoc][:determined_by] = val
+    end
+
+    def to_associations_compiler(_, val)
+      @models[:assoc] ||= {}
+      @models[:assoc][:compiler] = val
+    end
+
     def to_associations_meta(field, val)
       @models[:assoc] ||= {}
       @models[:assoc][:meta] ||= {}

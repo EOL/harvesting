@@ -70,6 +70,16 @@ module Store
       @models[:trait][:contributor] = val
     end
 
+    def to_traits_determined_by(_, val)
+      @models[:trait] ||= {}
+      @models[:trait][:determined_by] = val
+    end
+
+    def to_traits_compiler(_, val)
+      @models[:trait] ||= {}
+      @models[:trait][:compiler] = val
+    end
+
     def to_traits_statistical_method(_, val)
       @models[:trait] ||= {}
       @models[:trait][:statistical_method] = val
