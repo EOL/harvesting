@@ -16,13 +16,12 @@ class LoggedProcess
   end
 
   def clear_log
-    # TODO: fix this.
-    # require 'fileutils'
-    # old_log_name = "#{@resource.process_log_path}.old"
-    # File.unlink(old_log_name) if File.exist?(old_log_name)
-    # FileUtils.mv(@resource.process_log_path, old_log_name)
-    # FileUtils.touch(@resource.process_log_path)
-    # @log = @resource.process_log # Because we changed the file handle, we have to re-instate it.
+    require 'fileutils'
+    old_log_name = "#{@resource.process_log_path}.old"
+    File.unlink(old_log_name) if File.exist?(old_log_name)
+    FileUtils.mv(@resource.process_log_path, old_log_name)
+    FileUtils.touch(@resource.process_log_path)
+    @log = @resource.create_process_log # Because we changed the file handle, we have to re-instate it.
   end
 
   def recent_or_new_process

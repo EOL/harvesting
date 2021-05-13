@@ -209,7 +209,12 @@ class Resource < ApplicationRecord
   end
 
   def process_log
-    @log ||= ActiveSupport::TaggedLogging.new(Logger.new(process_log_path))
+    @log ||= create_process_log
+  end
+
+  # Requires a separate, callable command because after we clear it, we need to re-create it:
+  def create_process_log
+    ActiveSupport::TaggedLogging.new(Logger.new(process_log_path))
   end
 
   # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.
