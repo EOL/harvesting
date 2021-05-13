@@ -81,7 +81,8 @@ class ResourceHarvester
           harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
           raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
         else
-          @process.clear_log
+          #@process.clear_log 
+          #TODO: fix/reinstate!
         end
         fast_forward = false
         @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
