@@ -80,9 +80,6 @@ class ResourceHarvester
         elsif Harvest.where(resource_id: @resource.id).running.count > 1
           harvest_ids = Harvest.where(resource_id: @resource.id).running.pluck(:id)
           raise(Exception, "MULTIPLE HARVESTS RUNNING FOR THIS RESOURCE: #{harvest_ids.join(', ')}")
-        else
-          #@process.clear_log 
-          #TODO: fix/reinstate!
         end
         fast_forward = false
         @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
@@ -108,6 +105,7 @@ class ResourceHarvester
   def create_harvest_instance
     @harvest = @resource.create_harvest_instance
     @harvest.create_harvest_instance! # This just sets the current "status"
+    @process.clear_log
     @process.info("Created harvest instance ##{@harvest.id}")
   end
 
@@ -653,9 +651,9 @@ class ResourceHarvester
     end
 
     if @resource.node_ancestors.count.zero?
-      @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?') 
+      @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?')
     end
-      
+
     SanityChecks.new(@harvest, @process).perform_all
   end
 
