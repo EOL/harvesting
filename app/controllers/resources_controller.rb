@@ -131,7 +131,7 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:resource_id])
     log_auth(@resource)
     Delayed::Job.enqueue(RemoveContentJob.new(@resource.id))
-    flash[:notice] = t('resources.flash.remove_content_enqueued', count: count)
+    flash[:notice] = t('resources.flash.remove_content_enqueued')
     redirect_to @resource
   end
 
