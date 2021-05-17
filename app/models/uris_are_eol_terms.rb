@@ -7,7 +7,7 @@ class UrisAreEolTerms
     return nil if @klass.nil? # Sometimes we ask for a non-existent occurrence!
     return nil unless @klass.respond_to?(method)
 
-    uri = @klass.send(method)
+    uri = @klass.read_attribute(method)
     return nil if uri.blank?
 
     term = EolTerms.by_uri(uri)

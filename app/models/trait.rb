@@ -103,6 +103,23 @@ class Trait < ApplicationRecord
     UrisAreEolTerms.new(self).uri(:units_term_uri)
   end
 
+  # TODO: standardize column naming -- some have _uri, some don't etc.
+  def normal_units_uri
+    UrisAreEolTerms.new(self).uri(:normal_units_uri)
+  end
+
+  def contributor_uri
+    UrisAreEolTerms.new(self).uri(:contributor_uri)
+  end
+
+  def compiler_uri
+    UrisAreEolTerms.new(self).uri(:compiler_uri)
+  end
+
+  def determined_by_uri
+    UrisAreEolTerms.new(self).uri(:determined_by_uri)
+  end
+
   def convert_measurement
     return unless measurement
 
