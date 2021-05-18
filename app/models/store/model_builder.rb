@@ -409,9 +409,12 @@ module Store
       puts "PRED URI: #{@models[:trait][:predicate_term_uri]}"
       units = @models[:trait].delete(:units)
       @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
-      @models[:trait][:contributor_uri] = fail_on_bad_uri(@models[:trait].delete(:contributor))
-      @models[:trait][:compiler_uri] = fail_on_bad_uri(@models[:trait].delete(:compiler))
-      @models[:trait][:determined_by_uri] = fail_on_bad_uri(@models[:trait].delete(:determined_by))
+
+      unless occ_meta
+        @models[:trait][:contributor_uri] = fail_on_bad_uri(@models[:trait].delete(:contributor))
+        @models[:trait][:compiler_uri] = fail_on_bad_uri(@models[:trait].delete(:compiler))
+        @models[:trait][:determined_by_uri] = fail_on_bad_uri(@models[:trait].delete(:determined_by))
+      end
 
       # TEMP:
       begin
