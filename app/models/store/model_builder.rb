@@ -193,7 +193,7 @@ module Store
     def build_medium
       @process.debug('#build_medium') if @models[:debug]
       unless medium_types_valid?
-        @process.warn("skipping invalid medium with resource_pk #{@models[:medium][:resource_pk]}, subclass "\
+        @process.warn("skipping invalid medium (missing format or subtype) with resource_pk #{@models[:medium][:resource_pk]}, subclass "\
           "#{@models[:medium][:subclass]} (from #{@models[:medium][:original_type]}), format "\
           "#{@models[:medium][:format]} (from #{@models[:medium][:original_format]})")
         return
