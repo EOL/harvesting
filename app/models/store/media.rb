@@ -64,6 +64,7 @@ module Store
       @media_subtype_mappings ||= {
         'image/jpeg' => :jpg,
         'image/gif' => :jpg, # It will be converted.
+        'image/tiff' => :jpg, # It will be converted.
         'video/x-youtube' => :youtube,
         'video/vimeo' => :vimeo,
         'video/mp4' => :mp4,
