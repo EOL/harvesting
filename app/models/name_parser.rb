@@ -50,6 +50,9 @@ class NameParser
         updates = []
         begin
           parsed = JSON.parse(json)
+          if parsed.has_key?('message')
+            @process.warn(parsed['message'])
+          end
           parsed.each_with_index do |result, i|
             verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
             if @names[verbatim].nil?
@@ -113,7 +116,7 @@ class NameParser
   end
 
   def request_parser(body)
-    uri = URI('https://parser.globalnames.org/api/v1')
+    uri = URI('https://parser.globalnames.org/api/v1/') # NOTE: the trailing slash IS required
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'accept' => 'json')
