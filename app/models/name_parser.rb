@@ -50,8 +50,13 @@ class NameParser
         updates = []
         begin
           parsed = JSON.parse(json)
-          if parsed.has_key?('message')
-            @process.warn(parsed['message'])
+          if !parsed.is_a?(Array)
+            if parsed.has_key?('message')
+              @process.warn(parsed['message'])
+            else
+              @process.warn("Cannot parse result of GNParser query: #{parsed[0..4000]}")
+            end
+            raise "Bad result from GN Parser!"
           end
           parsed.each_with_index do |result, i|
             verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
