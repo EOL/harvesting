@@ -22,17 +22,6 @@ RUN apt-get update -q && \
 
 WORKDIR /app
 
-# Install gnparser...
-
-# Fix Java problems: TODO - move gnparser to its own container...
-RUN update-ca-certificates -f
-RUN mkdir -p /u/tmp
-RUN mkdir -p /u/apps
-RUN cd /u/tmp \
-    && wget https://github.com/GlobalNamesArchitecture/gnparser/releases/download/release-0.4.2/gnparser-0.4.2.zip \
-    && unzip gnparser-0.4.2.zip && mv gnparser-0.4.2 /u/apps/gnparser && rm -f /usr/local/bin/gnparser \
-    && ln -s /u/apps/gnparser/bin/gnparser /usr/local/bin && rm -rf /u/tmp
-
 ENV LAST_SOURCE_REBUILD 2018-08-20
 
 COPY . /app

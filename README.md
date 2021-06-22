@@ -9,8 +9,6 @@ set the ENV variables from database.yml.
 
 You need to have `mysql`, `imagemagick@6`, and `elasticsearch` installed and *running* for this codebase to work.
 
-You also need to install `gnparser` [from here](https://github.com/GlobalNamesArchitecture/gnparser).
-
 # First Time
 
 ```
