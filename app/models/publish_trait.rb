@@ -1,0 +1,2 @@
+class PublishTrait < ApplicationRecord
+end

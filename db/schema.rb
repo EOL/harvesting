@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_12_204054) do
+ActiveRecord::Schema.define(version: 2021_07_08_155505) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -575,6 +575,35 @@ ActiveRecord::Schema.define(version: 2021_05_12_204054) do
   create_table "partners_users", id: false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "partner_id", null: false
+  end
+
+  create_table "publish_traits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "eol_pk"
+    t.integer "page_id"
+    t.string "scientific_name"
+    t.string "resource_pk"
+    t.string "predicate_uri"
+    t.string "sex_uri"
+    t.string "lifestage_uri"
+    t.string "statistical_method_uri"
+    t.integer "object_page_id"
+    t.string "target_scientific_name"
+    t.string "value_uri"
+    t.text "literal"
+    t.string "measurement"
+    t.string "units_uri"
+    t.string "normal_measurement"
+    t.string "normal_units_uri"
+    t.text "sample_size"
+    t.text "citation"
+    t.text "source"
+    t.text "remarks"
+    t.text "method"
+    t.string "contributor_uri"
+    t.string "compiler_uri"
+    t.string "determined_by_uri"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "references", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
