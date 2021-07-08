@@ -4,11 +4,6 @@ require "set"
 class Publisher
   attr_accessor :resource
 
-  SKIP_METADATA_PRED_URIS = Set.new([
-    "http://rs.tdwg.org/dwc/terms/lifestage",
-    "http://rs.tdwg.org/dwc/terms/sex"
-  ])
-
   def self.by_resource(resource_in, process, options = {})
     new(options.merge(resource: resource_in, process: process)).by_resource
   end
@@ -491,6 +486,44 @@ class Publisher
       end
     end
   end
+  
+  def build_publish_models
+    traits = Trait.primary.published.matched.where(node_id: node_ids)
+      .includes(
+        :references, 
+        :meta_traits,
+        children: :references, 
+        occurrence: :occurrence_metadata,
+        node: :scientific_name
+      )
+
+    assocs = Assoc.published.where(node_id: node_ids)
+      .includes(
+        :references, 
+        :meta_assocs,
+        occurrence: :occurrence_metadata,
+        node: :scientific_name, 
+        target_node: :scientific_name
+      )
+
+    @traits = build_publish_traits(traits) + build_publish_traits(assocs) 
+  end
+
+  def build_publish_traits(trait_likes)
+    trait_likes.find_each.map do |trait|
+      publish_trait = PublishTrait.build(trait)
+
+      publish_metas = trait.metadata.map do |meta|
+        PublishMetadatum.from_meta(meta, publish_trait)
+      end
+
+      publish_trait.publish_metadata = publish_metas
+      publish_trait.save!
+
+      publish_trait
+    end
+  end
+
 
   def trait_map(node_ids)
     @traits = {}
@@ -597,18 +630,6 @@ class Publisher
       UrisAreEolTerms.new(meta).uri(:source),
       meta.respond_to?(:external_meta?) ? meta.external_meta? : false
     ]
-  end
-
-  def moved_meta_mapping(uri)
-    @moved_meta_map ||= {
-      'http://eol.org/schema/terms/samplesize' => { from: :measurement, to: :sample_size },
-      'http://purl.org/dc/terms/bibliographiccitation' => { to: :citation },
-      'http://purl.org/dc/terms/source' => { to: :source },
-      'http://rs.tdwg.org/dwc/terms/measurementremarks' => { to: :remarks },
-      'http://rs.tdwg.org/dwc/terms/measurementmethod' => { to: :method }
-    }
-
-    @moved_meta_map[uri.downcase]
   end
 
   # TODO: move this method up.
