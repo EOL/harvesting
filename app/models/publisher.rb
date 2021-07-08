@@ -459,6 +459,7 @@ class Publisher
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     node_ids = nodes.map(&:id)
     build_publish_traits(node_ids)
+    external_trait_metas = build_external_trait_metas
     filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
     start_traits_file(filename, @trait_heads)
@@ -472,12 +473,8 @@ class Publisher
       add_meta_to_csv(external_trait_metas, csv)
     end
     CSV.open(filename, 'ab') do |csv|
-      @traits.values.each do |trait|
+      @traits.each do |trait|
         csv << @trait_heads.map { |field| trait.send(field) }
-      end
-      # Skip associations that don't have BOTH nodes defined (they are meaningless):
-      @assocs.values.select { |a| a.node && a.target_node }.each do |assoc|
-        csv << @trait_heads.map { |field| assoc.send(field) }
       end
     end
   end
@@ -505,23 +502,34 @@ class Publisher
   end
 
   def build_external_trait_metas
-    @external_trait_metas = @resource.traits.published
-      .includes(:parent, :references)
-      .where('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
-      .map do |m|
-        publish_meta = PublishMetadatum.from_meta(m)
-        publish_meta.save!
-        publish_meta
+    external_trait_metas = @resource.traits.published
+      .includes(:references)
+      .where('traits.parent_eol_pk IS NOT NULL')
+
+    external_trait_meta_parents = Trait.where(
+      eol_pk: external_trait_metas.map { |m| m.parent_eol_pk }
+    )
+
+    external_trait_metas.each do |m|
+      parent = external_trait_meta_parents[m.parent_eol_pk]
+
+      unless parent
+        @process.warn("Skipping external meta w/missing parent (parent_eol_pk: #{m.parent_eol_pk})")
       end
+
+      publish_meta = PublishMetadatum.from_meta(m, nil)
+      publish_meta.save!
+      result << publish_meta
+    end
   end
 
   def build_publish_traits_helper(trait_likes)
     trait_likes.find_each.map do |trait|
-      publish_trait = PublishTrait.build(trait)
+      publish_trait = PublishTrait.from_trait(trait)
 
       publish_metas = trait.metadata.map do |meta|
         PublishMetadatum.from_meta(meta, publish_trait)
-      end
+      end.compact # from_meta may return nil
 
       publish_trait.publish_metadata = publish_metas
       publish_trait.save!
@@ -545,6 +553,7 @@ class Publisher
   def assoc_map(node_ids)
     @assocs = {}
     Assoc.published.where(node_id: node_ids)
+         .where.not(object_node_id: nil)
          .includes(:references, :meta_assocs,
                    occurrence: :occurrence_metadata,
                    node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
@@ -566,6 +575,11 @@ class Publisher
 
     metas.each do |meta|
       count += 1
+
+      data = @meta_heads.map do |field|
+        meta.send(field)
+      end
+
       csv << data
     end
 
@@ -576,7 +590,7 @@ class Publisher
   def add_trait_meta_to_csv(traits, csv)
     count = 0
 
-    traits.each do |_, trait|
+    traits.each do |trait|
       count += add_meta_to_csv(trait.publish_metadata, csv)
     end
 

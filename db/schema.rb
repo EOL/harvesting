@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_08_172549) do
+ActiveRecord::Schema.define(version: 2021_07_08_193628) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -592,6 +592,7 @@ ActiveRecord::Schema.define(version: 2021_07_08_172549) do
     t.integer "publish_trait_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "resource_id"
   end
 
   create_table "publish_traits", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
@@ -621,6 +622,7 @@ ActiveRecord::Schema.define(version: 2021_07_08_172549) do
     t.string "determined_by_uri"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "resource_id"
   end
 
   create_table "references", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|

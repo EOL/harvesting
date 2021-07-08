@@ -1,10 +1,13 @@
 class PublishTrait < ApplicationRecord
+  belongs_to :resource
   has_many :publish_metadata
+
   before_save :set_eol_pk
 
   class << self
     def from_trait(trait)
       self.new({
+        resource_id: trait.resource_id,
         page_id: trait.page_id,
         scientific_name: trait.scientific_name,
         resource_pk: trait.resource_pk,
@@ -44,6 +47,14 @@ class PublishTrait < ApplicationRecord
     units_uri
   end
 
+  def predicate
+    predicate_uri
+  end
+
+  def sex
+    sex_uri
+  end
+
   def set_eol_pk
     self.eol_pk = build_eol_pk
   end
@@ -52,6 +63,7 @@ class PublishTrait < ApplicationRecord
   def build_eol_pk
     meta_digests = publish_metadata.map { |m| m.digest }.sort
     attr_str = [
+      resource_id,
       page_id,
       scientific_name,
       resource_pk,

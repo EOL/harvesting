@@ -1,4 +1,5 @@
 class PublishMetadatum < ApplicationRecord
+  belongs_to :resource
   belongs_to :publish_trait
 
   SKIP_METADATA_PRED_URIS = Set.new([
@@ -34,6 +35,7 @@ class PublishMetadatum < ApplicationRecord
       end
 
       self.new({
+        resource_id: meta.resource_id,
         predicate_uri: predicate,
         literal: literal,
         measurement: meta.respond_to?(:measurement) ? meta.measurement : nil,
@@ -42,8 +44,8 @@ class PublishMetadatum < ApplicationRecord
         sex_uri: UrisAreEolTerms.new(meta).uri(:sex_term_uri),
         lifestage_uri: UrisAreEolTerms.new(meta).uri(:lifestage_term_uri),
         statistical_method_uri: UrisAreEolTerms.new(meta).uri(:statistical_method_term_uri),
-        source_uri: UrisAreEolTerms.new(meta).uri(:source),
-        is_external_meta: meta.respond_to?(:external_meta?) ? meta.external_meta? : false
+        source: UrisAreEolTerms.new(meta).uri(:source),
+        is_external: meta.respond_to?(:external_meta?) ? meta.external_meta? : false
       })
     end
 
@@ -70,12 +72,8 @@ class PublishMetadatum < ApplicationRecord
     predicate_uri
   end
 
-  def units_uri
-    units
-  end
-
-  def source
-    source_uri
+  def units
+    units_uri
   end
 
   def lifestage
@@ -92,6 +90,7 @@ class PublishMetadatum < ApplicationRecord
 
   def digest
     attr_str = [
+      resource_id,
       predicate_uri,
       literal,
       measurement,
@@ -100,8 +99,8 @@ class PublishMetadatum < ApplicationRecord
       sex_uri,
       lifestage_uri,
       statistical_method_uri,
-      source_uri,
-      is_external_meta
+      source,
+      is_external
     ].join('|')
 
     Digest::MD5.hexdigest attr_str
