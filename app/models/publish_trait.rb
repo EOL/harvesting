@@ -1,5 +1,7 @@
 class PublishTrait < ApplicationRecord
   belongs_to :resource
+  belongs_to :harvest
+
   has_many :publish_metadata
 
   before_save :set_eol_pk
@@ -8,6 +10,7 @@ class PublishTrait < ApplicationRecord
     def from_trait(trait)
       self.new({
         resource_id: trait.resource_id,
+        harvest_id: trait.harvest_id,
         page_id: trait.page_id,
         scientific_name: trait.scientific_name,
         resource_pk: trait.resource_pk,

@@ -14,6 +14,8 @@ class Harvest < ApplicationRecord
   has_many :media, inverse_of: :harvest # destroyed via nodes
   has_many :articles, inverse_of: :harvest # destroyed via nodes
   has_many :vernaculars, inverse_of: :harvest # destroyed via nodes
+  has_many :publish_traits
+  has_many :publish_metadata
 
   before_destroy :remove_content
 
@@ -81,7 +83,7 @@ class Harvest < ApplicationRecord
   def remove_content
     # Because node.destroy does all of this work but MUCH less efficiently, we fake it all here:
     [ScientificName, Medium, Article, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference,
-     Reference, ContentAttribution, Attribution].each do |klass|
+     Reference, ContentAttribution, Attribution, PublishTrait, PublishMetadatum].each do |klass|
        count = klass.where(harvest_id: id).count
        # puts "#{klass}: #{count}"
        next if count.zero?

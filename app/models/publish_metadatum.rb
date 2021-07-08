@@ -1,5 +1,6 @@
 class PublishMetadatum < ApplicationRecord
   belongs_to :resource
+  belongs_to :harvest
   belongs_to :publish_trait
 
   SKIP_METADATA_PRED_URIS = Set.new([
@@ -36,6 +37,7 @@ class PublishMetadatum < ApplicationRecord
 
       self.new({
         resource_id: meta.resource_id,
+        harvest_id: meta.harvest_id,
         predicate_uri: predicate,
         literal: literal,
         measurement: meta.respond_to?(:measurement) ? meta.measurement : nil,

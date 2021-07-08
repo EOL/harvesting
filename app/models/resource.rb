@@ -21,6 +21,8 @@ class Resource < ApplicationRecord
   has_many :identifiers, inverse_of: :resource
   has_many :references, inverse_of: :resource
   has_many :harvest_processes, inverse_of: :resource, dependent: :destroy
+  has_many :publish_traits
+  has_many :publish_metadata
 
   # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
   # it. Also translations in en.yml
@@ -359,7 +361,7 @@ class Resource < ApplicationRecord
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
     [
       ScientificName, Vernacular, Article, Medium, Trait, MetaTrait, OccurrenceMetadatum, Assoc, MetaAssoc,
-      Identifier, Reference
+      Identifier, Reference, PublishTrait, PublishMetadatum
     ].each do |klass|
       remove_type(klass)
     end
