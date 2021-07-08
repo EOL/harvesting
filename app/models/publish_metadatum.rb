@@ -66,6 +66,30 @@ class PublishMetadatum < ApplicationRecord
     id
   end
 
+  def predicate
+    predicate_uri
+  end
+
+  def units_uri
+    units
+  end
+
+  def source
+    source_uri
+  end
+
+  def lifestage
+    lifestage_uri
+  end
+
+  def sex
+    sex_uri
+  end
+
+  def statistical_method
+    statistical_method_uri
+  end
+
   def digest
     attr_str = [
       predicate_uri,

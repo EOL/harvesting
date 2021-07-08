@@ -458,22 +458,17 @@ class Publisher
     @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     node_ids = nodes.map(&:id)
-    trait_map(node_ids)
-    assoc_map(node_ids)
+    build_publish_traits(node_ids)
     filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
     start_traits_file(filename, @trait_heads)
     start_traits_file(meta_file, @meta_heads)
 
     # metadata (child Traits) with parent Traits from resources other than the current one (specified by parent_eol_pk)
-    external_trait_metas = @resource.traits.published
-      .includes(:parent, :references)
-      .where('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
 
     # Metadata FIRST, because some of it moves to the traits.
     CSV.open(meta_file, 'ab') do |csv|
       add_trait_meta_to_csv(@traits, csv)
-      add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
     end
     CSV.open(filename, 'ab') do |csv|
@@ -487,7 +482,7 @@ class Publisher
     end
   end
   
-  def build_publish_models
+  def build_publish_traits(node_ids)
     traits = Trait.primary.published.matched.where(node_id: node_ids)
       .includes(
         :references, 
@@ -506,10 +501,21 @@ class Publisher
         target_node: :scientific_name
       )
 
-    @traits = build_publish_traits(traits) + build_publish_traits(assocs) 
+    @traits = build_publish_traits_helper(traits) + build_publish_traits_helper(assocs) 
   end
 
-  def build_publish_traits(trait_likes)
+  def build_external_trait_metas
+    @external_trait_metas = @resource.traits.published
+      .includes(:parent, :references)
+      .where('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
+      .map do |m|
+        publish_meta = PublishMetadatum.from_meta(m)
+        publish_meta.save!
+        publish_meta
+      end
+  end
+
+  def build_publish_traits_helper(trait_likes)
     trait_likes.find_each.map do |trait|
       publish_trait = PublishTrait.build(trait)
 
@@ -555,16 +561,12 @@ class Publisher
     @files[filename] = true
   end
 
-  def add_meta_to_csv(metas, csv, trait = nil)
+  def add_meta_to_csv(metas, csv)
     count = 0
 
     metas.each do |meta|
-      data = build_meta(meta, trait)
-
-      if data
-        count += 1
-        csv << data
-      end
+      count += 1
+      csv << data
     end
 
     count
@@ -575,7 +577,7 @@ class Publisher
     count = 0
 
     traits.each do |_, trait|
-      count += add_meta_to_csv(trait.metadata, csv, trait)
+      count += add_meta_to_csv(trait.publish_metadata, csv)
     end
 
     @process.info("#{count} metadata added.")

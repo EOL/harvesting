@@ -32,6 +32,18 @@ class PublishTrait < ApplicationRecord
     end
   end
 
+  def lifestage
+    lifestage_uri
+  end
+
+  def statistical_method
+    statistical_method_uri
+  end
+
+  def units
+    units_uri
+  end
+
   def set_eol_pk
     self.eol_pk = build_eol_pk
   end
