@@ -25,8 +25,9 @@ class SanityChecks
   end
 
   def perform_all
-    check_for_duplicate_traits
-    check_for_duplicate_assocs
+    # NOTE: These are now handled implicitly by the creation of PublishTraits in Publisher. Leaving commented out for now in case we change that design.
+    #check_for_duplicate_traits 
+    #check_for_duplicate_assocs
     check_for_no_source(Trait, 'trait', 'trait', true)
     check_for_no_source(Assoc, 'assoc', 'association', false)
   end
