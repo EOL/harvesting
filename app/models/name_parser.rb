@@ -189,7 +189,7 @@ class NameParser
     end
     if result['parsed']
       warns = if result.key?('qualityWarnings')
-        result['qualityWarnings']['warning']
+        result['qualityWarnings'].map { |w| w['warning'] }.join('|')
       else
         ''
       end
