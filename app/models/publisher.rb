@@ -585,57 +585,6 @@ class Publisher
     @process.info("#{count} metadata added.")
   end
 
-  # in_harvest_trait should always be passed in the case that the trait that meta belongs to belongs to the current harvest. Otherwise, it must be nil. 
-  #
-  # If in_harvest_trait is nil, an error will be raised in the case that
-  # 1) meta.parent is nil OR 
-  # 2) meta's predicate is a member of @moved_meta_map
-  def build_meta(meta, in_harvest_trait = nil)
-    literal = nil
-    predicate = nil
-
-    if meta.is_a?(Reference)
-      # TODO: we should probably make this URI configurable:
-      predicate = 'http://eol.org/schema/reference/referenceID'
-      body = meta.body || ''
-      body += " <a href='#{meta.url}'>link</a>" unless meta.url.blank?
-      body += " #{meta.doi}" unless meta.doi.blank?
-      literal = body
-    elsif SKIP_METADATA_PRED_URIS.include?(UrisAreEolTerms.new(meta).uri(:predicate_term_uri)&.downcase)
-      # these are written as fields in the traits file, so skip (associations are populated from OccurrenceMetadata in
-      # ResourceHarvester#resolve_trait_keys)
-      return nil
-    elsif (meta_mapping = moved_meta_mapping(meta.predicate_term_uri))
-      raise TypeError, "moved meta encountered without an in-harvest trait" if in_harvest_trait.nil?
-      value = meta.literal
-      value = meta.measurement if meta_mapping[:from] && meta_mapping[:from] == :measurement
-      in_harvest_trait.send("#{meta_mapping[:to]}=", value)
-      return nil # Don't record this one.
-    else
-      literal = meta.literal
-      predicate = UrisAreEolTerms.new(meta).uri(:predicate_term_uri)
-    end
-
-    sex_term = UrisAreEolTerms.new(meta).uri(:sex_term_uri)
-    lifestage_term = UrisAreEolTerms.new(meta).uri(:lifestage_term_uri)
-
-    # q.v.: @meta_heads for order, here:
-    [
-      "#{meta.class.name}-#{meta.id}",
-      (in_harvest_trait || meta.parent).eol_pk, 
-      predicate,
-      literal,
-      meta.respond_to?(:measurement) ? meta.measurement : nil,
-      UrisAreEolTerms.new(meta).uri(:object_term_uri),
-      UrisAreEolTerms.new(meta).uri(:units_term_uri),
-      sex_term,
-      lifestage_term,
-      UrisAreEolTerms.new(meta).uri(:statistical_method_term_uri),
-      UrisAreEolTerms.new(meta).uri(:source),
-      meta.respond_to?(:external_meta?) ? meta.external_meta? : false
-    ]
-  end
-
   # TODO: move this method up.
   # NOTE: vernaculars will not be preferred until the website runs
   # Vernacular.joins(:page).where(['pages.vernaculars_count = 1 AND vernaculars.is_preferred_by_resource = ? '\
