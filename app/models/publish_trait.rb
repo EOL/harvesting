@@ -1,10 +1,12 @@
 class PublishTrait < ApplicationRecord
+  validates :eol_pk, presence: true, uniqueness: true
+
   belongs_to :resource
   belongs_to :harvest
 
   has_many :publish_metadata
 
-  before_save :set_eol_pk
+  before_validation :set_eol_pk
 
   class << self
     def from_trait(trait)
@@ -69,7 +71,6 @@ class PublishTrait < ApplicationRecord
       resource_id,
       page_id,
       scientific_name,
-      resource_pk,
       predicate_uri,
       sex_uri,
       lifestage_uri,

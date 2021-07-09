@@ -21,8 +21,6 @@ class Publisher
     @web_resource_id = nil
     @files = {}
     @nodes = {}
-    @traits = {}
-    @assocs = {}
     @pages = {}
     @referents = {} # This will store ALL of the referents (the acutal text), and will persist over batches.
     @stored_refs = {} # This will store ref keys that we're already loaded, so we don't do it twice... [sigh]
@@ -458,7 +456,8 @@ class Publisher
     @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
     # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
     node_ids = nodes.map(&:id)
-    build_publish_traits(node_ids)
+    destroy_existing_publish_models
+    traits = build_publish_traits(node_ids)
     external_trait_metas = build_external_trait_metas
     filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
@@ -469,14 +468,20 @@ class Publisher
 
     # Metadata FIRST, because some of it moves to the traits.
     CSV.open(meta_file, 'ab') do |csv|
-      add_trait_meta_to_csv(@traits, csv)
+      add_trait_meta_to_csv(traits, csv)
       add_meta_to_csv(external_trait_metas, csv)
     end
     CSV.open(filename, 'ab') do |csv|
-      @traits.each do |trait|
+      traits.each do |trait|
         csv << @trait_heads.map { |field| trait.send(field) }
       end
     end
+  end
+
+  # We re-create these each time we 'publish'
+  def destroy_existing_publish_models
+    @resource.publish_traits.destroy_all
+    @resource.publish_metadata.destroy_all
   end
   
   def build_publish_traits(node_ids)
@@ -498,7 +503,7 @@ class Publisher
         target_node: :scientific_name
       )
 
-    @traits = build_publish_traits_helper(traits) + build_publish_traits_helper(assocs) 
+    build_publish_traits_helper(traits) + build_publish_traits_helper(assocs) 
   end
 
   def build_external_trait_metas
@@ -524,7 +529,9 @@ class Publisher
   end
 
   def build_publish_traits_helper(trait_likes)
-    trait_likes.find_each.map do |trait|
+    publish_traits = []
+
+    trait_likes.find_each.each do |trait|
       publish_trait = PublishTrait.from_trait(trait)
 
       publish_metas = trait.metadata.map do |meta|
@@ -532,34 +539,15 @@ class Publisher
       end.compact # from_meta may return nil
 
       publish_trait.publish_metadata = publish_metas
-      publish_trait.save!
 
-      publish_trait
+      if publish_trait.save
+        publish_traits << publish_trait
+      else
+        @process.warn("Failed to save PublishTrait with resource_pk #{trait.resource_pk} , possibly because it's a duplicate. Errors: #{publish_trait.errors.full_messages.join('; ')}.")
+      end
     end
-  end
 
-
-  def trait_map(node_ids)
-    @traits = {}
-    Trait.primary.published.matched.where(node_id: node_ids)
-         .includes(:references, :meta_traits,
-                   children: :references, occurrence: :occurrence_metadata,
-                   node: :scientific_name).find_each do |trait|
-                     @traits[trait.id] = trait
-                   end
-    @process.info("#{@traits.size} Traits (filtered)...")
-  end
-
-  def assoc_map(node_ids)
-    @assocs = {}
-    Assoc.published.where(node_id: node_ids)
-         .where.not(object_node_id: nil)
-         .includes(:references, :meta_assocs,
-                   occurrence: :occurrence_metadata,
-                   node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
-                     @assocs[assoc.id] = assoc
-                   end
-    @process.info("#{@assocs.size} Associations (filtered)...")
+    publish_traits
   end
 
   def start_traits_file(filename, heads)

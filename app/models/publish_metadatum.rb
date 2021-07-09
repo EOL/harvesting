@@ -70,6 +70,10 @@ class PublishMetadatum < ApplicationRecord
     id
   end
 
+  def trait_eol_pk
+    publish_trait.eol_pk
+  end
+
   def predicate
     predicate_uri
   end
