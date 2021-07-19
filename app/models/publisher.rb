@@ -9,8 +9,8 @@ class Publisher
     "http://rs.tdwg.org/dwc/terms/sex"
   ])
 
-  def self.by_resource(resource_in, process, options = {})
-    new(options.merge(resource: resource_in, process: process)).by_resource
+  def self.by_resource(resource_in, process, harvest)
+    new(resource, process, harvest).by_resource
   end
 
   def self.first
@@ -19,9 +19,10 @@ class Publisher
     publisher
   end
 
-  def initialize(options = {})
-    @resource = options[:resource]
-    @process = options[:process]
+  def initialize(resource, process, harvest)
+    @resource = resource
+    @process = process
+    @trait_filename = @resource.publish_table_path('traits', timestamp: harvest.created_at.to_i) # trait filename is pinned to harvest by timestamp since we keep old ones for diffs
     @root_url = Rails.application.secrets.repository[:url] || 'http://eol.org'
     @web_resource_id = nil
     @files = {}
@@ -465,9 +466,8 @@ class Publisher
     node_ids = nodes.map(&:id)
     trait_map(node_ids)
     assoc_map(node_ids)
-    filename = @resource.publish_table_path('traits')
     meta_file = @resource.publish_table_path('metadata')
-    start_traits_file(filename, @trait_heads)
+    start_traits_file(@trait_filename, @trait_heads)
     start_traits_file(meta_file, @meta_heads)
 
     # metadata (child Traits) with parent Traits from resources other than the current one (specified by parent_eol_pk)
@@ -654,13 +654,15 @@ class Publisher
 
   def remove_existing_pub_files
     WebDb.types.each do |type|
-      file = @resource.publish_table_path(type.pluralize)
-      File.unlink(file) if File.exist?(file)
+      remove_file(@resource.publish_table_path(type.pluralize))
     end
-    %i[traits metadata].each do |type|
-      file = @resource.publish_table_path(type)
-      File.unlink(file) if File.exist?(file)
-    end
+    
+    remove_file(@resource.publish_table_path(:metadata))
+    remove_file(@trait_filename)  
+  end
+
+  def remove_file(filename)
+    File.unlink(filename) if File.exist?(filename)
   end
 
   def new_referents_only

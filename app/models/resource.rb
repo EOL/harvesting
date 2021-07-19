@@ -191,8 +191,10 @@ class Resource < ApplicationRecord
     false
   end
 
-  def publish_table_path(table)
-    path.join("publish_#{table}.tsv")
+  def publish_table_path(table, options = {})
+    name = "publish_#{table}"
+    name += "_#{options[:timestamp]}" if options[:timestamp]
+    path.join("#{name}.tsv")
   end
 
   def path(make_if_missing = true)
