@@ -76,7 +76,7 @@ group :development, :test do
   gem 'byebug', '~> 11.1'
   gem 'factory_bot_rails', '~> 5.2'
   # Testing framework:
-  gem 'rspec-rails', '~> 3.9'
+  gem 'rspec-rails', '~> 5.0', '>= 5.0.1'
   gem 'solargraph', '~> 0.40'
 end
 
