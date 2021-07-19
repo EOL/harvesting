@@ -28,22 +28,25 @@ Rails.application.routes.draw do
     resources :traits, only: [:index]
     resources :assocs, only: [:index]
     resources :vernaculars, only: [:index]
+
+    nested do
+      scope "publish" do
+        scope "traits" do
+          get "new" => 'publish#new_traits', as: :publish_new_traits
+          get "removed" => 'publish#removed_traits', as: :publish_removed_traits
+        end
+
+        scope "metadata" do
+          get "new" => 'publish#new_metadata', as: :publish_new_metadata
+        end
+      end
+    end
+
     collection do
       get 'kill_workers'
     end
   end
   resources :traits, only: [:show]
-
-  scope "publish" do
-    scope "traits" do
-      get "new" => 'publish#new_traits', as: :publish_new_traits
-      get "removed" => 'publish#removed_traits', as: :publish_removed_traits
-    end
-
-    scope "metadata" do
-      get "new" => 'publish#new_metadata', as: :publish_new_metadata
-    end
-  end
 
   get "/service/page_id_map/:resource_id" => "service/page_id_map#get", as: "page_id_map", defaults: { format: 'csv' }
 
