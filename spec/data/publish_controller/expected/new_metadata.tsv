@@ -1,0 +1,3 @@
+eol_pk,trait_eol_pk,predicate,literal,measurement,value_uri,units,sex,lifestage,statistical_method,source,is_external
+OccurrenceMetadatum-228327,R50-PK288559,http://rs.tdwg.org/dwc/terms/locality,Canada basin,,,,,,,,false
+OccurrenceMetadatum-228379,R50-PK288590,http://rs.tdwg.org/dwc/terms/locality,Canada basin,,,,,,,,false

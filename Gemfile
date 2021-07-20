@@ -74,9 +74,9 @@ gem 'whenever', '~> 1.0', require: false
 group :development, :test do
   # Yes, pry is kinda redundant with byebug, but it doesnt' do stepping, sooo:
   gem 'byebug', '~> 11.1'
-  gem 'factory_bot_rails', '~> 5.2'
   # Testing framework:
   gem 'rspec-rails', '~> 5.0', '>= 5.0.1'
+  gem 'factory_bot_rails', '~> 6.2'
   gem 'solargraph', '~> 0.40'
 end
 
