@@ -1,8 +1,11 @@
 class PublishController < ApplicationController
   def new_traits 
     respond_to do |fmt|
-      fmt.tsv do 
-        send_data 'text', content_type: 'text/tab-separated-values'
+      fmt.csv do 
+        resource = Resource.find(params.require(:resource_id))
+        since = params.require(:since).to_i
+        diff = TraitDiff.new(resource, since)
+        send_file(diff.new_traits_path, content_type: 'text/csv')
       end
     end
   end

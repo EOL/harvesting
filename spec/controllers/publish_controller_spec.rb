@@ -14,14 +14,17 @@ end
 RSpec.describe PublishController do
   let(:resource_id) { 1 }
   let(:resource_name) { 'publish_diffs' }
-  let(:resource) { create(:resource, id: resource_id, abbr: resource_name) }
+  let!(:resource) { create(:resource, id: resource_id, abbr: resource_name) }
   let(:resource_dir) { TMP_DIR.join(resource_name) }
   let(:timestamp1) { 100 }
   let(:timestamp2) { 200 }
   let(:timestamp_between) { 150 }
 
   before do
-    FileUtils.mkdir(resource_dir)
+    Resource.data_dir_path = TMP_DIR
+    # clear directory here, rather than in after block, because it might be helpful to inspect files on failure
+    FileUtils.remove_dir(TMP_DIR) if File.exist?(TMP_DIR)
+    FileUtils.mkdir_p(resource_dir) # Also creates TMP_DIR
     FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join("publish_traits_#{timestamp1}.tsv"))
     FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join("publish_traits_#{timestamp2}.tsv"))
     FileUtils.copy_entry(SOURCE_DIR.join('publish_metadata.tsv'), resource_dir.join('publish_metadata.tsv'))
@@ -35,7 +38,7 @@ RSpec.describe PublishController do
     context 'when request is valid' do
       context "when 'since' is between most recent timestamp and previous" do
         it 'gives the expected response' do
-          get :new_traits, params: { resource_id: resource_id, since: timestamp_between }, format: :tsv
+          get :new_traits, params: { resource_id: resource_id, since: timestamp_between }, format: :csv
           expect(response).to have_http_status(:ok)
           expect(response.body).to_not be_empty
           expect_no_difference(response.body, actual_file, expected_file, diff_file)
@@ -51,6 +54,6 @@ RSpec.describe PublishController do
   end
 
   after do
-    FileUtils.remove_dir(resource_dir)
+    Resource.data_dir_path = nil
   end
 end

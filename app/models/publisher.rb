@@ -9,6 +9,14 @@ class Publisher
     "http://rs.tdwg.org/dwc/terms/sex"
   ])
 
+  TRAIT_HEADS = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method
+    object_page_id target_scientific_name value_uri literal measurement units normal_measurement
+    normal_units_uri sample_size citation source remarks method contributor_uri compiler_uri determined_by_uri]
+
+  META_HEADS = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
+    statistical_method source is_external]
+
+
   def self.by_resource(resource_in, process, harvest)
     new(resource, process, harvest).by_resource
   end
@@ -37,12 +45,6 @@ class Publisher
     @locs = {} # This will store ALL of the locations (the acutal values), and will persist.
     @stored_locs = {} # This will store location keys that we're already loaded, so we don't do it twice.
     @limit = 10_000
-    @trait_heads = %i[eol_pk page_id scientific_name resource_pk predicate sex lifestage statistical_method
-                      object_page_id target_scientific_name value_uri literal measurement units normal_measurement
-                      normal_units_uri sample_size citation source remarks method contributor_uri compiler_uri determined_by_uri]
-    @meta_heads = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
-                     statistical_method source is_external]
-
     reset_vars
   end
 
@@ -467,8 +469,8 @@ class Publisher
     trait_map(node_ids)
     assoc_map(node_ids)
     meta_file = @resource.publish_table_path('metadata')
-    start_traits_file(@trait_filename, @trait_heads)
-    start_traits_file(meta_file, @meta_heads)
+    start_traits_file(@trait_filename, TRAIT_HEADS)
+    start_traits_file(meta_file, META_HEADS)
 
     # metadata (child Traits) with parent Traits from resources other than the current one (specified by parent_eol_pk)
     external_trait_metas = @resource.traits.published
@@ -582,7 +584,7 @@ class Publisher
     sex_term = UrisAreEolTerms.new(meta).uri(:sex_term_uri)
     lifestage_term = UrisAreEolTerms.new(meta).uri(:lifestage_term_uri)
 
-    # q.v.: @meta_heads for order, here:
+    # q.v.: META_HEADS for order, here:
     [
       "#{meta.class.name}-#{meta.id}",
       (in_harvest_trait || meta.parent).eol_pk, 

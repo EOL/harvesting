@@ -113,12 +113,20 @@ class Resource < ApplicationRecord
         end
       end
     end
+
+    def data_dir_path
+      @data_dir_path ||= Rails.public_path.join('data')
+    end
+
+    # Exposed for tests, not to be used elsewhere
+    def data_dir_path=(path)
+      @data_dir_path = path
+    end
   end
 
   def propagate_to_publishing
     WebDb.update_resource(self) # NOTE: this WILL create it, if missing.
   end
-
 
   def complete
     published!
@@ -199,7 +207,7 @@ class Resource < ApplicationRecord
 
   def path(make_if_missing = true)
     return @path if @path
-    @path = Rails.public_path.join('data', abbr.gsub(/\s+/, '_'))
+    @path = self.class.data_dir_path.join(abbr.gsub(/\s+/, '_'))
     unless File.exist?(@path)
       if make_if_missing
         FileUtils.mkdir_p(@path)
