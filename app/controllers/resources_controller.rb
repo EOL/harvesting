@@ -160,6 +160,6 @@ class ResourcesController < ApplicationController
           .permit(:name, :abbr, :pk_url, :opendata_url, :min_days_between_harvests, :harvest_day_of_month, :notes,
                   :harvest_months_json, :auto_publish, :not_trusted, :might_have_duplicate_taxa, :description,
                   :is_browsable, :dataset_rights_holder, :dataset_license_id, :dataset_rights_statement,
-                  :classification)
+                  :classification, :has_persistent_trait_pks)
   end
 end
