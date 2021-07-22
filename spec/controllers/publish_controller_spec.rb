@@ -11,6 +11,9 @@ EXPECTED_NEW_TRAITS_DIFF_FILE = EXPECTED_DIR.join('new_traits.tsv') # TODO: shou
 EXPECTED_REMOVE_ALL_TRAITS_FILE = EXPECTED_DIR.join('remove_all_traits.csv')
 EXPECTED_REMOVED_TRAITS_DIFF_FILE = EXPECTED_DIR.join('removed_traits.tsv')
 EXPECTED_NEW_METADATA_DIFF_FILE = EXPECTED_DIR.join('new_metadata.tsv')
+EXPECTED_EMPTY_NEW_TRAITS_FILE = EXPECTED_DIR.join('new_traits_empty.csv')
+EXPECTED_EMPTY_REMOVED_TRAITS_FILE = EXPECTED_DIR.join('removed_traits_empty.csv')
+EXPECTED_EMPTY_NEW_METADATA_FILE = EXPECTED_DIR.join('new_metadata_empty.csv')
 
 # temp files created to examine diffs
 RESPONSE_FILE = TMP_DIR.join('response.csv')
@@ -63,6 +66,9 @@ RSpec.describe PublishController do
     end
 
     context 'when request is valid' do
+      let(:timestamp1) { 100 }
+      let(:timestamp2) { 200 }
+
       context 'when there is no trait file in the resource directory' do
         it do
           make_new_traits_request(resource_id: resource_id, since: 100)
@@ -70,62 +76,71 @@ RSpec.describe PublishController do
         end
       end
 
-      context 'when all files are timestamped' do
-        let(:timestamp1) { 100 }
-        let(:timestamp2) { 200 }
-        let(:ignore_timestamp1) { 50 }
-        let(:ignore_timestamp2) { 170 }
-
+      context 'when there are no new traits' do
         before do
           FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp1}.tsv"))
-          FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
-
-          # these should be ignored by implementation -- just create some extra files to ensure the correct ones are used
-          FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp1}.tsv"))
-          FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp2}.tsv"))
+          FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
         end
 
-        context "when 'since' is absent" do
-          it { expect_new_traits_response({ resource_id: resource_id }, TRAIT_SOURCE2) }
-        end
-
-        context "when 'since' is between most recent timestamp and a previous one" do
-          it { expect_new_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_NEW_TRAITS_DIFF_FILE) }
-        end
-
-        context "when 'since' is before earliest timestamp" do
-          it { expect_new_traits_response({ resource_id: resource_id, since: 10 }, TRAIT_SOURCE2) }
-        end
+        it { expect_new_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_EMPTY_NEW_TRAITS_FILE) }
       end
 
-      context 'when there is a non-timestamped published_traits.tsv file present' do
-        context 'when it is the only file' do
+      context 'when there are new traits' do
+        context 'when all files are timestamped' do
+          let(:ignore_timestamp1) { 50 }
+          let(:ignore_timestamp2) { 170 }
+
           before do
-            FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join('publish_traits.tsv'))
+            FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp1}.tsv"))
+            FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
+
+            # these should be ignored by implementation -- just create some extra files to ensure the correct ones are used
+            FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp1}.tsv"))
+            FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp2}.tsv"))
           end
 
-          it { expect_new_traits_response({ resource_id: resource_id, since: 100 }, TRAIT_SOURCE2) }
+          context "when 'since' is absent" do
+            it { expect_new_traits_response({ resource_id: resource_id }, TRAIT_SOURCE2) }
+          end
+
+          context "when 'since' is between most recent timestamp and a previous one" do
+            it { expect_new_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_NEW_TRAITS_DIFF_FILE) }
+          end
+
+          context "when 'since' is before earliest timestamp" do
+            it { expect_new_traits_response({ resource_id: resource_id, since: 10 }, TRAIT_SOURCE2) }
+          end
         end
 
-        context 'when there are also timestamped files' do
-          context 'when since is before earliest timestamp' do
+        context 'when there is a non-timestamped published_traits.tsv file present' do
+          context 'when it is the only file' do
             before do
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits.tsv'))
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
-              FileUtils.touch(SOURCE_DIR.join('publish_traits_50.tsv'))
+              FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join('publish_traits.tsv'))
             end
 
-            it { expect_new_traits_response({ resource_id: resource_id, since: 25 }, TRAIT_SOURCE2) }
+            it { expect_new_traits_response({ resource_id: resource_id, since: 100 }, TRAIT_SOURCE2) }
           end
 
-          context 'when since is between most recent and another timestamp' do
-            before do
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits_50.tsv'))
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
-              FileUtils.touch(SOURCE_DIR.join('publish_traits.tsv'))
+          context 'when there are also timestamped files' do
+            context 'when since is before earliest timestamp' do
+              before do
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits.tsv'))
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
+                FileUtils.touch(SOURCE_DIR.join('publish_traits_50.tsv'))
+              end
+
+              it { expect_new_traits_response({ resource_id: resource_id, since: 25 }, TRAIT_SOURCE2) }
             end
 
-            it { expect_new_traits_response({ resource_id: resource_id, since: 75 }, EXPECTED_NEW_TRAITS_DIFF_FILE) }
+            context 'when since is between most recent and another timestamp' do
+              before do
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits_50.tsv'))
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
+                FileUtils.touch(SOURCE_DIR.join('publish_traits.tsv'))
+              end
+
+              it { expect_new_traits_response({ resource_id: resource_id, since: 75 }, EXPECTED_NEW_TRAITS_DIFF_FILE) }
+            end
           end
         end
       end
@@ -152,6 +167,9 @@ RSpec.describe PublishController do
     end
 
     context 'when request is valid' do
+      let(:timestamp1) { 100 }
+      let(:timestamp2) { 200 }
+
       context 'when there is no trait file in the resource directory' do
         it do
           make_removed_traits_request(resource_id: resource_id, since: 100)
@@ -159,62 +177,73 @@ RSpec.describe PublishController do
         end
       end
 
-      context 'when all files are timestamped' do
-        let(:timestamp1) { 100 }
-        let(:timestamp2) { 200 }
-        let(:ignore_timestamp1) { 50 }
-        let(:ignore_timestamp2) { 170 }
-
+      context 'when there are no removed traits' do
         before do
           FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp1}.tsv"))
-          FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
-
-          # these should be ignored by implementation -- just create some extra files to ensure the correct ones are used
-          FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp1}.tsv"))
-          FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp2}.tsv"))
+          FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
         end
 
-        context "when 'since' is absent" do
-          it { expect_removed_traits_response({ resource_id: resource_id }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
-        end
-
-        context "when 'since' is between most recent timestamp and a previous one" do
-          it { expect_removed_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_REMOVED_TRAITS_DIFF_FILE) }
-        end
-
-        context "when 'since' is before earliest timestamp" do
-          it { expect_removed_traits_response({ resource_id: resource_id, since: 10 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+        it do
+          expect_removed_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_EMPTY_REMOVED_TRAITS_FILE)
         end
       end
 
-      context 'when there is a non-timestamped published_traits.tsv file present' do
-        context 'when it is the only file' do
+      context 'when there are removed traits' do
+        context 'when all files are timestamped' do
+          let(:ignore_timestamp1) { 50 }
+          let(:ignore_timestamp2) { 170 }
+
           before do
-            FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join('publish_traits.tsv'))
+            FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp1}.tsv"))
+            FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
+
+            # these should be ignored by implementation -- just create some extra files to ensure the correct ones are used
+            FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp1}.tsv"))
+            FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp2}.tsv"))
           end
 
-          it { expect_removed_traits_response({ resource_id: resource_id, since: 100 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+          context "when 'since' is absent" do
+            it { expect_removed_traits_response({ resource_id: resource_id }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+          end
+
+          context "when 'since' is between most recent timestamp and a previous one" do
+            it { expect_removed_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_REMOVED_TRAITS_DIFF_FILE) }
+          end
+
+          context "when 'since' is before earliest timestamp" do
+            it { expect_removed_traits_response({ resource_id: resource_id, since: 10 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+          end
         end
 
-        context 'when there are also timestamped files' do
-          context 'when since is before earliest timestamp' do
+        context 'when there is a non-timestamped published_traits.tsv file present' do
+          context 'when it is the only file' do
             before do
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits.tsv'))
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
-              FileUtils.touch(SOURCE_DIR.join('publish_traits_50.tsv'))
+              FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join('publish_traits.tsv'))
             end
 
-            it { expect_removed_traits_response({ resource_id: resource_id, since: 25 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+            it { expect_removed_traits_response({ resource_id: resource_id, since: 100 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
           end
 
-          context 'when since is between most recent and another timestamp' do
-            before do
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits_50.tsv'))
-              FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
-              FileUtils.touch(SOURCE_DIR.join('publish_traits.tsv'))
+          context 'when there are also timestamped files' do
+            context 'when since is before earliest timestamp' do
+              before do
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits.tsv'))
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
+                FileUtils.touch(SOURCE_DIR.join('publish_traits_50.tsv'))
+              end
+
+              it { expect_removed_traits_response({ resource_id: resource_id, since: 25 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
             end
 
-            it { expect_removed_traits_response({ resource_id: resource_id, since: 75 }, EXPECTED_REMOVED_TRAITS_DIFF_FILE) }
+            context 'when since is between most recent and another timestamp' do
+              before do
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits_50.tsv'))
+                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
+                FileUtils.touch(SOURCE_DIR.join('publish_traits.tsv'))
+              end
+
+              it { expect_removed_traits_response({ resource_id: resource_id, since: 75 }, EXPECTED_REMOVED_TRAITS_DIFF_FILE) }
+            end
           end
         end
       end
@@ -247,6 +276,9 @@ RSpec.describe PublishController do
       end
 
       context 'when request is valid' do
+        let(:timestamp1) { 100 }
+        let(:timestamp2) { 200 }
+
         # TODO: DRY
         context 'when there is no trait file in the resource directory' do
           it do
@@ -255,63 +287,71 @@ RSpec.describe PublishController do
           end
         end
 
-        context 'when all files are timestamped' do
-          let(:timestamp1) { 100 }
-          let(:timestamp2) { 200 }
-          let(:ignore_timestamp1) { 50 }
-          let(:ignore_timestamp2) { 170 }
-
-          # TODO: DRY
+        context 'when there are no new traits' do
           before do
             FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp1}.tsv"))
-            FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
-
-            # these should be ignored by implementation -- just create some extra files to ensure the correct ones are used
-            FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp1}.tsv"))
-            FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp2}.tsv"))
+            FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
           end
 
-          context "when 'since' is absent" do
-            it { expect_new_metadata_response({ resource_id: resource_id }, META_SOURCE) }
-          end
-
-          context "when 'since' is between most recent timestamp and a previous one" do
-            it { expect_new_metadata_response({ resource_id: resource_id, since: 150 }, EXPECTED_NEW_METADATA_DIFF_FILE) }
-          end
-
-          context "when 'since' is before earliest timestamp" do
-            it { expect_new_metadata_response({ resource_id: resource_id, since: 10 }, META_SOURCE) }
-          end
+          it { expect_new_metadata_response({ resource_id: resource_id, since: 150}, EXPECTED_EMPTY_NEW_METADATA_FILE) }
         end
 
-        context 'when there is a non-timestamped published_traits.tsv file present' do
-          context 'when it is the only file' do
+        context 'when there are new traits' do
+          context 'when all files are timestamped' do let(:ignore_timestamp1) { 50 }
+            let(:ignore_timestamp2) { 170 }
+
+            # TODO: DRY
             before do
-              FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join('publish_traits.tsv'))
+              FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp1}.tsv"))
+              FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
+
+              # these should be ignored by implementation -- just create some extra files to ensure the correct ones are used
+              FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp1}.tsv"))
+              FileUtils.touch(resource_dir.join("publish_traits_#{ignore_timestamp2}.tsv"))
             end
 
-            it { expect_new_metadata_response({ resource_id: resource_id, since: 100 }, META_SOURCE) }
+            context "when 'since' is absent" do
+              it { expect_new_metadata_response({ resource_id: resource_id }, META_SOURCE) }
+            end
+
+            context "when 'since' is between most recent timestamp and a previous one" do
+              it { expect_new_metadata_response({ resource_id: resource_id, since: 150 }, EXPECTED_NEW_METADATA_DIFF_FILE) }
+            end
+
+            context "when 'since' is before earliest timestamp" do
+              it { expect_new_metadata_response({ resource_id: resource_id, since: 10 }, META_SOURCE) }
+            end
           end
 
-          context 'when there are also timestamped files' do
-            context 'when since is before earliest timestamp' do
+          context 'when there is a non-timestamped published_traits.tsv file present' do
+            context 'when it is the only file' do
               before do
-                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits.tsv'))
-                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
-                FileUtils.touch(SOURCE_DIR.join('publish_traits_50.tsv'))
+                FileUtils.copy_entry(TRAIT_SOURCE2, resource_dir.join('publish_traits.tsv'))
               end
 
-              it { expect_new_metadata_response({ resource_id: resource_id, since: 25 }, META_SOURCE) }
+              it { expect_new_metadata_response({ resource_id: resource_id, since: 100 }, META_SOURCE) }
             end
 
-            context 'when since is between most recent and another timestamp' do
-              before do
-                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits_50.tsv'))
-                FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
-                FileUtils.touch(SOURCE_DIR.join('publish_traits.tsv'))
+            context 'when there are also timestamped files' do
+              context 'when since is before earliest timestamp' do
+                before do
+                  FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits.tsv'))
+                  FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
+                  FileUtils.touch(SOURCE_DIR.join('publish_traits_50.tsv'))
+                end
+
+                it { expect_new_metadata_response({ resource_id: resource_id, since: 25 }, META_SOURCE) }
               end
 
-              it { expect_new_metadata_response({ resource_id: resource_id, since: 75 }, EXPECTED_NEW_METADATA_DIFF_FILE) }
+              context 'when since is between most recent and another timestamp' do
+                before do
+                  FileUtils.copy_entry(SOURCE_DIR.join('publish_traits1.tsv'), resource_dir.join('publish_traits_50.tsv'))
+                  FileUtils.copy_entry(SOURCE_DIR.join('publish_traits2.tsv'), resource_dir.join('publish_traits_100.tsv'))
+                  FileUtils.touch(SOURCE_DIR.join('publish_traits.tsv'))
+                end
+
+                it { expect_new_metadata_response({ resource_id: resource_id, since: 75 }, EXPECTED_NEW_METADATA_DIFF_FILE) }
+              end
             end
           end
         end
