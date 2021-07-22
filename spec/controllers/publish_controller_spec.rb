@@ -22,8 +22,12 @@ DIFF_FILE = TMP_DIR.join('expected_response.diff')
 RSpec.describe PublishController do
   let(:resource_id) { 1 }
   let(:resource_name) { 'publish_diffs' }
-  let!(:resource) { create(:resource, id: resource_id, abbr: resource_name) }
   let(:resource_dir) { TMP_DIR.join(resource_name) }
+  let!(:resource) { create(:resource, id: resource_id, abbr: resource_name, has_persistent_trait_pks: true) }
+  let(:resource_non_persistent_id) { 2 }
+  let(:resource_non_persistent_name) { 'np_resource' }
+  let!(:resource_non_persistent) { create(:resource, id: resource_non_persistent_id, abbr: resource_non_persistent_name, has_persistent_trait_pks: false) }
+  let(:resource_non_persistent_dir) { TMP_DIR.join(resource_non_persistent_name) }
 
   before do
     Resource.data_dir_path = TMP_DIR
@@ -83,6 +87,20 @@ RSpec.describe PublishController do
         end
 
         it { expect_new_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_EMPTY_NEW_TRAITS_FILE) }
+      end
+
+      context 'when resource.has_persistent_trait_pks is false' do
+        before do
+          FileUtils.mkdir(resource_non_persistent_dir)
+          FileUtils.copy_entry(TRAIT_SOURCE1, resource_non_persistent_dir.join("publish_traits_#{timestamp1}.tsv"))
+          FileUtils.copy_entry(TRAIT_SOURCE2, resource_non_persistent_dir.join("publish_traits_#{timestamp2}.tsv"))
+        end
+
+        it { expect_new_traits_response({ resource_id: resource_non_persistent_id, since: 150 }, TRAIT_SOURCE2) }
+
+        after do
+          FileUtils.remove_dir(resource_non_persistent_dir)
+        end
       end
 
       context 'when there are new traits' do
@@ -185,6 +203,20 @@ RSpec.describe PublishController do
 
         it do
           expect_removed_traits_response({ resource_id: resource_id, since: 150 }, EXPECTED_EMPTY_REMOVED_TRAITS_FILE)
+        end
+      end
+
+      context 'when resource.has_persistent_trait_pks is false' do
+        before do
+          FileUtils.mkdir(resource_non_persistent_dir)
+          FileUtils.copy_entry(TRAIT_SOURCE1, resource_non_persistent_dir.join("publish_traits_#{timestamp1}.tsv"))
+          FileUtils.copy_entry(TRAIT_SOURCE2, resource_non_persistent_dir.join("publish_traits_#{timestamp2}.tsv"))
+        end
+
+        it { expect_removed_traits_response({ resource_id: resource_non_persistent_id, since: 150 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+
+        after do
+          FileUtils.remove_dir(resource_non_persistent_dir)
         end
       end
 
@@ -294,6 +326,21 @@ RSpec.describe PublishController do
           end
 
           it { expect_new_metadata_response({ resource_id: resource_id, since: 150}, EXPECTED_EMPTY_NEW_METADATA_FILE) }
+        end
+
+        context 'when resource.has_persistent_trait_pks is false' do
+          before do
+            FileUtils.mkdir(resource_non_persistent_dir)
+            FileUtils.copy_entry(TRAIT_SOURCE1, resource_non_persistent_dir.join("publish_traits_#{timestamp1}.tsv"))
+            FileUtils.copy_entry(TRAIT_SOURCE2, resource_non_persistent_dir.join("publish_traits_#{timestamp2}.tsv"))
+            FileUtils.copy_entry(META_SOURCE, resource_non_persistent_dir.join('publish_metadata.tsv'))
+          end
+
+          it { expect_new_metadata_response({ resource_id: resource_non_persistent_id, since: 150 }, META_SOURCE) }
+
+          after do
+            FileUtils.remove_dir(resource_non_persistent_dir)
+          end
         end
 
         context 'when there are new traits' do

@@ -72,16 +72,21 @@ class TraitDiff
     end
 
     if (
+      @resource.has_persistent_trait_pks? &&
       @since.present? && 
       last_published_file.present? && 
       last_published_file != most_recent_file   
-    ) # Then we have two timestamped files to build the diff files from
+    ) # Then we have two timestamped files to create diff files from
       create_diff_dir_if_needed
       write_files(last_published_file, most_recent_file, last_published_timestamp, most_recent_timestamp)
     else       
-      # We can't determine which file was most recently published (at time @since), so write files to instruct the client to
+      # We can't determine which file was most recently published (at time @since), 
+      # or the resource doesn't have persistent trait pks, so write files to instruct the client to
       # remove all existing traits and add all of the most recent harvest's traits and metadata
-      most_recent_file = trait_files[-1] if most_recent_file.nil?
+      
+      # there should only be one -- a non-timestamped publish_traits.tsv
+      most_recent_file = trait_files.first if most_recent_file.nil? 
+
       @new_traits_path = @resource.path.join(most_recent_file)
       publish_meta_path = @resource.publish_table_path(:metadata)
       @new_metadata_path = publish_meta_path if File.exist?(publish_meta_path) # Otherwise, leave it nil
