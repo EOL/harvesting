@@ -128,6 +128,13 @@ RSpec.describe PublishController do
           context "when 'since' is before earliest timestamp" do
             it { expect_new_traits_response({ resource_id: resource_id, since: 10 }, TRAIT_SOURCE2) }
           end
+
+          context "when 'since' is after most recent timestamp" do
+            it do
+              make_new_traits_request({ resource_id: resource_id, since: 300 })
+              expect(response).to have_http_status(:no_content)
+            end
+          end
         end
 
         context 'when there is a non-timestamped published_traits.tsv file present' do
@@ -244,6 +251,13 @@ RSpec.describe PublishController do
 
           context "when 'since' is before earliest timestamp" do
             it { expect_removed_traits_response({ resource_id: resource_id, since: 10 }, EXPECTED_REMOVE_ALL_TRAITS_FILE) }
+          end
+
+          context "when 'since' is after most recent timestamp" do
+            it do
+              make_removed_traits_request({ resource_id: resource_id, since: 300 })
+              expect(response).to have_http_status(:no_content)
+            end
           end
         end
 
@@ -367,6 +381,13 @@ RSpec.describe PublishController do
 
             context "when 'since' is before earliest timestamp" do
               it { expect_new_metadata_response({ resource_id: resource_id, since: 10 }, META_SOURCE) }
+            end
+
+            context "when 'since' is after most recent timestamp" do
+              it do
+                make_new_metadata_request({ resource_id: resource_id, since: 300 })
+                expect(response).to have_http_status(:no_content)
+              end
             end
           end
 

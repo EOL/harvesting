@@ -74,11 +74,15 @@ class TraitDiff
     if (
       @resource.can_perform_trait_diffs? &&
       @since.present? && 
-      last_published_file.present? && 
-      last_published_file != most_recent_file   
-    ) # Then we have two timestamped files to create diff files from
-      create_diff_dir_if_needed
-      write_files(last_published_file, most_recent_file, last_published_timestamp, most_recent_timestamp)
+      last_published_file.present?
+    )
+      if last_published_file != most_recent_file   
+        # Then we have two timestamped files to create diff files from
+        create_diff_dir_if_needed
+        write_files(last_published_file, most_recent_file, last_published_timestamp, most_recent_timestamp)
+      else
+        return # client already has most recent data -- nothing to do
+      end
     else       
       # We can't determine which file was most recently published (at time @since), 
       # or the resource isn't valid for diffs, so write files to instruct the client to
