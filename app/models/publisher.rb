@@ -18,7 +18,7 @@ class Publisher
 
 
   def self.by_resource(resource_in, process, harvest)
-    new(resource, process, harvest).by_resource
+    new(resource_in, process, harvest).by_resource
   end
 
   def self.first
@@ -483,13 +483,13 @@ class Publisher
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
     end
-    CSV.open(filename, 'ab') do |csv|
+    CSV.open(@trait_filename, 'ab') do |csv|
       @traits.values.each do |trait|
-        csv << @trait_heads.map { |field| trait.send(field) }
+        csv << TRAIT_HEADS.map { |field| trait.send(field) }
       end
       # Skip associations that don't have BOTH nodes defined (they are meaningless):
       @assocs.values.select { |a| a.node && a.target_node }.each do |assoc|
-        csv << @trait_heads.map { |field| assoc.send(field) }
+        csv << TRAIT_HEADS.map { |field| assoc.send(field) }
       end
     end
   end

@@ -11,8 +11,16 @@ class HarvestsController < ApplicationController
     authenticate_user!
     @harvest = Harvest.find(params[:id])
     resource = @harvest.resource
+
     @harvest.destroy
-    flash[:notice] = t('harvests.flash.destroyed')
+
+    if @harvest.completed_at.present? && resource.can_perform_trait_diffs?
+      resource.update!(can_perform_trait_diffs: false)
+      flash[:notice] = t('harvests.flash.destroyed_cant_perform_trait_diffs')
+    else
+      flash[:notice] = t('harvests.flash.destroyed')
+    end
+
     redirect_to resource
   end
 end

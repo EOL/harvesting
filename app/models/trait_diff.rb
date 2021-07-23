@@ -72,7 +72,7 @@ class TraitDiff
     end
 
     if (
-      @resource.has_persistent_trait_pks? &&
+      @resource.can_perform_trait_diffs? &&
       @since.present? && 
       last_published_file.present? && 
       last_published_file != most_recent_file   
@@ -81,7 +81,7 @@ class TraitDiff
       write_files(last_published_file, most_recent_file, last_published_timestamp, most_recent_timestamp)
     else       
       # We can't determine which file was most recently published (at time @since), 
-      # or the resource doesn't have persistent trait pks, so write files to instruct the client to
+      # or the resource isn't valid for diffs, so write files to instruct the client to
       # remove all existing traits and add all of the most recent harvest's traits and metadata
       
       # there should only be one -- a non-timestamped publish_traits.tsv

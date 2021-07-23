@@ -70,6 +70,7 @@ en:
       resume: "re-try"
     flash:
       destroyed: "Harvest destroyed."
+      destroyed_cant_perform_trait_diffs: "Harvest destroyed. Resource can_perform_trait_diffs has been set to false since destroying a harvest may break diff behavior!"
   layout:
     logged_in_as: "logged in as %{user}."
     index_link: "harvested resources"

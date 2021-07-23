@@ -107,8 +107,8 @@
         %strong= "THIS RESOURCE WILL BE HARVESTED ASAP:"
         = "An admin has set this resource to Force Harvest."
     .item
-      %strong= "Has persistent trait pks:"
-      = @resource.has_persistent_trait_pks? ? "Yes." : "No."
+      %strong= "Can perform trait diffs:"
+      = @resource.can_perform_trait_diffs? ? "Yes." : "No."
     .item
       %strong= "Created:"
       = I18n.l @resource.created_at.in_time_zone(Rails.configuration.time_zone), format: :short
