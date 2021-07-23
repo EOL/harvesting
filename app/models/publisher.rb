@@ -469,6 +469,7 @@ class Publisher
     trait_map(node_ids)
     assoc_map(node_ids)
     meta_file = @resource.publish_table_path('metadata')
+    external_meta_file = @resource.publish_table_path('external_metadata')
     start_traits_file(@trait_filename, TRAIT_HEADS)
     start_traits_file(meta_file, META_HEADS)
 
@@ -481,8 +482,12 @@ class Publisher
     CSV.open(meta_file, 'ab') do |csv|
       add_trait_meta_to_csv(@traits, csv)
       add_trait_meta_to_csv(@assocs, csv)
+    end
+
+    CSV.open(external_meta_file, 'wb', headers: META_HEADS, write_headers: true) do |csv|
       add_meta_to_csv(external_trait_metas, csv)
     end
+
     CSV.open(@trait_filename, 'ab') do |csv|
       @traits.values.each do |trait|
         csv << TRAIT_HEADS.map { |field| trait.send(field) }
@@ -659,7 +664,10 @@ class Publisher
       remove_file(@resource.publish_table_path(type.pluralize))
     end
     
-    remove_file(@resource.publish_table_path(:metadata))
+    %i[metadata external_metadata].each do |type|
+      remove_file(@resource.publish_table_path(type))
+    end
+
     remove_file(@trait_filename)  
   end
 
