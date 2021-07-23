@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_22_191733) do
+ActiveRecord::Schema.define(version: 2021_07_23_151921) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -625,7 +625,7 @@ ActiveRecord::Schema.define(version: 2021_07_22_191733) do
     t.boolean "classification", default: false
     t.text "skips"
     t.integer "root_nodes_count"
-    t.boolean "has_persistent_trait_pks", default: false
+    t.boolean "can_perform_trait_diffs", default: false
     t.index ["abbr"], name: "index_resources_on_abbr", unique: true
   end
 
