@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_23_151921) do
+ActiveRecord::Schema.define(version: 2021_07_26_201047) do
 
   create_table "articles", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin", force: :cascade do |t|
     t.string "guid", null: false
@@ -575,6 +575,19 @@ ActiveRecord::Schema.define(version: 2021_07_23_151921) do
   create_table "partners_users", id: false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "partner_id", null: false
+  end
+
+  create_table "publish_diffs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.integer "resource_id"
+    t.integer "t1"
+    t.integer "t2"
+    t.integer "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "new_traits_path"
+    t.string "removed_traits_path"
+    t.string "new_metadata_path"
+    t.boolean "remove_all_traits"
   end
 
   create_table "references", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
