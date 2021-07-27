@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+PUBLIC_DIR = Rails.root.join('public')
+
 RSpec.describe PublishDiffsController do
   let(:since) { 100 }
   let(:resource) { create(:resource) }
@@ -40,9 +42,12 @@ RSpec.describe PublishDiffsController do
     end
 
     context "when PublishDiff.since returns a 'completed' record" do
-      let(:new_traits_path) { '<new traits>' }
-      let(:removed_traits_path) { '<removed traits>' }
-      let(:new_metadata_path) { '<new metadata>' }
+      let(:new_traits_path_rel) { 'resource/new_traits.csv' }
+      let(:removed_traits_path_rel) { 'resource/removed_traits.csv' }
+      let(:new_metadata_path_rel) { 'resource/new_metadata.csv' }
+      let(:new_traits_path) { PUBLIC_DIR.join(new_traits_path_rel) }
+      let(:removed_traits_path) { PUBLIC_DIR.join(removed_traits_path_rel) }
+      let(:new_metadata_path) { PUBLIC_DIR.join(new_metadata_path_rel) }
 
       before do
         set_record_status(record, 'completed')
@@ -58,9 +63,9 @@ RSpec.describe PublishDiffsController do
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body).symbolize_keys).to eq({
           status: 'completed',
-          new_traits_path: new_traits_path,
-          removed_traits_path: removed_traits_path,
-          new_metadata_path: new_metadata_path,
+          new_traits_path: new_traits_path_rel,
+          removed_traits_path: removed_traits_path_rel,
+          new_metadata_path: new_metadata_path_rel,
           remove_all_traits: false
         })
       end

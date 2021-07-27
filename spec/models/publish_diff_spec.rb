@@ -19,7 +19,6 @@ EXPECTED_EMPTY_NEW_METADATA_FILE = EXPECTED_DIR.join('new_metadata_empty.csv')
 RESPONSE_FILE = TMP_DIR.join('response.csv')
 DIFF_FILE = TMP_DIR.join('expected_response.diff')
 
-
 RSpec.describe PublishDiff, type: :model do
   let(:timestamp1) { 100 }
   let(:timestamp2) { 200 }
