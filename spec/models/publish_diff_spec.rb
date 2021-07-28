@@ -5,15 +5,13 @@ SOURCE_DIR = DATA_DIR.join('source')
 TRAIT_SOURCE1 = SOURCE_DIR.join('publish_traits1.tsv')
 TRAIT_SOURCE2 = SOURCE_DIR.join('publish_traits2.tsv')
 META_SOURCE = SOURCE_DIR.join('publish_metadata.tsv')
+META_SOURCE_NO_EXTERNAL = SOURCE_DIR.join('publish_metadata_no_external.tsv')
 TMP_DIR = DATA_DIR.join('tmp')
 EXPECTED_DIR = DATA_DIR.join('expected')
-EXPECTED_NEW_TRAITS_DIFF_FILE = EXPECTED_DIR.join('new_traits.tsv') # TODO: should be csv
-EXPECTED_REMOVE_ALL_TRAITS_FILE = EXPECTED_DIR.join('remove_all_traits.csv')
-EXPECTED_REMOVED_TRAITS_DIFF_FILE = EXPECTED_DIR.join('removed_traits.tsv')
-EXPECTED_NEW_METADATA_DIFF_FILE = EXPECTED_DIR.join('new_metadata.tsv')
-EXPECTED_EMPTY_NEW_TRAITS_FILE = EXPECTED_DIR.join('new_traits_empty.csv')
-EXPECTED_EMPTY_REMOVED_TRAITS_FILE = EXPECTED_DIR.join('removed_traits_empty.csv')
-EXPECTED_EMPTY_NEW_METADATA_FILE = EXPECTED_DIR.join('new_metadata_empty.csv')
+EXPECTED_NEW_TRAITS_DIFF_FILE = EXPECTED_DIR.join('new_traits.csv')
+EXPECTED_REMOVED_TRAITS_DIFF_FILE = EXPECTED_DIR.join('removed_traits.csv')
+EXPECTED_NEW_METADATA_DIFF_FILE = EXPECTED_DIR.join('new_metadata.csv')
+EXPECTED_EXTERNAL_ONLY_META_FILE = EXPECTED_DIR.join('new_metadata_external_only.csv')
 
 # temp files created to examine diffs
 RESPONSE_FILE = TMP_DIR.join('response.csv')
@@ -247,15 +245,35 @@ RSpec.describe PublishDiff, type: :model do
           FileUtils.copy_entry(TRAIT_SOURCE1, resource_dir.join("publish_traits_#{timestamp2}.tsv"))
         end
 
-        it 'sets all path attributes to nil' do
-          diff.perform_without_delay
-          diff.reload # ensure that what we're getting is persisted
+        context 'when there is no external metadata' do
+          before { FileUtils.copy_entry(META_SOURCE_NO_EXTERNAL, resource_dir.join('publish_metadata.tsv')) }
 
-          expect(diff.status).to eq('completed')
-          expect(diff.new_traits_path).to be_nil
-          expect(diff.removed_traits_path).to be_nil
-          expect(diff.new_metadata_path).to be_nil
-          expect(diff.remove_all_traits?).to eq(false)
+          it 'sets all path attributes to nil' do
+            diff.perform_without_delay
+            diff.reload # ensure that what we're getting is persisted
+
+            expect(diff.status).to eq('completed')
+            expect(diff.new_traits_path).to be_nil
+            expect(diff.removed_traits_path).to be_nil
+            expect(diff.new_metadata_path).to be_nil
+            expect(diff.remove_all_traits?).to eq(false)
+          end
+        end
+
+        context 'when there is external metadata' do
+          before { FileUtils.copy_entry(META_SOURCE, resource_dir.join('publish_metadata.tsv')) }
+
+          it 'adds them to the new metadata file and sets trait paths to nil' do
+            diff.perform_without_delay
+            diff.reload # ensure that what we're getting is persisted
+
+            expect(diff.status).to eq('completed')
+            expect(diff.new_traits_path).to be_nil
+            expect(diff.removed_traits_path).to be_nil
+            expect(diff.new_metadata_path).to_not be_nil
+            expect(diff.remove_all_traits?).to eq(false)
+            expect(File.read(diff.new_metadata_path)).to eq(File.read(EXPECTED_EXTERNAL_ONLY_META_FILE))
+          end
         end
       end
     end

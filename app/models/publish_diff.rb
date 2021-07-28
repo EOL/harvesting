@@ -133,11 +133,15 @@ class PublishDiff < ApplicationRecord
 
     publish_meta_path = resource.publish_table_path(:metadata)
     any_new_metas = false
-    if File.exist?(publish_meta_path) && new_pks.any?
+    if File.exist?(publish_meta_path)
       CSV.open(new_metadata_path, 'wb', headers: Publisher::META_HEADS, write_headers: true) do |new_metas|
         CSV.foreach(publish_meta_path, headers: true) do |row|
-          new_metas << row if new_pks.include?(row['trait_eol_pk'])
-          any_new_metas = true
+          # is_external metadata are always 'new' -- there's no notion of diffs for them. 
+          # Assume client will remove all existing before republish.
+          if new_pks.include?(row['trait_eol_pk']) || row['is_external'] == 'true'
+            new_metas << row 
+            any_new_metas = true
+          end
         end
       end
     end
