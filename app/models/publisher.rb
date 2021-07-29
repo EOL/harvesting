@@ -30,7 +30,7 @@ class Publisher
   def initialize(resource, process, harvest)
     @resource = resource
     @process = process
-    @trait_filename = @resource.publish_table_path('traits', timestamp: harvest.created_at.to_i) # trait filename is pinned to harvest by timestamp since we keep old ones for diffs
+    @trait_filename = harvest.trait_filename
     @root_url = Rails.application.secrets.repository[:url] || 'http://eol.org'
     @web_resource_id = nil
     @files = {}

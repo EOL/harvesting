@@ -120,6 +120,7 @@ class Harvest < ApplicationRecord
       File.unlink(converted_csv) if File.exist?(converted_csv)
       diff = diff_path(fmt)
       File.unlink(diff) if File.exist?(diff)
+      File.unlink(trait_filename) if File.exist?(trait_filename)
     end
   end
 
@@ -141,6 +142,10 @@ class Harvest < ApplicationRecord
 
   def diff_path(format)
     special_path(format, 'diff', 'diff')
+  end
+
+  def trait_filename
+    resource.publish_table_path('traits', timestamp: self.created_at.to_i)
   end
 
 private
