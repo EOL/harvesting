@@ -13,10 +13,6 @@ EXPECTED_REMOVED_TRAITS_DIFF_FILE = EXPECTED_DIR.join('removed_traits.csv')
 EXPECTED_NEW_METADATA_DIFF_FILE = EXPECTED_DIR.join('new_metadata.csv')
 EXPECTED_EXTERNAL_ONLY_META_FILE = EXPECTED_DIR.join('new_metadata_external_only.csv')
 
-# temp files created to examine diffs
-RESPONSE_FILE = TMP_DIR.join('response.csv')
-DIFF_FILE = TMP_DIR.join('expected_response.diff')
-
 RSpec.describe PublishDiff, type: :model do
   let(:timestamp1) { 100 }
   let(:timestamp2) { 200 }
