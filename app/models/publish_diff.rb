@@ -31,7 +31,7 @@ class PublishDiff < ApplicationRecord
 
         self.new(
           status: :completed,
-          remove_all_traits: time.nil? ? false : true,
+          remove_all_traits: true,
           new_traits_path: resource.path.join(new_trait_file),
           removed_traits_path: nil,
           new_metadata_path: resource.path.join("publish_metadata.tsv")

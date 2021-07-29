@@ -44,13 +44,8 @@ class Trait < ApplicationRecord
     parent_eol_pk.present?
   end
 
-  # NOTE: yes, it makes me nervous that we're pegging the EOL identifier on the harvesting DB ID. In theory, this should
-  # be the PK from the partner. But after discussing things with Jen, we determined that data will ALWAYS be nuked and
-  # re-created for a resource, because the PK cannot ever actually be trusted. No "updates" are available for data, only
-  # complete re-ingestion. So using an ID here keeps the PK succinct (it's all integers) and much shorter (some PKs can
-  # be very, very long):
   def eol_pk
-    "R#{resource_id}-PK#{id}"
+    resource.can_perform_trait_diffs? ? resource_pk : "R#{resource_id}-PK#{id}"
   end
 
   # NOTE: this is NOT called by the code (it's meant for debugging at the prompt), and it's out of place (usually 'self'

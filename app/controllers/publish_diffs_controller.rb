@@ -5,7 +5,7 @@ class PublishDiffsController < ApplicationController
     respond_to do |fmt|
       fmt.json do
         resource = Resource.find(params.require(:resource_id))
-        since = params.require(:since).to_i
+        since = params[:since]&.to_i
 
         diff = PublishDiff.since(resource, since)
 
@@ -34,6 +34,6 @@ class PublishDiffsController < ApplicationController
 
   private
   def relpath(path_str)
-    path_str.nil? ? nil : Pathname.new(path_str).relative_path_from(PUBLIC_PATH)
+    path_str.nil? ? nil : '/' + Pathname.new(path_str).relative_path_from(PUBLIC_PATH).to_s
   end
 end

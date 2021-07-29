@@ -63,9 +63,9 @@ RSpec.describe PublishDiffsController do
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body).symbolize_keys).to eq({
           status: 'completed',
-          new_traits_path: new_traits_path_rel,
-          removed_traits_path: removed_traits_path_rel,
-          new_metadata_path: new_metadata_path_rel,
+          new_traits_path: '/' + new_traits_path_rel,
+          removed_traits_path: '/' + removed_traits_path_rel,
+          new_metadata_path: '/' + new_metadata_path_rel,
           remove_all_traits: false
         })
       end

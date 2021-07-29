@@ -6,7 +6,7 @@ class Resource
       end
 
       def reload(resource)
-        EolFileUtils.clear_resource_dir(resource)
+        EolFileUtils.clear_resource_dir(resource) 
         new(resource.opendata_url, resource).parse
       end
     end

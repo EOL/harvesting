@@ -157,7 +157,7 @@ RSpec.describe PublishDiff, type: :model do
             expect(diff.new_traits_path).to eq(t2_path.to_s)
             expect(diff.new_metadata_path).to eq(publish_meta_path.to_s)
             expect(diff.removed_traits_path).to be_nil
-            expect(diff.remove_all_traits).to eq(false)
+            expect(diff.remove_all_traits).to eq(true)
           end
         end
       end
