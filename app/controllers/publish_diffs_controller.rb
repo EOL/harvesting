@@ -9,13 +9,7 @@ class PublishDiffsController < ApplicationController
 
         diff = PublishDiff.since(resource, since)
 
-        if diff.pending?
-          diff.perform_with_delay
-
-          render json: {
-            status: 'pending'
-          }
-        elsif diff.completed?
+        if diff.completed?
           render json: {
             status: 'completed',
             new_traits_path: relpath(diff.new_traits_path),
@@ -24,6 +18,11 @@ class PublishDiffsController < ApplicationController
             remove_all_traits: diff.remove_all_traits?
           }
         else
+          if diff.pending?
+            diff.update!(status: :enqueued)
+            diff.perform_with_delay
+          end
+
           render json: {
             status: diff.status
           }

@@ -6,6 +6,7 @@ class PublishDiff < ApplicationRecord
 
   enum status: {
     pending: 0,
+    enqueued: 1,
     processing: 1,
     completed: 2,
     failed: 3
