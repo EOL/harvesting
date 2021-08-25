@@ -9,7 +9,7 @@ gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git', branch: 'main'
 # Because we are going to create many, many records!
 gem 'activerecord-import', '~> 1.0'
 # Used when parsing URLs (was included in Rails 4, but not 5)
-gem 'addressable', '~> 2.7'
+gem 'addressable', '~> 2.8'
 # Acts As List simplifies ordered lists of models:
 gem 'acts_as_list', '~> 1.0'
 # Parse Excel files:
