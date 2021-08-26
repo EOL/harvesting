@@ -1,0 +1,7 @@
+#!/bin/sh
+ps auxww | grep worker.start | grep publish_diffs | awk '{print $2}' | while read -r pid ; do
+  echo "Killing $pid"
+  kill $pid
+  echo "Killed $pid at `date`" >> log/publish_diffs.log
+done
+

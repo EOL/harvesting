@@ -1,0 +1,2 @@
+#!/bin/sh
+nohup rails r "worker = Delayed::Worker.new(queues: ['publish_diffs']).start ; worker.name_prefix = 'publish_diffs' ; worker.start" >> log/publish_diffs.log 2>&1 &
