@@ -162,7 +162,7 @@ class PublishDiff < ApplicationRecord
     self.status = :completed
     self.save!
   end
-  handle_asynchronously :perform, queue: :publish_diff
+  handle_asynchronously :perform, queue: :publish_diffs
 
 
   private
