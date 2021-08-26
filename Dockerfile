@@ -2,7 +2,10 @@ FROM ruby:2.6.5
 MAINTAINER Jeremy Rice <jrice@eol.org>
 LABEL Description="EOL Harvester"
 
-ENV LAST_FULL_REBUILD 2021-02-17
+ENV LAST_FULL_REBUILD 2021-08-26
+
+RUN addgroup eol_app --gid 1333 user
+RUN adduser eol_app --disabled-password --gecos '' --uid 1333 --gid 1333 user
 
 # Install packages (note we update / clean up at the end of EACH run, because each gets an image)
 RUN apt-get update -q && \
@@ -25,6 +28,9 @@ WORKDIR /app
 ENV LAST_SOURCE_REBUILD 2018-08-20
 
 COPY . /app
+
+RUN chown -R eol_app:eol_app $(ls /app | awk '{if($1 != "public"){ print $1 }}')
+
 COPY config/nginx-sites.conf /etc/nginx/sites-enabled/default
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/imagemagick_policy.xml /etc/ImageMagick-6/policy.xml
@@ -45,4 +51,5 @@ EXPOSE 3000
 
 ENTRYPOINT rake assets:precompile && rm -f /tmp/*.pid /tmp/*.sock && /usr/bin/supervisord
 
+USER eol_app
 CMD ["-c", "/etc/supervisord.conf"]
