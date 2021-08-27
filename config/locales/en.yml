@@ -66,6 +66,7 @@ en:
   harvests:
     later: "TODO"
     actions:
+      delete_trait_pub_files: "delete trait publishing files"
       destroy: "destroy"
       resume: "re-try"
     flash:
@@ -188,8 +189,8 @@ en:
       publishing_side: "see in production"
       re_harvest: "re-harvest"
       re_download_opendata_harvest: "Re-download OpenData and harvest"
-      re_harvest_confirm: "Are you sure? This will delete all current data, including trait publish files for diffs, before re-trying!"
-      re_download_confirm: "Are you sure? This will delete all current data (except trait publish fiels for diffs) before re-trying!"
+      re_harvest_confirm: "Are you sure? This will delete all current data (except trait publish files for diffs) before re-trying!"
+      re_download_confirm: "Are you sure? This will delete all current data (except trait publish files for diffs) before re-trying!"
       re_read_xml: "re-read XML"
       re_create_tsv: "re-create TSV"
       remove_content: "remove content"
@@ -203,6 +204,7 @@ en:
       header: "You are Editing \"%{name}\""
     flash:
       created: "Imported resource <a href=%{path}>%{name}</a> from opendata.eol.org; <b>HARVESTED QUEUED.</b>"
+      deleted_trait_pub_files: "Deleted trait publishing files. You will need to reharvest before attempting to publish."
       destroyed: "Deleted %{name} forever. You cannot get it back."
       harvest_enqueued:
         zero: "Added harvest job to the queue; there are no jobs ahead of it."

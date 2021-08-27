@@ -27,6 +27,7 @@ class Resource < ApplicationRecord
   enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending removing_content]
 
   before_create :fix_abbr
+  before_destroy :delete_trait_publish_files
   #after_save :propagate_to_publishing
 
   acts_as_list
@@ -471,6 +472,12 @@ class Resource < ApplicationRecord
         "id < #{index + batch_size} AND resource_id = #{id}")
       index += batch_size
       break if index > max
+    end
+  end
+
+  def delete_trait_publish_files
+    Dir.glob(path.to_s + '/publish_traits*.tsv').each do |filename|
+      File.unlink(filename)
     end
   end
 

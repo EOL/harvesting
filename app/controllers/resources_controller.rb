@@ -142,6 +142,13 @@ class ResourcesController < ApplicationController
     redirect_to resources_path
   end
 
+  def trait_publish_files
+    @resource = Resource.find(params[:resource_id])
+    @resource.delete_trait_publish_files
+    flash[:notice] = t('resources.flash.deleted_trait_pub_files')
+    redirect_to resource_path(@resource)
+  end
+
   private
 
   def enqueue_harvest(type = '')

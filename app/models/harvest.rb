@@ -120,7 +120,6 @@ class Harvest < ApplicationRecord
       File.unlink(converted_csv) if File.exist?(converted_csv)
       diff = diff_path(fmt)
       File.unlink(diff) if File.exist?(diff)
-      File.unlink(trait_filename) if File.exist?(trait_filename)
     end
   end
 
