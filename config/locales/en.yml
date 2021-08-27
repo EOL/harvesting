@@ -66,7 +66,7 @@ en:
   harvests:
     later: "TODO"
     actions:
-      delete_trait_pub_files: "delete trait publishing files"
+      destroy_harvests: "destroy harvests"
       destroy: "destroy"
       resume: "re-try"
     flash:

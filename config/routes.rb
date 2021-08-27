@@ -21,7 +21,7 @@ Rails.application.routes.draw do
     get :re_download_opendata_harvest
     get :re_read_xml
     get :re_create_tsv
-    delete :trait_publish_files
+    delete :destroy_harvests
     resources :formats, only: [:show]
     resources :media, only: [:index, :show]
     resources :nodes, only: [:index, :show]

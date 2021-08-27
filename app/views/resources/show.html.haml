@@ -44,7 +44,7 @@
             = link_to(t("resources.actions.re_read_xml"), resource_re_read_xml_path(@resource))
           - if policy(@resource).destroy?
             .ui.negative.button
-              = link_to(t("harvests.actions.delete_trait_pub_files"), resource_trait_publish_files_path(@resource), method: :delete, style: 'color: white', data: { confirm: 'This will delete ALL trait files used for calculating publishing diffs. You will need to reharvest this resource in order to publish it (from scratch). This CANNOT be undone. Are you SURE?' })
+              = link_to(t("harvests.actions.destroy_harvests"), resource_destroy_harvests_path(@resource), method: :delete, style: 'color: white', data: { confirm: 'This will delete ALL harvests as well as trait files used for calculating publishing diffs. You will need to reharvest this resource in order to publish it. This CANNOT be undone. Are you SURE?' })
             .ui.negative.button
               = link_to(t("harvests.actions.destroy"), resource_path(@resource), method: :delete, style: 'color: white', data: { confirm: 'This is the resource, not the harvest. This CANNOT be undone. Are you SURE?' })
 .ui.bottom.attached.segment

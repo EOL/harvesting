@@ -142,10 +142,11 @@ class ResourcesController < ApplicationController
     redirect_to resources_path
   end
 
-  def trait_publish_files
+  def destroy_harvests
     @resource = Resource.find(params[:resource_id])
+    @resource.harvests.destroy_all
     @resource.delete_trait_publish_files
-    flash[:notice] = t('resources.flash.deleted_trait_pub_files')
+    flash[:notice] = t('resources.flash.destroy_harvests')
     redirect_to resource_path(@resource)
   end
 
