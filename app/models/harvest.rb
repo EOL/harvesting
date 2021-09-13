@@ -144,7 +144,9 @@ class Harvest < ApplicationRecord
   end
 
   def trait_filename
-    resource.publish_table_path('traits', timestamp: self.created_at.to_i)
+    options = {}
+    options[:timestamp] = self.created_at.to_i if resource.can_perform_trait_diffs?
+    resource.publish_table_path('traits', options)
   end
 
 private
