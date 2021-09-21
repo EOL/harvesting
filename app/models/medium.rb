@@ -35,6 +35,8 @@ class Medium < ApplicationRecord
   scope :needs_download, -> { where(downloaded_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }
 
+  IMAGE_EXT = 'jpg'
+
   class << self
     attr_accessor :sizes, :bucket_size
 
@@ -53,7 +55,7 @@ class Medium < ApplicationRecord
     end
   end
 
-  @sizes = %w[88x88 98x68 580x360 130x130 260x190]
+  @sizes = %w[88x88 98x68 580x360 130x130 260x190 1200x720]
   @bucket_size = 256
 
   def s_dir
@@ -222,5 +224,31 @@ class Medium < ApplicationRecord
     Delayed::Worker.logger.error(mess)
     resource.log_error(mess)
     raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
+  end
+
+  def original_image_path
+    assert_jpg
+    "#{dir}/#{basename}.#{IMAGE_EXT}"
+  end
+
+  def create_missing_image_sizes
+    assert_jpg
+    image = Magick::Image.read(original_image_path)
+    cur_sizes = JSON.parse(sizes)
+    size_creator = MediumPrepper.image_size_creator.new(self, image)
+
+    self.class.sizes.each do |size|
+      unless cur_sizes.include?(size)
+        size_str = size_creator.create_size(size)
+        cur_sizes[size] = size_str if size_str
+      end
+    end
+
+    self.update!(sizes: JSON.generate(sizes))
+  end
+
+  private
+  def assert_jpg
+    raise TypeError, "must be jpg" unless jpg?
   end
 end
