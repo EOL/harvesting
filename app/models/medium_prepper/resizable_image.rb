@@ -5,7 +5,7 @@ module MediumPrepper
     include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
     # NOTE: if you want to use this at a prompt, replace Image with Magick::Image
 
-    def initialize(medium, raw)
+    def initialize(medium, raw, file_klass)
       @downloaded_at = Time.now
       @medium = medium
       @available_sizes = {}
@@ -15,6 +15,7 @@ module MediumPrepper
       # representation of the original (higher values, up to 100)
       @our_quality = 60
       @ext = 'jpg'
+      @file_klass = file_klass
       read_image(raw)
     end
 
@@ -77,7 +78,7 @@ module MediumPrepper
 
     def store_original
       orig_filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
-      return if File.exist?(orig_filename)
+      return if @file_klass.exist?(orig_filename)
       local_quality = @our_quality
       @image.write(orig_filename) { |img| img.quality = local_quality }
       FileUtils.chmod(0o644, orig_filename)

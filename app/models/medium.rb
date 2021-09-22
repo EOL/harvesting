@@ -213,7 +213,7 @@ class Medium < ApplicationRecord
       %r{audio/webm} => MediumPrepper::SaveAndServe
     }
     @valid_type_res.each do |re, klass|
-      return klass.new(self, raw) if content_type.downcase.match?(re)
+      return klass.new(self, raw, File) if content_type.downcase.match?(re)
     end
     # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
     # clearer.
