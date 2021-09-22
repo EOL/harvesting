@@ -6,7 +6,7 @@ module MediumPrepper
     # NOTE: if you want to use this at a prompt, replace Image with Magick::Image
     IMAGE_QUALITY = 60
 
-    def initialize(medium, raw)
+    def initialize(medium, raw, file_klass)
       @downloaded_at = Time.now
       @medium = medium
       @available_sizes = {}
@@ -16,6 +16,7 @@ module MediumPrepper
       # representation of the original (higher values, up to 100)
       @our_quality = IMAGE_QUALITY
       @ext = Medium::IMAGE_EXT
+      @file_klass = file_klass
       read_image(raw)
     end
 
@@ -78,7 +79,7 @@ module MediumPrepper
 
     def store_original
       orig_filename = @medium.original_image_path
-      return if File.exist?(orig_filename)
+      return if @file_klass.exist?(orig_filename)
       local_quality = @our_quality
       @image.write(orig_filename) { |img| img.quality = local_quality }
       FileUtils.chmod(0o644, orig_filename)

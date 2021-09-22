@@ -2,7 +2,7 @@ module MediumPrepper
   # Used to prepare a Medium with an image subclass for publishing, by normalizing the file type, cropping it for some
   # versions, resizing it for others, and then storing information about it in the DB.
   class SaveAndServe
-    def initialize(medium, raw)
+    def initialize(medium, raw, file_klass)
       @downloaded_at = Time.now
       @medium = medium
       get_ext
