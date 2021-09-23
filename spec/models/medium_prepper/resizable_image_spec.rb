@@ -1,10 +1,11 @@
 require 'rails_helper'
+require 'medium'
 
 RSpec.describe MediumPrepper::ResizableImage do
   describe '#prep_medium' do 
     describe 'success pathway' do
       let(:medium) { instance_double('Medium') }
-      let(:medium_class) { class_double('Medium').as_stubbed_const }
+      let(:medium_class) { class_double('Medium').as_stubbed_const(transfer_nested_constants: true) }
       let(:raw) { instance_double('File') }
       let(:raw_path) { 'raw_path' }
       let(:magick_image_class) { class_double('Magick::Image').as_stubbed_const }
@@ -57,6 +58,8 @@ RSpec.describe MediumPrepper::ResizableImage do
         expect(magick_image).to receive(:destroy!)
         allow(medium).to receive(:dir) { medium_dir }
         allow(medium).to receive(:basename) { medium_basename }
+        allow(medium).to receive(:original_image_path) { orig_filename }
+        allow(medium).to receive(:jpg?) { true }
         expect(file_class).to receive(:exist?).with(orig_filename) { false }
         expect(magick_image).to receive(:write).with(orig_filename)
         expect(file_utils_class).to receive(:chmod).with(0o644, orig_filename)

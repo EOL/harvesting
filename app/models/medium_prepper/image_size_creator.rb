@@ -1,18 +1,20 @@
 module MediumPrepper
   class ImageSizeCreator
+    # image parameter is a Magick::Image
     def initialize(medium, image) 
-      # image is a Magick::Image
+      raise ArgumentError, "medium must have format :jpg" unless medium.jpg?
+
       @medium = medium
       @image = image
     end
 
-    def create_size(size, options = {})
-      filename = "#{@medium.dir}/#{@medium.basename}.#{size}.#{@ext}"
+    def create_size(size)
+      filename = "#{@medium.dir}/#{@medium.basename}.#{size}.#{Medium::IMAGE_EXT}"
       # NOTE: we *used* to skip existing images here, but I think that's actually unwise, so... let's just do it again.
       (w, h) = size.split('x').map(&:to_i)
       this_image =
         if w == h
-          @image.resize_to_fill(w, h).crop(NorthWestGravity, w, h)
+          @image.resize_to_fill(w, h).crop(Magick::NorthWestGravity, w, h)
         else
           @image.resize_to_fit(w, h)
         end
@@ -25,11 +27,7 @@ module MediumPrepper
       # Note: we *should* honor crops. But none of these will have been cropped (yet), so I am skipping it for now.
       FileUtils.chmod(0o644, filename)
 
-      new_size = "#{new_w}x#{new_h}"
-
-      update_available_sizes(size, new_size) if options[:update_available_sizes]
-
-      new_size
+      "#{new_w}x#{new_h}"
     end
 
     private

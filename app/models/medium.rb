@@ -232,19 +232,22 @@ class Medium < ApplicationRecord
   end
 
   def create_missing_image_sizes
-    assert_jpg
-    image = Magick::Image.read(original_image_path)
-    cur_sizes = JSON.parse(sizes)
-    size_creator = MediumPrepper.image_size_creator.new(self, image)
+    size_creator = MediumPrepper::ImageSizeCreator.new(
+      self,
+      Magick::Image.read(original_image_path)
+    )
 
-    self.class.sizes.each do |size|
-      unless cur_sizes.include?(size)
-        size_str = size_creator.create_size(size)
-        cur_sizes[size] = size_str if size_str
-      end
-    end
+    missing_size_creator = MediumPrepper::MissingImageSizeCreator.new(
+      self,
+      self.class.sizes,
+      size_creator
+    )
 
-    self.update!(sizes: JSON.generate(sizes))
+    missing_size_creator.create_missing_sizes
+  end
+
+  def update_sizes(new_sizes)
+    self.update(sizes: JSON.generate(JSON.parse(self.sizes).merge(new_sizes)))
   end
 
   private
