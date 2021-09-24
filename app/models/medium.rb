@@ -234,7 +234,7 @@ class Medium < ApplicationRecord
   def create_missing_image_sizes
     size_creator = MediumPrepper::ImageSizeCreator.new(
       self,
-      Magick::Image.read(original_image_path)
+      Magick::Image.read(original_image_path).first
     )
 
     missing_size_creator = MediumPrepper::MissingImageSizeCreator.new(
