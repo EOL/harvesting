@@ -176,7 +176,8 @@ class NameParser
               rescue => e
                 @process.warn("ERROR: no '#{k}' value for attributes: #{v.inspect}")
               end
-              add_authorship(authorships, v)
+              # Hashes only, otherwise, we don't know what to do with it and it is ignored:
+              add_authorship(authorships, v) if v.is_a?(Hash)
             end
           end
         end
