@@ -69,6 +69,7 @@ class NameParser
               updates << @names[verbatim]
             rescue => e
               @process.warn("ERROR reading line #{i}: #{result[0..250]}")
+              @process.warn("ERROR on verbatim: #{result['verbatim']}") if result['verbatim']
               raise(e)
             end
           end
@@ -154,24 +155,29 @@ class NameParser
     quality = 0
     norm = nil
     if result.key?('details')
-      result['details'].each do |hash|
-        hash.each do |k, v|
-          next if v.nil? # specific_epithet seems to do this occassionally and I don't know why. :|
-          k = k.underscore.downcase # Looks like the format changed from this_style to thisStyle; change it back!
-          next if k == 'annotation_identification'
-          next if k == 'ignored'
-          if k == 'infraspecific_epithets'
-            attributes['infraspecific_epithet'] = v.map { |i| i['value'] }.join(' ; ')
-            v.each do |i|
-              add_authorship(authorships, i)
+      result['details'].each do |detail_type, value|
+        # We can't parse these, because the results get confusing (there is more than one of each), and we don't do
+        # anything with them anyway.
+        next if detail_type == 'hybridFormula'
+        if value.is_a?(Hash)
+          value.each do |k, v|
+            next if v.nil? # specific_epithet seems to do this occassionally and I don't know why. :|
+            k = k.underscore.downcase # Looks like the format changed from this_style to thisStyle; change it back!
+            next if k == 'annotation_identification'
+            next if k == 'ignored'
+            if k == 'infraspecific_epithets'
+              attributes['infraspecific_epithet'] = v.map { |i| i['value'] }.join(' ; ')
+              v.each do |i|
+                add_authorship(authorships, i)
+              end
+            else
+              begin
+                attributes[k] = v['value']
+              rescue => e
+                @process.warn("ERROR: no '#{k}' value for attributes: #{v.inspect}")
+              end
+              add_authorship(authorships, v)
             end
-          else
-            begin
-              attributes[k] = v['value']
-            rescue => e
-              @process.warn("ERROR: no '#{k}' value for attributes: #{v.inspect}")
-            end
-            add_authorship(authorships, v)
           end
         end
       end
