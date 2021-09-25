@@ -69,7 +69,7 @@ class NameParser
               updates << @names[verbatim]
             rescue => e
               @process.warn("ERROR reading line #{i}: #{result[0..250]}")
-              @process.warn("ERROR on verbatim: #{result['verbatim']}") if result['verbatim']
+              @process.warn("ERROR on verbatim: #{verbatim}") if verbatim
               raise(e)
             end
           end
@@ -171,13 +171,11 @@ class NameParser
                 add_authorship(authorships, i)
               end
             else
-              begin
+              if v.is_a?(Hash)
+                add_authorship(authorships, v)
+              elsif ScientificName.attribute_names.include?(k)
                 attributes[k] = v['value']
-              rescue => e
-                @process.warn("ERROR: no '#{k}' value for attributes: #{v.inspect}")
               end
-              # Hashes only, otherwise, we don't know what to do with it and it is ignored:
-              add_authorship(authorships, v) if v.is_a?(Hash)
             end
           end
         end
