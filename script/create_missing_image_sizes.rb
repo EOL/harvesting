@@ -20,7 +20,7 @@ def write_resume_file(id)
 end
 
 gt_id = read_resume_file
-media = Medium.where(format: :jpg).where('id > ?', gt_id)
+media = Medium.where(format: :jpg).where('id > ?', gt_id).where.not(sizes: nil)
 total = media.count
 count = 0
 
