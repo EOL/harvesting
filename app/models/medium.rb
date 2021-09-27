@@ -55,7 +55,7 @@ class Medium < ApplicationRecord
     end
   end
 
-  @sizes = %w[88x88 98x68 580x360 130x130 260x190 1200x720]
+  @sizes = %w[88x88 98x68 580x360 130x130 260x190]
   @bucket_size = 256
 
   def s_dir
