@@ -35,6 +35,8 @@ class Medium < ApplicationRecord
   scope :needs_download, -> { where(downloaded_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }
 
+  IMAGE_EXT = 'jpg'
+
   class << self
     attr_accessor :sizes, :bucket_size
 
@@ -213,7 +215,7 @@ class Medium < ApplicationRecord
       %r{audio/webm} => MediumPrepper::SaveAndServe
     }
     @valid_type_res.each do |re, klass|
-      return klass.new(self, raw) if content_type.downcase.match?(re)
+      return klass.new(self, raw, File) if content_type.downcase.match?(re)
     end
     # NOTE: No, I'm not using the rescue block below to handle this; different behavior, ugly to generalize. This is
     # clearer.
@@ -222,5 +224,34 @@ class Medium < ApplicationRecord
     Delayed::Worker.logger.error(mess)
     resource.log_error(mess)
     raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
+  end
+
+  def original_image_path
+    assert_jpg
+    "#{dir}/#{basename}.#{IMAGE_EXT}"
+  end
+
+  def create_missing_image_sizes
+    size_creator = MediumPrepper::ImageSizeCreator.new(
+      self,
+      Magick::Image.read(original_image_path).first
+    )
+
+    missing_size_creator = MediumPrepper::MissingImageSizeCreator.new(
+      self,
+      self.class.sizes,
+      size_creator
+    )
+
+    missing_size_creator.create_missing_sizes
+  end
+
+  def update_sizes(new_sizes)
+    self.update(sizes: JSON.generate(JSON.parse(self.sizes).merge(new_sizes)))
+  end
+
+  private
+  def assert_jpg
+    raise TypeError, "must be jpg" unless jpg?
   end
 end

@@ -304,6 +304,7 @@ class ResourceHarvester
       i = 0
       time = Time.now
       @process.enter_group(@harvest.diff_size(@format)) do |harv_proc|
+        ActiveRecord::Base.connection.reconnect!
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
           i += 1
           if (i % 10_000).zero?

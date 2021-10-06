@@ -27,6 +27,7 @@ RSpec.describe PublishDiffsController do
       before do
         set_record_status(record, 'pending')
         allow(record).to receive(:perform_with_delay)
+        expect(record).to receive(:update!).with(status: :enqueued)
       end
 
       it "responds as expected and calls 'perform_with_delay' on the record" do

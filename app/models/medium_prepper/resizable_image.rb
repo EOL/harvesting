@@ -4,8 +4,9 @@ module MediumPrepper
   class ResizableImage
     include Magick # Allows "Image" in this namespace, as well as the methods we'll manipulate them with.
     # NOTE: if you want to use this at a prompt, replace Image with Magick::Image
+    IMAGE_QUALITY = 60
 
-    def initialize(medium, raw)
+    def initialize(medium, raw, file_klass)
       @downloaded_at = Time.now
       @medium = medium
       @available_sizes = {}
@@ -13,8 +14,9 @@ module MediumPrepper
       @orig_h = 0
       # NOTE: you can try changing this to make for faster downloads (smaller values, down to 10) or better
       # representation of the original (higher values, up to 100)
-      @our_quality = 60
-      @ext = 'jpg'
+      @our_quality = IMAGE_QUALITY
+      @ext = Medium::IMAGE_EXT
+      @file_klass = file_klass
       read_image(raw)
     end
 
@@ -76,8 +78,8 @@ module MediumPrepper
     end
 
     def store_original
-      orig_filename = "#{@medium.dir}/#{@medium.basename}.#{@ext}"
-      return if File.exist?(orig_filename)
+      orig_filename = @medium.original_image_path
+      return if @file_klass.exist?(orig_filename)
       local_quality = @our_quality
       @image.write(orig_filename) { |img| img.quality = local_quality }
       FileUtils.chmod(0o644, orig_filename)
@@ -87,31 +89,11 @@ module MediumPrepper
       @orig_w = @image.columns
       @orig_h = @image.rows
       @available_sizes = { original: "#{@orig_w}x#{@orig_h}" }
+      size_creator = ImageSizeCreator.new(@medium, @image)
       Medium.sizes.each do |size|
-        available = crop_image(size)
+        available = size_creator.create_size(size)
         @available_sizes[size] = available if available
       end
-    end
-
-    def crop_image(size)
-      filename = "#{@medium.dir}/#{@medium.basename}.#{size}.#{@ext}"
-      # NOTE: we *used* to skip existing images here, but I think that's actually unwise, so... let's just do it again.
-      (w, h) = size.split('x').map(&:to_i)
-      this_image =
-        if w == h
-          @image.resize_to_fill(w, h).crop(NorthWestGravity, w, h)
-        else
-          @image.resize_to_fit(w, h)
-        end
-      new_w = this_image.columns
-      new_h = this_image.rows
-      this_image.strip! # Cleans up properties
-      local_quality = @our_quality
-      this_image.write(filename) { |img| img.quality = local_quality }
-      this_image.destroy! # Reclaim memory.
-      # Note: we *should* honor crops. But none of these will have been cropped (yet), so I am skipping it for now.
-      FileUtils.chmod(0o644, filename)
-      "#{new_w}x#{new_h}"
     end
 
     def get_image_size(filename)
