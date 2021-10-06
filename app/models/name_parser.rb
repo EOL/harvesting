@@ -36,8 +36,12 @@ class NameParser
     # NOTE: this while loop is ONLY here because gnparser seems to skip some names in each batch. For about 24K names,
     # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
     # Ick. TODO: find the problem and fix.
-    count = 0 # scope
-    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count.positive? && @attempts <= 10
+    count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count
+    @max_attempts = (count.to_f / 20000).ceil
+    @max_missed = (count.to_f / 1000).ceil
+    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) &&
+          count.positive? &&
+          @attempts <= @max_attempts
       @process.warn("I see #{count} names which still need to be parsed.")
       @attempts += 1
       # For debugging help:
@@ -88,7 +92,7 @@ class NameParser
       end
       sleep(1)
     end
-    raise "Too many attempts (#{@attempts}) to parse names" if @attempts >= 20 && count > 100
+    raise "Too many attempts (#{@attempts}) to parse names" if @attempts >= @max_attempts && count > @max_missed
   end
 
   def update_names(updates)
