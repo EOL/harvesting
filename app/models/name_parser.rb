@@ -37,8 +37,8 @@ class NameParser
     # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
     # Ick. TODO: find the problem and fix.
     count = ScientificName.where(harvest_id: @harvest.id).count
-    @max_attempts = (count.to_f / 20000).ceil
-    @max_missed = (count.to_f / 1000).ceil
+    @max_attempts = (count.to_f / 2000).ceil
+    @max_missed = (count.to_f / 500).ceil
     count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count
     while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) &&
           count.positive? &&
