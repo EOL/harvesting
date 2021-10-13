@@ -49,8 +49,8 @@ class NameParser
       # names = ScientificName.where(harvest_id: @harvest.id, canonical: nil).limit(100)
       loop_over_names_in_batches do |names|
         @names = {}
-        format_names(names)
-        learn_names(names)
+        @verbatims = names.map(&:verbatim)
+        learn_names(names) # populates @names
         json = run_parser_on_names(@verbatims)
         updates = []
         begin
@@ -63,6 +63,7 @@ class NameParser
             end
             raise "Bad result from GN Parser!"
           end
+          @process.warn("raw: #{names.size} formatted: #{@verbatims.size} learned: #{@names.size} parsed: #{parsed.size}")
           parsed.each_with_index do |result, i|
             verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
             if @names[verbatim].nil?
@@ -110,13 +111,6 @@ class NameParser
     ScientificName.where(harvest_id: @harvest.id, canonical: nil).find_in_batches(batch_size: 10_000) do |names|
       yield(names)
     end
-  end
-
-  def format_names(names)
-    @verbatims_size = names.size
-    # @verbatims = names.map(&:verbatim).join("\n") + "\n" # OLD VERSION, where parser took string...
-    # New version, where parser takes JSON:
-    @verbatims = names.map(&:verbatim)
   end
 
   def learn_names(names)
