@@ -14,7 +14,7 @@ class NameParser
         parser = NameParser.new(harvest, process)
         parser.run_parser_on_names(names)
       end
-      harvest.complete!
+      harvest.complete
     rescue => e
       process.fail(e)
       harvest.fail
