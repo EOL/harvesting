@@ -291,10 +291,13 @@ class Resource < ApplicationRecord
 
   # This is meant to be called manually.
   def parse_names(names = nil)
-    names ||= scientific_names
     required_harvest = harvests.last
     raise 'Harvest the resource, first' if required_harvest.nil?
-    NameParser.parse_names(required_harvest, names)
+    if names.nil? || names.empty?
+      NameParser.for_harvest(required_harvest, LoggedProcess.new(self))
+    else
+      NameParser.parse_names(required_harvest, names)
+    end
   end
 
   def resume_instance
