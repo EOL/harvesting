@@ -213,8 +213,8 @@ class NamesMatcher
     @@blank_canonical_warnings ||= 0
     if @@blank_canonical_warnings < 10
       @@blank_canonical_warnings += 1
-      @process.warn("cannot match node with blank canonical: Node.find(#{node.id}).scientific_name.verbatim "\
-        "= #{node.scientific_name.verbatim}")
+      # @process.warn("cannot match node with blank canonical: Node.find(#{node.id}).scientific_name.verbatim "\
+      #   "= #{node.scientific_name.verbatim}")
     elsif @@blank_canonical_warnings == 10
       @@blank_canonical_warnings += 1
       @process.warn("Too many blank canonical warnings. Did something go wrong with names_parser?")

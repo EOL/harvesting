@@ -43,7 +43,6 @@ class NameParser
     while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) &&
           count.positive? &&
           @attempts <= @max_attempts
-      @process.warn("I see #{count} names which still need to be parsed.")
       @attempts += 1
       # For debugging help:
       # names = ScientificName.where(harvest_id: @harvest.id, canonical: nil).limit(100)
@@ -63,16 +62,18 @@ class NameParser
             end
             raise "Bad result from GN Parser!"
           end
-          @process.warn("raw: #{names.size} formatted: #{@verbatims.size} learned: #{@names.size} parsed: #{parsed.size}")
+          @process.warn("Names to parse: #{names.size} formatted: #{@verbatims.size} learned: #{@names.size} parsed: #{parsed.size}")
           parsed.each_with_index do |result, i|
             verbatim = result['verbatim'].gsub(/^\s+/, '').gsub(/\s+$/, '')
-            if @names[verbatim].nil?
+            if @names[verbatim].nil? || @names[verbatim].empty?
               @process.warn("skipping assigning name to #{verbatim} (missing!): #{result.inspect}")
               next
             end
             begin
-              @names[verbatim].assign_attributes(parse_result(result))
-              updates << @names[verbatim]
+              @names[verbatim].each do |name|
+                name.assign_attributes(parse_result(result))
+              end
+              updates += @names[verbatim]
             rescue => e
               @process.warn("ERROR reading line #{i}: #{result[0..250]}")
               @process.warn("ERROR on verbatim: #{verbatim}") if verbatim
@@ -116,7 +117,8 @@ class NameParser
   def learn_names(names)
     names.each do |name|
       clean_name = name.verbatim.gsub(/^\s+/, '').gsub(/\s+$/, '')
-      @names[clean_name] = name
+      @names[clean_name] ||= []
+      @names[clean_name] << name
     end
   end
 
