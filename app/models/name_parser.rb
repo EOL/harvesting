@@ -37,12 +37,16 @@ class NameParser
     # it misses 20. For 20, it misses 1. I'm still not sure why, but rather than dig further, I'm using this workaround.
     # Ick. TODO: find the problem and fix.
     count = ScientificName.where(harvest_id: @harvest.id).count
-    @max_attempts = (count.to_f / 2000).ceil
-    @max_missed = (count.to_f / 500).ceil
     count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count
-    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) &&
-          count.positive? &&
-          @attempts <= @max_attempts
+    min_count_diff = 2
+    previous_count = count + min_count_diff + 1 # This just fakes a pass the first time...
+    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count.positive?
+      if count >= previous_count - min_count_diff
+        @process.warn("Failed to parse enough new names (#{@attempts} attempts), stopping...")
+        break
+      end
+      previous_count = count
+      @process.warn("I see #{count} names which still need to be parsed.")
       @attempts += 1
       # For debugging help:
       # names = ScientificName.where(harvest_id: @harvest.id, canonical: nil).limit(100)
@@ -95,7 +99,6 @@ class NameParser
       end
       sleep(1)
     end
-    raise "Too many attempts (#{@attempts}) to parse names" if @attempts >= @max_attempts && count > @max_missed
   end
 
   def update_names(updates)
