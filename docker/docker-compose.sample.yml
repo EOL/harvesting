@@ -1,0 +1,107 @@
+version: '3.0' # Note that the verison is NOT for this document, but for the version of docker-compose itself. Keep.
+services:
+  elasticsearch:
+    image: elasticsearch:6.4.0
+    container_name: harvesting_elasticsearch
+    restart: always
+    environment:
+      - RAILS_ENV
+      - bootstrap.memory_lock=true
+      - cluster.name=eol-search-${RAILS_ENV}
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${EOL_ROOT_DIR}/harvesting_elasticsearch/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/harvesting_elasticsearch/log:/var/log/elasticsearch
+    networks:
+      - harvesting_network
+    ports:
+      - 9200:9200
+      - 9300:9300
+  elasticsearch2:
+    image: elasticsearch:6.4.0
+    container_name: harvesting_elasticsearch2
+    environment:
+      - RAILS_ENV
+      - cluster.name=eol-search-${RAILS_ENV}
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - "discovery.zen.ping.unicast.hosts=[eol-backend-elasticsearch,eol-backend-elasticsearch3]"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${EOL_ROOT_DIR}/harvesting_elasticsearch2/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/harvesting_elasticsearch2/log:/var/log/elasticsearch
+    networks:
+      - harvesting_network
+  elasticsearch3:
+    image: elasticsearch:6.4.0
+    container_name: harvesting_elasticsearch3
+    environment:
+      - cluster.name=eol-search-${RAILS_ENV}
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - "discovery.zen.ping.unicast.hosts=[eol-backend-elasticsearch,eol-backend-elasticsearch2]"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./templates/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${EOL_ROOT_DIR}/harvesting_elasticsearch3/data:/var/data/elasticsearch
+      - ${EOL_ROOT_DIR}/harvesting_elasticsearch3/log:/var/log/elasticsearch
+    networks:
+      - harvesting_network
+  memcached:
+    image: memcached
+    container_name: harvesting_memcached
+    restart: always
+    environment:
+      - TZ=America/New_York
+    command: memcached -m 4096m
+    networks:
+      - harvesting_network
+  mysql:
+    image: mysql:5.7.12
+    container_name: harvesting_mysql
+    restart: always
+    env_file:
+      - resources/staging.env
+    volumes:
+      - ${EOL_ROOT_DIR}/harvesting_mysql:/var/lib/mysql
+    networks:
+      - harvesting_network
+  web:
+    build: ..
+    image: harvester_v3
+    container_name: harvesting_web
+    restart: always
+    volumes:
+      - ./resources/secrets.yml:/app/config/secrets.yml
+      - ${EOL_ROOT_DIR}/harvesting_web:/app/public/data
+      - ${EOL_ROOT_DIR}/harvesting_web/tmp:/tmp
+      - ${EOL_ROOT_DIR}/harvesting_web_log:/app/log
+    depends_on:
+      - elasticsearch
+      - mysql
+      - memcached
+    links:
+      - elasticsearch
+      - memcached
+      - mysql
+    env_file:
+      - resources/staging.env
+    ports:
+      - 3001:3000
+    networks:
+      - harvesting_network
+networks:
+  harvesting_network:
+    driver: bridge
