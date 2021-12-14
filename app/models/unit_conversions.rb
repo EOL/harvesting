@@ -33,6 +33,9 @@ class UnitConversions
     { starting_units:   ['http://mimi.case.edu/ontologies/2009/1/unitsontology#inch'], # inch
       ending_unit:      'http://purl.obolibrary.org/obo/uo_0000015', # cm
       function:         ->(v) { v * 2.54 } },
+    { starting_units:   ['https://www.wikidata.org/entity/Q200323'], # decimeter
+      ending_unit:      'http://purl.obolibrary.org/obo/UO_0000015', # cm
+      function:         ->(v) { v * 10 } },
     # todo: we need celsius (unconverted)
     { starting_units:   ['http://purl.obolibrary.org/obo/uo_0000012', 'http://anage.org/k'], # kelvin
       ending_unit:      'http://purl.obolibrary.org/obo/uo_0000027', # degrees celsius
