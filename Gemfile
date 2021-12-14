@@ -82,7 +82,7 @@ end
 
 group :development do
   # Required after Rails 5 upgrade:
-  gem 'listen', '~> 3.4'
+  gem 'listen', '~> 3.7'
   # For benchmarking queries:
   gem 'meta_request', '~> 0.7'
   # Spring speeds up development by keeping your application running in the background. Read more:
