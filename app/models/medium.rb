@@ -6,12 +6,13 @@ class Medium < ApplicationRecord
   belongs_to :language
   belongs_to :location, inverse_of: :media
   belongs_to :bibliographic_citation
+  belongs_to :downloaded_url
 
   has_many :media_references, inverse_of: :medium
   has_many :references, through: :media_references
-
   has_many :content_attributions, as: :content
   has_many :attributions, through: :content_attributions
+
 
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
   enum subclass: %i[image video sound map_image js_map]
@@ -58,12 +59,22 @@ class Medium < ApplicationRecord
   @sizes = %w[88x88 98x68 580x360 130x130 260x190]
   @bucket_size = 256
 
+  def id_to_use_for_storage
+    if media_path_map_id.nil? ||
+       (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
+        Rails.application.secrets.image_path[:legacy_medium_id])
+      id
+    else
+      media_path_map_id
+    end
+  end
+
   def s_dir
-    dir_from_mod(id)
+    dir_from_mod(id_to_use_for_storage)
   end
 
   def m_num
-    id / Medium.bucket_size
+    id_to_use_for_storage / Medium.bucket_size
   end
 
   def m_dir
