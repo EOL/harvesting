@@ -4,7 +4,7 @@ class DownloadedUrl < ApplicationRecord
   before_save :hash_url
 
   def self.by_url(url)
-    md5_hash = Digest::MD5.hexdigest(self[:url])
+    md5_hash = Digest::MD5.hexdigest(url)
     self.find_by_md5_hash(md5_hash)
   end
 

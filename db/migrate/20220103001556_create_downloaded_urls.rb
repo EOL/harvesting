@@ -13,6 +13,7 @@ class CreateDownloadedUrls < ActiveRecord::Migration[5.2]
     Medium.where('source_url IS NOT NULL').find_in_batches do |batch|
       # TODO: test whether import! can actually set the PK id. :S
       downloaded_urls = []
+      puts "Populating #{batch.size} media into downloaded_urls..."
       batch.each do |medium|
         downloaded_urls << DownloadedUrl.new(id: medium.id, resource_id: medium.resource_id, url: medium.source_url,
           md5_hash: Digest::MD5.hexdigest(medium.source_url))
