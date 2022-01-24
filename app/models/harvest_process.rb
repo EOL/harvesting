@@ -2,18 +2,10 @@ class HarvestProcess < ApplicationRecord
   belongs_to :resource, inverse_of: :harvest_processes
 
   def in_group_of_size(size)
-    already_re_tried = false
-    begin
-      update_attribute(:current_group_size, size)
-      update_attribute(:current_group_times, '')
-      update_attribute(:current_group, 1)
-    rescue Mysql2::Error::ConnectionError, ActiveRecord::StatementInvalid => e
-      raise e unless already_re_tried
-      already_re_tried = true
-      ActiveRecord::Base.connection.reconnect!
-      sleep(0.25)
-      retry
-    end
+    ActiveRecord::Base.connection.reconnect!
+    update_attribute(:current_group_size, size)
+    update_attribute(:current_group_times, '')
+    update_attribute(:current_group, 1)
   end
 
   def tick_group(time)
@@ -38,6 +30,7 @@ class HarvestProcess < ApplicationRecord
 
   def finished_group
     return [] if current_group_times.nil?
+    ActiveRecord::Base.connection.reconnect!
     all_times = current_group_times.split(/,/).map(&:to_f)
     update_attribute(:current_group_size, 0)
     update_attribute(:current_group_times, '')
