@@ -3,9 +3,10 @@ class DownloadedUrl < ApplicationRecord
   belongs_to :medium
   before_save :hash_url
 
-  def self.by_url(url)
+  # URL is NOT guaranteed to be unique! It is only unique within A RESOURCE. Keep that in mind.
+  def self.by_url_and_resource_id(url, resource_id)
     md5_hash = Digest::MD5.hexdigest(url)
-    self.find_by_md5_hash(md5_hash)
+    self.find_by_md5_hash_and_resource_id(md5_hash, resource_id)
   end
 
   def hash_url
