@@ -712,6 +712,12 @@
   "submapping":null,
   "is_unique":false,
   "is_required":false},
+{"term":"http://rs.tdwg.org/dwc/terms/originalNameUsageID",
+  "for_format":"nodes",
+  "represents":"to_ignored",
+  "submapping":null,
+  "is_unique":false,
+  "is_required":false}
 {"term":"http://purl.org/dc/terms/identifier",
  "for_format":"agents",
  "represents":"to_attributions_pk",
