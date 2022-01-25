@@ -23,7 +23,7 @@ class MetaXml
   def initialize(resource)
     @resource = resource
     filename = "#{@resource.path}/meta.xml"
-    raise 'Missing meta.xml file' unless File.exist?(filename)
+    build_log_and_raise 'Missing meta.xml file' unless File.exist?(filename)
 
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }
     @warnings = []
@@ -46,7 +46,7 @@ class MetaXml
       rescue ArgumentError => e
         puts "Unable to add these fields:"
         pp format[:fields]
-        raise e
+        build_log_and_raise e
       end
     end
     show_warnings
@@ -121,7 +121,7 @@ class MetaXml
     when /^events/
       @warnings << 'Ignoring events file.'
     else
-      raise "I cannot determine what #{format[:filename]} represents!"
+      build_log_and_raise "I cannot determine what #{format[:filename]} represents!"
     end
   end
 
@@ -173,14 +173,14 @@ class MetaXml
                      "term: #{field['term']}"
       end
     end
-    raise "Missing a field definition, check that your indexes start at 0" if
+    build_log_and_raise "Missing a field definition, check that your indexes start at 0" if
       format[:fields].any?(nil)
   end
 
   def field_insight(field, format)
     insight = { term: field['term'], for_format: format[:represents] }
     insight[:assumption] = MetaXmlField.where(term: field['term'], for_format: format[:represents])&.first
-    raise %Q(I don't know how to handle a meta.xml field of type "#{field['term']}" for format #{format[:represents]}!) if
+    build_log_and_raise %Q(I don't know how to handle a meta.xml field of type "#{field['term']}" for format #{format[:represents]}!) if
       insight[:assumption].nil?
 
     insight[:mapping_name] = insight[:assumption]&.represents || :to_ignored
@@ -189,6 +189,11 @@ class MetaXml
       field['term'].split('/').last :
       format[:headers][insight[:index]]
     insight
+  end
+
+  def build_log_and_raise(message)
+    @resource&.log_error(message)
+    raise message
   end
 
   def field_params(insight, format)
@@ -211,7 +216,7 @@ class MetaXml
     submap = insight[:header_name].downcase if insight[:mapping_name] == 'to_nodes_ancestor'
     if insight[:mapping_name] == 'to_nodes_ancestor'
       if insight[:header_name].nil?
-        raise 'I have a node-ancestor field that I cannot find a taxonomic level for. '\
+        build_log_and_raise 'I have a node-ancestor field that I cannot find a taxonomic level for. '\
               "Missing an index or term: #{insight.inspect}"
       end
       submap = insight[:header_name].downcase
