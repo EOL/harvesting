@@ -149,14 +149,30 @@ class Medium < ApplicationRecord
   def download_and_prep
     begin
       ensure_dir_exists
-      abort_if_filetype_unreadable
-      raw = download_raw_data
-      prepper = get_prepper(raw)
-      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
-      prepper.prep_medium
+      if downloaded_already?
+        create_missing_image_sizes # This will skip sizes that already exist.
+      else
+        abort_if_filetype_unreadable
+        raw = download_raw_data
+        prepper = get_prepper(raw)
+        raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
+        prepper.prep_medium
+      end
     rescue => e
       return fail_from_download_and_prep(e)
     end
+  end
+
+  def downloaded_already?
+    return false unless create_missing_downloaded_url.nil?
+    File.exist?(original_image_path)
+  end
+
+  def create_missing_downloaded_url
+    return nil unless downloaded_url.nil?
+    resource.log_error("#create_missing_downloaded_url called for Medium.find(#{self[:id]}): "\
+                       "the image may be missing if already published.")
+    downloaded_url = DownloadedUrl.create(resource_id: reosurce_id, url: source_url)
   end
 
   def fail_from_download_and_prep(e)

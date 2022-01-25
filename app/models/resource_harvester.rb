@@ -474,8 +474,24 @@ class ResourceHarvester
     # Bib_cit:
     propagate_id(Medium, fk: 'resource_pk', other: 'bibliographic_citations.resource_pk',
                          set: 'bibliographic_citation_id', with: 'id')
+    resolve_download_urls
     resolve_references(MediaReference, 'medium')
     resolve_attributions(Medium)
+  end
+
+  def resolve_download_urls
+    @process.log('Resolving downloaded urls (this is not actually downloading them yet)')
+    Medium.where(harvest_id: @harvest.id).where('source_url IS NOT NULL').find_in_batches do |batch|
+      # build a list of URL from media
+      urls = {}
+      batch.pluck(:source_url).each { |url| urls[url] = true }
+      # remove any members that already exist in DownloadedUrl
+      DownloadedUrl.where(url: urls).pluck(:url).each { |url| urls.delete(url) }
+      # create new DownloadedUrl instances using the remaining URLs
+      DownloadedUrl.import(urls.keys.map { |url| DownloadedUrl.new(resource_id: @resource.id, url: url) })
+      # now propagate_id on those new instances.
+      propagate_id(Medium, fk: 'source_url', other: 'download_urls.url', set: 'downloaded_url_id', with: 'id')
+    end
   end
 
   def resolve_article_keys
