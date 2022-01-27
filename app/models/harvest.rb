@@ -59,6 +59,8 @@ class Harvest < ApplicationRecord
     traits.where('measurement IS NOT NULL AND units_term_uri IS NOT NULL').find_each(&:convert_measurement)
   end
 
+  # NOTE: if you are reading this looking for a way to reset a job that was killed, don't use this, use
+  # @resourece.unlock
   def fail
     now = Time.now
     update_attributes(failed_at: now, completed_at: now)

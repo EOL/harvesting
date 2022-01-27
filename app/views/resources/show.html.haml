@@ -15,7 +15,7 @@
       - else
         = t("unlocked")
 .ui.tiny.attached.menu
-  - if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
+  - if @resource.delayed_jobs.any?
     .item= t("resources.actions.harvest_in_queue")
   - elsif policy(@resource).update?
     .item
