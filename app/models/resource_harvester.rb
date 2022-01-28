@@ -486,7 +486,7 @@ class ResourceHarvester
       urls = {}
       batch.pluck(:source_url).each { |url| urls[url] = true }
       # remove any members that already exist in DownloadedUrl
-      DownloadedUrl.where(url: urls).pluck(:url).each { |url| urls.delete(url) }
+      DownloadedUrl.where(url: urls.keys).pluck(:url).each { |url| urls.delete(url) }
       # create new DownloadedUrl instances using the remaining URLs
       DownloadedUrl.import(urls.keys.map { |url| DownloadedUrl.new(resource_id: @resource.id, url: url) })
       # now propagate_id on those new instances.
