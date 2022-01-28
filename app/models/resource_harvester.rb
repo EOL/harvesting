@@ -490,7 +490,7 @@ class ResourceHarvester
       # create new DownloadedUrl instances using the remaining URLs
       DownloadedUrl.import(urls.keys.map { |url| DownloadedUrl.new(resource_id: @resource.id, url: url) })
       # now propagate_id on those new instances.
-      propagate_id(Medium, fk: 'source_url', other: 'download_urls.url', set: 'downloaded_url_id', with: 'id')
+      propagate_id(Medium, fk: 'source_url', other: 'downloaded_urls.url', set: 'downloaded_url_id', with: 'id')
     end
   end
 
