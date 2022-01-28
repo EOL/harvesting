@@ -528,6 +528,8 @@ class Publisher
   def add_meta_to_csv(metas, csv, trait = nil)
     count = 0
 
+    # This is another place where the DB may have gone away. :|
+    ActiveRecord::Base.connection.reconnect!
     metas.each do |meta|
       data = build_meta(meta, trait)
 
@@ -551,10 +553,10 @@ class Publisher
     @process.info("#{count} metadata added.")
   end
 
-  # in_harvest_trait should always be passed in the case that the trait that meta belongs to belongs to the current harvest. Otherwise, it must be nil. 
+  # in_harvest_trait should always be passed in the case that the trait that meta belongs to belongs to the current harvest. Otherwise, it must be nil.
   #
   # If in_harvest_trait is nil, an error will be raised in the case that
-  # 1) meta.parent is nil OR 
+  # 1) meta.parent is nil OR
   # 2) meta's predicate is a member of @moved_meta_map
   def build_meta(meta, in_harvest_trait = nil)
     literal = nil
@@ -588,7 +590,7 @@ class Publisher
     # q.v.: META_HEADS for order, here:
     [
       "#{meta.class.name}-#{meta.id}",
-      (in_harvest_trait || meta.parent).eol_pk, 
+      (in_harvest_trait || meta.parent).eol_pk,
       predicate,
       literal,
       meta.respond_to?(:measurement) ? meta.measurement : nil,
@@ -659,12 +661,12 @@ class Publisher
     WebDb.types.each do |type|
       remove_file(@resource.publish_table_path(type.pluralize))
     end
-    
+
     %i[metadata external_metadata].each do |type|
       remove_file(@resource.publish_table_path(type))
     end
 
-    remove_file(@trait_filename)  
+    remove_file(@trait_filename)
   end
 
   def remove_file(filename)
