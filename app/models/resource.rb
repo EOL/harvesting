@@ -152,6 +152,10 @@ class Resource < ApplicationRecord
     update_attribute(:failed_downloaded_media_count, missing)
   end
 
+  def delayed_jobs
+    Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{id}%'")
+  end
+
   def lockfile_name
     "#{path}/#{Resource.lockfile_name}"
   end
@@ -163,6 +167,8 @@ class Resource < ApplicationRecord
   end
 
   def unlock
+    harvests.running.each { |h| h.fail }
+    delayed_jobs.destroy_all
     return nil unless lockfile_exists?
     Rails.logger.info("Unlocking #{lockfile_name}")
     Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"}).delete_all
