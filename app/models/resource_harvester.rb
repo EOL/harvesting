@@ -481,16 +481,16 @@ class ResourceHarvester
 
   def resolve_download_urls
     @process.log('Resolving downloaded urls (this is not actually downloading them yet)')
-    Medium.where(harvest_id: @harvest.id).where('source_url IS NOT NULL').find_in_batches do |batch|
-      # build a list of URL from media
-      urls = {}
-      batch.pluck(:source_url).each { |url| urls[url] = true }
-      # remove any members that already exist in DownloadedUrl
-      DownloadedUrl.where(url: urls.keys).pluck(:url).each { |url| urls.delete(url) }
-      # create new DownloadedUrl instances using the remaining URLs
-      DownloadedUrl.import(urls.keys.map { |url| DownloadedUrl.new(resource_id: @resource.id, url: url) })
-      # now propagate_id on those new instances.
-      propagate_id(Medium, fk: 'source_url', other: 'downloaded_urls.url', set: 'downloaded_url_id', with: 'id')
+    # TODO: figure out a way to do this NOT one at a time... This is going to be quite slow!
+    Medium.where(harvest_id: @harvest.id).
+           where('source_url IS NOT NULL AND downloaded_url_id IS NOT NULL ').
+           find_each do |medium|
+      md5_hash = Digest::MD5.hexdigest(medium.source_url)
+      if DownloadedUrl.exists?(md5_hash: md5_hash)
+        medium.update(downloaded_url_id: DownloadedUrl.find(md5_hash: md5_hash).id)
+      else
+        DownloadedUrl.create(id: medium.id, resource_id: @resource.id, url: medium.source_url, md5_hash: md5_hash)
+      end
     end
   end
 
