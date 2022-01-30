@@ -10,6 +10,7 @@ Delayed::Worker.max_attempts = 2
 # TODO: You should really move these to a jobs folder.
 HarvestJob = Struct.new(:resource_id) do
   def perform
+    ActiveRecord::Base.connection.reconnect!
     Resource.find(resource_id).harvest
   end
 
@@ -33,6 +34,7 @@ end
 
 ReHarvestJob = Struct.new(:resource_id) do
   def perform
+    ActiveRecord::Base.connection.reconnect!
     Resource.find(resource_id).re_harvest
   end
 
@@ -52,6 +54,7 @@ end
 
 ResumeHarvestJob = Struct.new(:resource_id) do
   def perform
+    ActiveRecord::Base.connection.reconnect!
     Resource.find(resource_id).resume
   end
 
@@ -71,6 +74,7 @@ end
 
 ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
   def perform
+    ActiveRecord::Base.connection.reconnect!
     Resource.find(resource_id).re_download_opendata_and_harvest
   end
 
@@ -90,6 +94,7 @@ end
 
 DownloadMediumJob = Struct.new(:medium_id) do
   def perform
+    ActiveRecord::Base.connection.reconnect!
     Medium.find(medium_id).download_and_prep
   end
 
@@ -104,6 +109,7 @@ end
 
 RemoveContentJob = Struct.new(:resource_id) do
   def perform
+    ActiveRecord::Base.connection.reconnect!
     resource = Resource.find(resource_id)
     message = "!! REMOVING CONTENT for resource #{resource.name} (##{resource.id})"
     Rails.logger.warn(message)
