@@ -175,7 +175,7 @@ class Resource < ApplicationRecord
 
   def unlock
     Rails.logger.info("Unlocking #{lockfile_name}")
-    delayed_jobs.delete_all
+    delayed_jobs.destroy_all
     if lockfile_exists?
       Lockfile.new(lockfile_name, timeout: 0.1).unlock
       Rails.logger.info("Unlocked.")
