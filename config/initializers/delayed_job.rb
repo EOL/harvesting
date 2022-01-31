@@ -1,3 +1,20 @@
+# Quiet down the logs in production: https://github.com/collectiveidea/delayed_job/issues/477#issuecomment-800341818
+module ::Delayed::Backend::ActiveRecord
+  class Job < ::ActiveRecord::Base
+  end
+  Job.singleton_class.prepend(
+    Module.new do
+      def reserve(*)
+        previous_level = ::ActiveRecord::Base.logger.level
+        ::ActiveRecord::Base.logger.level = Logger::WARN if previous_level < Logger::WARN
+        value = super
+        ::ActiveRecord::Base.logger.level = previous_level
+        value
+      end
+    end
+  )
+end
+
 Delayed::Worker.logger = Logger.new(Rails.root.join('log', 'delayed_job.log'))
 Delayed::Worker.default_queue_name = 'media'
 Delayed::Worker.queue_attributes = {
