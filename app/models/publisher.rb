@@ -479,7 +479,9 @@ class Publisher
 
     # Metadata FIRST, because some of it moves to the traits.
     CSV.open(meta_file, 'ab') do |csv|
+      @process.info("Adding #{@traits.count} traits...")
       add_trait_meta_to_csv(@traits, csv)
+      @process.info("Adding #{@assocs.count} assocs...")
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
     end
@@ -546,7 +548,12 @@ class Publisher
   def add_trait_meta_to_csv(traits, csv)
     count = 0
 
-    traits.each do |_, trait|
+    traits.each do |key, trait|
+      trait_meta_count = trait.metadata.count
+      if trait_meta_count > 20
+        @process.info("Trait ##{trait.id} in key #{key} has #{trait_meta_count} metadata... that seems high?")
+        ActiveRecord::Base.connection.reconnect!
+      end
       count += add_meta_to_csv(trait.metadata, csv, trait)
     end
 
