@@ -146,7 +146,7 @@ class Resource < ApplicationRecord
       Delayed::Job.none
     else
       Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"})
-    else
+    end
   end
 
   def stop_adding_media_jobs
