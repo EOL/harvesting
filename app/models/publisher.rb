@@ -481,6 +481,7 @@ class Publisher
     CSV.open(meta_file, 'ab') do |csv|
       @process.info("Adding #{@traits.count} traits...")
       add_trait_meta_to_csv(@traits, csv)
+      ActiveRecord::Base.connection.reconnect!
       @process.info("Adding #{@assocs.count} assocs...")
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
@@ -530,8 +531,6 @@ class Publisher
   def add_meta_to_csv(metas, csv, trait = nil)
     count = 0
 
-    # This is another place where the DB may have gone away. :|
-    ActiveRecord::Base.connection.reconnect!
     metas.each do |meta|
       data = build_meta(meta, trait)
 
@@ -552,7 +551,6 @@ class Publisher
       trait_meta_count = trait.metadata.count
       if trait_meta_count > 20
         @process.info("Trait ##{trait.id} in key #{key} has #{trait_meta_count} metadata... that seems high?")
-        ActiveRecord::Base.connection.reconnect!
       end
       count += add_meta_to_csv(trait.metadata, csv, trait)
     end
