@@ -138,8 +138,19 @@ class Resource < ApplicationRecord
     id == Resource.native.id?
   end
 
+  def delayed_jobs
+    if Delayed::Job.count > 100_000
+      warning_message = '** SKIPPING delayed job operation, since there are too many delayed jobs (search would take too long).'
+      Rails.logger.warn(warning_message)
+      puts warning_message
+      Delayed::Job.none
+    else
+      Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"})
+    else
+  end
+
   def stop_adding_media_jobs
-    Delayed::Job.where(queue: 'media').where(%(handler LIKE "%resource_id: #{id}%")).delete_all
+    delayed_jobs.where(queue: 'media').delete_all
   end
 
   def undownloaded_media_count
@@ -168,11 +179,14 @@ class Resource < ApplicationRecord
 
   def unlock
     harvests.running.each { |h| h.fail }
-    delayed_jobs.destroy_all
-    return nil unless lockfile_exists?
     Rails.logger.info("Unlocking #{lockfile_name}")
-    Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"}).delete_all
-    Lockfile.new(lockfile_name, timeout: 0.1).unlock
+    delayed_jobs.destroy_all
+    if lockfile_exists?
+      Lockfile.new(lockfile_name, timeout: 0.1).unlock
+      Rails.logger.info("Unlocked.")
+    else
+      Rails.logger.info("No lockfile, proceed.")
+    end
   rescue
     Rails.logger.warn("Failed to remove #{lockfile_name} politely, retrying manually.")
     File.unlink(lockfile_name) rescue nil
@@ -393,11 +407,7 @@ class Resource < ApplicationRecord
     end
     remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
     harvests.destroy_all
-    if Delayed::Job.count > 100_000
-      puts '** SKIPPING delayed job clear, since there are too many delayed jobs.'
-    else
-      Delayed::Job.where("handler LIKE '%resource_id: #{id}%'").delete_all
-    end
+    delayed_jobs.delete_all
     unpublished!
   end
 
