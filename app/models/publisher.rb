@@ -481,7 +481,7 @@ class Publisher
     CSV.open(meta_file, 'ab') do |csv|
       @process.info("Adding #{@traits.count} traits...")
       add_trait_meta_to_csv(@traits, csv)
-      ActiveRecord::Base.connection.reconnect!
+      Admin.maintain_db_connection
       @process.info("Adding #{@assocs.count} assocs...")
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)

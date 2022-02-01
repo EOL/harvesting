@@ -9,5 +9,9 @@ class Admin
            Node.connection.execute("OPTIMIZE TABLE `#{table}`")
          end
     end
+
+    def maintain_db_connection
+      ActiveRecord::Base.connection.reconnect! if ActiveRecord::Base.connected?
+    end
   end
 end

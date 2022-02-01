@@ -84,7 +84,7 @@ class ResourceHarvester
         fast_forward = false
         @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
         @process.run_step(stage) { send(stage) }
-        Resource.connection.reconnect! # These things can take a long time. Best to be safe.
+        Admin.maintain_db_connection
       end
     rescue => e
       @resource&.stop_adding_media_jobs
@@ -304,7 +304,7 @@ class ResourceHarvester
       i = 0
       time = Time.now
       @process.enter_group(@harvest.diff_size(@format)) do |harv_proc|
-        ActiveRecord::Base.connection.reconnect!
+        Admin.maintain_db_connection
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
           i += 1
           if (i % 10_000).zero?
@@ -666,7 +666,7 @@ class ResourceHarvester
   end
 
   def each_format(&block)
-    Resource.connection.reconnect! # Steps that call this can take a long time. Best to be safe.
+    Admin.maintain_db_connection
     count = @resource.formats.size
     raise "No formats!" if count.zero?
     @process.info("Looping over #{count} formats...")
@@ -686,7 +686,7 @@ class ResourceHarvester
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       yield
-      Resource.connection.reconnect! # These things can take a long time. Best to be safe.
+      Admin.maintain_db_connection
     end
   end
 
@@ -694,7 +694,7 @@ class ResourceHarvester
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
     @resource.formats.each do |fmt|
-      Resource.connection.reconnect! # These things can take a long time. Best to be safe.
+      Admin.maintain_db_connection
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
