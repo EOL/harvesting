@@ -2,7 +2,7 @@ class HarvestProcess < ApplicationRecord
   belongs_to :resource, inverse_of: :harvest_processes
 
   def in_group_of_size(size)
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     update_attribute(:current_group_size, size)
     update_attribute(:current_group_times, '')
     update_attribute(:current_group, 1)
@@ -23,14 +23,14 @@ class HarvestProcess < ApplicationRecord
 
   def update_group(position, time = nil)
     # this happens to be a prudent time to reconnect the database ...
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     record_time(time) if time
     update_attribute(:current_group, position)
   end
 
   def finished_group
     return [] if current_group_times.nil?
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     all_times = current_group_times.split(/,/).map(&:to_f)
     update_attribute(:current_group_size, 0)
     update_attribute(:current_group_times, '')
