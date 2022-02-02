@@ -531,7 +531,8 @@ class Publisher
   def add_meta_to_csv(metas, csv, trait = nil)
     count = 0
 
-    metas.each do |meta|
+    Admin.maintain_db_connection
+    metas.find_each do |meta|
       data = build_meta(meta, trait)
 
       if data
