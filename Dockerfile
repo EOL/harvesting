@@ -41,9 +41,6 @@ RUN touch /tmp/supervisor.sock
 RUN chmod 777 /tmp/supervisor.sock
 RUN ln -s /tmp /app/tmp
 
-SHELL ["/bin/bash", "-c" , "source /app/docker/.env && git config --global user.email '$EOL_GITHUB_EMAIL'"]
-SHELL ["/bin/bash", "-c" , "source /app/docker/.env && git config --global user.name '$EOL_GITHUB_USER'"]
-
 EXPOSE 3000
 
 ENTRYPOINT ["/bin/bash", "-c", "source /app/docker/.env && rake assets:precompile && rm -f /tmp/*.pid /tmp/*.sock && /usr/bin/supervisord"]
