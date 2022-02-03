@@ -14,6 +14,7 @@ class HarvestProcess < ApplicationRecord
   end
 
   def record_time(time)
+    Admin.maintain_db_connection
     if current_group_times.blank?
       update_attribute(:current_group_times, time)
     else
@@ -22,7 +23,6 @@ class HarvestProcess < ApplicationRecord
   end
 
   def update_group(position, time = nil)
-    # this happens to be a prudent time to reconnect the database ...
     Admin.maintain_db_connection
     record_time(time) if time
     update_attribute(:current_group, position)
