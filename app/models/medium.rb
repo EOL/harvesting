@@ -60,12 +60,12 @@ class Medium < ApplicationRecord
   @bucket_size = 256
 
   def id_to_use_for_storage
-    if media_path_map_id.nil? ||
+    if downloaded_url_id.nil? ||
        (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
         Rails.application.secrets.image_path[:legacy_medium_id])
       id
     else
-      media_path_map_id
+      downloaded_url_id
     end
   end
 
