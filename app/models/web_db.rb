@@ -115,7 +115,7 @@ class WebDb < ApplicationRecord
 
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
-      Admin.maintain_db_connection
+      connection.reconnect! unless connected?
       connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
       connection.send(:last_inserted_id, table)
     end
@@ -271,7 +271,7 @@ class WebDb < ApplicationRecord
     end
 
     def exec_query(query)
-      connection.remove_connection && connection.establish_connection unless connection.active?
+      connection.reconnect! unless connected?
       connection.exec_query(query)
     end
   end
