@@ -10,8 +10,18 @@ class Admin
          end
     end
 
-    def maintain_db_connection
-      ActiveRecord::Base.connection.reconnect! if ActiveRecord::Base.connected?
+    def maintain_db_connection(process = nil)
+      tries = 0
+      while tries <= 3 and !ActiveRecord::Base.connected?
+        ActiveRecord::Base.connection.reconnect!
+        tries += 1
+        msg = if tries < 1
+          'WARNING: lost connection to DB, reconnecting...'
+        else
+          "WARNING: DB still not responding, re-trying connection (attempt #{tries})..."
+        end
+        process ? @process.info(msg) : Rails.logger.warn(msg)
+      end
     end
   end
 end
