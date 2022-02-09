@@ -531,17 +531,29 @@ class Publisher
   def add_meta_to_csv(metas, csv, trait = nil)
     count = 0
 
-    Admin.maintain_db_connection
-    metas.find_each do |meta|
-      data = build_meta(meta, trait)
-
-      if data
-        count += 1
-        csv << data
+    if metas.respond_to?(:find_each)
+      Admin.maintain_db_connection
+      metas.find_each do |meta|
+        count += add_one_meta_to_csv(meta, trait, csv)
+      end
+    else
+      metas.each do |meta|
+        count += add_one_meta_to_csv(meta, trait, csv)
       end
     end
 
     count
+  end
+
+  def add_one_meta_to_csv(meta, trait, csv)
+    data = build_meta(meta, trait)
+
+    if data
+      csv << data
+      1
+    else
+      0
+    end
   end
 
   # traits - hash keyed by id
