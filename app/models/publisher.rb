@@ -481,7 +481,7 @@ class Publisher
     CSV.open(meta_file, 'ab') do |csv|
       @process.info("Adding #{@traits.count} traits...")
       add_trait_meta_to_csv(@traits, csv)
-      Admin.maintain_db_connection
+      Admin.maintain_db_connection(@process)
       @process.info("Adding #{@assocs.count} assocs...")
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
@@ -532,7 +532,7 @@ class Publisher
     count = 0
 
     if metas.respond_to?(:find_each)
-      Admin.maintain_db_connection
+      Admin.maintain_db_connection(@process)
       metas.find_each do |meta|
         count += add_one_meta_to_csv(meta, trait, csv)
       end
