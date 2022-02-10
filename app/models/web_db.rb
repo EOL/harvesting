@@ -115,8 +115,18 @@ class WebDb < ApplicationRecord
 
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
-      connection.reconnect! unless connected?
-      connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
+      connection.reconnect! unless connected? and connection.active?
+      tried = false
+      begin
+        connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
+      rescue => e
+        raise "Exception of class #{e.class}, you should rescue those here."
+        if tried
+          raise e
+        else
+          tried = true
+        end
+      end
       connection.send(:last_inserted_id, table)
     end
 
