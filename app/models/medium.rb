@@ -170,8 +170,6 @@ class Medium < ApplicationRecord
 
   def create_missing_downloaded_url
     return nil unless downloaded_url.nil?
-    resource.log_error("#create_missing_downloaded_url called for Medium.find(#{self[:id]}): "\
-                       "the image may be missing if already published.")
     downloaded_url = DownloadedUrl.create(resource_id: resource_id, url: source_url)
   end
 
