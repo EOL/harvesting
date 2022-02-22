@@ -76,8 +76,8 @@ class Medium < ApplicationRecord
   def create_downloaded_url(md5_hash = nil)
     md5_hash ||= Digest::MD5.hexdigest(source_url)
     # NOTE: yes, the downloaded_url shares the ID with the first medium that creates it. This is just to avoid collisions.
-    durl = if DownloadedUrl.exists?(md5_hash: md5_hash)
-      DownloadedUrl.find_by_md5_hash(md5_hash)
+    durl = if DownloadedUrl.exists?(resource_id: resource_id, md5_hash: md5_hash)
+      DownloadedUrl.find_by_md5_hash_and_resource_id(md5_hash, resource_id)
     else
       DownloadedUrl.create(id: id, resource_id: resource_id, url: source_url, md5_hash: md5_hash)
     end
