@@ -60,13 +60,20 @@ class Medium < ApplicationRecord
   @bucket_size = 256
 
   def id_to_use_for_storage
-    if downloaded_url_id.nil? ||
-       (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
+    id_to_use_for_storage ||= (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
         Rails.application.secrets.image_path[:legacy_medium_id])
       id
     else
+      create_downloaded_url if downloaded_url_id.nil?
       downloaded_url_id
     end
+  end
+
+  def create_downloaded_url(md5_hash = nil)
+    md5_hash ||= Digest::MD5.hexdigest(source_url)
+    # NOTE: yes, the downloaded_url shares the ID with the first medium that creates it. This is just to avoid collisions.
+    durl = DownloadedUrl.create(id: id, resource_id: resource_id, url: medium.source_url, md5_hash: md5_hash)
+    update_attribute(:downloaded_url_id, durl.id)
   end
 
   def s_dir

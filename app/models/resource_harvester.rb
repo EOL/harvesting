@@ -489,7 +489,7 @@ class ResourceHarvester
       if DownloadedUrl.exists?(md5_hash: md5_hash)
         medium.update(downloaded_url_id: DownloadedUrl.find(md5_hash: md5_hash).id)
       else
-        DownloadedUrl.create(id: medium.id, resource_id: @resource.id, url: medium.source_url, md5_hash: md5_hash)
+        medium.create_downloaded_url(md5_hash)
       end
     end
   end
