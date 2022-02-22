@@ -64,7 +64,11 @@ class Medium < ApplicationRecord
         Rails.application.secrets.image_path[:legacy_medium_id])
       id
     else
-      create_downloaded_url if downloaded_url_id.nil?
+      if downloaded_url_id.nil?
+        create_downloaded_url
+      else
+        resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
+      end
       downloaded_url_id
     end
   end
