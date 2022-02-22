@@ -5,10 +5,13 @@ class DownloadedUrl < ApplicationRecord
 
   def self.heal
     Medium.where('source_url IS NOT NULL AND downloaded_url_id IS NULL').find_in_batches do |batch|
+      # First look to see if they already exist, which can happen:
+      already_exist_by_id = DownloadedUrl.where(id: batch.map(&:id)).select('id').index_by(&:id)
       # TODO: test whether import! can actually set the PK id. :S
       downloaded_urls = []
       puts "Populating #{batch.size} media into downloaded_urls..."
       batch.each do |medium|
+        next if already_exist_by_id[medium.id] # Skip it, will get healed soon without create
         downloaded_urls << DownloadedUrl.new(id: medium.id, resource_id: medium.resource_id, url: medium.source_url,
           md5_hash: Digest::MD5.hexdigest(medium.source_url))
       end
