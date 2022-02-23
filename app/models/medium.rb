@@ -297,7 +297,7 @@ class Medium < ApplicationRecord
       size = variant.sub(/.*#{basename}./, '').sub(/\.\w+$/, '')
       sizes[size] = get_size(Magick::Image.read(variant).first)
     end
-    update_attribute(:sizes, sizes)
+    update_attribute(:sizes, JSON.generate(sizes))
   end
 
   def get_size(img)
