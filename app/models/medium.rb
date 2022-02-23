@@ -163,8 +163,8 @@ class Medium < ApplicationRecord
     begin
       ensure_dir_exists
       if downloaded_already?
-        resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
         create_missing_image_sizes # This will skip sizes that already exist.
+        resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
       else
         abort_if_filetype_unreadable
         raw = download_raw_data
@@ -298,9 +298,9 @@ class Medium < ApplicationRecord
       sizes[size] = get_size(Magick::Image.read(variant).first)
     end
     unmodified_url = "#{default_base_url}#{original_path.sub(/.*#{Regexp.escape(basename)}/, '')}"
-    update_attribute(:sizes, JSON.generate(sizes), w: image.columns, h: image.rows,
-                              downloaded_at: Time.now, unmodified_url: unmodified_url,
-                              base_url: default_base_url)
+    update_attributes(sizes: JSON.generate(sizes), w: image.columns, h: image.rows,
+                      downloaded_at: Time.now, unmodified_url: unmodified_url,
+                      base_url: default_base_url)
   end
 
   def get_size(img)
