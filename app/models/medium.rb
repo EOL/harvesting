@@ -60,14 +60,12 @@ class Medium < ApplicationRecord
   @bucket_size = 256
 
   def id_to_use_for_storage
-    id_to_use_for_storage ||= if (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
+    @id_to_use_for_storage ||= if (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
         Rails.application.secrets.image_path[:legacy_medium_id])
       id
     else
       if downloaded_url_id.nil?
         create_downloaded_url
-      else
-        resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
       end
       downloaded_url_id
     end
@@ -165,6 +163,7 @@ class Medium < ApplicationRecord
     begin
       ensure_dir_exists
       if downloaded_already?
+        resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
         create_missing_image_sizes # This will skip sizes that already exist.
       else
         abort_if_filetype_unreadable
@@ -276,6 +275,8 @@ class Medium < ApplicationRecord
       Magick::Image.read(original_image_path).first
     )
 
+    populate_sizes if sizes.blank?
+
     missing_size_creator = MediumPrepper::MissingImageSizeCreator.new(
       self,
       self.class.sizes,
@@ -283,6 +284,15 @@ class Medium < ApplicationRecord
     )
 
     missing_size_creator.create_missing_sizes
+  end
+
+  def populate_sizes
+    path = Rails.public_path.join(original_image_path)
+    raise "Missing original image!" unless File.exist?(path)
+    basename = File.basename(path, '.*')
+    variants = Dir.glob(path.sub(basename, "#{basename}.*"))
+    sizes = variants.map{ |var| var.sub(/.*#{basename}./, '').sub(/\.\w+$/, '') }
+    update_attribute(:sizes, sizes)
   end
 
   def update_sizes(new_sizes)
