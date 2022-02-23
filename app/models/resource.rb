@@ -101,7 +101,7 @@ class Resource < ApplicationRecord
 
     def with_lock(resource_id)
       resource = Resource.find(resource_id)
-      process = LoggedProcess.new(resource)
+      process = resource.logged_process
       resource.lock do
         begin
           yield(process)
@@ -243,6 +243,15 @@ class Resource < ApplicationRecord
     @log ||= create_process_log
   end
 
+  # Internal use, you probably don't want this.
+  def logged_process
+    LoggedProcess.new(self)
+  end
+
+  def clear_log
+    logged_process.clear_log
+  end
+
   # Requires a separate, callable command because after we clear it, we need to re-create it:
   def create_process_log
     ActiveSupport::TaggedLogging.new(Logger.new(process_log_path))
@@ -306,7 +315,7 @@ class Resource < ApplicationRecord
   end
 
   def publish
-    Publisher.by_resource(self, LoggedProcess.new(self))
+    Publisher.by_resource(self, logged_process)
   end
 
   # This is meant to be called manually.
@@ -314,7 +323,7 @@ class Resource < ApplicationRecord
     required_harvest = harvests.last
     raise 'Harvest the resource, first' if required_harvest.nil?
     if names.nil? || names.empty?
-      NameParser.for_harvest(required_harvest, LoggedProcess.new(self))
+      NameParser.for_harvest(required_harvest, logged_process)
     else
       NameParser.parse_names(required_harvest, names)
     end
