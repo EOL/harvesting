@@ -270,12 +270,13 @@ class Medium < ApplicationRecord
   end
 
   def create_missing_image_sizes
+    image = Magick::Image.read(original_image_path).first
     size_creator = MediumPrepper::ImageSizeCreator.new(
       self,
-      Magick::Image.read(original_image_path).first
+      image
     )
 
-    populate_sizes if sizes.blank?
+    populate_sizes(image) if sizes.blank?
 
     missing_size_creator = MediumPrepper::MissingImageSizeCreator.new(
       self,
@@ -286,13 +287,21 @@ class Medium < ApplicationRecord
     missing_size_creator.create_missing_sizes
   end
 
-  def populate_sizes
-    path = Rails.public_path.join(original_image_path)
-    raise "Missing original image!" unless File.exist?(path)
-    basename = File.basename(path, '.*')
-    variants = Dir.glob(path.sub(basename, "#{basename}.*"))
-    sizes = variants.map{ |var| var.sub(/.*#{basename}./, '').sub(/\.\w+$/, '') }
+  def populate_sizes(image)
+    original_path = Rails.public_path.join(original_image_path)
+    raise "Missing original image!" unless File.exist?(original_path)
+    basename = File.basename(original_path, '.*')
+    variants = Dir.glob(original_path.sub(basename, "#{basename}.*"))
+    sizes = { original: get_size(image) }
+    variants.each do |variant|
+      size = variant.sub(/.*#{basename}./, '').sub(/\.\w+$/, '')
+      sizes[size] = get_size(Magick::Image.read(variant).first)
+    end
     update_attribute(:sizes, sizes)
+  end
+
+  def get_size(img)
+    "#{img.columns}x#{img.rows}"
   end
 
   def update_sizes(new_sizes)
