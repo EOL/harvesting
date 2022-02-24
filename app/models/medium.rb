@@ -46,7 +46,7 @@ class Medium < ApplicationRecord
       return if image.nil?
       # If ONE is already downloaded, CHANCES are they're all so: just process the whole batch in memory.
       if image.already_downloaded?
-        where(id: images).each { |image| image.download_and_prep }
+        images.each { |image| image.download_and_prep }
       else
         enqueue_downloads(images)
       end
