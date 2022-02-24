@@ -41,25 +41,22 @@ class Medium < ApplicationRecord
   class << self
     attr_accessor :sizes, :bucket_size
 
-    def download_and_prep(images)
+    def download_and_prep_batch(images)
       image = images.first
       return if image.nil?
       # If ONE is already downloaded, CHANCES are they're all so: just process a whole bunch in memory.
       if image.already_downloaded?
-        images.limit(Resource.media_download_batch_size * 64).each { |image| image.download_and_prep }
+        images.each { |image| image.download_and_prep_with_rescue }
       else
         enqueue_downloads(images)
       end
     end
 
     def enqueue_downloads(images)
-      count = 0
       images.select('id').map(&:id).each do |img_id|
         next if download_enqueued?(img_id)
         Delayed::Job.enqueue(DownloadMediumJob.new(img_id))
-        count += 1
       end
-      count
     end
 
     def download_enqueued?(id)
@@ -170,21 +167,25 @@ class Medium < ApplicationRecord
     raise "Unable to resolve URL #{sanitized_source_url}" if bad_url == sanitized_source_url
   end
 
-  def download_and_prep
+  def download_and_prep_with_rescue
     begin
-      ensure_dir_exists
-      if already_downloaded?
-        create_missing_image_sizes # This will skip sizes that already exist.
-        resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
-      else
-        abort_if_filetype_unreadable
-        raw = download_raw_data
-        prepper = get_prepper(raw)
-        raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
-        prepper.prep_medium
-      end
+      download_and_prep
     rescue => e
       return fail_from_download_and_prep(e)
+    end
+  end
+
+  def download_and_prep
+    ensure_dir_exists
+    if already_downloaded?
+      create_missing_image_sizes # This will skip sizes that already exist.
+      resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
+    else
+      abort_if_filetype_unreadable
+      raw = download_raw_data
+      prepper = get_prepper(raw)
+      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
+      prepper.prep_medium
     end
   end
 

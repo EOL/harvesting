@@ -39,10 +39,7 @@ class Harvest < ApplicationRecord
   ]
 
   def download_media
-    resource.fix_downloaded_media_count if media.needs_download.count.zero?
-    return if media.needs_download.count.zero? # Nothing to do if it's zero the second time!
-    Medium.download_and_prep(media.needs_download.limit(25))
-    delay(queue: 'media').download_media
+    resource.download_missing_images
   end
 
   def retry_failed_images

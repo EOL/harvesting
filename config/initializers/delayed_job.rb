@@ -112,7 +112,22 @@ end
 DownloadMediumJob = Struct.new(:medium_id) do
   def perform
     ActiveRecord::Base.connection.reconnect!
-    Medium.find(medium_id).download_and_prep
+    Medium.find(medium_id).download_and_prep_with_rescue
+  end
+
+  def queue_name
+    'media'
+  end
+
+  def max_attempts
+    1 # We handle this elsewhere.
+  end
+end
+
+EnqueueMediaDownloadJob = Struct.new(:resource_id) do
+  def perform
+    ActiveRecord::Base.connection.reconnect!
+    Resource.find(medium_id).download_missing_images
   end
 
   def queue_name

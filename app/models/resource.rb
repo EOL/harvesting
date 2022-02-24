@@ -379,10 +379,11 @@ class Resource < ApplicationRecord
   def download_missing_images
     fix_downloaded_media_count
     log_download_progress
-    return no_more_images_to_download if media.published.missing.count.zero?
-    count = Medium.download_and_prep(media.published.missing.limit(Resource.media_download_batch_size))
-    return no_more_images_to_download if count.zero?
-    delay_more_downloads
+    remaining_count = media.published.missing.count
+    return no_more_images_to_download if remaining_count.zero?
+    Medium.download_and_prep_batch(media.published.missing.limit(Resource.media_download_batch_size))
+    return no_more_images_to_download if remaining_count < Resource.media_download_batch_size
+    Delayed::Job.enqueue(EnqueueMediaDownloadJob.new(id))
   end
 
   def latest_media_count
@@ -409,10 +410,6 @@ class Resource < ApplicationRecord
     end
     log_error(msg)
     nil
-  end
-
-  def delay_more_downloads
-    delay(queue: 'media').download_missing_images # NOTE: this *could* cause a kind of infinite loop...
   end
 
   # Because this happens often enough that it was worth making a method out of it. TODO: rename the @!#$*& fields:
