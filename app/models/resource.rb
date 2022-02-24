@@ -381,8 +381,9 @@ class Resource < ApplicationRecord
 
   def no_more_images_to_download
     msg = 'NO additional images were found to download'
-    if media.published.failed_download.count.positive?
-      msg += ', NOTE THAT SOME DOWNLOADS FAILED.'
+    fix_downloaded_media_count
+    if count = media.published.failed_download.count && count.positive?
+      msg += ", NOTE THAT #{count} DOWNLOADS FAILED."
     end
     log_error(msg)
     nil
