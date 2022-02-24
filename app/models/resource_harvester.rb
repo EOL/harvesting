@@ -68,7 +68,7 @@ class ResourceHarvester
 
   # I am trying to re-arrange things. You MUST now call this wrapped in a Resource.with_lock:
   def start
-    @process = LoggedProcess.new(@resource)
+    @process = @resource.logged_process
     Searchkick.disable_callbacks
     begin
       fast_forward = @harvest && !@harvest.stage.nil?

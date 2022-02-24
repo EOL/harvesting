@@ -8,7 +8,7 @@ class NameParser
   end
 
   def self.parse_names(harvest, names)
-    process = LoggedProcess.new(harvest.resource)
+    process = harvest.resource.logged_process
     begin
       process.run_step('parse_names') do
         parser = NameParser.new(harvest, process)

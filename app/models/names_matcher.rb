@@ -44,7 +44,7 @@ class NamesMatcher
 
   # NOTE: this has a **bad** smell. :\ But it's kind of a one-off for fixing rare problems, so that's fine.
   def self.match_one_node(node)
-    matcher = new(node.harvest, LoggedProcess.new(node.resource))
+    matcher = new(node.harvest, node.resource.logged_process)
     node_id = node.id
     matcher.instance_eval do
       @logs = []; @have_names = true; @ancestor = nil; @ancestors = []; inode = Node.find(node_id)
