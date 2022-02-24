@@ -1,3 +1,4 @@
+DownloadMed
 # Quiet down the logs in production: https://github.com/collectiveidea/delayed_job/issues/477#issuecomment-800341818
 module ::Delayed::Backend::ActiveRecord
   class Job < ::ActiveRecord::Base
@@ -127,7 +128,7 @@ end
 EnqueueMediaDownloadJob = Struct.new(:resource_id) do
   def perform
     ActiveRecord::Base.connection.reconnect!
-    Resource.find(medium_id).download_missing_images
+    Resource.find(resource_id).download_missing_images
   end
 
   def queue_name
