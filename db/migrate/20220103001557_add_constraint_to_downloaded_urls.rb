@@ -17,4 +17,8 @@ class AddConstraintToDownloadedUrls < ActiveRecord::Migration[5.2]
     q = "ALTER TABLE `downloaded_urls` ADD UNIQUE `resource_id_and_md5_hash`(`resource_id`, `md5_hash`)"
     DownloadedUrl.connection.execute(q)
   end
+
+  def down
+    raise ActiveRecord::IrreversibleMigration
+  end
 end
