@@ -387,7 +387,7 @@ class Resource < ApplicationRecord
   end
 
   def latest_media_count
-    last_harvest = @resource.harvests&.last
+    last_harvest = harvests&.last
     return 0 if last_harvest.nil?
     last_harvest.media.count
   end
