@@ -42,6 +42,15 @@ class Medium < ApplicationRecord
     attr_accessor :sizes, :bucket_size
 
     def download_and_prep(images)
+      image = find(images.first)
+      if image.already_downloaded? # If ONE of them is already downloaded, CHANCES are they all are, so just do them all:
+        where(id: images).each { |image| image.download_and_prep }
+      else
+        enqueue_downloads(images)
+      end
+    end
+
+    def enqueue_downloads(images)
       count = 0
       images.select('id').map(&:id).each do |img_id|
         next if download_enqueued?(img_id)
@@ -162,7 +171,7 @@ class Medium < ApplicationRecord
   def download_and_prep
     begin
       ensure_dir_exists
-      if downloaded_already?
+      if already_downloaded?
         resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
         create_missing_image_sizes # This will skip sizes that already exist.
       else
@@ -177,7 +186,7 @@ class Medium < ApplicationRecord
     end
   end
 
-  def downloaded_already?
+  def already_downloaded?
     File.exist?(original_image_path)
   end
 

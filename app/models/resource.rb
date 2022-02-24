@@ -2,6 +2,7 @@ class Resource < ApplicationRecord
   @logfile_name = 'process.log'
   @lockfile_name = 'harvest.lock'
   @unmatched_file_name = 'unmatched_nodes.txt'
+  @media_download_batch_size = 32
 
   belongs_to :partner, inverse_of: :resources
   belongs_to :default_license, class_name: 'License', inverse_of: :resources
@@ -33,7 +34,7 @@ class Resource < ApplicationRecord
   acts_as_list
 
   class << self
-    attr_reader :logfile_name, :lockfile_name, :unmatched_file_name
+    attr_reader :logfile_name, :lockfile_name, :unmatched_file_name, :media_download_batch_size
 
     def native
       Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
@@ -364,7 +365,7 @@ class Resource < ApplicationRecord
 
   def download_missing_images
     return no_more_images_to_download if media.published.missing.count.zero?
-    count = Medium.download_and_prep(media.published.missing.limit(25))
+    count = Medium.download_and_prep(media.published.missing.limit(Resource.media_download_batch_size))
     return no_more_images_to_download if count.zero?
     delay_more_downloads
   end
