@@ -258,6 +258,10 @@ class Resource < ApplicationRecord
     ActiveSupport::TaggedLogging.new(Logger.new(process_log_path))
   end
 
+  def last_line_of_log
+    `tail -n 1 #{process_log_path}`
+  end
+
   # Try not to use this. Use LoggedProcess instead. This is for "headless" jobs.
   def log_error(message)
     process_log.tagged('ERR') { process_log.warn("[#{Time.now.strftime('%F %T')}][hdls] #{message}") }
@@ -373,10 +377,28 @@ class Resource < ApplicationRecord
   end
 
   def download_missing_images
+    fix_downloaded_media_count
+    log_download_progress
     return no_more_images_to_download if media.published.missing.count.zero?
     count = Medium.download_and_prep(media.published.missing.limit(Resource.media_download_batch_size))
     return no_more_images_to_download if count.zero?
     delay_more_downloads
+  end
+
+  def latest_media_count
+    last_harvest = @resource.harvests&.last
+    return 0 if last_harvest.nil?
+    last_harvest.media.count
+  end
+
+  def percent_downloaded_media
+    ((downloaded_media_count / latest_media_count.to_f) * 100).to_i
+  end
+
+  def log_download_progress
+    pct = percent_downloaded_media
+    return if last_line_of_log =~ /#{pct}%/
+    log_info("#{pct}% of media downloaded") if (pct % 10).zero?
   end
 
   def no_more_images_to_download
