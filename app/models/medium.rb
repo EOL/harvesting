@@ -42,8 +42,10 @@ class Medium < ApplicationRecord
     attr_accessor :sizes, :bucket_size
 
     def download_and_prep(images)
-      image = find(images.first)
-      if image.already_downloaded? # If ONE of them is already downloaded, CHANCES are they all are, so just do them all:
+      image = images.first
+      return if image.nil?
+      # If ONE is already downloaded, CHANCES are they're all so: just process the whole batch in memory.
+      if image.already_downloaded?
         where(id: images).each { |image| image.download_and_prep }
       else
         enqueue_downloads(images)

@@ -11,7 +11,7 @@ module MediumPrepper
     def create_size(size)
       filename = "#{@medium.dir}/#{@medium.basename}.#{size}.#{Medium::IMAGE_EXT}"
       if File.exist?(filename)
-        img = Magick::Image::read(file).first
+        img = Magick::Image::read(filename).first
         "#{img.columns}x#{img.rows}"
       else
         (w, h) = size.split('x').map(&:to_i)
