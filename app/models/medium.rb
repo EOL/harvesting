@@ -33,7 +33,7 @@ class Medium < ApplicationRecord
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where('base_url IS NULL') }
-  scope :needs_download, -> { where(downloaded_at: nil) }
+  scope :needs_download, -> { where(downloaded_at: nil, enqueued_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }
 
   IMAGE_EXT = 'jpg'
@@ -46,8 +46,11 @@ class Medium < ApplicationRecord
       return if image.nil?
       # If ONE is already downloaded, CHANCES are they're all so: just process a whole bunch in memory.
       if image.already_downloaded?
+        images = images.limit(Resource.media_download_batch_size * 64)
+        images.update_all(enqueued_at: Time.now)
         images.each { |image| image.download_and_prep_with_rescue }
       else
+        images.update_all(enqueued_at: Time.now)
         enqueue_downloads(images)
       end
     end

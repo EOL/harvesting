@@ -159,6 +159,7 @@ class Resource < ApplicationRecord
   end
 
   def fix_downloaded_media_count
+    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
     update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
     update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
   end
