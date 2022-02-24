@@ -1,4 +1,3 @@
-DownloadMed
 # Quiet down the logs in production: https://github.com/collectiveidea/delayed_job/issues/477#issuecomment-800341818
 module ::Delayed::Backend::ActiveRecord
   class Job < ::ActiveRecord::Base
