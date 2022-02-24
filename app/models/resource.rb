@@ -155,13 +155,12 @@ class Resource < ApplicationRecord
   end
 
   def undownloaded_media_count
-    media.published.missing.count
+    media.published.needs_download.count
   end
 
   def fix_downloaded_media_count
-    missing = undownloaded_media_count
-    update_attribute(:downloaded_media_count, media.count - missing)
-    update_attribute(:failed_downloaded_media_count, missing)
+    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
+    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
   end
 
   def delayed_jobs
