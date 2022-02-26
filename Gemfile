@@ -42,7 +42,7 @@ gem 'lograge', '~> 0.11'
 # Use mysql as the database for Active Record
 gem 'mysql2', '0.5.3'
 # Used in parsing XML for new resources:
-gem 'nokogiri', '~> 1.12'
+gem 'nokogiri', '~> 1.13'
 # Debugging:
 gem 'pry-rails', '~> 0.3'
 # Authorization:
