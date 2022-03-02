@@ -7,7 +7,7 @@ class HarvestsController < ApplicationController
       File.readlines(@path) :
       []
     @lines = @logs&.size || 0
-    @logs = @logs[-1000..-1]
+    @logs = @logs[-1000..-1] if @lines > 1000
   end
 
   def destroy
