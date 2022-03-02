@@ -74,6 +74,9 @@
       = distance_of_time_in_words(@harvest.time_in_minutes)
 
 %h2 Harvesting Log (most recent first)
+= "(#{@lines} lines)"
+- if @lines > 1000
+  = "(showing only the last 1000 lines, see #{@path} for the full file)"
 - if @logs.empty?
   %p The logs for this harvest are empty.
 - else
