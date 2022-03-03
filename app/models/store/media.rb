@@ -205,7 +205,7 @@ module Store
     def clean_string(field, val)
       return nil if val.nil?
       return '' if val.blank?
-      if field&.utf8_only?
+      if field&.submapping == 'utf8_only' # #utf_only? didn't work and using a symbol here didn't work. :|
         # Stolen from https://stackoverflow.com/questions/16487697/how-to-remove-4-byte-utf-8-characters-in-ruby
         val.each_char.select { |c| c.bytes.count < 4 }.join('')
       end
