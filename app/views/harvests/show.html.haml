@@ -73,7 +73,7 @@
       %strong Time to Harvest:
       = distance_of_time_in_words(@harvest.time_in_minutes)
 
-%h2 Harvesting Log (most recent first)
+%h2 Harvesting Log
 = "(#{@lines} lines)"
 - if @lines > 1000
   = "(showing only the last 1000 lines, see #{@path} for the full file)"
