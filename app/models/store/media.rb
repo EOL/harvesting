@@ -207,7 +207,7 @@ module Store
       return '' if val.blank?
       if field.utf8_only?
         # Stolen from https://stackoverflow.com/questions/16487697/how-to-remove-4-byte-utf-8-characters-in-ruby
-        val.each_char.select { |c| c.bytes.count < 4 }.join('')
+        val = val.each_char.select { |c| c.bytes.count < 4 }.join('')
       end
       val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"\s*(.*)\s*\"$/, '\\1')
     end
