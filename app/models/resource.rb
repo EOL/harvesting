@@ -376,6 +376,11 @@ class Resource < ApplicationRecord
     Resource::RemapNames.for_resource(self, process)
   end
 
+  def enqueue_max_media_downloaders
+    count = ENV.key?('MEDIA_WORKER_COUNT') ? ENV['MEDIA_WORKER_COUNT'] : 6
+    count.times { download_missing_images }
+  end
+
   def download_missing_images
     Delayed::Job.enqueue(EnqueueMediaDownloadJob.new(id))
   end

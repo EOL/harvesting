@@ -39,7 +39,7 @@ class Harvest < ApplicationRecord
   ]
 
   def download_media
-    resource.download_missing_images
+    resource.enqueue_max_media_downloaders
   end
 
   def retry_failed_images
