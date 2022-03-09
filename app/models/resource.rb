@@ -377,13 +377,17 @@ class Resource < ApplicationRecord
   end
 
   def download_missing_images
+    Delayed::Job.enqueue(EnqueueMediaDownloadJob.new(id))
+  end
+
+  def download_batch_of_missing_images
     fix_downloaded_media_count
     log_download_progress
     remaining_count = media.needs_download.count
     return no_more_images_to_download if remaining_count.zero?
     Medium.download_and_prep_batch(media.needs_download.limit(Resource.media_download_batch_size))
     return no_more_images_to_download if remaining_count < Resource.media_download_batch_size
-    Delayed::Job.enqueue(EnqueueMediaDownloadJob.new(id))
+    download_missing_images
   end
 
   def latest_media_count

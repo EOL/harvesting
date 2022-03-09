@@ -127,7 +127,7 @@ end
 EnqueueMediaDownloadJob = Struct.new(:resource_id) do
   def perform
     ActiveRecord::Base.connection.reconnect!
-    Resource.find(resource_id).download_missing_images
+    Resource.find(resource_id).download_batch_of_missing_images
   end
 
   def queue_name
