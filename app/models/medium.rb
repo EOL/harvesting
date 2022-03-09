@@ -181,7 +181,7 @@ class Medium < ApplicationRecord
   def download_and_prep
     ensure_dir_exists
     if already_downloaded?
-      create_missing_image_sizes # This will skip sizes that already exist.
+      create_missing_image_sizes if jpg? # This will skip sizes that already exist.
       resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
     else
       abort_if_filetype_unreadable
@@ -193,7 +193,8 @@ class Medium < ApplicationRecord
   end
 
   def already_downloaded?
-    File.exist?(original_image_path)
+    return true if embedded_video?
+    File.exist?(jpg? ? original_image_path : non_image_path)
   end
 
   def create_missing_downloaded_url
@@ -279,12 +280,17 @@ class Medium < ApplicationRecord
     raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
   end
 
+  def non_image_path
+    "#{dir}/#{basename}.#{file_ext}"
+  end
+
   def original_image_path
     assert_jpg
     "#{dir}/#{basename}.#{IMAGE_EXT}"
   end
 
   def create_missing_image_sizes
+    return unless jpg?
     image = Magick::Image.read(original_image_path).first
     size_creator = MediumPrepper::ImageSizeCreator.new(
       self,
@@ -303,6 +309,7 @@ class Medium < ApplicationRecord
   end
 
   def populate_sizes(image)
+    return unless jpg?
     original_path = Rails.public_path.join(original_image_path)
     raise "Missing original image!" unless File.exist?(original_path)
     basename = File.basename(original_path, '.*')
