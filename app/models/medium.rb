@@ -44,8 +44,9 @@ class Medium < ApplicationRecord
     def download_and_prep_batch(images)
       image = images.first
       return if image.nil?
-      # If ONE is already downloaded, CHANCES are they're all so: just process a whole bunch in memory.
-      if image.already_downloaded?
+      already_downloaded_one = image.already_downloaded? rescue false
+      if already_downloaded_one
+        # CHANCES are they're all downloaded, so just process a whole bunch in memory.
         images = images.limit(Resource.media_download_batch_size * 64)
         images.update_all(enqueued_at: Time.now)
         images.each { |image| image.download_and_prep_with_rescue }
