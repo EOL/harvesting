@@ -206,7 +206,7 @@ class Medium < ApplicationRecord
   def fail_from_download_and_prep(e)
     update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
     resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-    resource.log_error("download_and_prep FAILED for Medium.find(#{self[:id]}): #{e.message[0..1000]}")
+    resource.log_error("download_and_prep FAILED for Medium.find(#{self[:id]}): #{e.message[0..512]}")
     nil
   end
 
