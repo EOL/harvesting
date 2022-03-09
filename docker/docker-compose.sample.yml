@@ -73,7 +73,7 @@ services:
     container_name: harvesting_mysql
     restart: always
     env_file:
-      - resources/staging.env
+      - resources/docker.env
     volumes:
       - ${EOL_ROOT_DIR}/harvesting_mysql:/var/lib/mysql
     networks:
@@ -97,7 +97,7 @@ services:
       - memcached
       - mysql
     env_file:
-      - resources/staging.env
+      - resources/docker.env
     ports:
       - 3001:3000
     networks:
