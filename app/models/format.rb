@@ -86,6 +86,7 @@ class Format < ApplicationRecord
   end
 
   def use_original_file
+    Admin.maintain_db_connection
     update_attribute(:file, get_from)
   end
 end
