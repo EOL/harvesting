@@ -377,7 +377,9 @@ class Resource < ApplicationRecord
   end
 
   def enqueue_max_media_downloaders
-    count = ENV.key?('MEDIA_WORKER_COUNT') ? ENV['MEDIA_WORKER_COUNT'] : 6
+    count = ENV.key?('MEDIA_WORKER_COUNT') ? ENV['MEDIA_WORKER_COUNT'].to_i : 6
+    count = 6 if count <= 0 # Oops, the config was wrong somehow.
+    count = 32 if count > 32 # We have our limits!
     count.times { download_missing_images }
   end
 
