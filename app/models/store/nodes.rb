@@ -8,11 +8,11 @@ module Store
     def to_nodes_page_id(_, val)
       @models[:node] ||= {}
       return if val.blank?
-      if @models[:node][:page_id].downcase.sub(/^\s+/, '').sub(/\s+$/, '') == 'new'
+      if val.downcase.sub(/^\s+/, '').sub(/\s+$/, '') == 'new'
         @models[:node][:page_id] = 0 # This is a LITTLE dangerous, but a "0" here will mean "map this to a NEW page,
                                      # don't attempt to match this to any other node."
       else
-        raise "Non-integer page_id!" if @models[:node][:page_id].to_i.zero?
+        raise "Non-integer page_id!" if val.to_i.zero?
         @models[:node][:page_id] = val
       end
     end
