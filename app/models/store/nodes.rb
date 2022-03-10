@@ -7,8 +7,13 @@ module Store
 
     def to_nodes_page_id(_, val)
       @models[:node] ||= {}
-      @models[:node][:page_id] = val
-      # TODO: we shouldn't trust this unless it came from Resource #1; add some code in the names-matcher to check.
+      if @models[:node][:page_id].downcase.sub(/^\s+/, '').sub(/\s+$/, '') == 'new'
+        @models[:node][:page_id] = 0 # This is a LITTLE dangerous, but a "0" here will mean "map this to a NEW page,
+                                     # don't attempt to match this to any other node."
+      else
+        raise "Non-integer page_id!" if @models[:node][:page_id].to_i.zero?
+        @models[:node][:page_id] = val
+      end
     end
 
     def to_nodes_landmark(field, val)

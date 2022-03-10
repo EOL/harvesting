@@ -250,6 +250,7 @@ class NamesMatcher
   end
 
   def map_node(node, opts = {})
+    return unmapped(node, 'NEW EOL ID flagged') if node.page_id&.zero?
     return unmapped(node, 'first_import') unless @have_names
     # NOTE: Surrogates never get matched in this version of the algorithm.
     return unmapped(node, 'surrogate') if node.scientific_name.surrogate?
