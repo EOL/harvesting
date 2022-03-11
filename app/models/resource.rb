@@ -359,10 +359,6 @@ class Resource < ApplicationRecord
     count.times { download_missing_images }
   end
 
-  def download_missing_images
-    Delayed::Job.enqueue(EnqueueMediaDownloadJob.new(id))
-  end
-
   def download_batch_of_missing_images
     fix_downloaded_media_count
     log_download_progress
@@ -371,6 +367,18 @@ class Resource < ApplicationRecord
     download_and_prep_batch
     return no_more_images_to_download if remaining_count < Resource.media_download_batch_size
     download_missing_images
+  end
+
+  def fix_downloaded_media_count
+    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
+    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
+    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
+  end
+
+  def log_download_progress
+    pct = percent_downloaded_media
+    return if last_line_of_log =~ /#{pct}%/
+    log_info("#{pct}% of media downloaded") if (pct % 10).zero?
   end
 
   def download_and_prep_batch
@@ -385,6 +393,10 @@ class Resource < ApplicationRecord
     limited_downloadable.each { |image| image.download_and_prep_with_rescue }
   end
 
+  def download_missing_images
+    Delayed::Job.enqueue(EnqueueMediaDownloadJob.new(id))
+  end
+
   def latest_media_count
     last_harvest = harvests&.last
     return 0 if last_harvest.nil?
@@ -393,12 +405,6 @@ class Resource < ApplicationRecord
 
   def percent_downloaded_media
     ((downloaded_media_count / latest_media_count.to_f) * 100).to_i
-  end
-
-  def log_download_progress
-    pct = percent_downloaded_media
-    return if last_line_of_log =~ /#{pct}%/
-    log_info("#{pct}% of media downloaded") if (pct % 10).zero?
   end
 
   def no_more_images_to_download
@@ -422,12 +428,6 @@ class Resource < ApplicationRecord
 
   def undownloaded_media_count
     media.published.needs_download.count
-  end
-
-  def fix_downloaded_media_count
-    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
-    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
-    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
   end
 
   # ------ END MEDIA DOWNLOAD RELATED METHODS ---^
