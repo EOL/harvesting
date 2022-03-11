@@ -109,21 +109,6 @@ ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
   end
 end
 
-DownloadMediumJob = Struct.new(:medium_id) do
-  def perform
-    Admin.maintain_db_connection
-    Medium.find(medium_id).download_and_prep_with_rescue
-  end
-
-  def queue_name
-    'media'
-  end
-
-  def max_attempts
-    1 # We handle this elsewhere.
-  end
-end
-
 EnqueueMediaDownloadJob = Struct.new(:resource_id) do
   def perform
     Admin.maintain_db_connection

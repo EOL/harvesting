@@ -40,32 +40,6 @@ class Medium < ApplicationRecord
 
   class << self
     attr_accessor :sizes, :bucket_size
-
-    def download_and_prep_batch(images)
-      image = images.first
-      return if image.nil?
-      already_downloaded_one = image.already_downloaded? rescue false
-      if already_downloaded_one
-        # CHANCES are they're all downloaded, so just process a whole bunch in memory.
-        images = images.limit(Resource.media_download_batch_size * 64)
-        images.update_all(enqueued_at: Time.now)
-        images.each { |image| image.download_and_prep_with_rescue }
-      else
-        images.update_all(enqueued_at: Time.now)
-        enqueue_downloads(images)
-      end
-    end
-
-    def enqueue_downloads(images)
-      images.select('id').map(&:id).each do |img_id|
-        next if download_enqueued?(img_id)
-        Delayed::Job.enqueue(DownloadMediumJob.new(img_id))
-      end
-    end
-
-    def download_enqueued?(id)
-      Delayed::Job.where(queue: 'media').where(%(handler LIKE "%DownloadMediumJob%medium_id: #{id}%")).any?
-    end
   end
 
   @sizes = %w[88x88 98x68 580x360 130x130 260x190]

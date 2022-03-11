@@ -140,32 +140,11 @@ class Resource < ApplicationRecord
   end
 
   def delayed_jobs
-    if Delayed::Job.count > 100_000
-      warning_message = '** SKIPPING delayed job operation, since there are too many delayed jobs (search would take too long).'
-      Rails.logger.warn(warning_message)
-      puts warning_message
-      Delayed::Job.none
+    if Delayed::Job.count > 10_000
+      Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{id}%'")
     else
       Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"})
     end
-  end
-
-  def stop_adding_media_jobs
-    delayed_jobs.where(queue: 'media').delete_all
-  end
-
-  def undownloaded_media_count
-    media.published.needs_download.count
-  end
-
-  def fix_downloaded_media_count
-    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
-    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
-    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
-  end
-
-  def delayed_jobs
-    Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{id}%'")
   end
 
   def lockfile_name
@@ -371,9 +350,20 @@ class Resource < ApplicationRecord
     @name_brief
   end
 
-  # TODO: I'm not sure where this is called. (?)
-  def remap_names(process)
-    Resource::RemapNames.for_resource(self, process)
+  # ------ MEDIA DOWNLOAD RELATED METHODS:
+
+  def stop_adding_media_jobs
+    delayed_jobs.where(queue: 'media').delete_all
+  end
+
+  def undownloaded_media_count
+    media.published.needs_download.count
+  end
+
+  def fix_downloaded_media_count
+    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
+    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
+    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
   end
 
   def enqueue_max_media_downloaders
@@ -392,9 +382,22 @@ class Resource < ApplicationRecord
     log_download_progress
     remaining_count = media.needs_download.count
     return no_more_images_to_download if remaining_count.zero?
-    Medium.download_and_prep_batch(media.needs_download.limit(Resource.media_download_batch_size))
+    download_and_prep_batch
     return no_more_images_to_download if remaining_count < Resource.media_download_batch_size
     download_missing_images
+  end
+
+  def download_and_prep_batch
+    downloadable = media.needs_download
+    downloadable.limit(Resource.media_download_batch_size)
+    image = downloadable.first
+    return if image.nil?
+    already_downloaded_one = image.already_downloaded? rescue false
+    # If we've already downloaded the first one, assume most will also be downloaded, so grab a BIG batch, otherwise,
+    # just grab a normal batch:
+    limited_downloadable = downloadable.limit(Resource.media_download_batch_size * already_downloaded_one ? 64 : 1)
+    limited_downloadable.update_all(enqueued_at: Time.now)
+    limited_downloadable.each { |image| image.download_and_prep_with_rescue }
   end
 
   def latest_media_count
@@ -427,6 +430,8 @@ class Resource < ApplicationRecord
   def swap_media_source_urls
     media.update_all('source_url=@tmp:=source_url, source_url=source_page_url, source_page_url=@tmp')
   end
+
+  # ------ END MEDIA DOWNLOAD RELATED METHODS ---^
 
   # NOTE: keeps formats, of course.
   def remove_content
