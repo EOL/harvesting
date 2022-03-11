@@ -20,7 +20,20 @@ class Admin
         else
           "WARNING: DB still not responding, re-trying connection (attempt #{tries})..."
         end
-        process ? @process.info(msg) : Rails.logger.warn(msg)
+        process ? process.info(msg) : Rails.logger.warn(msg)
+      end
+    end
+
+    def retry_if_connection_fails(&block)
+      tried = false
+      begin
+        yield
+      rescue => e
+        raise e if tried
+        tried = true
+        ActiveRecord::Base.connection.reconnect!
+        WebDb.connection.reconnect!
+        retry
       end
     end
   end
