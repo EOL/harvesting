@@ -352,20 +352,6 @@ class Resource < ApplicationRecord
 
   # ------ MEDIA DOWNLOAD RELATED METHODS:
 
-  def stop_adding_media_jobs
-    delayed_jobs.where(queue: 'media').delete_all
-  end
-
-  def undownloaded_media_count
-    media.published.needs_download.count
-  end
-
-  def fix_downloaded_media_count
-    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
-    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
-    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
-  end
-
   def enqueue_max_media_downloaders
     count = ENV.key?('MEDIA_WORKER_COUNT') ? ENV['MEDIA_WORKER_COUNT'].to_i : 6
     count = 6 if count <= 0 # Oops, the config was wrong somehow.
@@ -389,7 +375,6 @@ class Resource < ApplicationRecord
 
   def download_and_prep_batch
     downloadable = media.needs_download
-    downloadable.limit(Resource.media_download_batch_size)
     image = downloadable.first
     return if image.nil?
     already_downloaded_one = image.already_downloaded? rescue false
@@ -429,6 +414,20 @@ class Resource < ApplicationRecord
   # Because this happens often enough that it was worth making a method out of it. TODO: rename the @!#$*& fields:
   def swap_media_source_urls
     media.update_all('source_url=@tmp:=source_url, source_url=source_page_url, source_page_url=@tmp')
+  end
+
+  def stop_adding_media_jobs
+    delayed_jobs.where(queue: 'media').delete_all
+  end
+
+  def undownloaded_media_count
+    media.published.needs_download.count
+  end
+
+  def fix_downloaded_media_count
+    media.needs_download.where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
+    update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
+    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
   end
 
   # ------ END MEDIA DOWNLOAD RELATED METHODS ---^
