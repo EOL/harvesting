@@ -142,6 +142,13 @@ class Medium < ApplicationRecord
     extend EncodingFixer
     bad_url = sanitized_source_url
     @sanitized_source_url = fix_encoding(sanitized_source_url)
+    # This won't work if there's no path, but that should really never happen; we're not getting images from index.html
+    # on domains!
+    if sanitized_source_url =~ /^(.*)\/([^\/]+)$/
+      first_bit, last_bit = $1, $2
+    end
+    new_last_bit = {_: last_bit}.to_query[2..-1]
+    sanitized_source_url = "#{first_bit}/#{new_last_bit}"
     raise "Unable to resolve URL #{sanitized_source_url}" if bad_url == sanitized_source_url
   end
 
