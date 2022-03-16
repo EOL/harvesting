@@ -734,7 +734,7 @@ class ResourceHarvester
   # This is very much like #each_format, but reads the diff file and ignores the
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
-    @resource.formats.each_with_index do |fmt, index|
+    @resource.formats.each do |fmt|
       Admin.maintain_db_connection(@process)
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
