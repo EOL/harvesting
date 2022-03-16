@@ -127,7 +127,7 @@ class Harvest < ApplicationRecord
   def diff_size(format)
     file = diff_path(format) || format.get_from
     return 0 unless File.exist?(file)
-    `wc -l #{file}`.chomp
+    `wc -l #{file}`.chomp.split.first
   end
 
   def diff_parser(format)
