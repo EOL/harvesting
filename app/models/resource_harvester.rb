@@ -709,8 +709,9 @@ class ResourceHarvester
   # This is very much like #each_format, but reads the diff file and ignores the
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
-    @resource.formats.each do |fmt|
+    @resource.formats.each_with_index do |fmt, index|
       Admin.maintain_db_connection(@process)
+      next if next_file_exists?(fmt, index)
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
@@ -724,6 +725,17 @@ class ResourceHarvester
       @process.info("Handling diff: #{@file} (#{@file.readlines.size} lines)")
       yield
     end
+  end
+
+  def next_file_exists?(fmt, index)
+    unless fmt == @resource.formats.last
+      next_file = @harvest.diff_path(@resource.formats[index+1])
+      if File.exist?(next_file)
+        @process.info("ALREADY EXISTS, skipping: #{next_file} (#{next_file.readlines.size} lines)")
+        true
+      end
+    end
+    false
   end
 
   def completed

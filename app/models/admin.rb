@@ -11,9 +11,16 @@ class Admin
          end
     end
 
-    def maintain_db_connection(process = nil)
+    def verify_connection
       @@last_try ||= Time.now
-      ActiveRecord::Base.connection.verify! unless @@last_try <= 2.minutes.ago
+      unless @@last_try <= 2.minutes.ago
+        ActiveRecord::Base.connection.verify!
+        @@last_try = Time.now
+      end
+    end
+
+    def maintain_db_connection(process = nil)
+      verify_connection
       tries = 0
       msgs = []
       while tries <= 3 and !ActiveRecord::Base.connected?
@@ -29,6 +36,7 @@ class Admin
     end
 
     def retry_if_connection_fails(&block)
+      verify_connection
       tried = false
       begin
         yield
