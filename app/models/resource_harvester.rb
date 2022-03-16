@@ -413,9 +413,9 @@ class ResourceHarvester
         @process.warn "No models to import, skipping!"
         next
       end
-      models.in_groups_of(group_size) do |group|
+      models.in_groups_of(group_size, false) do |group|
         begin
-          klass.import! group, validate: false
+          klass.import! group.compact, validate: false
         rescue => e
           if e.message =~ /row (\d+)\b/
             row = Regexp.last_match(1).to_i
