@@ -404,6 +404,7 @@ class ResourceHarvester
   # TODO: extract to Store::Storage
   def store_new
     @new.each do |klass, models|
+      models.delete_if { |model| model.blank? }
       size = models.size
       @process.info "Storing #{size} #{klass.name.pluralize}"
       # Grouping them might not be necssary, but it sure makes debugging easier...
