@@ -304,10 +304,10 @@ class ResourceHarvester
       i = 0
       time = Time.now
       @process.enter_group(@harvest.diff_size(@format)) do |harv_proc|
-        Admin.maintain_db_connection(@process)
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
           i += 1
           if (i % 10_000).zero?
+            flush_model_cache
             harv_proc.update_group(i, Time.now - time)
             time = Time.now
           end
@@ -356,11 +356,16 @@ class ResourceHarvester
         end
         @process.warn('There were no differences in this file!') unless any_diff
       end
+      flush_model_cache
     end
-    find_orphan_parent_nodes
-    find_duplicate_nodes
+  end
+
+  def flush_model_cache
+    Admin.maintain_db_connection(@process)
+    find_orphan_parent_nodes # Empty now, TODO with deltas.
+    find_duplicate_nodes # Empty now, TODO with deltas.
     store_new
-    mark_old
+    mark_old # Does nothing now, TODO with deltas.
     clear_storage_vars # Allow GC to clean up!
   end
 
@@ -379,8 +384,21 @@ class ResourceHarvester
     # TODO: if the resource gave us parent IDs, we *could* have unresolved ids that we need to flag.
   end
 
+  # TODO: look for shared parents and primary keys.
   def find_duplicate_nodes
-    # TODO: look for shared parents and primary keys.
+    # No good way to spot duplicates for Identifiers (node_resource_pk + identifier), Locations (no nice way, doesn't
+    # have a harvest_id argh), and Vernaculars (language_code_verbatim + verbatim)
+    @new.each do |klass, models|
+      if klass.attribute_names.include?('resource_pk') && !klass.where(harvest_id: @harvest.id).count.zero?
+        pks = Set.new(klass.where(harvest_id: @harvest.id).pluck(:resource_pk))
+        size_before = models.size
+        models.delete_if { |model| pks.include?(model.resource_pk) }
+        num_removed = size_before - models.size
+        if num_removed > 0
+          @process.warn "SKIPPED #{num_removed} #{klass.table_name.humanize} with resource_pks already be in the database!"
+        end
+      end
+    end
   end
 
   # TODO: extract to Store::Storage
@@ -389,12 +407,8 @@ class ResourceHarvester
       size = models.size
       @process.info "Storing #{size} #{klass.name.pluralize}"
       # Grouping them might not be necssary, but it sure makes debugging easier...
-      group_size = 1000
-      g_count = 1
-      @process.in_groups(models, group_size, size: size) do |group|
-        g_count += 1
-        # TODO: we should probably detect and handle duplicates: it shouldn't happen but it would be bad if it did.
-        # DB validations are adequate and we want to go faster:
+      group_size = 2000
+      models.in_groups_of(group_size) do |group|
         begin
           klass.import! group, validate: false
         rescue => e
@@ -711,7 +725,6 @@ class ResourceHarvester
   def each_diff(&block)
     @resource.formats.each_with_index do |fmt, index|
       Admin.maintain_db_connection(@process)
-      next if next_file_exists?(fmt, index)
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
@@ -725,17 +738,6 @@ class ResourceHarvester
       @process.info("Handling diff: #{@file} (#{@file.readlines.size} lines)")
       yield
     end
-  end
-
-  def next_file_exists?(fmt, index)
-    unless fmt == @resource.formats.last
-      next_file = @harvest.diff_path(@resource.formats[index+1])
-      if File.exist?(next_file)
-        @process.info("ALREADY EXISTS, skipping: #{next_file} (#{next_file.readlines.size} lines)")
-        true
-      end
-    end
-    false
   end
 
   def completed
