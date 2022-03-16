@@ -425,11 +425,12 @@ class ResourceHarvester
             # code where appropriate.
             raise "#{e.class} while parsing something around here: #{group[row-1..row+1].to_json}"
           else
-            group.each do |instance|
+            group.each_with_index do |instance, index|
               begin
                 klass.import! [instance], validate: false # Let it fail on the single row that had a problem!
               rescue => e
-                @process.warn "Failed to import instance: #{instance}"
+                @process.warn "Failed to import instance #{index}: #{instance}"
+                @process.warn "group around it: #{group[index-1..index+1].pretty_inspect}"
                 raise e
               end
             end
