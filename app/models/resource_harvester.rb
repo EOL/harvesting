@@ -715,7 +715,7 @@ class ResourceHarvester
     unless fmt == @resource.formats.last
       next_file = @harvest.diff_path(@resource.formats[index+1])
       if File.exist?(next_file)
-        @process.info("ALREADY EXISTS, skipping: #{next_file} (#{next_file.readlines.size} lines)")
+        @process.info("NEXT file (#{next_file} - #{next_file.readlines.size} lines) already exists, skipping #{fmt.represents}")
         true
       end
     end
