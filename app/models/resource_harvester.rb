@@ -409,6 +409,10 @@ class ResourceHarvester
       @process.info "Storing #{size} #{klass.name.pluralize}"
       # Grouping them might not be necssary, but it sure makes debugging easier...
       group_size = 2000
+      if models.empty?
+        @process.warn "No models to import, skipping!"
+        next
+      end
       models.in_groups_of(group_size) do |group|
         begin
           klass.import! group, validate: false
