@@ -301,16 +301,17 @@ class ResourceHarvester
     each_diff do
       @diff_size = @harvest.diff_size(@format)
       @progress = 0
+      @line_of_diff = 0
       @process.info("Loading #{@format.represents} diff file into memory (#{@diff_size} lines)...")
       fields = build_fields
       i = 0
       time = Time.now
       @process.enter_group(@diff_size) do |harv_proc|
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
-          i += 1
-          if (i % 10_000).zero?
+          @line_of_diff += 1
+          if (@line_of_diff % 10_000).zero?
             flush_model_cache
-            harv_proc.update_group(i, Time.now - time)
+            harv_proc.update_group(@line_of_diff, Time.now - time)
             time = Time.now
           end
           @file = @parser.path_to_file
@@ -321,7 +322,7 @@ class ResourceHarvester
               field = fields[header]
               field.debugging = debugging
               if debugging
-                @process.debug("#{@format.represents} ##{i} field {#{header}}")
+                @process.debug("#{@format.represents} ##{@line_of_diff} field {#{header}}")
                 @models[:debug] = true
               end
               if row[header].blank?
@@ -406,7 +407,7 @@ class ResourceHarvester
         models.delete_if { |model| pks.include?(model.resource_pk) }
         num_removed = size_before - models.size
         if num_removed > 0
-          @process.warn "SKIPPED #{num_removed} #{klass.table_name.humanize} (#{@progress}/#{@diff_size}) with resource_pks already be in the database!"
+          @process.warn "SKIPPED #{num_removed} #{klass.table_name.humanize} (#{@progress}/#{@line_of_diff}/#{@diff_size}) with resource_pks already be in the database!"
         end
       end
     end
@@ -417,7 +418,7 @@ class ResourceHarvester
     @new.each do |klass, models|
       models.delete_if { |model| model.blank? }
       size = models.size
-      @process.info "Storing #{size} #{klass.name.pluralize} (#{@progress}/#{@diff_size})"
+      @process.info "Storing #{size} #{klass.name.pluralize} (#{@progress}/#{@line_of_diff}/#{@diff_size})"
       # Grouping them might not be necssary, but it sure makes debugging easier...
       group_size = 2000
       if models.empty?
