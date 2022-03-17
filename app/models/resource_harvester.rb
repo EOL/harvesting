@@ -299,11 +299,13 @@ class ResourceHarvester
   def parse_diff_and_store
     clear_storage_vars
     each_diff do
-      @process.info("Loading #{@format.represents} diff file into memory (#{@harvest.diff_size(@format)} lines)...")
+      @diff_size = @harvest.diff_size(@format)
+      @progress = 0
+      @process.info("Loading #{@format.represents} diff file into memory (#{@diff_size} lines)...")
       fields = build_fields
       i = 0
       time = Time.now
-      @process.enter_group(@harvest.diff_size(@format)) do |harv_proc|
+      @process.enter_group(@diff_size) do |harv_proc|
         any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
           i += 1
           if (i % 10_000).zero?
@@ -362,8 +364,9 @@ class ResourceHarvester
 
   def flush_model_cache
     Admin.maintain_db_connection(@process)
+    measure_progress
     find_orphan_parent_nodes # Empty now, TODO with deltas.
-    find_duplicate_nodes # Empty now, TODO with deltas.
+    find_duplicate_nodes # TODO: not complete, still a few trouble models.
     store_new
     mark_old # Does nothing now, TODO with deltas.
     clear_storage_vars # Allow GC to clean up!
@@ -378,10 +381,18 @@ class ResourceHarvester
     @missing_media_types = {}
     @bad_statuses = {}
     @warned = {}
+    @diff_size ||= 0 # NOTE the *or* here. We don't want to blow it away if we have it, just initialize it.
+    @progress ||= 0
   end
 
   def find_orphan_parent_nodes
     # TODO: if the resource gave us parent IDs, we *could* have unresolved ids that we need to flag.
+  end
+
+  def measure_progress
+    @new.each do |_, models|
+      @progress += models.size # BEFORE we delete duplicates;
+    end
   end
 
   # TODO: look for shared parents and primary keys.
@@ -395,7 +406,7 @@ class ResourceHarvester
         models.delete_if { |model| pks.include?(model.resource_pk) }
         num_removed = size_before - models.size
         if num_removed > 0
-          @process.warn "SKIPPED #{num_removed} #{klass.table_name.humanize} with resource_pks already be in the database!"
+          @process.warn "SKIPPED #{num_removed} #{klass.table_name.humanize} (#{@progress}/#{@diff_size}) with resource_pks already be in the database!"
         end
       end
     end
@@ -406,7 +417,7 @@ class ResourceHarvester
     @new.each do |klass, models|
       models.delete_if { |model| model.blank? }
       size = models.size
-      @process.info "Storing #{size} #{klass.name.pluralize}"
+      @process.info "Storing #{size} #{klass.name.pluralize} (#{@progress}/#{@diff_size})"
       # Grouping them might not be necssary, but it sure makes debugging easier...
       group_size = 2000
       if models.empty?
