@@ -32,7 +32,7 @@ class Admin
           "WARNING: DB still not responding, re-trying connection (attempt #{tries})..."
         end
       end
-      process ? process.info(msgs.join("; ")) : Rails.logger.warn(msgs.join("\n") unless msgs.empty?
+      process ? process.info(msgs.join("; ")) : Rails.logger.warn(msgs.join("\n")) unless msgs.empty?
     end
 
     def retry_if_connection_fails(&block)
