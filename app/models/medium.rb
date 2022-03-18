@@ -6,12 +6,13 @@ class Medium < ApplicationRecord
   belongs_to :language
   belongs_to :location, inverse_of: :media
   belongs_to :bibliographic_citation
+  belongs_to :downloaded_url
 
   has_many :media_references, inverse_of: :medium
   has_many :references, through: :media_references
-
   has_many :content_attributions, as: :content
   has_many :attributions, through: :content_attributions
+
 
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
   enum subclass: %i[image video sound map_image js_map]
@@ -32,38 +33,47 @@ class Medium < ApplicationRecord
 
   scope :published, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where('base_url IS NULL') }
-  scope :needs_download, -> { where(downloaded_at: nil) }
+  scope :needs_download, -> { where(downloaded_at: nil, enqueued_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }
 
   IMAGE_EXT = 'jpg'
 
   class << self
     attr_accessor :sizes, :bucket_size
-
-    def download_and_prep(images)
-      count = 0
-      images.select('id').map(&:id).each do |img_id|
-        next if download_enqueued?(img_id)
-        Delayed::Job.enqueue(DownloadMediumJob.new(img_id))
-        count += 1
-      end
-      count
-    end
-
-    def download_enqueued?(id)
-      Delayed::Job.where(queue: 'media').where(%(handler LIKE "%DownloadMediumJob%medium_id: #{id}%")).any?
-    end
   end
 
   @sizes = %w[88x88 98x68 580x360 130x130 260x190]
   @bucket_size = 256
 
+  def id_to_use_for_storage
+    @id_to_use_for_storage ||= if (Rails.application.secrets.image_path.has_key?(:legacy_medium_id) &&
+        Rails.application.secrets.image_path[:legacy_medium_id])
+      id
+    else
+      if downloaded_url_id.nil?
+        create_downloaded_url
+      end
+      downloaded_url_id
+    end
+  end
+
+  def create_downloaded_url(md5_hash = nil)
+    md5_hash ||= Digest::MD5.hexdigest(source_url)
+    # NOTE: yes, the downloaded_url shares the ID with the first medium that creates it. This is just to avoid collisions.
+    durl = if DownloadedUrl.exists?(resource_id: resource_id, md5_hash: md5_hash)
+      DownloadedUrl.find_by_md5_hash_and_resource_id(md5_hash, resource_id)
+    else
+      DownloadedUrl.create(id: id, resource_id: resource_id, url: source_url, md5_hash: md5_hash)
+    end
+    update_attribute(:downloaded_url_id, durl.id)
+  end
+
   def s_dir
-    dir_from_mod(id)
+    dir_from_mod(id_to_use_for_storage)
   end
 
   def m_num
-    id / Medium.bucket_size
+    id_to_use_for_storage / Medium.bucket_size
   end
 
   def m_dir
@@ -132,26 +142,52 @@ class Medium < ApplicationRecord
     extend EncodingFixer
     bad_url = sanitized_source_url
     @sanitized_source_url = fix_encoding(sanitized_source_url)
+    # This won't work if there's no path, but that should really never happen; we're not getting images from index.html
+    # on domains!
+    if sanitized_source_url =~ /^(.*)\/([^\/]+)$/
+      first_bit, last_bit = $1, $2
+    end
+    new_last_bit = {_: last_bit}.to_query[2..-1]
+    sanitized_source_url = "#{first_bit}/#{new_last_bit}"
     raise "Unable to resolve URL #{sanitized_source_url}" if bad_url == sanitized_source_url
   end
 
-  def download_and_prep
+  def download_and_prep_with_rescue
     begin
-      ensure_dir_exists
-      abort_if_filetype_unreadable
-      raw = download_raw_data
-      prepper = get_prepper(raw)
-      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
-      prepper.prep_medium
+      download_and_prep
     rescue => e
       return fail_from_download_and_prep(e)
     end
   end
 
+  def download_and_prep
+    ensure_dir_exists
+    if already_downloaded?
+      create_missing_image_sizes if jpg? # This will skip sizes that already exist.
+      resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
+    else
+      abort_if_filetype_unreadable
+      raw = download_raw_data
+      prepper = get_prepper(raw)
+      raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
+      prepper.prep_medium
+    end
+  end
+
+  def already_downloaded?
+    return true if embedded_video?
+    File.exist?(jpg? ? original_image_path : non_image_path)
+  end
+
+  def create_missing_downloaded_url
+    return nil unless downloaded_url.nil?
+    downloaded_url = DownloadedUrl.create(resource_id: resource_id, url: source_url)
+  end
+
   def fail_from_download_and_prep(e)
     update_attribute(:downloaded_at, Time.now) # Avoid attempting it again...
     resource.update_attribute(:failed_downloaded_media_count, resource.failed_downloaded_media_count + 1)
-    resource.log_error("download_and_prep FAILED for Medium.find(#{self[:id]}): #{e.message[0..1000]}")
+    resource.log_error("download_and_prep FAILED for Medium.find(#{self[:id]}): #{e.message[0..512]}")
     nil
   end
 
@@ -226,16 +262,24 @@ class Medium < ApplicationRecord
     raise TypeError, mess # NO, this isn't "really" a TypeError, but it makes enough sense to use it. KISS.
   end
 
+  def non_image_path
+    "#{dir}/#{basename}.#{file_ext}"
+  end
+
   def original_image_path
     assert_jpg
     "#{dir}/#{basename}.#{IMAGE_EXT}"
   end
 
   def create_missing_image_sizes
+    return unless jpg?
+    image = Magick::Image.read(original_image_path).first
     size_creator = MediumPrepper::ImageSizeCreator.new(
       self,
-      Magick::Image.read(original_image_path).first
+      image
     )
+
+    populate_sizes(image) if sizes.blank?
 
     missing_size_creator = MediumPrepper::MissingImageSizeCreator.new(
       self,
@@ -244,6 +288,27 @@ class Medium < ApplicationRecord
     )
 
     missing_size_creator.create_missing_sizes
+  end
+
+  def populate_sizes(image)
+    return unless jpg?
+    original_path = Rails.public_path.join(original_image_path)
+    raise "Missing original image!" unless File.exist?(original_path)
+    basename = File.basename(original_path, '.*')
+    variants = Dir.glob(original_path.sub(basename, "#{basename}.*"))
+    sizes = { original: get_size(image) }
+    variants.each do |variant|
+      size = variant.sub(/.*#{basename}./, '').sub(/\.\w+$/, '')
+      sizes[size] = get_size(Magick::Image.read(variant).first)
+    end
+    unmodified_url = "#{default_base_url}#{original_path.sub(/.*#{Regexp.escape(basename)}/, '')}"
+    update_attributes(sizes: JSON.generate(sizes), w: image.columns, h: image.rows,
+                      downloaded_at: Time.now, unmodified_url: unmodified_url,
+                      base_url: default_base_url)
+  end
+
+  def get_size(img)
+    "#{img.columns}x#{img.rows}"
   end
 
   def update_sizes(new_sizes)

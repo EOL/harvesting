@@ -27,7 +27,7 @@ Delayed::Worker.max_attempts = 2
 # TODO: You should really move these to a jobs folder.
 HarvestJob = Struct.new(:resource_id) do
   def perform
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     Resource.find(resource_id).harvest
   end
 
@@ -51,7 +51,7 @@ end
 
 ReHarvestJob = Struct.new(:resource_id) do
   def perform
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     Resource.find(resource_id).re_harvest
   end
 
@@ -71,7 +71,7 @@ end
 
 ResumeHarvestJob = Struct.new(:resource_id) do
   def perform
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     Resource.find(resource_id).resume
   end
 
@@ -91,7 +91,7 @@ end
 
 ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
   def perform
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     Resource.find(resource_id).re_download_opendata_and_harvest
   end
 
@@ -109,10 +109,10 @@ ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
   end
 end
 
-DownloadMediumJob = Struct.new(:medium_id) do
+EnqueueMediaDownloadJob = Struct.new(:resource_id) do
   def perform
-    ActiveRecord::Base.connection.reconnect!
-    Medium.find(medium_id).download_and_prep
+    Admin.maintain_db_connection
+    Resource.find(resource_id).download_batch_of_missing_images
   end
 
   def queue_name
@@ -126,7 +126,7 @@ end
 
 RemoveContentJob = Struct.new(:resource_id) do
   def perform
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     resource = Resource.find(resource_id)
     message = "!! REMOVING CONTENT for resource #{resource.name} (##{resource.id})"
     Rails.logger.warn(message)

@@ -107,12 +107,12 @@ module Store
 
     def to_bibliographic_citation(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:bib_cit] = clean_string(val)
+      @models[:medium][:bib_cit] = clean_string(field, val)
     end
 
     def to_media_name(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:name_verbatim] = clean_string(val)
+      @models[:medium][:name_verbatim] = clean_string(field, val)
       @process.debug("Set medium name_verbatim to #{@models[:medium][:name_verbatim]}") if field.debugging
       @models[:medium][:name] = sanitize(@models[:medium][:name_verbatim])
       @process.debug("Set medium name to #{@models[:medium][:name]}") if field.debugging
@@ -125,37 +125,37 @@ module Store
 
     def to_media_description(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:description_verbatim] = clean_string(val)
+      @models[:medium][:description_verbatim] = clean_string(field, val)
       @process.debug("Set medium description_verbatim to #{@models[:medium][:description_verbatim]}") if field.debugging
       @models[:medium][:description] = sanitize(@models[:medium][:description_verbatim])
       @process.debug("Set medium description to #{@models[:medium][:description]}") if field.debugging
     end
 
     # http://rs.tdwg.org/ac/terms/accessURI (where to fetch the media file)
-    def to_media_source_url(_, val)
+    def to_media_source_url(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:source_url] = clean_string(val)
+      @models[:medium][:source_url] = clean_string(field, val)
     end
 
     # http://rs.tdwg.org/ac/terms/furtherInformationURL (where the link accompanying the media object should point)
-    def to_media_source_page_url(_, val)
+    def to_media_source_page_url(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:source_page_url] = clean_string(val)
+      @models[:medium][:source_page_url] = clean_string(field, val)
     end
 
-    def to_media_owner(_, val)
+    def to_media_owner(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:owner] = clean_string(val)
+      @models[:medium][:owner] = clean_string(field, val)
     end
 
-    def to_media_rights_statement(_, val)
+    def to_media_rights_statement(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:rights_statement] = clean_string(val)
+      @models[:medium][:rights_statement] = clean_string(field, val)
     end
 
-    def to_media_usage_statement(_, val)
+    def to_media_usage_statement(field, val)
       @models[:medium] ||= {}
-      @models[:medium][:usage_statement] = clean_string(val)
+      @models[:medium][:usage_statement] = clean_string(field, val)
     end
 
     def to_media_ref_fks(field, val)
@@ -202,9 +202,13 @@ module Store
       @models[:location][:locality] = val
     end
 
-    def clean_string(val)
+    def clean_string(field, val)
       return nil if val.nil?
       return '' if val.blank?
+      if field.utf8_only?
+        # Stolen from https://stackoverflow.com/questions/16487697/how-to-remove-4-byte-utf-8-characters-in-ruby
+        val = val.each_char.select { |c| c.bytes.count < 4 }.join('')
+      end
       val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"\s*(.*)\s*\"$/, '\\1')
     end
 

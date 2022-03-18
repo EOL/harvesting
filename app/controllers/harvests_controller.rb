@@ -2,9 +2,12 @@ class HarvestsController < ApplicationController
   def show
     @harvest = Harvest.find(params[:id])
 
-    @logs = File.exist?(@harvest.resource.process_log_path) ?
-      File.readlines(@harvest.resource.process_log_path) :
+    @path = @harvest.resource.process_log_path
+    @logs = File.exist?(@path) ?
+      File.readlines(@path) :
       []
+    @lines = @logs&.size || 0
+    @logs = @logs[-1000..-1] if @lines > 1000
   end
 
   def destroy

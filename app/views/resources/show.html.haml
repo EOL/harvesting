@@ -15,7 +15,7 @@
       - else
         = t("unlocked")
 .ui.tiny.attached.menu
-  - if Delayed::Job.where(queue: 'harvest').where("handler LIKE '%resource_id: #{@resource.id}%'").any?
+  - if @resource.delayed_jobs.any?
     .item= t("resources.actions.harvest_in_queue")
   - elsif policy(@resource).update?
     .item
@@ -154,7 +154,7 @@
       .item= render('harvest_processes/show', process: process)
 - if last_harvest = @resource.harvests&.last
   %h2= "Last Harvest Content"
-  - media_count = last_harvest.media.count
+  - media_count = @resource.latest_media_count
   .ui.segment
     .ui.six.tiny.statistics
       .statistic
@@ -197,7 +197,7 @@
     #progress.ui.indicating.progress{ data: { value: @resource.downloaded_media_count, total: media_count } }
       .bar
         .progress
-      .label= t("resources.stats.downloaded_media_progress", count: ((@resource.downloaded_media_count / media_count.to_f) * 100).to_i)
+      .label= t("resources.stats.downloaded_media_progress", count: @resource.percent_downloaded_media)
 
 %h2= t(:resource_nodes_title)
 - if @resource.root_nodes_count.nil? || @resource.root_nodes_count.zero?

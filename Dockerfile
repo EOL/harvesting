@@ -1,8 +1,8 @@
-FROM ruby:2.6.5
+FROM ruby:2.6.8-bullseye
 MAINTAINER Jeremy Rice <jrice@eol.org>
 LABEL Description="EOL Harvester"
 
-ENV LAST_FULL_REBUILD 2021-02-17
+ENV LAST_FULL_REBUILD 2021-11-03
 
 # Install packages (note we update / clean up at the end of EACH run, because each gets an image)
 RUN apt-get update -q && \
@@ -43,6 +43,6 @@ RUN ln -s /tmp /app/tmp
 
 EXPOSE 3000
 
-ENTRYPOINT rake assets:precompile && rm -f /tmp/*.pid /tmp/*.sock && /usr/bin/supervisord
+ENTRYPOINT ["/bin/bash", "-c", "source /app/docker/.env && rake assets:precompile && rm -f /tmp/*.pid /tmp/*.sock && /usr/bin/supervisord"]
 
 CMD ["-c", "/etc/supervisord.conf"]

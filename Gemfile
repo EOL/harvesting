@@ -1,13 +1,13 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails"
-gem 'rails', '5.2.4.5'
+gem 'rails', '5.2.6'
 
 # "Interal" EOL gems:
 gem 'eol_terms', git: 'https://github.com/EOL/eol_terms.git', branch: 'main'
 
 # Because we are going to create many, many records!
-gem 'activerecord-import', '~> 1.0'
+gem 'activerecord-import', '~> 1.3'
 # Used when parsing URLs (was included in Rails 4, but not 5)
 gem 'addressable', '~> 2.8'
 # Acts As List simplifies ordered lists of models:
@@ -15,14 +15,14 @@ gem 'acts_as_list', '~> 1.0'
 # Parse Excel files:
 gem 'creek', '~> 2.5'
 # Required to run bin/delayed_job:
-gem 'daemons', '~> 1.3'
+gem 'daemons', '~> 1.4'
 # mem_cache_store needs this:
 gem 'dalli', '~> 2.7'
 # Background jobs:
-gem 'delayed_job', '~> 4.1.9'
+gem 'delayed_job', '~> 4.1'
 gem 'delayed_job_active_record', '~> 4.1'
 # Store users securely:
-gem 'devise', '~> 4.7'
+gem 'devise', '~> 4.8'
 # Enums with simple_form:
 gem 'enum_help', '~> 0.0'
 # Because ERB is just plain silly compared to Haml:
@@ -42,7 +42,7 @@ gem 'lograge', '~> 0.11'
 # Use mysql as the database for Active Record
 gem 'mysql2', '0.5.3'
 # Used in parsing XML for new resources:
-gem 'nokogiri', '~> 1.12'
+gem 'nokogiri', '~> 1.13'
 # Debugging:
 gem 'pry-rails', '~> 0.3'
 # Authorization:
@@ -54,8 +54,6 @@ gem 'sass-rails', '~> 6.0'
 # ElasticSearch:
 gem 'searchkick', '~> 4.4' # Depends on elasticsearch, which needs to be running our version.
 gem 'elasticsearch', '~> 6.8' # Needs to be in sync with the version of ES you are running.
-# bundle exec rake doc:rails generates the API under doc/api.
-gem 'sdoc', '~> 1.1'
 # Making forms simpler:
 gem 'simple_form', '~> 5.1'
 # Turbolinks makes following links in your web application faster. Read more:
@@ -66,7 +64,7 @@ gem 'uglifier', '~> 4.2'
 # Find (in order to remove) emoji in strings:
 gem 'emoji_regex', '~> 3.2'
 # Use Unicorn as the app server
-gem 'unicorn', '~> 5.8'
+gem 'unicorn', '~> 6.1'
 gem 'unicorn-worker-killer', '~> 0.4'
 # Our own crontab. Read https://github.com/javan/whenever foe details.
 gem 'whenever', '~> 1.0', require: false
@@ -82,7 +80,7 @@ end
 
 group :development do
   # Required after Rails 5 upgrade:
-  gem 'listen', '~> 3.4'
+  gem 'listen', '~> 3.7'
   # For benchmarking queries:
   gem 'meta_request', '~> 0.7'
   # Spring speeds up development by keeping your application running in the background. Read more:

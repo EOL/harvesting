@@ -6,7 +6,7 @@ class Resource
       end
 
       def reload(resource)
-        EolFileUtils.clear_resource_dir(resource) 
+        EolFileUtils.clear_resource_dir(resource)
         new(resource.opendata_url, resource).parse
       end
     end
@@ -37,7 +37,7 @@ class Resource
     def parse
       noko = noko_parse(@url)
       create_resource(noko) unless @resource
-      @process = LoggedProcess.new(@resource)
+      @process = @resource.logged_process
       @process.run_step('Creating resource from OpenData') do
         get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
         file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)

@@ -39,12 +39,7 @@ class Harvest < ApplicationRecord
   ]
 
   def download_media
-    if media.needs_download.count.zero?
-      resource.fix_downloaded_media_count
-      return
-    end
-    Medium.download_and_prep(media.needs_download.limit(25))
-    delay(queue: 'media').download_media
+    resource.enqueue_max_media_downloaders
   end
 
   def retry_failed_images
@@ -59,6 +54,8 @@ class Harvest < ApplicationRecord
     traits.where('measurement IS NOT NULL AND units_term_uri IS NOT NULL').find_each(&:convert_measurement)
   end
 
+  # NOTE: if you are reading this looking for a way to reset a job that was killed, don't use this, use
+  # @resourece.unlock
   def fail
     now = Time.now
     update_attributes(failed_at: now, completed_at: now)
@@ -130,7 +127,7 @@ class Harvest < ApplicationRecord
   def diff_size(format)
     file = diff_path(format) || format.get_from
     return 0 unless File.exist?(file)
-    `wc -l #{file}`.chomp
+    `wc -l #{file}`.chomp.split.first
   end
 
   def diff_parser(format)

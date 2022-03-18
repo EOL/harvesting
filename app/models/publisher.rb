@@ -101,7 +101,7 @@ class Publisher
     # TODO: add relationships for links
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
-                      .includes(:identifiers, :node_ancestors, :references,
+                      .includes(:identifiers, :node_ancestors, :references, :scientific_name, 
                                 vernaculars: [:language], scientific_names: [:dataset, :references],
                                 media: %i[node license language references bibliographic_citation location] <<
                                   { content_attributions: :attribution },
