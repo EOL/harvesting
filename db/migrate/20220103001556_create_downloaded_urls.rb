@@ -1,6 +1,6 @@
 class CreateDownloadedUrls < ActiveRecord::Migration[5.2]
-  def change
-    create_table :downloaded_urls do |t|
+  def change # utf8_unicode_ci
+    create_table :downloaded_urls, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
       t.integer :resource_id
       t.string :url, limit: 2083
       t.string :md5_hash, limit: 32
