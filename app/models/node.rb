@@ -76,26 +76,6 @@ class Node < ApplicationRecord
     }
   end
 
-  # json.ancestors node.
-  # id: 1,
-  # resource_id: 1,
-  # harvest_id: 1,
-  # page_id: 2913056,
-  # parent_id: null,
-  # scientific_name_id: 1,
-  # removed_by_harvest_id: null,
-  # landmark: "extended",
-  # canonical: "Life",
-  # taxonomic_status_verbatim: null,
-  # resource_pk: "-1",
-  # parent_resource_pk: null,
-  # further_information_url: null,
-  # rank: null,
-  # rank_verbatim: "clade",
-  # in_unmapped_area: false,
-  # created_at: "2017-11-22T21:40:56.000Z",
-  # updated_at: "2017-11-22T21:40:56.000Z"
-
   def as_json(*)
     super(only: %i[page_id parent_resource_pk in_unmapped_area resource_pk landmark rank],
           methods: %i[scientific_name source_url ancestors],
