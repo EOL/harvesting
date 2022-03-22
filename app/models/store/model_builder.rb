@@ -132,26 +132,27 @@ module Store
       prev = nil
       Rank.sort(@models[:ancestors].keys).each do |rank|
         @process.debug("Handling rank #{rank}") if @models[:debug]
-        ancestor_pk = @models[:ancestors][rank]
-        ancestry << ancestor_pk
+        ancestor_canonical = @models[:ancestors][rank]
+        ancestry << ancestor_canonical
         ancestry_joined = ancestry.join('->')
-        # NOTE: @nodes_by_ancestry is just a cache, to make sure we don't redefine things. The value is never used.
+        ancestor_pk = ancestry.join('/')
+        ancestor_pk = Digest::MD5.hexdigest("#{ancestor_pk}:#{ancestor_canonical}") if ancestor_pk.length > 255
+        # NOTE: @nodes_by_ancestry is just a cache of keys, to make sure we don't redefine things. The value is never
+        # used.
         if @nodes_by_ancestry.key?(ancestry_joined)
-          # Do nothing. We used to want to avoid dupes, but now I think it's okay as long as the IDs are different, and
-          # validations would have already checked that.
+          # Do nothing.
           @process.debug('ignoring duplicate node in ancestry') if @models[:debug]
         else # New ancestry...
           if @diff == :new
             @process.debug('new row, preparing node and name') if @models[:debug]
             model = { harvest_id: @harvest.id, resource_id: @resource.id, rank_verbatim: rank,
-                      parent_resource_pk: prev, resource_pk: ancestor_pk, canonical: ancestor_pk }
+                      parent_resource_pk: prev, resource_pk: ancestor_pk, canonical: ancestor_canonical }
             prepare_model_for_store(Node, model)
             name = { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
-                     verbatim: ancestor_pk, taxonomic_status_verbatim: 'HARVEST ANCESTOR', is_preferred: true }
+                     verbatim: ancestor_canonical, taxonomic_status_verbatim: 'HARVEST ANCESTOR', is_preferred: true }
             prepare_model_for_store(ScientificName, name)
           else
             @process.debug('old row, skipping') if @models[:debug]
-            # Node.find_by_resource_pk(ancestor_pk)
           end
           @nodes_by_ancestry[ancestry_joined] = true
         end
