@@ -188,7 +188,7 @@ class NamesMatcher
   def map_nodes(nodes)
     @@blank_canonical_warnings = 0
     nodes.each do |node|
-      map_if_needed(node)
+      safe_map_if_needed(node)
     end
   end
 
@@ -220,6 +220,15 @@ class NamesMatcher
       @process.warn("Too many blank canonical warnings. Did something go wrong with names_parser?")
     end
     true
+  end
+
+  def safe_map_if_needed(node)
+    begin
+      map_if_needed(node)
+    rescue => e # Yes, I know, bad form, but, really: anything could happen.
+      @process.warn("#{e.class} error mapping node #{node.id}")
+      raise e
+    end
   end
 
   def map_if_needed(node)
