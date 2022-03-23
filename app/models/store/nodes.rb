@@ -4,7 +4,7 @@ module Store
       @models[:node] ||= {}
       @models[:node][:resource_pk] = val
       # Set the scientific name's PK if we haven't already (this shouldn't happen often)
-      if @models.key?(:scientific_name) && @models[:scientific_name].key?(:verbatim)
+      if @models.key?(:scientific_name) && @models[:scientific_name]&.key?(:verbatim)
         @models[:scientific_name][:resource_pk] ||=
           "#{@models[:node][:resource_pk]}:#{@models[:scientific_name][:verbatim]}"
       end
@@ -51,7 +51,7 @@ module Store
       @models[:scientific_name][:verbatim] = name
       @models[:scientific_name][:resource_pk] ||= "#{name}"
       @models[:scientific_name][:resource_pk] = "#{@models[:node][:resource_pk]}:#{name}" if
-        @models[:node].key?(:resource_pk)
+        @models[:node]&.key?(:resource_pk)
     end
 
     def to_nodes_parent_fk(field, val)
