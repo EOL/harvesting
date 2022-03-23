@@ -148,8 +148,9 @@ module Store
             model = { harvest_id: @harvest.id, resource_id: @resource.id, rank_verbatim: rank,
                       parent_resource_pk: prev, resource_pk: ancestor_pk, canonical: ancestor_canonical }
             prepare_model_for_store(Node, model)
-            name = { resource_id: @resource.id, harvest_id: @harvest.id, node_resource_pk: ancestor_pk,
-                     verbatim: ancestor_canonical, taxonomic_status_verbatim: 'HARVEST ANCESTOR', is_preferred: true }
+            name = { resource_id: @resource.id, harvest_id: @harvest.id, resource_pk: ancestor_pk,
+                     node_resource_pk: ancestor_pk, verbatim: ancestor_canonical,
+                     taxonomic_status_verbatim: 'HARVEST ANCESTOR', is_preferred: true }
             prepare_model_for_store(ScientificName, name)
           else
             @process.debug('old row, skipping') if @models[:debug]
