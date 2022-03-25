@@ -299,7 +299,7 @@ class Resource < ApplicationRecord
   end
 
   def publish
-    Publisher.by_resource(self, logged_process)
+    Publisher.by_resource(self, logged_process, harvests.last)
   end
 
   # This is meant to be called manually.
