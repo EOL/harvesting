@@ -19,8 +19,7 @@
     .item= t("resources.actions.harvest_in_queue")
   - elsif policy(@resource).update?
     .item
-      - currently_harvesting = Delayed::Job.where(queue: 'harvest').where('locked_at IS NOT NULL').any? {|j| j.payload_object&.resource_id == @resource.id }
-      - if currently_harvesting
+      - if currently_harvesting?(@resource)
         .ui.text-capital= t("resources.actions.currently_harvesting")
       - else
         .ui.buttons
