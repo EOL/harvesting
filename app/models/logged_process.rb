@@ -111,12 +111,11 @@ class LoggedProcess
     tot_time
   end
 
-  # TODO: If we ever want a standard deviation elsewhere, we should generalize this...
   def std_dev(times)
     mean = times.sum / times.size
     sum = times.inject(0) { |accum, i| accum + (i - mean)**2 }
     sample_variance = (sum / (times.size - 1)).round(3)
-    Math.sqrt(sample_variance)
+    Math.sqrt(sample_variance).round(3)
   end
 
   def exit
