@@ -101,7 +101,7 @@ class Publisher
     # TODO: add relationships for links
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
-                      .includes(:identifiers, :node_ancestors, :references, :scientific_name, 
+                      .includes(:identifiers, :node_ancestors, :references, :scientific_name,
                                 vernaculars: [:language], scientific_names: [:dataset, :references],
                                 media: %i[node license language references bibliographic_citation location] <<
                                   { content_attributions: :attribution },
@@ -500,24 +500,36 @@ class Publisher
 
   def trait_map(node_ids)
     @traits = {}
+    count = 0
+    meta_count = 0
+    @process.info("Building Traits map (this can take a while)...")
     Trait.primary.published.matched.where(node_id: node_ids)
          .includes(:resource, :references, :meta_traits,
                    children: :references, occurrence: :occurrence_metadata,
                    node: :scientific_name).find_each do |trait|
+                     count += 1
+                     meta_count += trait.meta_traits.size if trait.meta_traits
+                     @process.info("#{count} traits mapped (#{meta_count} meta)...") if (count % 10_000).zero?
                      @traits[trait.id] = trait
                    end
-    @process.info("#{@traits.size} Traits (filtered)...")
+    @process.info("Done. #{count} traits mapped (#{meta_count} meta).")
   end
 
   def assoc_map(node_ids)
     @assocs = {}
+    count = 0
+    meta_count = 0
+    @process.info("Building Associations map (this can take a while)...")
     Assoc.published.where(node_id: node_ids)
          .includes(:references, :meta_assocs,
                    occurrence: :occurrence_metadata,
                    node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
+                     count += 1
+                     meta_count += assoc.meta_assocs.size if assoc.meta_assocs
+                     @process.info("#{count} assocs mapped (#{meta_count} meta)...") if (count % 10_000).zero?
                      @assocs[assoc.id] = assoc
                    end
-    @process.info("#{@assocs.size} Associations (filtered)...")
+    @process.info("Done. #{count} assocs mapped (#{meta_count} meta).")
   end
 
   def start_traits_file(filename, heads)
