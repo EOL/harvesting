@@ -81,15 +81,18 @@ class Publisher
       slurp_nodes
     end
     @process.info('Done. Check your files:')
-    @files.each_key do |file|
-      begin
-        sizes = `wc -l #{file}`
-      rescue Errno::ENOMEM
-        raise('OUT OF MEMORY. This is NOT a problem for this resource (really, it isn\'t), but means that you should '\
-              'have someone restart the containers!')
-      end
+    @files.each_key { |file| safely_log_file_size(file) }
+  end
+
+  def safely_log_file_size(file)
+    size = 0
+    begin
+      sizes = `wc -l #{file}`
       size = sizes.strip.split.first.to_i
       @process.info("(#{size} lines) #{file}")
+    rescue Errno::ENOMEM
+      raise('OUT OF MEMORY. This is NOT a problem for this resource (really, it isn\'t), but means that you should '\
+            'have someone restart the containers!')
     end
   end
 
