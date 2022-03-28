@@ -61,7 +61,6 @@ class Publisher
     @references = []
     @attributions = []
     @content_sections = []
-    # : all the other hashes, like links
     @same_sci_name_attributes =
       %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
          authorship publication remarks parse_quality year hybrid surrogate virus]
@@ -78,7 +77,7 @@ class Publisher
     @process.run_step('overall_tsv_creation') do
       learn_resource_publishing_id
       WebDb.init
-      slurp_nodes
+      create_tsv
     end
     @process.info('Done. Check your files:')
     @files.each_key { |file| safely_log_file_size(file) }
@@ -100,8 +99,7 @@ class Publisher
     @web_resource_id = WebDb.resource_id(@resource)
   end
 
-  def slurp_nodes
-    # TODO: add relationships for links
+  def create_tsv
     # TODO: ensure that all of the associations are only pulling in published results. :S
     @nodes = @resource.nodes.published
                       .includes(:identifiers, :node_ancestors, :references, :scientific_name,
@@ -133,7 +131,6 @@ class Publisher
       build_media(node)
       build_articles(node)
       build_vernaculars(node)
-      # TODO: links
     end
   end
 
@@ -280,9 +277,9 @@ class Publisher
     @pages[node.page_id].articles_count = node.articles.size
     @pages[node.page_id].referents_count = node.references.size
     # TODO: all of these 0s should be populated, once we have the associations included:
-    @pages[node.page_id].links_count = 0 # TODO
     @pages[node.page_id].maps_count = 0 # TODO
     # These are NOT used by our code, but are required by the database (and thus we avoid inserting nulls):
+    @pages[node.page_id].links_count = 0
     @pages[node.page_id].page_contents_count = 0
     @pages[node.page_id].species_count = 0
     @pages[node.page_id].is_extinct = 0
@@ -305,7 +302,7 @@ class Publisher
     @pages[node.page_id].vernaculars_count += node.vernaculars.size
     @pages[node.page_id].scientific_names_count += node.scientific_names.size
     @pages[node.page_id].referents_count += node.references.size
-    # TODO: add counts for links, maps
+    # TODO: add counts for maps
   end
 
   def build_identifiers(node)
