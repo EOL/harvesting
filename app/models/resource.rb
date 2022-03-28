@@ -29,7 +29,6 @@ class Resource < ApplicationRecord
 
   before_create :fix_abbr
   before_destroy :delete_trait_publish_files
-  #after_save :propagate_to_publishing
 
   acts_as_list
 
@@ -124,10 +123,6 @@ class Resource < ApplicationRecord
     def data_dir_path=(path)
       @data_dir_path = path
     end
-  end
-
-  def propagate_to_publishing
-    WebDb.update_resource(self) # NOTE: this WILL create it, if missing.
   end
 
   def complete

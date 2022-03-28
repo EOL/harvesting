@@ -76,7 +76,7 @@ class Publisher
 
   def by_resource
     @process.run_step('overall_tsv_creation') do
-      learn_resource_id
+      learn_resource_publishing_id
       WebDb.init
       slurp_nodes
     end
@@ -96,7 +96,7 @@ class Publisher
     end
   end
 
-  def learn_resource_id
+  def learn_resource_publishing_id
     @web_resource_id = WebDb.resource_id(@resource)
   end
 
