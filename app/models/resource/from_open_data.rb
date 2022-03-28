@@ -41,7 +41,7 @@ class Resource
       @process.run_step('Creating resource from OpenData') do
         get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
         file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
-        path = @resource.path(true)
+        path = @resource.path
         already_exists = File.exist?("#{path}/meta.xml") && @resource.formats.any?
         dir = DropDir.unpack_file(file)
         if already_exists
