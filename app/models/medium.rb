@@ -201,7 +201,7 @@ class Medium < ApplicationRecord
     begin
       raw = URI.open(sanitized_source_url, progress_proc: ->(size) { raise(IOError, 'too large') if size > 20.gigabytes })
     rescue URI::InvalidURIError => e
-      raise e if attempts.positive?
+      raise e if attempts&.positive?
       fix_encoding_for_sanitized_source_url
       attempts += 1
       retry

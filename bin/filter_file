@@ -13,7 +13,7 @@ comma_count = `grep -c "," #{ARGV[0]}`.chomp.to_i
 tab_count = `grep -c "\t" #{ARGV[0]}`.chomp.to_i
 null_count = `grep -c "\\x00" #{ARGV[0]}`.chomp.to_i
 sep = comma_count > tab_count ? ',' : "\t"
-quote = null_count.positive? || sep == "\t" ? "\x00" : '"'
+quote = null_count&.positive? || sep == "\t" ? "\x00" : '"'
 field = ARGV[1].dup
 div = field.sub!(/\.$/, '') ? /[;|]/ : nil
 CSV.foreach(ARGV[0], col_sep: sep, quote_char: quote, encoding: 'UTF-8') do |row|

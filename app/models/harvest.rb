@@ -132,7 +132,7 @@ class Harvest < ApplicationRecord
 
   def diff_parser(format)
     headers = nil
-    headers = format.fields.map(&:expected_header) if format.data_begins_on_line.positive?
+    headers = format.fields.map(&:expected_header) if format.data_begins_on_line&.positive?
     CsvParser.new(diff_path(format), headers: headers)
   end
 

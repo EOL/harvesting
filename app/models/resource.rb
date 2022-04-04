@@ -509,7 +509,7 @@ class Resource < ApplicationRecord
         sleep(0.5) # Being (moderately) nice.
       end while klass.where(harvest_id: harvest_ids).count > 0 && times < max_times
       raise "Failed to delete all of the #{klass} instances! Tried #{times}x#{batch_size} times." if
-        klass.where(harvest_id: harvest_ids).count.positive?
+        klass.where(harvest_id: harvest_ids).count&.positive?
       total_count
     end
     str = "[#{Time.now.strftime('%H:%M:%S.%3N')}] Removed #{count} #{klass.name.humanize.pluralize}"

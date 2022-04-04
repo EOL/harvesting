@@ -40,7 +40,7 @@ class NameParser
     count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count
     min_count_diff = 2
     previous_count = count + min_count_diff + 1 # This just fakes a pass the first time...
-    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count.positive?
+    while (count = ScientificName.where(harvest_id: @harvest.id, canonical: nil).count) && count&.positive?
       if count >= previous_count - min_count_diff
         @process.warn("Failed to parse enough new names (#{@attempts} attempts), stopping...")
         break

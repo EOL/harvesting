@@ -130,12 +130,12 @@ class ResourceHarvester
     @resource.reload
     each_format do
       fields = nil # scope.
-      if @format.header_lines.positive?
+      if @format.header_lines&.positive?
         col_checks = check_each_column
         expected_by_file = col_checks[:expected]
         fields = col_checks[:fields]
         raise(Exceptions::ColumnUnmatched, "TOO MANY COLUMNS: #{@format.represents}: #{expected_by_file.join(',')}") if
-          expected_by_file.size.positive?
+          expected_by_file&.size&.positive?
       else
         fields = {}
         @format.fields.each { |f| fields[f.expected_header] = f }
