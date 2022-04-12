@@ -19,8 +19,8 @@ class PublishDiff < ApplicationRecord
       if timestamps && timestamps.t1 && timestamps.t2
         self.create_with(status: :pending)
           .find_or_create_by!(
-            t1: timestamps.t1, 
-            t2: timestamps.t2, 
+            t1: timestamps.t1,
+            t2: timestamps.t2,
             resource: resource
           )
       else
@@ -44,9 +44,11 @@ class PublishDiff < ApplicationRecord
     def timestamps_from_files(resource, since_time)
       trait_files = Dir.glob('publish_traits*.tsv', base: resource.path)
 
-      return unless trait_files.any? # all paths stay nil, as they should -- this resource either doesn't have any traits or it hasn't been published yet
+      # all paths stay nil, as they should -- this resource either doesn't have any traits or it hasn't been harvested
+      # yet
+      return unless trait_files.any?
 
-      last_published_timestamp = nil
+      last_harvested_timestamp = nil
       most_recent_timestamp = nil
       earliest_timestamp = nil
 
@@ -64,19 +66,19 @@ class PublishDiff < ApplicationRecord
         end
 
         if (
-          (last_published_timestamp.nil? || timestamp > last_published_timestamp) &&
+          (last_harvested_timestamp.nil? || timestamp > last_harvested_timestamp) &&
           since_time.present? &&
           timestamp < since_time
         )
-          last_published_timestamp = timestamp
+          last_harvested_timestamp = timestamp
         end
       end
 
-      if last_published_timestamp.present? || most_recent_timestamp.present?
-        t1 = resource.can_perform_trait_diffs? ? last_published_timestamp : nil
+      if last_harvested_timestamp.present? || most_recent_timestamp.present?
+        t1 = resource.can_perform_trait_diffs? ? last_harvested_timestamp : nil
 
-        Timestamps.new(t1, most_recent_timestamp) 
-      else       
+        Timestamps.new(t1, most_recent_timestamp)
+      else
         nil
       end
     end
@@ -84,7 +86,7 @@ class PublishDiff < ApplicationRecord
     def timestamp_from_filename(filename)
       # format of timestamped file is publish_traits_<timestamp>.tsv
       parts = filename.split('.')[0].split('_')
-      
+
       if parts.length == 3
         parts[2].to_i
       else # assume non-timestamped file, e.g., legacy publish_traits.tsv
@@ -137,16 +139,16 @@ class PublishDiff < ApplicationRecord
     if File.exist?(publish_meta_path)
       CSV.open(new_metadata_path, 'wb', headers: Publisher::META_HEADS, write_headers: true) do |new_metas|
         CSV.foreach(publish_meta_path, headers: true) do |row|
-          # is_external metadata are always 'new' -- there's no notion of diffs for them. 
+          # is_external metadata are always 'new' -- there's no notion of diffs for them.
           # Assume client will remove all existing before republish.
           if new_pks.include?(row['trait_eol_pk']) || row['is_external'] == 'true'
-            new_metas << row 
+            new_metas << row
             any_new_metas = true
           end
         end
       end
     end
-    
+
     if new_pks.any?
       self.new_traits_path = new_traits_path
     elsif File.exist?(new_traits_path)
@@ -156,7 +158,7 @@ class PublishDiff < ApplicationRecord
     if any_new_metas
       self.new_metadata_path = new_metadata_path
     elsif File.exist?(new_metadata_path)
-      FileUtils.rm(new_metadata_path) 
+      FileUtils.rm(new_metadata_path)
     end
 
     self.status = :completed

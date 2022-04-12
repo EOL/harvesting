@@ -234,7 +234,7 @@ class InitialContent < ActiveRecord::Migration[4.2]
 
     create_join_table :links, :sections
 
-    # There are currently 1,084,941 published data objects with a non-empty
+    # There are currently 1,084,941 harvested data objects with a non-empty
     # citation, out of 7,785,934 objects. Of those, there is a lot of
     # duplication, so I'm making this its own table.
     #

@@ -532,7 +532,7 @@
 "submapping":null,
 "is_unique":false,
 "is_required":false},
-{"term":"http://rs.tdwg.org/dwc/terms/namePublishedIn",
+{"term":"http://rs.tdwg.org/dwc/terms/nameharvestedIn",
 "for_format":"nodes",
 "represents":"to_nodes_publication",
 "submapping":null,

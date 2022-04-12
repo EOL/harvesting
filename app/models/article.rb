@@ -16,5 +16,5 @@ class Article < ApplicationRecord
   has_many :articles_sections
   has_many :sections, through: :articles_sections
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 end

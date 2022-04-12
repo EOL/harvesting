@@ -242,13 +242,13 @@ en:
       media_pids: "Media PIDs:"
       no_harvest: "No harvests (yet)."
       most_recent_harvest: "Most recent harvest:"
-    publish_status:
+    harvest_status:
       deprecated: "deprecated (will never harvest)"
       harvest_pending: "pending"
       nil: "never harvested"
-      published: "harvested"
+      harvested: "harvested"
       publishing: "harvesting (incomplete)"
-      unpublished: "unharvested"
+      unharvested: "unharvested"
       updated_files: "new files!"
       removing_content: "REMOVING CONTENT!"
     stats:

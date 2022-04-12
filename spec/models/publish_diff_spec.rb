@@ -84,7 +84,7 @@ RSpec.describe PublishDiff, type: :model do
         end
       end
 
-      context 'when there is a non-timestamped published_traits.tsv file present' do
+      context 'when there is a non-timestamped harvested_traits.tsv file present' do
         context 'when it is the only file' do
           let(:trait_path) { resource_dir.join('publish_traits.tsv') }
 

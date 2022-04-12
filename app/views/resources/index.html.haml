@@ -83,8 +83,8 @@
         %i.large.file.middle.aligned.icon
         .content
           .header= link_to(resource.name, resource)
-          - if resource.publish_status
-            .description= t("resources.publish_status.#{resource.publish_status}")
+          - if resource.harvest_status
+            .description= t("resources.harvest_status.#{resource.harvest_status}")
   %p= paginate(@resources)
 - if user_signed_in?
   .ui.section

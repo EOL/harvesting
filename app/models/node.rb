@@ -23,7 +23,7 @@ class Node < ApplicationRecord
   has_many :children, class_name: 'Node', foreign_key: :parent_id, inverse_of: :parent
 
   scope :root, -> { where('parent_id IS NULL') }
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 
   # NOTE: special scope used by Searchkick
   scope :search_import, -> {

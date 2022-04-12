@@ -5,5 +5,5 @@ class MetaTrait < ApplicationRecord
   belongs_to :harvest, inverse_of: :meta_traits
   belongs_to :trait, inverse_of: :meta_traits
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 end

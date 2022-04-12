@@ -9,5 +9,5 @@ class Occurrence < ApplicationRecord
   has_many :assocs, inverse_of: 'occurrence'
   has_many :occurrence_metadata, inverse_of: :occurrence # NOTE: ooof. As of May 2018, this is SLOOOOW. Index?
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 end

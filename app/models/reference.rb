@@ -10,5 +10,5 @@ class Reference < ApplicationRecord
   has_many :articles, through: :articles_references
   has_many :nodes, through: :nodes_references
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 end

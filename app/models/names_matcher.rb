@@ -61,6 +61,12 @@ class NamesMatcher
     @root_nodes = []
     @node_updates = []
     @species_or_lower = {}
+    @resource_page_ids = {}
+    if @resource.native? || @resource.might_have_duplicate_taxa
+      # NOTE this hash could potentially have millions of keys, so it's a memory-hog, but... until that breaks, it's a
+      # lot faster than querying the DB every time! (It's also not *likely* to be that large.)
+      @resource_page_ids = @resource.nodes.where('page_id IS NOT NULL').selects('id, page_id').index_by(:page_id)
+    end
     Rank.species_or_lower.each { |rank| @species_or_lower[rank] = true }
     @explain = options[:explain]
     @should_update = options.key?(:update) ? options[:update] : true
@@ -163,7 +169,7 @@ class NamesMatcher
   end
 
   def start
-    @root_nodes = @resource.nodes.published.includes(:scientific_name).where(harvest_id: @harvest.id).root
+    @root_nodes = @resource.nodes.harvested.includes(:scientific_name).where(harvest_id: @harvest.id).root
     @have_names = Harvest.completed.any?
     begin
       @process.run_step('map_all_nodes_to_pages') { map_all_nodes_to_pages(@root_nodes) }
@@ -397,7 +403,12 @@ class NamesMatcher
 
   def save_match(node, page_id, message = nil)
     @logs << message if message
+    if @resource.native? || @resource.might_have_duplicate_taxa
+      unmapped(node, "The resource already has a node with page_id #{page_id}, reassigning.") if
+        @resource_page_ids.key?(page_id)
+    end
     # NOTE: only grabbing the end of the matching log, if it's too long...
+    @resource_page_ids[page_id] = true
     node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_500..-1])
     update_node(node)
     tick_progress
@@ -414,6 +425,7 @@ class NamesMatcher
       in_unmapped_area: @in_unmapped_area,
       matching_log: @logs.join('; ')[-65_500..-1]
     )
+    @resource_page_ids[new_page_id] = true
     update_node(node)
     tick_progress
   end

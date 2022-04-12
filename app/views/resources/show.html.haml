@@ -70,10 +70,10 @@
         = months.join(", ")
     .item
       %strong= "Harvesting Status:"
-      - if @resource.publish_status.nil?
-        = t("resources.publish_status.nil")
+      - if @resource.harvest_status.nil?
+        = t("resources.harvest_status.nil")
       - else
-        = t("resources.publish_status.#{@resource.publish_status}")
+        = t("resources.harvest_status.#{@resource.harvest_status}")
     - if @resource.nodes_count
       .item
         %strong= "Nodes:"
@@ -89,7 +89,7 @@
     - if @resource.auto_publish?
       "This resource will auto-publish after harvesting."
     - else
-      "This resource will NOT be published after harvesting. It must be published manually."
+      "This resource will NOT be harvested after harvesting. It must be harvested manually."
     .item
       %strong= "Trusted:"
       = @resource.not_trusted? ? "No." : "Yes."

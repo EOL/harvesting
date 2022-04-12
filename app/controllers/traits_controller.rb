@@ -5,7 +5,7 @@ class TraitsController < ApplicationController
     @resource = Resource.find(params[:resource_id])
     # NOTE: you may want to add to these terms later!
     @traits = prep_for_api(
-      @resource.traits.primary.published.matched
+      @resource.traits.primary.harvested.matched
                .includes(:references, :children, :meta_traits,
                          occurrence: :occurrence_metadata,
                          node: :scientific_name)

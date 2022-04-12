@@ -5,5 +5,5 @@ class MetaAssoc < ApplicationRecord
   belongs_to :harvest, inverse_of: :meta_assocs
   belongs_to :assoc, inverse_of: :meta_assocs
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 end

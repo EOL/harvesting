@@ -54,7 +54,7 @@ class ResourceHarvester
     @harvest = @resource.harvests.last
     @harvest.incomplete
     @previous_harvest = @resource.harvests.complete_non_failed[-2] if @harvest == @previous_harvest
-    @resource.publishing!
+    @resource.harvesting!
     @harvest.update_attribute(:failed_at, nil)
   end
 

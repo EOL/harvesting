@@ -15,7 +15,7 @@ class Trait < ApplicationRecord
   has_many :traits_references, inverse_of: :trait
   has_many :references, through: :traits_references
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
   scope :primary, -> { where(of_taxon: true) }
   scope :matched, -> { where('node_id IS NOT NULL') }
   scope :unmatched, -> { where('node_id IS NULL') }

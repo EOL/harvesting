@@ -33,7 +33,7 @@ class Flattener
   def study_resource
     @process.starting('Flattener#study_resource')
     @children = {}
-    Node.where(resource_id: @resource.id).published.pluck_in_batches(:id, :parent_id) do |batch|
+    Node.where(resource_id: @resource.id).harvested.pluck_in_batches(:id, :parent_id) do |batch|
       batch.each do |row|
         entry = row.first
         parent = row.last

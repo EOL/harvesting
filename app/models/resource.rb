@@ -23,9 +23,7 @@ class Resource < ApplicationRecord
   has_many :references, inverse_of: :resource
   has_many :harvest_processes, inverse_of: :resource, dependent: :destroy
 
-  # TODO: oops, this should be HARVEST, not PUBLISH... NOTE that there is a call to resource.published! so search for
-  # it. Also translations in en.yml
-  enum publish_status: %i[unpublished publishing published deprecated updated_files harvest_pending removing_content]
+  enum harvest_status: %i[unharvested harvesting harvested deprecated updated_files harvest_pending removing_content]
 
   before_create :fix_abbr
   before_destroy :delete_trait_publish_files
@@ -36,17 +34,12 @@ class Resource < ApplicationRecord
     attr_reader :logfile_name, :lockfile_name, :unmatched_file_name, :media_download_batch_size
 
     def native
-      Rails.cache.fetch('resources/harvested_dynamic_hierarchy_1_1') do
-        Resource.where(abbr: 'dvdtg').first_or_create do |r|
-          r.name = 'EOL Dynamic Hierarchy 1.1'
-          r.partner = nil
-          r.description = ''
-          r.abbr = 'dvdtg'
-          r.is_browsable = true
-          r.might_have_duplicate_taxa = false
-          r.nodes_count = 650000
-        end
-      end
+      # Note this CLASS method will return the FIRST resource flagged as native! That's hugely important. As we add new
+      # ones, we'll use the old until the flag is flipped back to false. That's intentional: you'll need to continue to
+      # use the "old" native resource (via Resource.native) for mathing of the new one, and yet you STILL need to know
+      # that the new one WILL be "native" (via resource_instance.native?); both logics are used in names_matcher, for
+      # example.
+      find_by_native(true)
     end
 
     def quick_define(options)
@@ -126,12 +119,8 @@ class Resource < ApplicationRecord
   end
 
   def complete
-    published!
-    update_attributes(nodes_count: Node.where(resource_id: id).count, root_nodes_count: nodes.root.published.count)
-  end
-
-  def native?
-    id == Resource.native.id?
+    harvested!
+    update_attributes(nodes_count: Node.where(resource_id: id).count, root_nodes_count: nodes.root.harvested.count)
   end
 
   def delayed_jobs
@@ -368,7 +357,7 @@ class Resource < ApplicationRecord
   def fix_downloaded_media_count
     reset_undownloaded_enqueued_at_times
     update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
-    update_attribute(:failed_downloaded_media_count, media.published.failed_download.count)
+    update_attribute(:failed_downloaded_media_count, media.harvested.failed_download.count)
   end
 
   def reset_undownloaded_enqueued_at_times
@@ -415,7 +404,7 @@ class Resource < ApplicationRecord
   def no_more_images_to_download
     msg = 'NO additional images were found to download'
     fix_downloaded_media_count
-    if count = media.published.failed_download.count && count.positive?
+    if count = media.harvested.failed_download.count && count.positive?
       msg += ", NOTE THAT #{count} DOWNLOADS FAILED."
     end
     log_error(msg)
@@ -432,7 +421,7 @@ class Resource < ApplicationRecord
   end
 
   def undownloaded_media_count
-    media.published.needs_download.count
+    media.harvested.needs_download.count
   end
 
   # ------ END MEDIA DOWNLOAD RELATED METHODS ---^
@@ -458,7 +447,7 @@ class Resource < ApplicationRecord
     remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
     harvests.destroy_all
     delayed_jobs.delete_all
-    unpublished!
+    unharvested!
   end
 
   def remove_from_searchkick

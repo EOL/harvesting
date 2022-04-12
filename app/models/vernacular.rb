@@ -4,5 +4,5 @@ class Vernacular < ApplicationRecord
   belongs_to :node, inverse_of: :vernaculars
   belongs_to :language
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 end

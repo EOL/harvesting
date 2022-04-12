@@ -37,7 +37,7 @@ Resource.quick_define(
       { 'scientificNameAuthorship' => 'to_ignored' },
       { 'scientificNameID' => 'to_nodes_identifiers' },
       { 'taxonRemarks' => 'to_nodes_remarks' },
-      { 'namePublishedIn' => 'to_nodes_publication' },
+      { 'nameharvestedIn' => 'to_nodes_publication' },
       { 'furtherInformationURL' => 'to_nodes_further_information_url' },
       { 'datasetID' => 'to_nodes_dataset_id' },
       { 'EOLid' => 'to_nodes_page_id' },
@@ -139,7 +139,7 @@ sheet2_nodes: [
   'FurtherInformationURL http://rs.tdwg.org/ac/terms/furtherInformationURL', # to_nodes_further_information_url
   'TaxonomicStatus http://rs.tdwg.org/dwc/terms/taxonomicStatus', # to_taxonomic_status
   'TaxonRemarks http://rs.tdwg.org/dwc/terms/taxonRemarks', # to_nodes_remarks
-  'NamePublishedIn http://rs.tdwg.org/dwc/terms/namePublishedIn', # to_nodes_publication
+  'NameharvestedIn http://rs.tdwg.org/dwc/terms/nameharvestedIn', # to_nodes_publication
   'ReferenceID http://eol.org/schema/reference/referenceID' #to_nodes_ref_fks
 ],
 sheet3_names: [
@@ -314,7 +314,7 @@ end
 Field.where(format_id: fmt.id, position: 14).first_or_create do |f|
   f.format_id = fmt.id
   f.position = 14
-  f.expected_header = 'NamePublishedIn'
+  f.expected_header = 'NameharvestedIn'
   f.mapping = 'to_nodes_publication'
 end
 
@@ -389,7 +389,7 @@ Resource.quick_define(
       { 'referenceID' => 'to_ignored' },
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },
       { 'scientificName' => 'to_nodes_scientific', can_be_empty: false },
-      { 'namePublishedIn' => 'to_ignored' },
+      { 'nameharvestedIn' => 'to_ignored' },
       { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
       { 'class' => 'to_nodes_ancestor', submapping: 'class' },
       { 'order' => 'to_nodes_ancestor', submapping: 'order' },
@@ -686,7 +686,7 @@ Resource.quick_define(
       { 'referenceID' => 'to_ignored' }, # unused in this resource.
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },
       { 'scientificName' => 'to_nodes_scientific' },
-      { 'namePublishedIn' => 'to_nodes_publication' },
+      { 'nameharvestedIn' => 'to_nodes_publication' },
       { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
       { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
       { 'class' => 'to_nodes_ancestor', submapping: 'class' },
@@ -790,7 +790,7 @@ Resource.quick_define(
       { 'referenceID' => 'to_nodes_ref_fks', submapping: ';' },
       { 'parentNameUsageID' => 'to_nodes_parent_fk' },
       { 'scientificName' => 'to_nodes_scientific' },
-      { 'namePublishedIn' => 'to_nodes_publication' },
+      { 'nameharvestedIn' => 'to_nodes_publication' },
       { 'kingdom' => 'to_nodes_ancestor', submapping: 'kingdom' },
       { 'phylum' => 'to_nodes_ancestor', submapping: 'phylum' },
       { 'class' => 'to_nodes_ancestor', submapping: 'class' },

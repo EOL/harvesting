@@ -11,7 +11,7 @@ class ScientificName < ApplicationRecord
   # https://docs.google.com/spreadsheets/d/1qgjUrFQQ8JHLtcVcZK7ClV3mlcZxxObjb5SXkr5FAUUqrr
   enum taxonomic_status: TaxonomicStatus.types
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
   scope :used_for_merges, -> { where(is_used_for_merges: true) }
 
   # We discovered that about 40 resources were affected by a bug where the #scientific_name attribute of a Node could be

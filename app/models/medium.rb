@@ -31,7 +31,7 @@ class Medium < ApplicationRecord
     webm: 11
   }
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
   scope :missing, -> { where('base_url IS NULL') }
   scope :needs_download, -> { where(downloaded_at: nil, enqueued_at: nil) }
   scope :failed_download, -> { where('downloaded_at IS NOT NULL AND base_url IS NULL') }

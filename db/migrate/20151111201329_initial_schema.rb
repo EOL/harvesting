@@ -52,7 +52,7 @@ class InitialSchema < ActiveRecord::Migration[4.2]
       t.string :default_rights_statement, limit: 300, comment: "was: rights_statement"
       t.text :default_rights_holder, comment: "was: rights_holder"
 
-      t.integer :publish_status, comment: "enum: unpublished, publishing, published, deprecated"
+      t.integer :harvest_status, comment: "enum: unharvested harvesting harvested deprecated updated_files harvest_pending removing_content"
 
       t.integer :dataset_license_id, comment: "applies to the set of data itself (not its individual members)"
       t.string :dataset_rights_holder, comment: "applies to the set of data itself (not its individual members)"

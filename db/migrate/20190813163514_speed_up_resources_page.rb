@@ -10,7 +10,7 @@ class SpeedUpResourcesPage < ActiveRecord::Migration[4.2]
                                 scientific_names_count: ScientificName.where(harvest_id: harvest.id).count)
     end
     Resource.find_each do |resource|
-      resource.update_attribute(:root_nodes_count, resource.nodes.root.published.count)
+      resource.update_attribute(:root_nodes_count, resource.nodes.root.harvested.count)
     end
   end
 end

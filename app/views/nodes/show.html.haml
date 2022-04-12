@@ -99,39 +99,39 @@
               .header= t('nodes.fields.name_taxonomic_status')
               = name.taxonomic_status
 %h2= t('nodes.fields.vernaculars')
-- if @node.vernaculars.published.empty?
+- if @node.vernaculars.harvested.empty?
   %strong= t(:node_vernaculars_empty_notice)
 - else
   = t('nodes.fields.vernaculars')
   %ul
-    - @node.vernaculars.published.each do |vern|
+    - @node.vernaculars.harvested.each do |vern|
       %li
         = vern.verbatim
         = "(#{vern.language_code_verbatim} &rarr; #{vern.language.code})".html_safe
 %h2= t('nodes.headers.children')
-- if @node.children.published.empty?
+- if @node.children.harvested.empty?
   = t('nodes.empty_fields.children')
 - else
   %ul
-    - @node.children.published.each do |child|
+    - @node.children.harvested.each do |child|
       %li= link_to(child.title, child)
 
 %h2= t('nodes.headers.media')
-- if @node.media.published.empty?
+- if @node.media.harvested.empty?
   = t('nodes.empty_fields.media')
 - else
   %ul
-    - @node.media.published.each do |medium|
+    - @node.media.harvested.each do |medium|
       %li
         = link_to(medium.name_verbatim || truncate(medium.description_verbatim, length: 20), medium)
         = "(#{medium.format})"
 
 %h2= t('nodes.headers.traits')
-- if @node.traits.published.empty?
+- if @node.traits.harvested.empty?
   = t('nodes.empty_fields.traits')
 - else
   .ui.list
-    - @node.traits.published.each do |trait|
+    - @node.traits.harvested.each do |trait|
       .item
         = trait.predicate_term.name
         = "(#{trait.predicate_term_uri})"
@@ -147,11 +147,11 @@
           (literal value)
 
 %h2= t('nodes.headers.assocs')
-- if @node.assocs.published.empty?
+- if @node.assocs.harvested.empty?
   = t('nodes.empty_fields.assocs')
 - else
   .ui.list
-    - @node.assocs.published.each do |assoc|
+    - @node.assocs.harvested.each do |assoc|
       .item
         = assoc.predicate_term.name
         = "(#{assoc.predicate_term_uri})"

@@ -13,7 +13,7 @@ class ResourcesController < ApplicationController
   def index
     params[:per_page] ||= 50
     @resources = Resource.order(:name).includes([:partner])
-    @resources = @resources.where(publish_status: Resource.publish_statuses[:published]) unless params[:all]
+    @resources = @resources.where(harvest_status: Resource.harvest_statuses[:harvested]) unless params[:all]
     params[:per_page] = 15 if request.format.html?
     @resources = prep_for_api(@resources, updated: true)
     respond_to do |fmt|
@@ -27,7 +27,7 @@ class ResourcesController < ApplicationController
     @formats = Format.where(resource_id: @resource.id)
     respond_to do |fmt|
       fmt.html do
-        @root_nodes = @resource.nodes.published.root.order('canonical, resource_pk').page(params[:page] || 1)
+        @root_nodes = @resource.nodes.harvested.root.order('canonical, resource_pk').page(params[:page] || 1)
                                .per(params[:per] || 10)
       end
       # TODO: add the "since" param...

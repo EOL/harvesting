@@ -124,7 +124,7 @@ module Store
 
     # TODO: an UPDATE of this type might be trickier to handle than I have here. e.g.: The only change on this row was
     # to set "Karninvora" to "Carnivora"; we do not unpublish "Karnivora" (rightly, because we don't know whether it's
-    # actually used elsewhere), so it will still exist and still be published and will still have children that it
+    # actually used elsewhere), so it will still exist and still be harvested and will still have children that it
     # shouldn't. But, as mentioned, this is a difficult case to detect.
     def build_ancestors
       @process.debug('#build_ancestors') if @models[:debug]

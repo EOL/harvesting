@@ -628,7 +628,7 @@ ActiveRecord::Schema.define(version: 2021_07_26_201047) do
     t.integer "default_license_id"
     t.string "default_rights_statement", limit: 300
     t.text "default_rights_holder"
-    t.integer "publish_status"
+    t.integer "harvest_status"
     t.integer "dataset_license_id"
     t.string "dataset_rights_holder"
     t.string "dataset_rights_statement"

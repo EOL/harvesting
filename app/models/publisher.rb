@@ -100,8 +100,8 @@ class Publisher
   end
 
   def create_tsv
-    # TODO: ensure that all of the associations are only pulling in published results. :S
-    @nodes = @resource.nodes.published
+    # TODO: ensure that all of the associations are only pulling in harvested results. :S
+    @nodes = @resource.nodes.harvested
                       .includes(:identifiers, :node_ancestors, :references, :scientific_name,
                                 vernaculars: [:language], scientific_names: [:dataset, :references],
                                 media: %i[node license language references bibliographic_citation location] <<
@@ -473,7 +473,7 @@ class Publisher
     start_traits_file(meta_file, META_HEADS)
 
     # metadata (child Traits) with parent Traits from resources other than the current one (specified by parent_eol_pk)
-    external_trait_metas = @resource.traits.published
+    external_trait_metas = @resource.traits.harvested
       .includes(:parent, :references)
       .where('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
 
@@ -503,7 +503,7 @@ class Publisher
     count = 0
     meta_count = 0
     @process.info("Building Traits map (this can take a while)...")
-    Trait.primary.published.matched.where(node_id: node_ids)
+    Trait.primary.harvested.matched.where(node_id: node_ids)
          .includes(:resource, :references, :meta_traits,
                    children: :references, occurrence: :occurrence_metadata,
                    node: :scientific_name).find_each do |trait|
@@ -520,7 +520,7 @@ class Publisher
     count = 0
     meta_count = 0
     @process.info("Building Associations map (this can take a while)...")
-    Assoc.published.where(node_id: node_ids)
+    Assoc.harvested.where(node_id: node_ids)
          .includes(:references, :meta_assocs,
                    occurrence: :occurrence_metadata,
                    node: :scientific_name, target_node: :scientific_name).find_each do |assoc|

@@ -46,12 +46,12 @@ class TaxonomicStatus
       'subsequent name/combination',
       'superfluous renaming (illegitimate)',
       'synonym',
-      'invalidly published',
+      'invalidly harvested',
       'nomen oblitum',
       'unavailable',
       'unjustified emendation',
       'unnecessary replacement',
-      'unpublished',
+      'unharvested',
       'invalid',
       'genus synonym',
       'alternate representation',
@@ -78,7 +78,7 @@ class TaxonomicStatus
   @regexes = {
     /^orthographic variant.*/ => 'orthographic variant',
     /^synonym.*/ => 'synonym',
-    /^invalidly published.*/ => 'invalidly published',
+    /^invalidly harvested.*/ => 'invalidly harvested',
     /^unavailable.*/ => 'unavailable'
   }
 

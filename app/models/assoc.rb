@@ -15,7 +15,7 @@ class Assoc < ApplicationRecord
   has_many :assocs_references, inverse_of: :assoc
   has_many :references, through: :assocs_references
 
-  scope :published, -> { where(removed_by_harvest_id: nil) }
+  scope :harvested, -> { where(removed_by_harvest_id: nil) }
 
   # These are used during the CSV-writing stage of pre-publishing (copied from Trait)
   attr_accessor :sample_size, :citation, :remarks, :method
