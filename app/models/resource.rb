@@ -201,17 +201,18 @@ class Resource < ApplicationRecord
     path.join("#{name}.tsv")
   end
 
-  def path(make_if_missing = true)
+  def path
     return @path if @path
+    raise "Illegal abbreviation, blank is NOT allowed!" if abbr.blank?
+    FileUtils.mkdir_p(path) unless File.exist?(path)
     @path = self.class.data_dir_path.join(abbr.gsub(/\s+/, '_'))
-    unless File.exist?(@path)
-      if make_if_missing
-        FileUtils.mkdir_p(@path)
-      else
-        raise "MISSING RESOURCE DIR (#{@path})!"
-      end
-    end
     @path
+  end
+
+  def format_path(format, subdir, ext)
+    subdir = path.join(subdir)
+    FileUtils.mkdir_p(subdir) unless File.exist?(subdir)
+    path.join(subdir, "#{resource.abbr}_#{format.represents}_#{id}.#{ext}")
   end
 
   def process_log

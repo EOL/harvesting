@@ -28,6 +28,7 @@ spec/files/*diff
 # Created when processing resources:
 public/data
 public/data/*
+# This is old, but I'm keeping it just to make sure old files aren't included:
 public/diff/*
 public/converted_csv/*
 

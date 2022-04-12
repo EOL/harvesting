@@ -121,7 +121,7 @@ class Harvest < ApplicationRecord
   end
 
   def converted_csv_path(format)
-    special_path(format, 'converted_csv', 'csv')
+    resource.format_path(format, 'converted_csv', 'csv')
   end
 
   def diff_size(format)
@@ -137,7 +137,7 @@ class Harvest < ApplicationRecord
   end
 
   def diff_path(format)
-    special_path(format, 'diff', 'diff')
+    resource.format_path(format, 'diff', 'diff')
   end
 
   def trait_filename
@@ -148,7 +148,4 @@ class Harvest < ApplicationRecord
 
 private
 
-  def special_path(format, subdir, ext)
-    Rails.public_path.join(subdir, "#{resource.abbr}_#{format.represents}_#{id}.#{ext}")
-  end
 end

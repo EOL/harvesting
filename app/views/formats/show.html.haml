@@ -51,6 +51,7 @@
               .header
                 = "#{field.position}."
                 = field.expected_header
+                = "(#{field.id})"
                 \&rarr;
                 - unless field.mapping.blank?
                   = field.mapping
