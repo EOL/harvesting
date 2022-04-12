@@ -5,27 +5,7 @@ Dir.glob("#{diff_path}/*.diff").each { |file| File.unlink(file) }
 
 Rails.cache.clear
 License.public_domain
-
-file = Rails.root.join('db', 'data', 'datasets.csv')
-if File.exist?(file)
-  puts '.. Importing datasets'
-  datasets = []
-  headers = nil
-  CSV.foreach(file, encoding: 'UTF-8') do |row|
-    if headers.nil?
-      headers = row
-    else
-      data = {}
-      row.each_with_index do |field, i|
-        data[headers[i]] = field
-      end
-      datasets << data
-    end
-  end
-  Dataset.import(datasets)
-else
-  puts "NO datasets file found (#{file}), skipping. Your names attributions may be missing."
-end
+Dataset.import_csv
 
 eol_attrs = {
   name: 'Encyclopedia of Life',
