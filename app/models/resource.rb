@@ -88,12 +88,6 @@ class Resource < ApplicationRecord
       resource
     end
 
-    def change_abbr(new_abbr)
-      old_path = path
-      resource.update_attribute(:abbr, new_abbr)
-      FileUtils.mv(old_path, path, :force => true)
-    end
-
     def from_xml(loc)
       Resource::FromMetaXml.by_path(loc)
     end
@@ -122,6 +116,12 @@ class Resource < ApplicationRecord
     def data_dir_path=(path)
       @data_dir_path = path
     end
+  end
+
+  def change_abbr(new_abbr)
+    old_path = path
+    resource.update_attribute(:abbr, new_abbr)
+    FileUtils.mv(old_path, path, :force => true)
   end
 
   def complete
