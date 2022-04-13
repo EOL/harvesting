@@ -25,6 +25,7 @@ class Resource < ApplicationRecord
 
   enum harvest_status: %i[unharvested harvesting harvested deprecated updated_files harvest_pending removing_content]
 
+  before_save :move_files, if: :abbr_changed?
   before_create :fix_abbr
   before_destroy :delete_trait_publish_files
 
@@ -86,6 +87,12 @@ class Resource < ApplicationRecord
         end
       end
       resource
+    end
+
+    def change_abbr(new_abbr)
+      old_path = path
+      resource.update_attribute(:abbr, new_abbr)
+      FileUtils.mv(old_path, path, :force => true)
     end
 
     def from_xml(loc)

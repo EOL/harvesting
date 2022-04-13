@@ -99,6 +99,10 @@ class ResourcesController < ApplicationController
   def update
     @resource = Resource.find(params[:id])
     log_auth(@resource)
+    # Abbr is special: it causes the files to move. It needs to be handled on its own:
+    if resource_params.key?('abbr') && resource_params['abbr'] != @resource.abbr
+      @resource.change_abbr(resource_params['abbr'])
+    end
     if @resource.update(resource_params)
       resp = WebDb.update_resource(@resource)
       flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
