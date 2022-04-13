@@ -193,8 +193,8 @@ class Resource < ApplicationRecord
   def path
     return @path if @path
     raise "Illegal abbreviation, blank is NOT allowed!" if abbr.blank?
-    FileUtils.mkdir_p(path) unless File.exist?(path)
     @path = self.class.data_dir_path.join(abbr.gsub(/\s+/, '_'))
+    FileUtils.mkdir_p(@path) unless File.exist?(@path)
     @path
   end
 
