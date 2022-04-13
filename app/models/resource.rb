@@ -121,7 +121,7 @@ class Resource < ApplicationRecord
   def change_abbr(new_abbr)
     old_path = path
     update_attribute(:abbr, new_abbr)
-    FileUtils.mv(old_path, path, :force => true)
+    `mv -rf #{old_path}/* #{path}`
   end
 
   def complete
