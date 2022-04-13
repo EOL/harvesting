@@ -25,7 +25,6 @@ class Resource < ApplicationRecord
 
   enum harvest_status: %i[unharvested harvesting harvested deprecated updated_files harvest_pending removing_content]
 
-  before_save :move_files, if: :abbr_changed?
   before_create :fix_abbr
   before_destroy :delete_trait_publish_files
 
