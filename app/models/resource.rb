@@ -201,7 +201,7 @@ class Resource < ApplicationRecord
   def format_path(format, subdir, ext)
     subdir = path.join(subdir)
     FileUtils.mkdir_p(subdir) unless File.exist?(subdir)
-    path.join(subdir, "#{resource.abbr}_#{format.represents}_#{id}.#{ext}")
+    path.join(subdir, "#{abbr}_#{represents}_#{id}.#{ext}")
   end
 
   def process_log
