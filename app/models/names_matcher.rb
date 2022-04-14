@@ -403,15 +403,22 @@ class NamesMatcher
 
   def save_match(node, page_id, message = nil)
     @logs << message if message
-    if @resource.native? || @resource.might_have_duplicate_taxa
+    if @resource.native? || ! @resource.might_have_duplicate_taxa
       unmapped(node, "The resource already has a node with page_id #{page_id}, reassigning.") if
-        @resource_page_ids.key?(page_id)
+        page_id_already_used?(page_id)
     end
     # NOTE: only grabbing the end of the matching log, if it's too long...
     @resource_page_ids[page_id] = true
     node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_500..-1])
     update_node(node)
     tick_progress
+  end
+
+  def page_id_already_used?(page_id)
+    # This one is faster, use it if possible:
+    return true if @resource_page_ids.key?(page_id)
+    # Slower, but not HORRIBLE:
+    return Node.exists?(resource_id: @resource.id, page_id: page_id)
   end
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
