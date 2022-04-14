@@ -119,9 +119,15 @@ class Resource < ApplicationRecord
   end
 
   def change_abbr(new_abbr)
+    old_abbr = abbr
     old_path = path
     update_attribute(:abbr, new_abbr)
     `mv -rf #{old_path}/* #{path}`
+    formats.each do |fmt|
+      fmt.get_from.sub!(old_abbr, new_abbr)
+      fmt.file.sub!(old_abbr, new_abbr)
+      fmt.save!
+    end
   end
 
   def complete
