@@ -65,7 +65,7 @@ class NamesMatcher
     if @resource.native? || @resource.might_have_duplicate_taxa
       # NOTE this hash could potentially have millions of keys, so it's a memory-hog, but... until that breaks, it's a
       # lot faster than querying the DB every time! (It's also not *likely* to be that large.)
-      @resource_page_ids = @resource.nodes.where('page_id IS NOT NULL').select('id, page_id').index_by(:page_id)
+      @resource_page_ids = @resource.nodes.select('id, page_id').where('page_id IS NOT NULL').index_by(&:page_id)
     end
     Rank.species_or_lower.each { |rank| @species_or_lower[rank] = true }
     @explain = options[:explain]
