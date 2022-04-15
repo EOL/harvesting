@@ -411,7 +411,7 @@ class NamesMatcher
     end
     # NOTE: only grabbing the end of the matching log, if it's too long...
     @resource_page_ids[page_id] = true
-    node.assign_attributes(page_id: page_id, matching_log: @matching_log.join('; ')[-65_500..-1])
+    node.assign_attributes(page_id: page_id, matching_log: truncate_log)
     update_node(node)
     tick_progress
   end
@@ -432,11 +432,16 @@ class NamesMatcher
       page_id: new_page_id,
       is_on_page_in_dynamic_hierarchy: @resource.native? || !@in_unmapped_area,
       in_unmapped_area: @in_unmapped_area,
-      matching_log: @matching_log.join('; ')[-65_500..-1]
+      matching_log: truncate_log
     )
     @resource_page_ids[new_page_id] = true
     update_node(node)
     tick_progress
+  end
+
+  def truncate_log
+    log = @matching_log.join("\n")
+    (overage = log.size - 64_000).positive? ? "...#{log[overage..-1]}" : log
   end
 
   def update_node(node)
