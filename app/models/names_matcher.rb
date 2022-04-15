@@ -47,9 +47,9 @@ class NamesMatcher
     matcher = new(node.harvest, node.resource.logged_process)
     node_id = node.id
     matcher.instance_eval do
-      @logs = []; @have_names = true; @ancestor = nil; @ancestors = []; inode = Node.find(node_id)
+      @matching_log = []; @have_names = true; @ancestor = nil; @ancestors = []; inode = Node.find(node_id)
       map_node(inode, ancestor_depth: 0, strategy: pick_first_strategy(inode))
-      inode.matching_log = @logs.join(';')
+      inode.matching_log = @matching_log.join(';')
       inode.save
     end
   end
@@ -59,7 +59,7 @@ class NamesMatcher
     @process = process
     @resource = @harvest.resource
     @root_nodes = []
-    @node_updates = []
+    @node_update_buffer = {}
     @species_or_lower = {}
     @resource_page_ids = {}
     if @resource.native? || @resource.might_have_duplicate_taxa
@@ -133,11 +133,11 @@ class NamesMatcher
     # TODO - Seachkick update required: how[:where] = { page_id: { exists: true } } if how[:where].empty?
     how.delete(:where) if how[:where].empty?
     @process.info("Q: #{how.inspect}") if @explain
-    @logs << "Q: #{how.inspect}"
+    @matching_log << "Q: #{how.inspect}"
     results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
     hits = results[0..9].map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
     @process.info("RESULTS (#{results.total_count}): #{hits}") if @explain
-    @logs << "RESULTS (#{results.total_count}): #{hits}"
+    @matching_log << "RESULTS (#{results.total_count}): #{hits}"
     results.to_a.delete_if {|r| r['page_id'].nil? }
   end
 
@@ -198,9 +198,10 @@ class NamesMatcher
     end
   end
 
+  # Returns a hash of nodes that it would have updated.
   def explain_node(node)
     @process.info("LIMITED RUN: explaining the names-matching for node #{node.id}")
-    @logs = []
+    @matching_log = []
     @explain = true
     return if skip_blank_canonical(node)
 
@@ -211,7 +212,7 @@ class NamesMatcher
 
     @have_names = true
     map_node(node, ancestor_depth: 0, strategy: pick_first_strategy(node))
-    @node_updates
+    @node_update_buffer
   end
 
   def skip_blank_canonical(node)
@@ -238,7 +239,7 @@ class NamesMatcher
   end
 
   def map_if_needed(node)
-    @logs = []
+    @matching_log = []
     if skip_blank_canonical(node)
       unmapped(node, 'blank_canonical')
     elsif node.needs_to_be_mapped?
@@ -309,11 +310,11 @@ class NamesMatcher
     if common_exceptions.key?(node.scientific_name.canonical)
       return save_match(node, common_exceptions[node.scientific_name.canonical], 'common kingdom match')
     end
-    @logs << @strategies[opts[:strategy]]
+    @matching_log << @strategies[opts[:strategy]]
     results = send(@strategies[opts[:strategy]], node)
     # TODO - After Searchkick upgrade: if results.total_count == 1
     if results.size == 1
-      @logs << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
+      @matching_log << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
       return save_match(node, results.first[:page_id], 'single hit')
     end
     # TODO - After Searchkick upgrade: return more_than_one_match(node, results, opts) if results.total_count > 1
@@ -343,8 +344,8 @@ class NamesMatcher
   end
 
   def more_than_one_match(node, matching_nodes, opts = {})
-    @logs << "#{matching_nodes.size} matches via #{@strategies[opts[:strategy]]}"
-    # TODO: @logs << "#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"
+    @matching_log << "#{matching_nodes.size} matches via #{@strategies[opts[:strategy]]}"
+    # TODO: @matching_log << "#{matching_nodes.total_count} matches via #{@strategies[opts[:strategy]]}"
     scores = {}
     matching_nodes.each do |matching_node|
       scores[matching_node] = {}
@@ -356,12 +357,12 @@ class NamesMatcher
       # NOTE: we are unsure of how effective this is; we really need to pay attention to how this performs.
       if !scores[matching_node][:matching_family] &&
          scores[matching_node][:matching_ancestors] < @minimum_ancestry_match[@ancestors.size]
-        @logs << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
+        @matching_log << "IGNORING insufficient ancestry matches: #{scores[matching_node][:matching_ancestors]} "\
           "of #{@ancestors.size}"
         scores[matching_node][:matching_ancestors] = 0
         # This is just a warning, since it won't match, but might be worth investigating, since it's *possible* we're
         # skipping a better match.
-        @logs << "insufficient ancestry matches vs node #{matching_node.id} ; matches " \
+        @matching_log << "insufficient ancestry matches vs node #{matching_node.id} ; matches " \
           "#{scores[matching_node][:matching_ancestors]} of #{@ancestors.size}"
       else
         scores[matching_node][:score] =
@@ -394,7 +395,7 @@ class NamesMatcher
         "#{best_match['id']} = #{simple_scores[best_match['id']].inspect} "\
         "VS #{tie['id']} = #{simple_scores[best_match['id']].inspect}")
     else
-      @logs << "Node #{node.id} (#{node.canonical}) matched page #{best_match['page_id']} (#{best_match['canonical']}): "\
+      @matching_log << "Node #{node.id} (#{node.canonical}) matched page #{best_match['page_id']} (#{best_match['canonical']}): "\
         "#{simple_scores.inspect}"
       save_match(node, best_match['page_id'])
     end
@@ -402,14 +403,15 @@ class NamesMatcher
   end
 
   def save_match(node, page_id, message = nil)
-    @logs << message if message
+    @matching_log << message if message
     if @resource.native? || ! @resource.might_have_duplicate_taxa
       unmapped(node, "The resource already has a node with page_id #{page_id}, reassigning.") if
         page_id_already_used?(page_id)
+      return
     end
     # NOTE: only grabbing the end of the matching log, if it's too long...
     @resource_page_ids[page_id] = true
-    node.assign_attributes(page_id: page_id, matching_log: @logs.join('; ')[-65_500..-1])
+    node.assign_attributes(page_id: page_id, matching_log: @matching_log.join('; ')[-65_500..-1])
     update_node(node)
     tick_progress
   end
@@ -423,14 +425,14 @@ class NamesMatcher
 
   # TODO: in_unmapped_area ...if there are no matching ancestors...
   def unmapped(node, message)
-    @logs << message
+    @matching_log << message
     @unmatched << "Canonical: #{node.canonical}; Node##{node.id}; ResourceID: #{node.resource_pk}"
     @in_unmapped_area = false if @resource.native?
     node.assign_attributes(
       page_id: new_page_id,
       is_on_page_in_dynamic_hierarchy: @resource.native? || !@in_unmapped_area,
       in_unmapped_area: @in_unmapped_area,
-      matching_log: @logs.join('; ')[-65_500..-1]
+      matching_log: @matching_log.join('; ')[-65_500..-1]
     )
     @resource_page_ids[new_page_id] = true
     update_node(node)
@@ -438,8 +440,8 @@ class NamesMatcher
   end
 
   def update_node(node)
-    @node_updates << node
-    update_nodes if @node_updates.size >= 100_000
+    @node_update_buffer[node.id] = node
+    update_nodes if @node_update_buffer.size >= 100_000
     true # Just avoiding a large return value
   end
 
@@ -451,13 +453,13 @@ class NamesMatcher
   end
 
   def update_nodes
-    return if @node_updates.empty?
+    return if @node_update_buffer.empty?
     unless @should_update
       @process.info('SKIPPPING UPDATE.')
       return
     end
-    Node.import!(@node_updates, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
-    @node_updates = []
+    Node.import!(@node_update_buffer.values, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
+    @node_update_buffer = {}
   end
 
   def new_page_id
