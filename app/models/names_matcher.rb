@@ -18,11 +18,13 @@
 # and so on, I don't want to enumerate them here in the documentation, as the code itself is canonical, q.v.!
 
 class NamesMatcher
+  # options allowed are :explain and :update, both booleans.
   def self.for_harvest(harvest, process, options = {})
     new(harvest, process, options).start
   end
 
   # This is meant to be called manually. You can pass the second argument in as nil if you don't have a process handle.
+  # options allowed are :explain and :update, both booleans.
   def self.explain_node(node, process, options = {})
     process ||= node.resource.process_log
     harvest = node.resource.create_harvest_instance # Perhaps heavy-handed, but... simpler.
@@ -54,6 +56,7 @@ class NamesMatcher
     end
   end
 
+  # options allowed are :explain and :update, both booleans.
   def initialize(harvest, process, options = {})
     @harvest = harvest
     @process = process
@@ -132,8 +135,13 @@ class NamesMatcher
     how[:fields] = [:canonical] # It seems this shouldn't matter, since the query is '*', but, alas: it matters.
     # TODO - Seachkick update required: how[:where] = { page_id: { exists: true } } if how[:where].empty?
     how.delete(:where) if how[:where].empty?
-    @process.info("Q: #{how.inspect}") if @explain
     @matching_log << "Q: #{how.inspect}"
+    if @explain
+      @process.info("Log so far: #{@matching_log}")
+      puts "[#{Time.now.strftime('%F %T')}] matching_log"
+      puts @matching_log
+      puts "---"
+    end
     results = Node.search('*', how) # TODO: .reverse_merge(load: false))  <-- not sure about this yet, so, playing safe
     hits = results[0..9].map { |h| "#{h['id']}:#{h['canonical']}" }.join(",")
     @process.info("RESULTS (#{results.total_count}): #{hits}") if @explain
