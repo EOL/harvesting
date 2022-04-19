@@ -413,9 +413,8 @@ class NamesMatcher
   def save_match(node, page_id, message = nil)
     @matching_log << message if message
     if @resource.native? || ! @resource.might_have_duplicate_taxa
-      unmapped(node, "The resource already has a node with page_id #{page_id}, reassigning.") if
+      return unmapped(node, "The resource already has a node with page_id #{page_id}, reassigning.") if
         page_id_already_used?(page_id)
-      return
     end
     # NOTE: only grabbing the end of the matching log, if it's too long...
     @resource_page_ids[page_id] = true
@@ -431,7 +430,6 @@ class NamesMatcher
     return Node.exists?(resource_id: @resource.id, page_id: page_id)
   end
 
-  # TODO: in_unmapped_area ...if there are no matching ancestors...
   def unmapped(node, message)
     @matching_log << message
     @unmatched << "Canonical: #{node.canonical}; Node##{node.id}; ResourceID: #{node.resource_pk}"
@@ -468,7 +466,7 @@ class NamesMatcher
   def update_nodes
     return if @node_update_buffer.empty?
     unless @should_update
-      @process.info('SKIPPPING UPDATE.')
+      @process.info('SKIPPPING UPDATE (update flag is false).')
       return
     end
     Node.import!(@node_update_buffer.values, on_duplicate_key_update: %i[page_id in_unmapped_area matching_log])
