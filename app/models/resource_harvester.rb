@@ -709,6 +709,8 @@ class ResourceHarvester
       @process.log('ZERO NODE ANCESTORS. Is this actually a completely flat resource?')
     end
 
+    log_info("Duplicate page_id count: #{@resource.count_duplicate_page_ids}")
+
     SanityChecks.new(@harvest, @process).perform_all
   end
 

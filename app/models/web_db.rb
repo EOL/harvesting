@@ -147,7 +147,8 @@ class WebDb < ApplicationRecord
         dataset_rights_statement: obj.dataset_rights_statement,
         updated_at: obj.updated_at,
         abbr: obj.abbr,
-        classification: obj.classification
+        classification: obj.classification,
+        native: obj.native
       }
       attrs = hash.map { |k, v| "#{k}=#{quote_value(v)}" }.join(', ')
       connection.exec_update("UPDATE resources SET #{attrs} WHERE id = #{web_id}", 'SQL', attrs)

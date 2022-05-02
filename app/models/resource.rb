@@ -118,6 +118,16 @@ class Resource < ApplicationRecord
     end
   end
 
+  def count_duplicate_page_ids
+    connection.query(%Q{
+        SELECT COUNT(*)
+        FROM nodes n1
+        LEFT JOIN nodes n2
+        ON (n1.page_id = n2.page_id AND NOT n1.id = n2.id)
+        WHERE n1.resource_id = #{id} AND n2.resource_id = #{id}
+      })&.first&.first
+  end
+
   def change_abbr(new_abbr)
     old_abbr = abbr
     old_path = path
