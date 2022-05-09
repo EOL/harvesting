@@ -448,13 +448,34 @@ class Resource < ApplicationRecord
 
   # ------ END MEDIA DOWNLOAD RELATED METHODS ---^
 
+  # This method is meant for command-line use. You will not find a reference to it in the codebase.
+  # Note that the TSV also becomes invalid when you do this. It's up to you to rebuild it.
+  def change_id(new_id)
+    raise "New ID already exists!" if Resource.exists?(id: new_id)
+    [
+      ScientificName, Vernacular, Article, Medium, Trait, MetaTrait, OccurrenceMetadatum, Assoc, MetaAssoc,
+      Identifier, Reference, Attribution, BibliographicCitation, ContentAttribution, Format, HarvestProcess,
+      Harvest, MetaTrait, NodeAncestor, Node, PublishDiff, AssocTrait
+    ].each do |klass|
+      log_info("## remove_type: #{klass} (#{klass.where(resource_id: id).count})")
+      klass.where(resource_id: id).update_all(resource_id: new_id)
+    end
+    WebDB.change_resource_id(id, new_id)
+    Resource.where(id: id).update_all(id: new_id)
+    id = new_id
+    WebDb.update_resource(self)
+    Node.where(resource_id: new_id).in_batches { |batch| batch.reindex }
+    self
+  end
+
   # NOTE: keeps formats, of course.
   def remove_content
     removing_content!
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
     [
       ScientificName, Vernacular, Article, Medium, Trait, MetaTrait, OccurrenceMetadatum, Assoc, MetaAssoc,
-      Identifier, Reference
+      Identifier, Reference, Attribution, BibliographicCitation, ContentAttribution, Link, MetaTrait,
+      TraitsReference, Occurrence, ScientificNamesReference, AssocTrait
     ].each do |klass|
       remove_type(klass)
     end

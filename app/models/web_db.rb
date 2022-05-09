@@ -155,6 +155,10 @@ class WebDb < ApplicationRecord
       logger
     end
 
+    def change_resource_id(old_id, new_id)
+      connection.exec_update("UPDATE resources SET id = #{new_id} WHERE id = #{old_id}", 'SQL', [])
+    end
+
     def quote_value(val)
       return 'NULL' if val.nil?
       return ApplicationRecord.connection.quote(val) if val.is_a?(ActiveSupport::TimeWithZone)
