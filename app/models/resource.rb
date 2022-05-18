@@ -474,7 +474,7 @@ class Resource < ApplicationRecord
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
     [
       ScientificName, Vernacular, Article, Medium, Trait, MetaTrait, OccurrenceMetadatum, Assoc, MetaAssoc,
-      Identifier, Reference, Attribution, BibliographicCitation, ContentAttribution, Link, MetaTrait,
+      Identifier, Reference, Attribution, BibliographicCitation, ContentAttribution, MetaTrait,
       TraitsReference, Occurrence, ScientificNamesReference, AssocTrait
     ].each do |klass|
       remove_type(klass)

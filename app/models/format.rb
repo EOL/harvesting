@@ -25,8 +25,6 @@ class Format < ApplicationRecord
       { Medium => :resource_pk }
     elsif js_maps?
       { Medium => :resource_pk }
-    elsif links?
-      { Link => :resource_pk }
     elsif media?
       { Medium => :resource_pk }
     elsif maps?
