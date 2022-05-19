@@ -1,6 +1,6 @@
 class SanityChecks
   TRAIT_COMPARISON_COLS = [
-    'node_id', 
+    'node_id',
     'predicate_term_uri',
     'object_term_uri',
     'statistical_method_term_uri',
@@ -25,8 +25,12 @@ class SanityChecks
   end
 
   def perform_all
-    check_for_duplicate_traits
-    check_for_duplicate_assocs
+    # These two checks take several HOURS, together, on large trait resources, and the rresults
+    # were not as helpful as we had hoped they would be. We're removing them as of May 2022. I'm leaving
+    # the methods in for now. If you're reading this and don't have any idea what I'm referring to, then
+    # it's probably safe to actually remove these two methods (and their associated sub-methods).
+    # check_for_duplicate_traits
+    # check_for_duplicate_assocs
     check_for_no_source(Trait, 'trait', 'trait', true)
     check_for_no_source(Assoc, 'assoc', 'association', false)
   end
@@ -57,14 +61,14 @@ class SanityChecks
 
   def log_no_source(klass, type, name, has_parent)
     q = <<~SQL
-      SELECT #{table(type)}.resource_pk, #{table(type)}.id 
+      SELECT #{table(type)}.resource_pk, #{table(type)}.id
       #{no_source_query_common(type, name, has_parent)}
       LIMIT 100
     SQL
 
     result = klass.connection.execute(q)
 
-    @process.log("#{name}s w/o source (up to 100):") 
+    @process.log("#{name}s w/o source (up to 100):")
 
     result.each do |r|
       @process.log("(resource_pk: #{r[0]}, id: #{r[1]})")
@@ -74,7 +78,7 @@ class SanityChecks
   def log_duplicates(klass, type, name, cols, has_parent)
     q = <<~SQL
       SELECT t1.resource_pk, t1.id, t2.resource_pk, t2.id
-      FROM #{table(type)} t1 JOIN #{table(type)} t2 ON 
+      FROM #{table(type)} t1 JOIN #{table(type)} t2 ON
       #{cols.map { |c| "coalesce(t1.#{c}, 'null') = coalesce(t2.#{c}, 'null')" }.join("AND\n")} AND
       t1.id < t2.id AND
       t1.harvest_id = #{@harvest.id} AND t2.harvest_id = #{@harvest.id}
@@ -85,8 +89,8 @@ class SanityChecks
 
     result = klass.connection.execute(q)
 
-    @process.log("(Near) duplicate #{name} pairs (up to 100):") 
-    
+    @process.log("(Near) duplicate #{name} pairs (up to 100):")
+
     result.each do |r|
       @process.log("(resource_pk: #{r[0]}, id: #{r[1]}), (resource_pk: #{r[2]}, id: #{r[3]})")
     end
@@ -102,11 +106,11 @@ class SanityChecks
         ))
       FROM #{table(type)}
       WHERE #{table(type)}.harvest_id = #{@harvest.id}
-      #{child_filter_clause(table(type), has_parent)} 
+      #{child_filter_clause(table(type), has_parent)}
     SQL
 
     uniq_count = klass.connection.execute(count_q).first.first
-    diff = all_count - uniq_count 
+    diff = all_count - uniq_count
 
     unless diff == 0
       @process.log("(NEAR) DUPLICATE TRAITS FOUND! There are only #{uniq_count} (of #{all_count} total) unique #{name}s.")
@@ -136,9 +140,8 @@ class SanityChecks
   end
 
   def child_filter_clause(table, has_parent)
-    has_parent ? 
+    has_parent ?
       "AND #{table}.parent_pk IS NULL AND #{table}.parent_eol_pk IS NULL" :
       ''
   end
 end
-
