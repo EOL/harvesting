@@ -37,12 +37,10 @@ RUN gem install bundler:2.1.4
 RUN bundle config set without 'test development staging'
 RUN bundle install --jobs 10 --retry 5
 
-RUN touch /tmp/supervisor.sock
-RUN chmod 777 /tmp/supervisor.sock
 RUN ln -s /tmp /app/tmp
 
 EXPOSE 3000
 
-ENTRYPOINT ["/bin/bash", "-c", "source /app/docker/.env && rake assets:precompile && rm -f /tmp/*.pid /tmp/*.sock && /usr/bin/supervisord"]
+ENTRYPOINT ["/app/bin/entrypoint.sh"]
 
 CMD ["-c", "/etc/supervisord.conf"]
