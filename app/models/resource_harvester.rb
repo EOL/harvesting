@@ -156,7 +156,9 @@ class ResourceHarvester
     fields = {}
     expected_by_file = @headers.dup
     Admin.maintain_db_connection # We need to read the format...
-    @format.fields.each_with_index do |field, i|
+    loop_fields = @format.fields.to_a # Forcing the query to run *now*
+    # Using the results of that query to avoid querying again...
+    loop_fields.each_with_index do |field, i|
       Admin.maintain_db_connection
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
