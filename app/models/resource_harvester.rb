@@ -155,8 +155,8 @@ class ResourceHarvester
   def check_each_column
     fields = {}
     expected_by_file = @headers.dup
+    Admin.maintain_db_connection # We need to read the format...
     @format.fields.each_with_index do |field, i|
-      Admin.maintain_db_connection # We need to read the format...
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
 
