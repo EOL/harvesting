@@ -157,7 +157,6 @@ class ResourceHarvester
     expected_by_file = @headers.dup
     Admin.maintain_db_connection # We need to read the format...
     @format.fields.each_with_index do |field, i|
-      Admin.maintain_db_connection # We'll be reading the format again after a long pause...
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
 
@@ -168,6 +167,7 @@ class ResourceHarvester
       end
       fields[@headers[i]] = field
       expected_by_file.delete(@headers[i])
+      Admin.maintain_db_connection # We'll be reading the format again after a long pause...
     end
     { expected: expected_by_file, fields: fields }
   end
