@@ -3,12 +3,16 @@ class Admin
   @@last_try = Time.now
   class << self
     def optimize_tables
-      %w[vernaculars traits traits_references scientific_names resources references occurrences
-         occurrence_metadata nodes_references nodes node_ancestors media media_references locations
-         identifiers harvests formats fields content_attributions bibliographic_citations
-         attributions assocs_references assocs assoc_traits articles harvest_processes].each do |table|
-           Node.connection.execute("OPTIMIZE TABLE `#{table}`")
-         end
+      ApplicationRecord.descendants.each do |klass|
+        puts "++ #{klass}"
+        klass.connection.execute("OPTIMIZE TABLE `#{klass.table_name}`")
+      end
+      # %w[vernaculars traits traits_references scientific_names resources references occurrences
+      #    occurrence_metadata nodes_references nodes node_ancestors media media_references locations
+      #    identifiers harvests formats fields content_attributions bibliographic_citations
+      #    attributions assocs_references assocs assoc_traits articles harvest_processes].each do |table|
+      #      Node.connection.execute("OPTIMIZE TABLE `#{table}`")
+      #    end
     end
 
     def verify_connection
