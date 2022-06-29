@@ -155,10 +155,9 @@ class ResourceHarvester
   def check_each_column
     fields = {}
     expected_by_file = @headers.dup
-    Admin.maintain_db_connection # We need to read the format...
-    loop_fields = @format.fields.to_a # Forcing the query to run *now*
-    # Using the results of that query to avoid querying again...
-    loop_fields.each_with_index do |field, i|
+    # For some reason, verify_connection is NOT catching the state we're in for this case, so:
+    ActiveRecord::Base.connection.reconnect!
+    @format.fields.each_with_index do |field, i|
       Admin.maintain_db_connection
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
