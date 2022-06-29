@@ -148,7 +148,8 @@ class ResourceHarvester
       @process.info("Valid: #{@file} (#{@file.readlines.size} lines)")
       @converted[@format.id] = true
     end
-    Admin.maintain_db_connection
+    # For whatever reason, Admin.maintain_db_connection does not work here.
+    ActiveRecord::Base.connection.reconnect!
     @harvest.update_attribute(:validated_at, Time.now)
   end
 
