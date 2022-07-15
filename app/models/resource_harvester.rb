@@ -724,6 +724,7 @@ class ResourceHarvester
   # eventually, but not now.
   def complete_harvest_instance
     Publisher.by_resource(@resource, @process, @harvest)
+    ActiveRecord::Base.connection.reconnect! # With large resources, it will have disconnected here.
     @harvest.complete
   end
 

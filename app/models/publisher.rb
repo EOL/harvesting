@@ -544,9 +544,11 @@ class Publisher
     count = 0
 
     if metas.respond_to?(:find_each)
-      Admin.maintain_db_connection(@process)
+      # For whatever reason, Admin.maintain_db_connection does not work here.
+      ActiveRecord::Base.connection.reconnect!
       metas.find_each do |meta|
         count += add_one_meta_to_csv(meta, trait, csv)
+        ActiveRecord::Base.connection.reconnect!
       end
     else
       metas.each do |meta|
