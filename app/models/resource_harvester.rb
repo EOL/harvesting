@@ -148,15 +148,18 @@ class ResourceHarvester
       @process.info("Valid: #{@file} (#{@file.readlines.size} lines)")
       @converted[@format.id] = true
     end
-    Admin.maintain_db_connection
+    # For whatever reason, Admin.maintain_db_connection does not work here.
+    ActiveRecord::Base.connection.reconnect!
     @harvest.update_attribute(:validated_at, Time.now)
   end
 
   def check_each_column
     fields = {}
     expected_by_file = @headers.dup
-    Admin.maintain_db_connection # We need to read the format...
+    # For some reason, verify_connection is NOT catching the state we're in for this case, so:
+    ActiveRecord::Base.connection.reconnect!
     @format.fields.each_with_index do |field, i|
+      Admin.maintain_db_connection
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
 
@@ -730,6 +733,7 @@ class ResourceHarvester
   # eventually, but not now.
   def complete_harvest_instance
     Publisher.by_resource(@resource, @process, @harvest)
+    ActiveRecord::Base.connection.reconnect! # With large resources, it will have disconnected here.
     @harvest.complete
   end
 
