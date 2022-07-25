@@ -63,6 +63,7 @@ class ResourcesController < ApplicationController
     @resource = Resource.find(params[:resource_id])
     log_auth(@resource)
     @resource.re_read_xml
+    @resource.requires_full_reharvest
     flash[:notice] = t('resources.flash.re_read_xml')
     redirect_to @resource
   end
@@ -99,6 +100,7 @@ class ResourcesController < ApplicationController
   def update
     @resource = Resource.find(params[:id])
     log_auth(@resource)
+    @resource.requires_full_reharvest if @resource.changed?
     # Abbr is special: it causes the files to move. It needs to be handled on its own:
     if resource_params.key?('abbr') && resource_params['abbr'] != @resource.abbr
       @resource.change_abbr(resource_params['abbr'])

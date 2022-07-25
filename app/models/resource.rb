@@ -142,7 +142,8 @@ class Resource < ApplicationRecord
 
   def complete
     harvested!
-    update_attributes(nodes_count: Node.where(resource_id: id).count, root_nodes_count: nodes.root.harvested.count)
+    update_attributes(nodes_count: Node.where(resource_id: id).count, root_nodes_count: nodes.root.harvested.count,
+                      requires_full_reharvest_after: nil)
   end
 
   def delayed_jobs
@@ -218,12 +219,6 @@ class Resource < ApplicationRecord
     @path = self.class.data_dir_path.join(abbr.gsub(/\s+/, '_'))
     FileUtils.mkdir_p(@path) unless File.exist?(@path)
     @path
-  end
-
-  def format_path(format, subdir, ext)
-    subdir = path.join(subdir)
-    FileUtils.mkdir_p(subdir) unless File.exist?(subdir)
-    path.join(subdir, "#{abbr}_#{format.represents}_#{format.id}.#{ext}")
   end
 
   def process_log
@@ -306,17 +301,16 @@ class Resource < ApplicationRecord
   end
 
   def publish
-    Publisher.by_resource(self, logged_process, harvests.last)
+    Publisher.by_resource(self, logged_process, latest_harvest)
   end
 
   # This is meant to be called manually.
   def parse_names(names = nil)
-    required_harvest = harvests.last
-    raise 'Harvest the resource, first' if required_harvest.nil?
+    raise 'Harvest the resource, first' if latest_harvest.nil?
     if names.nil? || names.empty?
-      NameParser.for_harvest(required_harvest, logged_process)
+      NameParser.for_harvest(latest_harvest, logged_process)
     else
-      NameParser.parse_names(required_harvest, names)
+      NameParser.parse_names(latest_harvest, names)
     end
   end
 
@@ -490,6 +484,7 @@ class Resource < ApplicationRecord
     remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
     harvests.destroy_all
     delayed_jobs.delete_all
+    requires_full_reharvest
     unharvested!
   end
 
@@ -580,6 +575,23 @@ class Resource < ApplicationRecord
     Dir.glob(path.to_s + '/publish_traits*.tsv').each do |filename|
       File.unlink(filename)
     end
+  end
+
+  def requires_full_reharvest
+    requires_full_reharvest_after = Time.now
+  end
+
+  def requires_full_reharvest?
+    return true unless requires_full_reharvest_after.nil?
+    previous_harvest.nil? || previous_harvest.stage != "complete_harvest_instance"
+  end
+
+  def latest_harvest
+    @latest_harvest ||= harvests.order('created_at DESC').first
+  end
+
+  def previous_harvest
+    @previous_harvest ||= harvests.order('created_at DESC').offset(1).first
   end
 
   private

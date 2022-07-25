@@ -113,19 +113,15 @@ class Harvest < ApplicationRecord
   # NOTE: this does not remove the SOURCE files, only the intermediates we keep. :)
   def remove_files
     resource.formats.each do |fmt|
-      converted_csv = converted_csv_path(fmt)
+      converted_csv = fmt.converted_csv_file
       File.unlink(converted_csv) if File.exist?(converted_csv)
-      diff = diff_path(fmt)
+      diff = fmt.diff_file
       File.unlink(diff) if File.exist?(diff)
     end
   end
 
-  def converted_csv_path(format)
-    resource.format_path(format, 'converted_csv', 'csv')
-  end
-
   def diff_size(format)
-    file = diff_path(format) || format.get_from
+    file = format.diff_file || format.get_from
     return 0 unless File.exist?(file)
     `wc -l #{file}`.chomp.split.first
   end
@@ -133,11 +129,7 @@ class Harvest < ApplicationRecord
   def diff_parser(format)
     headers = nil
     headers = format.fields.map(&:expected_header) if format.data_begins_on_line&.positive?
-    CsvParser.new(diff_path(format), headers: headers)
-  end
-
-  def diff_path(format)
-    resource.format_path(format, 'diff', 'diff')
+    CsvParser.new(format.diff_file, headers: headers)
   end
 
   def trait_filename

@@ -146,6 +146,7 @@ class CsvParser
       end
     end
     hash = Hash[headers.zip(row)]
+    hash[:type] = @diff
     hash
   end
 end

@@ -88,4 +88,24 @@ class Format < ApplicationRecord
       update_attribute(:file, get_from)
     end
   end
+
+  def format_path(subdir, ext, harvest = nil)
+    path = resource.path
+    subdir = path.join(subdir)
+    harvest ||= resource.latest_harvest
+    FileUtils.mkdir_p(subdir) unless File.exist?(subdir)
+    path.join(subdir, "#{resource.abbr}_#{represents}_#{harvest.id}_#{format.id}.#{ext}").to_s.gsub(' ', '\\ ')
+  end
+
+  def converted_csv_file(harvest = nil)
+    format_path('converted_csv', 'csv', harvest)
+  end
+
+  def diff_file(harvest = nil)
+    format_path("diff_#{id}", 'diff', harvest)
+  end
+
+  def sorted_file(harvest = nil)
+    format_path('sorted_csv', 'csv', harvest)
+  end
 end
