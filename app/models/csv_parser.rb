@@ -92,12 +92,12 @@ class CsvParser
   # TODO: parsing with diffs deserves its own class, move!
   def diff_as_hashes(db_headers)
     @line_num = 0
-    @diff = nil
+    @diff_type = nil
     any_diff = line_at_a_time do |row, line|
       # NOTE that this is a diff... so ... not great... but it IS the line of the file we're reading!
       @line_num = line + 1
       if row.size == 1 && row.first =~ /^\d+(\D)(\d+)?$/
-        @diff = diff_type(Regexp.last_match(1))
+        @diff_type = diff_type(Regexp.last_match(1))
         next
       end
       next if ignore_row?(row.first, row.size)
@@ -130,23 +130,23 @@ class CsvParser
 
   def ignore_row?(first, size)
     # "Removed" part of a change, we can ignore it:
-    (@diff == :changed && first =~ /^</) ||
+    (@diff_type == :changed && first =~ /^</) ||
       # "switch" part of a change, ignore:
-      (@diff == :changed && size == 1 && first =~ /^---/) ||
+      (@diff_type == :changed && size == 1 && first =~ /^---/) ||
       # End of input (for "faked" new diffs):
       (size == 1 && first == '.')
   end
 
   def row_as_diff(row, headers)
     if row.first # Because if it's nil, then we're looking at an empty first field, which is ok.
-      if @diff == :changed || @diff == :new
+      if @diff_type == :changed || @diff_type == :new
         row.first.sub!(/^> /, '')
-      elsif @diff == :removed
+      elsif @diff_type == :removed
         row.first.sub!(/^< /, '')
       end
     end
     hash = Hash[headers.zip(row)]
-    hash[:type] = @diff
+    hash[:type] = @diff_type
     hash
   end
 end
