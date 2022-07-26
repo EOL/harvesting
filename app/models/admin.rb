@@ -15,19 +15,10 @@ class Admin
       #    end
     end
 
-    def verify_connection
-      @@last_try ||= Time.now
-      unless @@last_try <= 2.minutes.ago
-        ActiveRecord::Base.connection.verify!
-        @@last_try = Time.now
-      end
-    end
-
     def maintain_db_connection(process = nil)
-      verify_connection
       tries = 0
       msgs = []
-      while tries <= 3 and !ActiveRecord::Base.connected?
+      while tries <= 3 and connection_fails?
         ActiveRecord::Base.connection.reconnect!
         tries += 1
         msgs << if tries < 1
@@ -39,8 +30,16 @@ class Admin
       process ? process.info(msgs.join("; ")) : Rails.logger.warn(msgs.join("\n")) unless msgs.empty?
     end
 
+    def connection_fails?
+      begin
+        Resource.exists?(id: 1)
+      rescue
+        return true
+      end
+      false
+    end
+
     def retry_if_connection_fails(&block)
-      verify_connection
       tried = false
       begin
         yield
