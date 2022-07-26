@@ -100,8 +100,7 @@ class Publisher
   end
 
   def create_tsv
-    # TODO: ensure that all of the associations are only pulling in harvested results. :S
-    @nodes = @resource.nodes.harvested
+    @nodes = @resource.nodes
                       .includes(:identifiers, :node_ancestors, :references, :scientific_name,
                                 vernaculars: [:language], scientific_names: [:dataset, :references],
                                 media: %i[node license language references bibliographic_citation location] <<
@@ -109,14 +108,46 @@ class Publisher
                                 articles: %i[node license language references bibliographic_citation location
                                              articles_sections] <<
                                   { content_attributions: :attribution })
-    remove_existing_pub_files
+    total_count = 0 # Scope
+    processed_count = 0
+    if start_with_node_id = read_highest_node_id
+      total_count = @resource.nodes.where(['id > ?', start_with_node_id]).count
+      @nodes = @nodes.where(['nodes.id > ?', start_with_node_id])
+      @process.info("It looks like we have already exported up to node #{start_with_node_id}, resuming.")
+      @process.info("Exporting another #{total_count} nodes as TSV in batches of #{@limit}...")
+    else
+      total_count = @resource.nodes.count
+      @process.info("Exporting #{total_count} nodes as TSV in batches of #{@limit}...")
+      remove_existing_pub_files
+    end
     @process.in_batches(@nodes, @limit) do |nodes|
       reset_vars
       nodes_to_hashes(nodes) # This takes a about 75 seconds for a batch of 10K
       count_children # super-fast (about a 20th of a second)
       load_hashes # A few seconds
       build_traits(nodes)
+      processed_count += nodes.size
+      @process.info("Processed #{processed_count}/#{total_count} nodes")
+      write_highest_node_id(nodes.last.id)
     end
+    remove_highest_node_id_file
+  end
+
+  def read_highest_node_id
+    return nil unless File.exist?(highest_node_id_filename)
+    File.read(highest_node_id_filename).to_i
+  end
+
+  def write_highest_node_id(node_id)
+    File.open(highest_node_id_filename, 'w') { |file| file.write(node_id) }
+  end
+
+  def remove_highest_node_id_file
+    File.delete(highest_node_id_filename) if File.exist?(highest_node_id_filename)
+  end
+
+  def highest_node_id_filename
+    @highest_node_id_filename ||= @resource.path.join('highest_tsv_node_id.txt')
   end
 
   def nodes_to_hashes(nodes)
@@ -473,7 +504,7 @@ class Publisher
     start_traits_file(meta_file, META_HEADS)
 
     # metadata (child Traits) with parent Traits from resources other than the current one (specified by parent_eol_pk)
-    external_trait_metas = @resource.traits.harvested
+    external_trait_metas = @resource.traits
       .includes(:parent, :references)
       .where('traits.parent_eol_pk IS NOT NULL AND traits.parent_id IS NOT NULL')
 
@@ -501,18 +532,19 @@ class Publisher
   def trait_map(node_ids)
     @traits = {}
     count = 0
+    size = node_ids.size
     meta_count = 0
-    @process.info("Building Traits map (this can take a while)...")
-    Trait.primary.harvested.matched.where(node_id: node_ids)
+    @process.info("Building Traits map for #{size} nodes (this can take a while)...")
+    Trait.primary.matched.where(node_id: node_ids)
          .includes(:resource, :references, :meta_traits,
                    children: :references, occurrence: :occurrence_metadata,
                    node: :scientific_name).find_each do |trait|
                      count += 1
                      meta_count += trait.meta_traits.size if trait.meta_traits
-                     @process.info("#{count} traits mapped (#{meta_count} meta)...") if (count % 10_000).zero?
+                     @process.info("#{count} traits mapped (#{meta_count} meta)...") if (count % 100_000).zero?
                      @traits[trait.id] = trait
                    end
-    @process.info("Done. #{count} traits mapped (#{meta_count} meta).")
+    @process.info("Mapped #{count} traits (#{meta_count} meta) for #{size} nodes.")
   end
 
   def assoc_map(node_ids)
@@ -520,7 +552,7 @@ class Publisher
     count = 0
     meta_count = 0
     @process.info("Building Associations map (this can take a while)...")
-    Assoc.harvested.where(node_id: node_ids)
+    Assoc.where(node_id: node_ids)
          .includes(:references, :meta_assocs,
                    occurrence: :occurrence_metadata,
                    node: :scientific_name, target_node: :scientific_name).find_each do |assoc|
