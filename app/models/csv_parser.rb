@@ -90,11 +90,13 @@ class CsvParser
   end
 
   # TODO: parsing with diffs deserves its own class, move!
+  # TODO: Changes are tricky... need to read up to the === line and compare the two versions of each. :S
   def diff_as_hashes(db_headers)
     @line_num = 0
     @diff_type = nil
     any_diff = line_at_a_time do |row, line|
       # NOTE that this is a diff... so ... not great... but it IS the line of the file we're reading!
+      # Maybe use this instead? https://github.com/agardiner/csv-diff
       @line_num = line + 1
       if row.size == 1 && row.first =~ /^\d+(\D)(\d+)?$/
         @diff_type = diff_type(Regexp.last_match(1))
@@ -108,6 +110,7 @@ class CsvParser
                   else
                     false
                   end
+      raise("Invalid diff file: no type preamble") if @diff_type.nil?
       yield(row_as_diff(row, db_headers), debugging)
     end
     any_diff
