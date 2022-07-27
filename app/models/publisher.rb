@@ -16,6 +16,8 @@ class Publisher
   META_HEADS = %i[eol_pk trait_eol_pk predicate literal measurement value_uri units sex lifestage
     statistical_method source is_external]
 
+  MAX_TRAIT_BATCH_SIZE = 1_000_000
+  MAX_ASSOC_BATCH_SIZE = 1_000_000
 
   def self.by_resource(resource_in, process, harvest)
     new(resource_in, process, harvest).by_resource
@@ -493,9 +495,38 @@ class Publisher
   def build_traits(nodes)
     return unless Trait.where(node_id: nodes.map(&:id)).any? ||
                   Assoc.where(node_id: nodes.map(&:id)).any?
+    manage_size_of_nodes_for_traits(nodes) do |nodes_batch|
+      build_batch_of_traits(nodes_batch)
+    end
+  end
 
-    @process.info("#{Trait.where(node_id: nodes.map(&:id)).count} Traits (unfiltered)...")
-    # NOTE: this query is MOSTLY copied (but tweaked) from TraitsController.
+  def manage_size_of_nodes_for_traits(nodes)
+    start_node = 0
+    last_node = nodes.size - 1
+    loop do
+      last_node = nodes.size - 1 # It's always greedy and tries to complete the rest of the batch
+      while(too_many_trait_operations(nodes[start_node..last_node]) && start_node < last_node)
+        last_node = ((last_node - start_node) / 2.0).round
+        last_node = start_node if last_node < start_node
+      end
+      build_batch_of_traits(nodes[start_node..last_node])
+      write_highest_node_id(nodes[last_node].id)
+      start_node = last_node + 1
+      break if last_node >= nodes.size
+    end
+  end
+
+  def too_many_trait_operations(nodes)
+    trait_count = Trait.where(node_id: nodes.map(&:id)).count
+    assoc_count = Assoc.where(node_id: nodes.map(&:id)).count
+    if trait_count <= MAX_TRAIT_BATCH_SIZE && assoc_count <= MAX_ASSOC_BATCH_SIZE
+      @process.info("#{trait_count} Traits (unfiltered) and #{assoc_count} associations...")
+      return false
+    end
+    true
+  end
+
+  def build_batch_of_traits(nodes)
     node_ids = nodes.map(&:id)
     trait_map(node_ids)
     assoc_map(node_ids)
