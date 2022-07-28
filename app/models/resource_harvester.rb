@@ -37,10 +37,9 @@ class ResourceHarvester
     @default_trait_resource_pk = 0
     @converted = {}
     # Placeholders to mark where we "currently are":
-    @diff = nil
-    @line_num = 0 # This is really just used for debugging.
+    @line_num = 0
     @format = 'none'
-    @file = '/dev/null' # This is really just used for debugging.
+    @file = '/dev/null'
     @parser = nil
     @headers = []
   end
@@ -183,10 +182,9 @@ class ResourceHarvester
   end
 
   def validate_csv(csv, fields)
-    @parser.rows_as_hashes do |row, line, debugging|
+    @parser.rows_as_hashes do |row, line|
       @line_num = line
       csv_row = []
-      csv_row << 'DEBUG' if debugging
       @headers.each do |header|
         check_header(csv_row, fields, row, header)
       end
@@ -224,13 +222,9 @@ class ResourceHarvester
       unless @converted[@format.id]
         @file = @format.converted_csv_file
         CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
-          @parser.rows_as_hashes do |row, line, debugging|
+          @parser.rows_as_hashes do |row, line|
             @line_num = line
             csv_row = []
-            if debugging
-              csv_row << 'DEBUG'
-              @process.debug("DEBUGGING line #{line}")
-            end
             @headers.each do |header|
               # Un-quote values; we use a special quote char:
               val = strip_quotes(row[header])
@@ -272,36 +266,38 @@ class ResourceHarvester
       @process.info("Created diff dir: #{diff_dir}")
     end
     if @resource.requires_full_reharvest?
-      each_format do
-        @file = @format.diff_file
-        fake_diff_from_nothing
-        @process.info("Created diff: #{@file} (#{@file.readlines.size} lines)")
+      each_format do |format|
+        file = format.diff_file
+        fake_diff_from_nothing(format)
+        @process.info("Created diff: #{file} (#{file.readlines.size} lines)")
       end
     else
       each_format do |format|
-        @file = @format.diff_file
-        diff_format(@file)
-        @process.info("Created diff: #{@file} (#{@file.readlines.size} lines)")
+        file = format.diff_file
+        diff_format
+        @process.info("Created diff: #{file} (#{file.readlines.size} lines)")
       end
     end
     @harvest.update_attribute(:deltas_created_at, Time.now)
   end
 
-  def fake_diff_from_nothing
-    diff = @format.diff_file
-    csv = @format.converted_csv_file
+  def fake_diff_from_nothing(format)
+    diff = format.diff_file
+    csv = format.converted_csv_file
     run_cmd("echo \"0a\" > #{diff}")
-    if @format.data_begins_on_line.zero?
+    if format.data_begins_on_line.zero?
       run_cmd("cat #{csv} >> #{diff}")
     else
-      run_cmd("tail -n +#{@format.data_begins_on_line} #{csv} >> #{diff}")
+      run_cmd("tail -n +#{format.data_begins_on_line} #{csv} | sed 's/^/> /' >> #{diff}")
     end
     run_cmd("echo \".\" >> #{diff}")
   end
 
   def diff_format(format)
     # diff the old version against the new:
-    prev_harvest = @resource.previous_harvest
+    prev_csv = format.converted_csv_file(@resource.previous_harvest)
+    curr_csv = format.converted_csv_file
+    run_cmd("diff #{prev_csv} #{curr_csv} > #{format.diff_file}")
   end
 
   def run_cmd(cmd, env = {})
@@ -322,8 +318,8 @@ class ResourceHarvester
       i = 0
       time = Time.now
       @process.enter_group(@diff_size) do |harv_proc|
-        any_diff = @parser.diff_as_hashes(@headers) do |row, debugging|
-          # TODO: row[:type] is one of :new, :changed, or :removed ... handle them each! 
+        # YOU WERE HERE - I'm not sure @parser is right, here; check.
+        any_diff = @parser.diff_as_hashes(@headers) do |row|
           @line_of_diff += 1
           if (@line_of_diff % 10_000).zero?
             flush_model_cache
@@ -331,35 +327,21 @@ class ResourceHarvester
             time = Time.now
           end
           @file = @parser.path_to_file
-          @diff = @parser.diff
           reset_row
           begin
             @headers.each do |header|
               field = fields[header]
-              field.debugging = debugging
-              if debugging
-                @process.debug("#{@format.represents} ##{@line_of_diff} field {#{header}}")
-                @models[:debug] = true
-              end
               if row[header].blank?
-                unless field.default_when_blank
-                  @process.debug('skipping; blank') if debugging
-                  next
-                end
+                next unless field.default_when_blank
 
-                @process.debug("setting value to {#{field.default_when_blank}} because blank.") if debugging
                 row[header] = field.default_when_blank
               end
-              if field.to_ignored?
-                @process.debug('skipping; field is to be ignored') if debugging
-                next
-              end
+              next if field.to_ignored?
               raise "BAD FIELD: no mapping ##{field&.id} for #{@format.represents} format" if field.mapping.nil?
               raise "NO HANDLER FOR '#{field.mapping}' for #{@format.represents} format!" unless
                 respond_to?(field.mapping)
 
               # NOTE: that these methods are defined in the Store::* mixins:
-              @process.debug("calling {#{field.mapping}}") if debugging
               send(field.mapping, field, row[header])
             end
           rescue => e
@@ -367,9 +349,10 @@ class ResourceHarvester
             raise e
           end
           # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
-          if @diff == :removed
+          type = row.delete(:type)
+          if type == :old
             destroy_for_fmt
-          else # new or changed
+          else # new
             build_models
           end
         end
@@ -383,9 +366,9 @@ class ResourceHarvester
     Admin.maintain_db_connection(@process)
     measure_progress
     find_orphan_parent_nodes # Empty now, TODO with deltas.
-    find_duplicate_nodes # TODO: not complete, still a few trouble models.
+    find_duplicate_nodes
     store_new
-    mark_old # Does nothing now, TODO with deltas.
+    remove_old
     clear_storage_vars # Allow GC to clean up!
   end
 
@@ -470,7 +453,7 @@ class ResourceHarvester
   end
 
   # TODO: extract to Store::Storage
-  def mark_old
+  def remove_old
     @old.each do |klass, by_keys|
       @process.info("Marking old #{klass.name}") unless by_keys.empty?
       by_keys.each do |key, pks|

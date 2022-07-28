@@ -1,9 +1,7 @@
 module Store
   module ModelBuilder
     def destroy_for_fmt
-      @format.model_fks.each do |klass, key|
-        removed_by_harvest(klass, key, @models[klass.name.underscore.to_sym][key])
-      end
+      # YOU WERE HERE - do a find on all the fields we have and remove if there's one match
     end
 
     def reset_row
@@ -705,23 +703,11 @@ module Store
     # TODO: extract to Store::Storage
     def prepare_model_for_store(klass, model)
       @process.debug('#prepare_model_for_store') if @models[:debug]
-      if @diff == :changed
-        key = @format.model_fks[klass]
-        removed_by_harvest(klass, key, model[key])
-      end
       @new[klass] ||= []
       new_model = klass.send(:new, model)
       @new[klass] << new_model
       new_model.prepare_for_store(@process) if new_model.respond_to?(:prepare_for_store)
       new_model
-    end
-
-    # TODO: extract to Store::Storage
-    def removed_by_harvest(klass, key, pk)
-      @process.debug('#removed_by_harvest') if @models[:debug]
-      @old[klass] ||= {}
-      @old[klass][key] ||= []
-      @old[klass][key] << pk
     end
 
     def fake_pk(type)
