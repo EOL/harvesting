@@ -83,6 +83,11 @@ class Format < ApplicationRecord
     end
   end
 
+  def diff_parser
+    DiffParser.new(diff_file, field_sep: field_sep, line_sep: line_sep, header_lines: header_lines,
+                              data_begins_on_line: data_begins_on_line)
+  end
+
   def use_original_file
     Admin.retry_if_connection_fails do
       update_attribute(:file, get_from)

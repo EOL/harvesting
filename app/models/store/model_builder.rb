@@ -1,37 +1,37 @@
 module Store
   module ModelBuilder
-    def destroy_for_fmt
-      # YOU WERE HERE - do a find on all the fields we have and remove if there's one match
-    end
-
     def reset_row
       # We *could* skip this, but I prefer not to deal with missing keys: makes the code cleaner
       @models = { node: nil, scientific_name: nil, ancestors: nil, medium: nil, vernacular: nil, occurrence: nil,
-                  trait: nil, identifiers: nil, location: nil, ref: nil, debug: false }
+                  trait: nil, identifiers: nil, location: nil, ref: nil }
     end
 
-    def build_models
+    def build_models(type)
+      @type = type
       build_licenses
       fix_parent_fks_used_for_accepted_fks
       @synonym = synonym?
-      @process.warn(@models[:log].join('; ')) if @models[:log]
+      log_model_info if @models[:log]
       build_scientific_name if @models[:scientific_name]
       build_ancestors if @models[:ancestors]
       build_identifiers if @models[:identifiers]
       build_node if @models[:node]
       build_location if @models[:location]
       build_medium if @models[:medium]
-      build_vernacular if @models[:vernacular] # TODO: this one is not very robust
+      build_vernacular if @models[:vernacular]
       build_occurrence if @models[:occurrence]
       build_trait if @models[:trait]
       build_assoc if @models[:assoc]
       build_attribution if @models[:attribution]
       build_ref if @models[:reference]
-      # TODO: still need to build article, js_map (?), link, map, sound, video
+      @type = nil # just to avoid scope creep
+    end
+
+    def log_model_info
+      @process.warn(@models[:log].join('; '))
     end
 
     def build_licenses
-      @process.debug('#build_licenses') if @models[:debug]
       return if @licenses
 
       @licenses = {}
@@ -42,7 +42,6 @@ module Store
     # prefered. ...This indicates a synonym, and the "parentNameUsageID" should be treated as an "acceptedNameUsageID"
     # value instead (which the code uses as the "synonym_of" field on the scientific name hash).
     def fix_parent_fks_used_for_accepted_fks
-      @process.debug('#fix_parent_fks_used_for_accepted_fks') if @models[:debug]
       return unless @models[:node]
       return unless @models[:scientific_name].key?(:taxonomic_status_verbatim)
       return if @models[:scientific_name][:taxonomic_status_verbatim].blank?
@@ -56,12 +55,10 @@ module Store
 
     # Opposite of is_preferred? ...but I think this is clearer...
     def synonym?
-      @process.debug('#synonym?') if @models[:debug]
       @models[:scientific_name] && @models[:scientific_name][:synonym_of]
     end
 
     def build_scientific_name
-      @process.debug('#build_scientific_name') if @models[:debug]
       @models[:scientific_name][:resource_id] = @resource.id
       @models[:scientific_name][:harvest_id] = @harvest.id
       @models[:scientific_name][:resource_pk] = @models[:node][:resource_pk] # Always the same, especially for synonyms.
@@ -72,29 +69,23 @@ module Store
         #  KS: "Generally, records of non-preferred names don't have a parentNameUsageID, but sometimes they do. In
         #  records that have both an acceptedNameUsageID and a parentNameUsageID, the parentNameUsageID should be
         #  ignored"
-        if @models[:node]
-          @models[:node][:parent_resource_pk] = nil
-          @process.debug('ignoring parentNameUsageID because there is an acceptedNameUsageID') if @models[:debug]
-        end
+        @models[:node][:parent_resource_pk] = nil if @models[:node]
       else
         @models[:scientific_name][:node_resource_pk] = @models[:node][:resource_pk]
         @models[:scientific_name][:is_preferred] = true
       end
       @models[:scientific_name][:taxonomic_status] =
         if @models[:scientific_name][:taxonomic_status_verbatim].blank?
-          @process.debug('taxonomic_status_verbatim blank, setting as preferred') if @models[:debug]
           :preferred
         else
           status = parse_status(@models[:scientific_name][:taxonomic_status_verbatim])
-          @process.debug("taxonomic_status_verbatim parsed as taxonomic status #{status}") if @models[:debug]
           status
         end
 
-      prepare_model_for_store(ScientificName, @models[:scientific_name])
+      handle_model_based_on_type(ScientificName, @models[:scientific_name])
     end
 
     def parse_status(status)
-      @process.debug('#parse_status') if @models[:debug]
       begin
         TaxonomicStatus.parse(status)
       rescue Errors::UnmatchedTaxonomicStatus => e
@@ -105,19 +96,16 @@ module Store
     end
 
     def build_node
-      @process.debug('#build_node') if @models[:debug]
       return if @synonym # Don't build a node for synonyms.
 
-      @process.debug('Not a synonym, proceeding.') if @models[:debug]
       @models[:node][:resource_id] ||= @resource.id
       @models[:node][:harvest_id] ||= @harvest.id
       unless @models[:node][:rank_verbatim].blank?
         # NOTE: #clean_rank creates a (normalized) STRING, not an ID. q.v.
         @models[:node][:rank] = clean_rank(@models[:node][:rank_verbatim])
-        @process.debug("rank_verbatim provided, set rank to #{@models[:node][:rank]}") if @models[:debug]
       end
       build_references(:node, NodesReference)
-      prepare_model_for_store(Node, @models[:node])
+      handle_model_based_on_type(Node, @models[:node])
     end
 
     # TODO: an UPDATE of this type might be trickier to handle than I have here. e.g.: The only change on this row was
@@ -125,11 +113,9 @@ module Store
     # actually used elsewhere), so it will still exist and still be harvested and will still have children that it
     # shouldn't. But, as mentioned, this is a difficult case to detect.
     def build_ancestors
-      @process.debug('#build_ancestors') if @models[:debug]
       ancestry = []
       prev = nil
       Rank.sort(@models[:ancestors].keys).each do |rank|
-        @process.debug("Handling rank #{rank}") if @models[:debug]
         ancestor_canonical = @models[:ancestors][rank]
         ancestry << ancestor_canonical
         ancestry_joined = ancestry.join('->')
@@ -139,19 +125,16 @@ module Store
         # used.
         if @nodes_by_ancestry.key?(ancestry_joined)
           # Do nothing.
-          @process.debug('ignoring duplicate node in ancestry') if @models[:debug]
         else # New ancestry...
           if @diff == :new
-            @process.debug('new row, preparing node and name') if @models[:debug]
             model = { harvest_id: @harvest.id, resource_id: @resource.id, rank_verbatim: rank,
                       parent_resource_pk: prev, resource_pk: ancestor_pk, canonical: ancestor_canonical }
-            prepare_model_for_store(Node, model)
+            handle_model_based_on_type(Node, model)
             name = { resource_id: @resource.id, harvest_id: @harvest.id, resource_pk: ancestor_pk,
                      node_resource_pk: ancestor_pk, verbatim: ancestor_canonical,
                      taxonomic_status_verbatim: 'HARVEST ANCESTOR', is_preferred: true }
-            prepare_model_for_store(ScientificName, name)
+            handle_model_based_on_type(ScientificName, name)
           else
-            @process.debug('old row, skipping') if @models[:debug]
           end
           @nodes_by_ancestry[ancestry_joined] = true
         end
@@ -161,27 +144,23 @@ module Store
     end
 
     def build_identifiers
-      @process.debug('#build_identifiers') if @models[:debug]
       @models[:identifiers].each do |identifier|
-        @process.debug("Building identifier for {#{identifier}}") if @models[:debug]
         ider = {}
         ider[:node_resource_pk] = @models[:node][:resource_pk]
         ider[:identifier] = identifier
         ider[:resource_id] = @resource.id
         ider[:harvest_id] = @harvest.id
-        prepare_model_for_store(Identifier, ider)
+        handle_model_based_on_type(Identifier, ider)
       end
     end
 
     def build_location
-      @process.debug('#build_location') if @models[:debug]
       @locations ||= {}
       loc_key = @models[:location].to_s
       location =
         if @locations.key?(loc_key)
           @locations[loc_key]
         else
-          @process.debug('location unknown; creating new (slow)') if @models[:debug]
           # NOTE: this is NOT delayed; it is instantly created (unless it exists). ...This is slow. :S ...the
           # alternative isn't much faster, though, since we'll have to do as many updates (of media). Sigh.
           Location.where(@models[:location]).first_or_create
@@ -191,7 +170,6 @@ module Store
     end
 
     def build_medium
-      @process.debug('#build_medium') if @models[:debug]
       unless medium_types_valid?
         @process.warn("skipping invalid medium (missing format or subtype) with resource_pk #{@models[:medium][:resource_pk]}, subclass "\
           "#{@models[:medium][:subclass]} (from #{@models[:medium][:original_type]}), format "\
@@ -213,29 +191,24 @@ module Store
       lang = find_or_create_language(lang_code)
       @models[:medium][:language_id] = lang.id
       if @models[:medium][:is_article]
-        @process.debug('...is Article') if @models[:debug]
         @models[:article] = @models[:medium]
         build_article
       else
-        @process.debug('...is normal Medium') if @models[:debug]
         build_true_medium
       end
     end
 
     def delete_extra_medium_fields
-      @process.debug('#delete_extra_medium_fields') if @models[:debug]
       @models[:medium].delete(:original_type)
       @models[:medium].delete(:original_format)
     end
 
     def medium_types_valid?
-      @process.debug('#medium_types_valid') if @models[:debug]
       @models[:medium][:subclass].present? &&
         (@models[:medium][:is_article] || @models[:medium][:format].present?)
     end
 
     def build_article
-      @process.debug('#build_article') if @models[:debug]
       @models[:article][:guid] = "EOL-article-#{@resource.id}-#{@models[:article][:resource_pk]}"
       truncate(:article, :name, 254)
       @models[:article][:body] = @models[:article].delete(:description)
@@ -256,21 +229,18 @@ module Store
       build_attributions(Article, @models[:article])
       build_sections(@models[:article].delete(:section_value))
       if @models[:article][:source_url].blank?
-        @process.debug('article source URL blank, using source page') if @models[:debug]
         @models[:article][:source_url] = @models[:article].delete(:source_page_url)
       elsif !@models[:article][:source_page_url].blank?
         raise "Attempt to specify both source_url and source_page_url on Article #{@models[:article][:resource_pk]}"
       end
       # Articles have far less information than media:
       %i[subclass format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|
-        @process.debug("Skipping superfluous #{superfluous_field}") if @models[:debug]
         @models[:article].delete(superfluous_field)
       end
-      prepare_model_for_store(Article, @models[:article])
+      handle_model_based_on_type(Article, @models[:article])
     end
 
     def build_true_medium
-      @process.debug('#build_true_medium') if @models[:debug]
       @models[:medium][:guid] = "EOL-media-#{@resource.id}-#{@models[:medium][:resource_pk]}"
       build_references(:medium, MediaReference)
       build_attributions(Medium, @models[:medium])
@@ -280,21 +250,17 @@ module Store
       @models[:medium][:name] ||= @models[:medium][:name_verbatim]
       truncate(:medium, :name, 254)
       @models[:medium].delete(:section_value) # TODO: someday we probably want to keep this. Not today.
-      prepare_model_for_store(Medium, @models[:medium])
+      handle_model_based_on_type(Medium, @models[:medium])
     end
 
     def truncate(model, field, length, options = {})
-      @process.debug('#truncate') if @models[:debug]
       return unless @models[model][field]
 
-      @process.debug('not blank, continuing') if @models[:debug]
       return unless @models[model][field].size > length
 
-      @process.debug("too long (#{@models[model][field].size}>#{length}), truncating") if @models[:debug]
       longer = length + 256
       # Max length on log line (the limit is bout 64_000, but that's tedious and doesn't give us much more info.)
       longer = 2000 if longer > 2000
-      if options[:warn] || @models[:debug]
         @process.warn("title is too long for medium #{@models[model][:resource_pk]}; truncating to #{length} chars: "\
           "#{@models[model][field][0..longer]}...")
       end
@@ -302,20 +268,15 @@ module Store
     end
 
     def find_or_build_license(url)
-      @process.debug('#find_or_build_license') if @models[:debug]
       if url.blank?
-        @process.debug('license URI is blank, using default') if @models[:debug]
         return @resource.default_license&.id || License.public_domain.id
       end
       return @licenses[url] if @licenses.key?(url)
 
-      @process.debug('license not known, parsing.') if @models[:debug]
       name =
         if url =~ %r{creativecommons\.org\/licenses}
-          @process.debug('license is CC, parsing as such') if @models[:debug]
           'cc-' + url.split('/')[-2..-1].join(' ')
         else
-          @process.debug('using last term in license as the name') if @models[:debug]
           url.split('/').last.titleize
         end
       license = License.create(name: name, source_url: url, can_be_chosen_by_partners: false)
@@ -323,50 +284,42 @@ module Store
     end
 
     def build_references(key, klass)
-      @process.debug('#build_references') if @models[:debug]
       return if @models[key][:ref_fks].blank?
 
-      @process.debug('reference FKs exist, continuing') if @models[:debug]
       sep = "[#{@models[key].delete(:ref_sep) || '|;'}]"
       fks = @models[key].delete(:ref_fks)
       fks.split(/#{sep}\s*/).each do |ref_fk|
-        @process.debug("found ref FK {#{ref_fk}}") if @models[:debug]
-        prepare_model_for_store(klass, "#{key}_resource_fk": @models[key][:resource_pk],
+        handle_model_based_on_type(klass, "#{key}_resource_fk": @models[key][:resource_pk],
                                        ref_resource_fk: ref_fk, harvest_id: @harvest.id)
       end
     end
 
     # TODO: handle things if there's no "is_preferred" field. ...not sure if we should assume pref'd or not, though.
     def build_vernacular
-      @process.debug('#build_vernacular') if @models[:debug]
       @models[:vernacular][:resource_id] = @resource.id
       @models[:vernacular][:harvest_id] = @harvest.id
       lang_code = @models[:vernacular][:language_code_verbatim] || 'en'
       lang = find_or_create_language(lang_code)
       @models[:vernacular][:language_id] = lang.id
       # TODO: there are some other normalizations and checks we should do here, I expect.
-      prepare_model_for_store(Vernacular, @models[:vernacular])
+      handle_model_based_on_type(Vernacular, @models[:vernacular])
     end
 
     def build_occurrence
-      @process.debug('#build_occurrence') if @models[:debug]
       @models[:occurrence][:harvest_id] = @harvest.id
       @models[:occurrence][:resource_id] = @resource.id
       meta = @models[:occurrence].delete(:meta) || {}
       if @models[:occurrence][:sex]
-        @process.debug('sex exists, treating as Term') if @models[:debug]
         sex = @models[:occurrence].delete(:sex)
         @models[:occurrence][:sex_term_uri] = fail_on_bad_uri(sex)
       end
       if @models[:occurrence][:lifestage]
-        @process.debug('lifestage exists, treating as Term') if @models[:debug]
         lifestage = @models[:occurrence].delete(:lifestage)
         @models[:occurrence][:lifestage_term_uri] = fail_on_bad_uri(lifestage)
       end
       # TODO: there are some other normalizations and checks we should do here, # I expect.
-      prepare_model_for_store(Occurrence, @models[:occurrence])
+      handle_model_based_on_type(Occurrence, @models[:occurrence])
       meta.each do |key, value|
-        @process.debug("setting meta #{key} to {#{value}}") if @models[:debug]
         datum = {}
         datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
         datum[:predicate_term_uri] = fail_on_bad_uri(key)
@@ -374,12 +327,11 @@ module Store
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum.delete(:source) # TODO: we should allow (and show) this. :S
-        prepare_model_for_store(OccurrenceMetadatum, datum)
+        handle_model_based_on_type(OccurrenceMetadatum, datum)
       end
     end
 
     def build_trait
-      @process.debug('#build_trait') if @models[:debug]
       parent = @models[:trait][:parent_pk] || @models[:trait][:parent_eol_pk]
       occurrence = @models[:trait][:occurrence_resource_pk]
       dup_model = @models[:trait].dup # TEMP:
@@ -397,7 +349,6 @@ module Store
       @models[:trait][:resource_pk] ||= (@default_trait_resource_pk += 1)
       build_references(:trait, TraitsReference)
       unless @models[:trait].key?(:of_taxon)
-        @process.debug('trait is of_taxon') if @models[:debug]
         @models[:trait][:of_taxon] = true
       end
       # Example of occurrence metadata: Leptonychotes weddellii from PanTHERia. Should have metadata of body mass of
@@ -430,7 +381,6 @@ module Store
       end
 
       if @models[:trait][:statistical_method]
-        @process.debug('statistical method exists, setting to Term') if @models[:debug]
         stat_m = @models[:trait].delete(:statistical_method)
         @models[:trait][:statistical_method_term_uri] = fail_on_bad_uri(stat_m)
       end
@@ -442,9 +392,8 @@ module Store
       # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
       # it somewhere, and that’s all that matters for mvp"
       # build_attributions(Trait, @models[:trait])
-      trait = prepare_model_for_store(klass, @models[:trait])
+      trait = handle_model_based_on_type(klass, @models[:trait])
       meta.each do |key, value|
-        @process.debug("setting meta #{key} to #{value}") if @models[:debug]
         datum = {}
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
@@ -457,12 +406,11 @@ module Store
           datum[:resource_pk] = "meta_#{@models[:trait][:resource_pk]}"
           datum[:occurrence_resource_pk] = @models[:trait][:occurrence_resource_pk]
         end
-        prepare_model_for_store(klass, datum)
+        handle_model_based_on_type(klass, datum)
       end
     end
 
     def build_assoc
-      @process.debug('#build_assoc') if @models[:debug]
       @models[:assoc][:resource_id] = @resource.id
       @models[:assoc][:harvest_id] = @harvest.id
       predicate = @models[:assoc].delete(:predicate)
@@ -476,54 +424,46 @@ module Store
       # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
       # it somewhere, and that’s all that matters for mvp"
       # build_attributions(Assoc, @models[:assoc])
-      assoc = prepare_model_for_store(Assoc, @models[:assoc])
+      assoc = handle_model_based_on_type(Assoc, @models[:assoc])
       meta.each do |key, value|
-        @process.debug("setting meta #{key} to {#{value}}") if @models[:debug]
         datum = {}
         datum[:predicate_term_uri] = fail_on_bad_uri(key)
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
         datum[:assoc_resource_fk] = assoc.resource_pk
         datum = convert_meta_value(datum, value)
-        prepare_model_for_store(MetaAssoc, datum)
+        handle_model_based_on_type(MetaAssoc, datum)
       end
     end
 
     def build_ref
-      @process.debug('#build_ref') if @models[:debug]
       @models[:reference][:resource_id] ||= @resource.id
       @models[:reference][:harvest_id] ||= @harvest.id
       # NOTE: sometimes all there is, is a URL or a DOI (or both), with an empty body.
       if @models[:reference][:body].blank? && @models[:reference][:parts]
-        @process.debug('reference has parts, joining for body') if @models[:debug]
         @models[:reference][:body] = @models[:reference][:parts].join(' ')
       end
       @models[:reference].delete(:parts)
-      prepare_model_for_store(Reference, @models[:reference])
+      handle_model_based_on_type(Reference, @models[:reference])
     end
 
     def build_attribution
-      @process.debug('#build_attribution') if @models[:debug]
       @models[:attribution][:resource_id] ||= @resource.id
       @models[:attribution][:harvest_id] ||= @harvest.id
       # NOTE: the role *can* be nil. It's not required. ...but the publishing DB DOES require it, so we're setting a
       # default here of "contributor" per JH's suggestion. It's vague enough that it works.
       @models[:attribution][:role] = symbolize(@models[:attribution][:role]) || :contributor
       if (other_info = @models[:attribution].delete(:other_info))
-        @process.debug('other_info set in attribution, changing to JSON') if @models[:debug]
         @models[:attribution][:other_info] = other_info.to_json
       end
-      prepare_model_for_store(Attribution, @models[:attribution])
+      handle_model_based_on_type(Attribution, @models[:attribution])
     end
 
     def build_attributions(klass, model)
-      @process.debug('#build_attributions') if @models[:debug]
       return if model[:attributions].blank?
 
-      @process.debug('attributions not blank, continuing') if @models[:debug]
       sep = "[#{model.delete(:attribution_sep) || '|;'}]"
       model[:attributions].split(/#{sep}\s*/).each do |fk|
-        @process.debug("found attribution {#{fk}}") if @models[:debug]
         content_attribution = {
           content_type: klass.to_s,
           content_resource_fk: model[:resource_pk],
@@ -531,49 +471,40 @@ module Store
           resource_id: @resource.id,
           harvest_id: @harvest.id
         }
-        prepare_model_for_store(ContentAttribution, content_attribution)
+        handle_model_based_on_type(ContentAttribution, content_attribution)
       end
       model.delete(:attributions)
     end
 
     def build_bib_cit(value, resource_pk)
-      @process.debug('#build_bib_cit') if @models[:debug]
       return nil if value.blank?
 
-      @process.debug('value not blank, continuing') if @models[:debug]
       # TODO: we should do some scrubbing of that body content:
-      prepare_model_for_store(BibliographicCitation, body: value, resource_pk: resource_pk, resource_id: @resource.id,
+      handle_model_based_on_type(BibliographicCitation, body: value, resource_pk: resource_pk, resource_id: @resource.id,
                                                      harvest_id: @harvest.id)
     end
 
     def build_sections(values)
-      @process.debug('#build_sections') if @models[:debug]
       return nil if values.blank?
 
-      @process.debug('values not blank, continuing') if @models[:debug]
       # Sorry, not making this separator configurable. :|
       values.split(/\s*[|;]\s*/).each do |value|
-        @process.debug("found value {#{value}}") if @models[:debug]
         sid = find_section(value)
         if sid.nil?
-          @process.debug('skipping blank section') if @models[:debug]
           next
         end
-        prepare_model_for_store(ArticlesSection,
+        handle_model_based_on_type(ArticlesSection,
                                 article_pk: @models[:article][:resource_pk], section_id: sid, harvest_id: @harvest.id)
       end
     end
 
     def find_section(orig_value)
-      @process.debug('#find_section') if @models[:debug]
       return nil if orig_value.blank?
 
-      # @process.debug("original value not blank ({#{orig_value}}), continuing...")
       value = orig_value.gsub(/\s+\Z/, '').gsub(/\A\s+/, '') # Strip space, of course.
       @section_values ||= {}
       return @section_values[value] if @section_values.key?(value)
 
-      @process.debug("Section value {#{@section_values[value]}} not known, continuing...") if @models[:debug]
       unless SectionValue.exists?(value: value)
         @process.warn("Could not find a section value of '#{value}' for article #{@models[:article][:resource_pk]}")
         return @section_values[value] = nil
@@ -582,36 +513,28 @@ module Store
     end
 
     def symbolize(str)
-      @process.debug('#symbolize') if @models[:debug]
       return nil if str.blank?
 
-      @process.debug('string not blank, continuing') if @models[:debug]
       str.downcase.gsub(/\W+/, '_').underscore.gsub(/_+$/, '').gsub(/^_+/, '').gsub(/_+/, '_')
     end
 
     def convert_trait_value(instance, options = {})
-      @process.debug('#convert_trait_value') if @models[:debug]
       value = instance.delete(:value)
       if options[:predicate] && EolTerms.by_uri(options[:predicate])['is_text_only']
         if instance[:units]
           @process.warn("Units are set on trait, but predicate #{options[:predicate]} is flagged as text-only! This trait will have a literal and not a measurement.")
-        elsif @models[:debug]
-          @process.debug('predicate flagged as text-only, setting literal only')
         end
 
         instance[:literal] = value
         return instance
       end
       if Term.uri?(value)
-        @process.debug('value recognized as URI, treating as term') if @models[:debug]
         instance[:object_term_uri] = fail_on_bad_uri(value)
       end
       # NOTE we have to check both for units AND for a numeric value to see if it's "numeric"
       if instance[:units] || (!Float(value&.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
-        @process.debug('instance has units') if @models[:debug]
         units = instance.delete(:units)
         if Term.uri?(units)
-          @process.debug('units looks like a URI, treating as term') if @models[:debug]
           instance[:units_term_uri] = fail_on_bad_uri(units)
         elsif !units.blank?
           raise("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
@@ -621,7 +544,6 @@ module Store
         instance[:measurement] = value&.tr(',', '')
         # NOTE: We are handling unit normalization at the publishing layer for now.
       else
-        @process.debug('instance does NOT have units, setting literal') if @models[:debug]
         # TODO: really, we want a robust map of literal values to reasonable URIs, but that should be "filtered".
         instance[:literal] = value
       end
@@ -630,14 +552,11 @@ module Store
 
     # Simpler:
     def convert_meta_value(datum, value)
-      @process.debug('#convert_meta_value') if @models[:debug]
       if datum[:predicate_term_uri] && EolTerms.by_uri(datum[:predicate_term_uri])['is_text_only']
         datum[:literal] = value
-        @process.debug('predicate URI flagged as text-only, setting literal only') if @models[:debug]
         return datum
       end
       if Term.uri?(value)
-        @process.debug('treating value as a URI') if @models[:debug]
         datum[:object_term_uri] = fail_on_bad_uri(value)
       else
         datum[:literal] = value
@@ -646,43 +565,33 @@ module Store
     end
 
     def fail_on_bad_uri(uri)
-      @process.debug('#fail_on_bad_uri') if @models[:debug]
       return nil if uri.blank?
 
-      @process.debug('URI is NOT blank, continue...') if @models[:debug]
       raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri.downcase)
 
       uri.downcase # This is perhaps SLIGHTLY dangerous, but: URIs are SUPPOSED to be case-insensitive!
     end
 
     def find_or_create_language(lang_code)
-      @process.debug('#find_or_create_language') if @models[:debug]
       @languages_by_code ||= {}
       @languages_by_group ||= {}
       if @languages_by_code.key?(lang_code)
-        @process.debug('language known') if @models[:debug]
         @languages_by_code[lang_code]
       elsif @languages_by_group.key?(lang_code)
-        @process.debug('language group known') if @models[:debug]
         @languages_by_group[lang_code]
       elsif Language.exists?(code: lang_code)
-        @process.debug('language in database') if @models[:debug]
         lang = Language.where(code: lang_code).first
         @languages_by_code[lang_code] = lang
         lang
       elsif Language.exists?(group_code: lang_code)
-        @process.debug('language group in database') if @models[:debug]
         lang = Language.where(group_code: lang_code).first
         @languages_by_group[lang_code] = lang
         lang
       else
-        @process.debug("creating new language for #{lang_code}") if @models[:debug]
         attrs =
           if (iso = ISO_639.find(lang_code))
-            @process.debug('code found in ISO_629 gem') if @models[:debug]
             { code: iso.alpha3, group_code: iso.alpha2 }
           else
-            @process.debug('code NOT found in ISO_629 gem, building custom') if @models[:debug]
             { code: lang_code, group_code: lang_code }
           end
         # NOTE: languages don't have "name" fields; that's handled by I18n based on the code.
@@ -693,16 +602,34 @@ module Store
     end
 
     def clean_rank(verbatim)
-      @process.debug('#clean_rank') if @models[:debug]
       @ranks ||= {}
       return @ranks[verbatim] if @ranks.key?(verbatim)
 
       @ranks[verbatim] = Rank.clean(verbatim)
     end
 
-    # TODO: extract to Store::Storage
+    def handle_model_based_on_type(klass, model)
+      if @type == :old
+        destroy_model(klass, model)
+      else
+        prepare_model_for_store(klass, model)
+      end
+    end
+
+    def destroy_model(klass, model)
+      matches = klass.column_names.map(&:to_sym).select { |col| model.has_key?(col) }
+      match_attributes = model.slice(*matches)
+      records = klass.where(match_attributes)
+      if records.one?
+        @old[klass] ||= 0
+        @old[klass] += 1
+        records.first.destroy
+      else
+        raise("ERROR: cannot delete #{klass}, found #{records.size} records matching #{pp match_attributes}")
+      end
+    end
+
     def prepare_model_for_store(klass, model)
-      @process.debug('#prepare_model_for_store') if @models[:debug]
       @new[klass] ||= []
       new_model = klass.send(:new, model)
       @new[klass] << new_model
@@ -711,7 +638,6 @@ module Store
     end
 
     def fake_pk(type)
-      @process.debug('#fake_pk') if @models[:debug]
       @fake_pks ||= {}
       @fake_pks[type] ||= 0
       @fake_pks[type] += 1

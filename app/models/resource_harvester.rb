@@ -318,8 +318,8 @@ class ResourceHarvester
       i = 0
       time = Time.now
       @process.enter_group(@diff_size) do |harv_proc|
-        # YOU WERE HERE - I'm not sure @parser is right, here; check.
         any_diff = @parser.diff_as_hashes(@headers) do |row|
+          type = row.delete(:type)
           @line_of_diff += 1
           if (@line_of_diff % 10_000).zero?
             flush_model_cache
@@ -328,37 +328,40 @@ class ResourceHarvester
           end
           @file = @parser.path_to_file
           reset_row
-          begin
-            @headers.each do |header|
-              field = fields[header]
-              if row[header].blank?
-                next unless field.default_when_blank
-
-                row[header] = field.default_when_blank
-              end
-              next if field.to_ignored?
-              raise "BAD FIELD: no mapping ##{field&.id} for #{@format.represents} format" if field.mapping.nil?
-              raise "NO HANDLER FOR '#{field.mapping}' for #{@format.represents} format!" unless
-                respond_to?(field.mapping)
-
-              # NOTE: that these methods are defined in the Store::* mixins:
-              send(field.mapping, field, row[header])
-            end
-          rescue => e
-            @process.info("Failed to parse row #{@line_num}...")
-            raise e
-          end
+          safely_map_fields_to_headers(fields, row)
           # NOTE: see Store::ModelBuilder mixin for the methods called here. (Why aren't they here? Composition.)
-          type = row.delete(:type)
-          if type == :old
-            destroy_for_fmt
-          else # new
-            build_models
-          end
+          build_models(type)
         end
         @process.warn('There were no differences in this file!') unless any_diff
       end
       flush_model_cache
+    end
+  end
+
+  def safely_map_fields_to_headers(fields, row)
+    begin
+      map_fields_to_headers(fields, row)
+    rescue => e
+      @process.info("Failed to parse row #{@line_num}...")
+      raise e
+    end
+  end
+
+  def map_fields_to_headers(fields, row)
+    @headers.each do |header|
+      field = fields[header]
+      if row[header].blank?
+        next unless field.default_when_blank
+
+        row[header] = field.default_when_blank
+      end
+      next if field.to_ignored?
+      raise "BAD FIELD: no mapping ##{field&.id} for #{@format.represents} format" if field.mapping.nil?
+      raise "NO HANDLER FOR '#{field.mapping}' for #{@format.represents} format!" unless
+      respond_to?(field.mapping)
+
+      # NOTE: that these methods are defined in the Store::* mixins:
+      send(field.mapping, field, row[header])
     end
   end
 
@@ -368,7 +371,7 @@ class ResourceHarvester
     find_orphan_parent_nodes # Empty now, TODO with deltas.
     find_duplicate_nodes
     store_new
-    remove_old
+    log_old
     clear_storage_vars # Allow GC to clean up!
   end
 
@@ -452,15 +455,9 @@ class ResourceHarvester
     @harvest.update_attribute(:stored_at, Time.now)
   end
 
-  # TODO: extract to Store::Storage
-  def remove_old
-    @old.each do |klass, by_keys|
-      @process.info("Marking old #{klass.name}") unless by_keys.empty?
-      by_keys.each do |key, pks|
-        pks.in_groups_of(1000, false) do |group|
-          klass.send(:where, key => group, :resource_id => @resource.id).update_all(removed_by_harvest_id: @harvest.id)
-        end
-      end
+  def log_old
+    @old.each do |klass, count|
+      @process.warn("Removed #{count} instance#{'s' if count > 1} of #{klass.name}")
     end
   end
 
@@ -754,10 +751,10 @@ class ResourceHarvester
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)
         @formats[fid] = {}
-        @formats[fid][:parser] = @harvest.diff_parser(@format)
+        @formats[fid][:parser] = @format.diff_parser
         @formats[fid][:headers] = @format.headers
       end
-      @parser = @formats[fid][:parser]
+      @parser = @formats[fid].diff_parser
       @headers = @formats[fid][:headers]
       @file = @format.diff_file
       @process.info("Handling diff: #{@file} (#{@file.readlines.size} lines)")

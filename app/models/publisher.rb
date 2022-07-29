@@ -1,4 +1,4 @@
-# Publish to the website database as quick as you can, please. NOTE: We will NOT publish Terms in this code.
+# Publish to the website database as quick as you can, please.
 require "set"
 
 class Publisher
@@ -32,8 +32,8 @@ class Publisher
   def initialize(resource, process, harvest)
     @resource = resource
     @process = process
+    @model_mapper = WebDb::ModelMapper.new(@resource, @process)
     @trait_filename = harvest.trait_filename
-    @root_url = Rails.application.secrets.repository[:url] || 'http://eol.org'
     @web_resource_id = nil
     @files = {}
     @nodes = {}
@@ -63,16 +63,6 @@ class Publisher
     @references = []
     @attributions = []
     @content_sections = []
-    @same_sci_name_attributes =
-      %i[italicized genus specific_epithet infraspecific_epithet infrageneric_epithet uninomial verbatim
-         authorship publication remarks parse_quality year hybrid surrogate virus]
-    # TODO: Stylesheet and Javascript. ...We don't need them yet, sooo...
-    @same_article_attributes = %i[guid resource_pk source_url name body source_url]
-    @same_medium_attributes =
-      %i[guid resource_pk source_url name description unmodified_url base_url
-         source_page_url rights_statement usage_statement]
-    @same_node_attributes = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
-    @same_vernacular_attributes = %i[node_resource_pk locality remarks source]
   end
 
   def by_resource
@@ -95,10 +85,6 @@ class Publisher
       raise('OUT OF MEMORY. This is NOT a problem for this resource (really, it isn\'t), but means that you should '\
             'have someone restart the containers!')
     end
-  end
-
-  def learn_resource_publishing_id
-    @web_resource_id = WebDb.resource_id(@resource)
   end
 
   def create_tsv
@@ -168,46 +154,22 @@ class Publisher
   end
 
   def node_to_struct(node)
-    web_node = Struct::WebNode.new
-    copy_fields(@same_node_attributes, node, web_node)
-    web_node.resource_id = @web_resource_id
+    web_node = @model_mapper.node_to_struct(node)
+    timestamp(web_node)
     web_node.parent_id = node.parent_id # NOTE this is a HARV DB ID. We need to update it.
-    web_node.harv_db_id = node.id
-    web_node.canonical_form = clean_values(node.safe_canonical)
-    web_node.scientific_name = clean_values(node.safe_scientific)
-    web_node.has_breadcrumb = clean_values(!node.no_landmark?)
-    web_node.rank_id = WebDb.rank(node.rank, @process)
-    web_node.is_hidden = 0
-    web_node.created_at = Time.now.to_s(:db)
-    web_node.updated_at = Time.now.to_s(:db)
-    web_node.landmark = Node.landmarks[node.landmark] # NOTE: we are RELYING on the enum being the same, here!
     @nodes_by_pk[node.resource_pk] = web_node
     add_refs(node)
-  end
-
-  def copy_fields(fields, source, dest)
-    fields.each do |field|
-      val = source.attributes.key?(field) ? source[field] : source.send(field)
-      dest[field] = clean_values(val)
-    end
   end
 
   def add_refs(object)
     object.references.each do |ref|
       next if @referents.key?(ref.id)
 
-      t = Time.now.to_s(:db)
-      referent = Struct::WebReferent.new
-      referent.body = clean_values(ref.body)
-      referent.created_at = t
-      referent.updated_at = t
-      referent.resource_id = @web_resource_id
-      referent.harv_db_id = ref.id
+      referent = @model_mapper.referant_to_struct(ref)
+      timestamp(referent)
       @referents[ref.id] = referent
-      reference = Struct::WebReference.new
-      reference.parent_type = object.class.name
+      reference = @model_mapper.reference_to_struct(object)
       reference.parent_id = object.id # NOTE: this is a HARV DB ID and should be replaced later.
-      reference.resource_id = @web_resource_id
       reference.referent_id = ref.id # NOTE: this is also a harv ID, and will need to be replaced.
       @references << reference
     end
@@ -217,29 +179,15 @@ class Publisher
     object.content_attributions.each do |content_attribution|
       next unless content_attribution.attribution
 
-      t = Time.now.to_s(:db)
-      attribution = Struct::WebAttribution.new
-      attribution.value = clean_values(content_attribution.attribution.body)
-      attribution.created_at = t
-      attribution.updated_at = t
-      attribution.resource_id = @web_resource_id
-      attribution.resource_pk = clean_values(content_attribution.attribution.resource_pk)
-      attribution.content_resource_fk = clean_values(content_attribution.content_resource_fk)
-      attribution.content_type = content_attribution.content_type
-      attribution.content_id = content_attribution.content_id # NOTE this is the HARVEST DB ID. It will be replaced.
-      attribution.role_id = WebDb.role(content_attribution.attribution.role, @process)
-      attribution.url = content_attribution.attribution.sanitize_url
+      attribution = @model_mapper.attribution_to_struct(content_attribution)
+      timestamp(attribution)
       @attributions << attribution
     end
   end
 
   def add_sections(object, type)
     object.articles_sections.each do |articles_section|
-      section = Struct::WebContentSection.new
-      section.resource_id = @web_resource_id
-      section.content_id = object.id # NOTE this is the HARVEST DB ID. It will be replaced.
-      section.content_type = type
-      section.section_id = articles_section.section_id # WE ASSUME THE IDs ARE THE SAME! (q.v.: DefaultSections)
+      section = @model_mapper.section_to_struct(object, articles_section)
       @content_sections << section
     end
   end
@@ -251,13 +199,8 @@ class Publisher
     object.bibliographic_citation_id = citation.id
     return if @bib_cits.key?(citation.id)
 
-    t = Time.now.to_s(:db)
-    bc = Struct::WebBibliographicCitation.new
-    bc.body = clean_values(citation.body)
-    bc.created_at = t
-    bc.updated_at = t
-    bc.harv_db_id = citation.id
-    bc.resource_id = @web_resource_id
+    bc = @model_mapper.citation_to_struct(citation)
+    timestamp(bc)
     @bib_cits[citation.id] = bc
   end
 
@@ -268,25 +211,7 @@ class Publisher
     object.location_id = loc.id
     return if @locs.key?(loc.id)
 
-    literal = "#{loc.lat_literal} #{loc.long_literal} #{loc.alt_literal} #{loc.locality}"
-    loc_struct = Struct::WebLocation.new
-    loc_struct.location = literal
-    loc_struct.longitude = loc.long
-    loc_struct.latitude = loc.lat
-    loc_struct.altitude = loc.alt
-    loc_struct.spatial_location = loc.locality
-    loc_struct.resource_id = @web_resource_id
-    @locs[loc.id] = loc_struct
-  end
-
-  def clean_values(src)
-    val = src.dup
-    if val.respond_to?(:gsub!)
-      val.gsub!("\t", '&nbsp;') # Sorry, no tabs allowed.
-    end
-    val = 1 if val.class == TrueClass
-    val = 0 if val.class == FalseClass
-    val
+    @locs[loc.id] = @model_mapper.location_to_struct(loc)
   end
 
   def build_page(node)
@@ -297,12 +222,12 @@ class Publisher
     end
   end
 
+  # This is NOT in the model mapper because it is HIGHLY dependent on the information provided by this class. You cannot
+  # create a Page without creating all of the "things" on the page at the same time, so it does not make sense there.
   def build_new_page(node)
     @pages[node.page_id] = Struct::WebPage.new
     @pages[node.page_id].id = node.page_id
-    t = Time.now.to_s(:db)
-    @pages[node.page_id].created_at = t
-    @pages[node.page_id].updated_at = t
+    timestamp(@pages[node.page_id])
     @pages[node.page_id].articles_count = node.articles.size
     @pages[node.page_id].nodes_count = 1 # This one, silly!
     @pages[node.page_id].vernaculars_count = node.vernaculars.size
@@ -341,12 +266,8 @@ class Publisher
   def build_identifiers(node)
     node.identifiers.each do |ider|
       @identifiers_by_node_pk[node.resource_pk] ||= []
-      web_id = Struct::WebIdentifier.new
-      web_id.resource_id = @web_resource_id
-      web_id.harv_db_id = ider.id
-      web_id.node_resource_pk = clean_values(node.resource_pk)
+      web_id = identifier_to_struct(node, ider)
       web_id.node_id = ider.node_id # NOTE: this is a HARV DB ID. We will convert it later.
-      web_id.identifier = ider.identifier
       @identifiers_by_node_pk[node.resource_pk] << web_id
     end
   end
@@ -354,14 +275,9 @@ class Publisher
   def build_ancestors(node)
     node.node_ancestors.each do |nodan|
       @ancestors_by_node_pk[node.resource_pk] ||= []
-      anc = Struct::WebNodeAncestor.new
-      anc.resource_id = @web_resource_id
+      anc = @model_mapper.node_ancestor_to_struct(node, nodan)
       anc.node_id = nodan.node_id # NOTE: this is a HARV DB ID. We will convert it later.
       anc.ancestor_id = nodan.ancestor_id # NOTE: this is a HARV DB ID. We will convert it later.
-      anc.node_resource_pk = clean_values(node.resource_pk)
-      anc.ancestor_resource_pk = clean_values(nodan.ancestor_fk)
-      anc.depth = nodan.depth
-      anc.harv_db_id = nodan.id # TODO: I'm not sure this is required?
       @ancestors_by_node_pk[node.resource_pk] << anc
     end
   end
@@ -369,38 +285,19 @@ class Publisher
   def build_scientific_names(node)
     node.scientific_names.each do |name_model|
       @sci_names_by_node_pk[node.resource_pk] ||= []
-      web_sci_name = build_scientific_name(node, name_model)
+      web_sci_name = @model_mapper.scientific_name_to_struct(node, name_model)
+      timestamp(web_sci_name)
+      web_sci_name.node_id = node.id # NOTE: this is a HARV DB ID. We will convert it later.
       @sci_names_by_node_pk[node.resource_pk] << web_sci_name
       add_refs(name_model)
     end
   end
 
-  def build_scientific_name(node, name_model)
-    name_struct = Struct::WebScientificName.new
-    name_struct.node_id = node.id # NOTE: this is a HARV DB ID. We will convert it later.
-    name_struct.page_id = node.page_id
-    name_struct.harv_db_id = name_model.id
-    name_struct.canonical_form = clean_values(name_model.canonical_italicized)
-    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status_verbatim&.downcase, @process)
-    name_struct.is_preferred = clean_values(name_model.is_preferred)
-    name_struct.created_at = Time.now.to_s(:db)
-    name_struct.updated_at = Time.now.to_s(:db)
-    name_struct.resource_id = @web_resource_id
-    name_struct.node_resource_pk = name_model.resource_pk.blank? ? clean_values(node.resource_pk) :
-      clean_values(name_model.resource_pk)
-    # name_struct.source_reference = name_model. ...errr.... TODO: This is intended to move off of the node. Put it
-    # here!
-    name_struct.attribution = clean_values(name_model.attribution_html)
-    name_struct.dataset_name = clean_values(name_model.dataset_name)
-    name_struct.name_according_to = clean_values(name_model.name_according_to)
-    copy_fields(@same_sci_name_attributes, name_model, name_struct)
-    name_struct
-  end
-
   def build_media(node)
     node.media.each do |medium|
       @media_by_node_pk[node.resource_pk] ||= []
-      web_medium = build_medium(node, medium)
+      web_medium = @model_mapper.medium_to_struct(node, medium)
+      timestamp(web_medium)
       @media_by_node_pk[node.resource_pk] << web_medium
       add_refs(medium)
       add_attributions(medium)
@@ -408,7 +305,10 @@ class Publisher
       add_loc(web_medium, medium.location)
       if medium.w && medium.h
         @image_info_by_node_pk[node.resource_pk] ||= []
-        @image_info_by_node_pk[node.resource_pk] << build_image_info(medium)
+        ii = @model_mapper.image_info_to_struct(medium)
+        timestamp(ii)
+        ii.medium_id = medium.id # NOTE this is a HARV DB ID, and needs to be replaced.
+        @image_info_by_node_pk[node.resource_pk] << ii
       end
     end
   end
@@ -416,7 +316,8 @@ class Publisher
   def build_articles(node)
     node.articles.each do |article|
       @articles_by_node_pk[node.resource_pk] ||= []
-      web_article = build_article(node, article)
+      web_article = @model_mapper.article_to_struct(node, article)
+      timestamp(web_article)
       @articles_by_node_pk[node.resource_pk] << web_article
       add_refs(article)
       add_attributions(article)
@@ -429,67 +330,13 @@ class Publisher
   def build_vernaculars(node)
     node.vernaculars.each do |vernacular|
       @vernaculars_by_node_pk[node.resource_pk] ||= []
-      @vernaculars_by_node_pk[node.resource_pk] << build_vernacular(node, vernacular)
+      web_vern = @model_mapper.vernacular_to_struct(node, vernacular)
+      timestamp(web_vern)
+      web_vern.node_id = node.id # NOTE: this is a HARV DB ID. We will convert it later.
+      web_vern.is_preferred = 0 # This will be fixed by the code run on the website.
+      web_vern.trust = 0
+      @vernaculars_by_node_pk[node.resource_pk] << vern
     end
-  end
-
-  def build_image_info(medium)
-    ii = Struct::WebImageInfo.new
-    ii.resource_id = @web_resource_id
-    ii.medium_id = medium.id # NOTE this is a HARV DB ID, and needs to be replaced.
-    ii.original_size = "#{medium.w}x#{medium.h}" if medium.w && medium.h
-    unless medium.sizes.blank?
-      # e.g.: {"88x88"=>"88x88", "98x68"=>"98x65", "580x360"=>"540x360", "130x130"=>"130x130", "260x190"=>"260x173"}
-      sizes = JSON.parse(medium.sizes)
-      ii.large_size = sizes['580x360']
-      ii.medium_size = sizes['260x190']
-      ii.small_size = sizes['98x68']
-    end
-    ii.crop_x = medium.crop_x_pct
-    ii.crop_y = medium.crop_y_pct
-    ii.crop_w = medium.crop_w_pct
-    t = Time.now.to_s(:db)
-    ii.created_at = t
-    ii.updated_at = t
-    ii.resource_pk = clean_values(medium.resource_pk)
-    # ii.harv_db_id = medium.id # TODO: this is not really needed, as II isn't a harv DB model. :|
-    ii
-  end
-
-  def build_medium(node, medium)
-    web_medium = Struct::WebMedium.new
-    web_medium.page_id = node.page_id
-    web_medium.harv_db_id = medium.id
-    web_medium.subclass = Medium.subclasses[medium.subclass]
-    web_medium.format = Medium.formats[medium.format]
-    web_medium.owner = medium.owner
-    # TODO: ImageInfo from medium.sizes
-    copy_fields(@same_medium_attributes, medium, web_medium)
-    web_medium.created_at = Time.now.to_s(:db)
-    web_medium.updated_at = Time.now.to_s(:db)
-    web_medium.resource_id = @web_resource_id
-    web_medium.name = clean_values(medium.name_verbatim) if medium.name.blank?
-    web_medium.description = clean_values(medium.description_verbatim) if medium.description.blank?
-    web_medium.base_url = fixed_medium_url(medium, 'base')
-    web_medium.unmodified_url = fixed_medium_url(medium, 'unmodified')
-    web_medium.license_id = WebDb.license(medium.license&.source_url, @process)
-    web_medium.language_id = WebDb.language(medium.language, @process)
-    web_medium
-  end
-
-  # NOTE: articles will not be visible until the website runs the same code as for build_medium (q.v.)
-  def build_article(node, article)
-    web_article = Struct::WebArticle.new
-    web_article.page_id = node.page_id
-    web_article.harv_db_id = article.id
-    web_article.owner = article.owner
-    copy_fields(@same_article_attributes, article, web_article)
-    web_article.created_at = Time.now.to_s(:db)
-    web_article.updated_at = Time.now.to_s(:db)
-    web_article.resource_id = @web_resource_id
-    web_article.license_id = WebDb.license(article.license&.source_url, @process)
-    web_article.language_id = WebDb.language(article.language, @process)
-    web_article
   end
 
   def build_traits(nodes)
@@ -632,8 +479,8 @@ class Publisher
       0
     end
   end
-
   # traits - hash keyed by id
+
   def add_trait_meta_to_csv(traits, csv)
     count = 0
 
@@ -709,27 +556,6 @@ class Publisher
     }
 
     @moved_meta_map[uri.downcase]
-  end
-
-  # TODO: move this method up.
-  # NOTE: vernaculars will not be preferred until the website runs
-  # Vernacular.joins(:page).where(['pages.vernaculars_count = 1 AND vernaculars.is_preferred_by_resource = ? '\
-  #   'AND vernaculars.resource_id = ?', true, @resource.id]).update_all(is_preferred: true)
-  def build_vernacular(node, vernacular)
-    web_vern = Struct::WebVernacular.new
-    web_vern.node_id = node.id # NOTE: this is a HARV DB ID. We will convert it later.
-    web_vern.page_id = node.page_id
-    web_vern.harv_db_id = vernacular.id
-    web_vern.resource_id = @web_resource_id
-    web_vern.language_id = WebDb.language(vernacular.language, @process)
-    web_vern.created_at = Time.now.to_s(:db)
-    web_vern.updated_at = Time.now.to_s(:db)
-    web_vern.is_preferred = 0 # This will be fixed by the code mentioned above, run on the website.
-    web_vern.trust = 0
-    web_vern.is_preferred_by_resource = clean_values(vernacular.is_preferred || false)
-    web_vern.string = clean_values(vernacular.verbatim)
-    copy_fields(@same_vernacular_attributes, vernacular, web_vern)
-    web_vern
   end
 
   def load_hashes
@@ -826,17 +652,9 @@ class Publisher
     @files[file] = true
   end
 
-  private
-
-  def fixed_medium_url(medium, type)
-    url_method_name = "#{type}_url"
-    default_url_method_name = "default_#{type}_url"
-
-    if medium.base_url.nil? # The image has not been downloaded.
-      "#{@root_url}/#{medium.send(default_url_method_name)}"
-    else
-      # It *has* been downloaded, but still lacks the root URL, so we add that:
-      "#{@root_url}/#{medium.send(url_method_name)}"
-    end
+  def timestamp(model)
+    t = Time.now.to_s(:db)
+    model.created_at = t
+    model.updated_at = t
   end
 end
