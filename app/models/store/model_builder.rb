@@ -261,9 +261,8 @@ module Store
       longer = length + 256
       # Max length on log line (the limit is bout 64_000, but that's tedious and doesn't give us much more info.)
       longer = 2000 if longer > 2000
-        @process.warn("title is too long for medium #{@models[model][:resource_pk]}; truncating to #{length} chars: "\
-          "#{@models[model][field][0..longer]}...")
-      end
+      @process.warn("title is too long for medium #{@models[model][:resource_pk]}; truncating to #{length} chars: "\
+        "#{@models[model][field][0..longer]}...")
       @models[model][field] = @models[model][field][0..length]
     end
 
