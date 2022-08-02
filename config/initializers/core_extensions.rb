@@ -2,13 +2,14 @@ class ActiveRecord::Base
   class << self
     # I AM NOT A FAN OF SQL... but this is **way** more efficient than alternatives:
     def propagate_id(options = {})
+      set = options[:set]
       filter = options[:harvest_id] || options[:resource_id]
       filter_field =
         if filter
           # Harvest is more specific, prefer it:
           options[:harvest_id] ? :harvest_id : :resource_id
         end
-      size_query = where('1=1')
+      size_query = where("#{options[:set]} IS NULL")
       size_query = size_query.where(filter_field => filter) if filter
       size_query = size_query.where(options[:poly_type] => options[:poly_val]) if options[:poly_type]
       min = size_query.minimum(:id)
@@ -18,7 +19,6 @@ class ActiveRecord::Base
       end
       max = size_query.maximum(:id)
       fk = options[:fk]
-      set = options[:set]
       with_field = options[:with]
       (o_table, o_field) = options[:other].split('.')
       clauses = ["UPDATE `#{table_name}` t JOIN `#{o_table}` o ON (t.`#{fk}` = o.`#{o_field}`"]

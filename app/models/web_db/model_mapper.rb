@@ -11,11 +11,85 @@ class WebDb
     SAME_NODE_ATTRIBUTES = %i[page_id parent_resource_pk in_unmapped_area resource_pk source_url]
     SAME_VERNACULAR_ATTRIBUTES = %i[node_resource_pk locality remarks source]
 
+    ENDS_AS_AN_ARRAY = /]\s*$/m
+
     def initialize(resource, process)
       @resource = resource
       @process  = process
       @root_url = Rails.application.secrets.repository[:url] || 'http://eol.org'
       @web_resource_id = WebDb.resource_id(@resource)
+    end
+
+    def store_old_json(klass, record)
+      hash = record_to_hash(klass, record)
+      array = if File.exist?(@resource.old_records_path)
+        JSON.parse(File.read(@resource.old_records_path))
+      else
+        []
+      end
+      raise "JSON was not an array: #{@resource.old_records_path}" unless array.is_a?(Array)
+      array << hash
+      File.write(@resource.old_records_path, JSON.dump(array))
+    end
+
+    def last_line_of_old_records
+      last_line = `/usr/bin/tail -n 1 #{@resource.old_records_path}`.chomp
+    end
+
+    def record_to_hash(klass, record)
+      klass = klass.to_s
+      # Giant switch to determine which builder to use
+      struct = if klass == 'Node'
+        node_to_struct(record)
+      elsif klass == 'Reference'
+        klass = 'Referent'
+        referant_to_struct(record)
+      elsif %w[NodesReference TraitsReference AssocsReference MediaReference ArticlesReference].include?(klass)
+        reference_to_struct(record)
+      elsif klass == 'Attribution'
+        attribution_to_struct(record)
+      elsif klass == 'BibliographicCitation'
+        citation_to_struct(record)
+      elsif klass == 'Location'
+        location_to_struct(record)
+      elsif klass == 'Identifier'
+        node = get_node_from_record(record)
+        identifier_to_struct(node, record)
+      elsif klass == 'NodeAncestor'
+        node = get_node_from_record(record)
+        node_ancestor_to_struct(node, record)
+      elsif klass == 'ScientificName'
+        node = get_node_from_record(record)
+        scientific_name_to_struct(node, record)
+      elsif klass == 'Medium'
+        node = get_node_from_record(record)
+        medium_to_struct(node, record)
+      elsif klass == 'ImageInfo'
+        image_info_to_struct(medium)
+      elsif klass == 'Article'
+        node = get_node_from_record(record)
+        article_to_struct(node, record)
+      elsif klass == 'Vernacular'
+        node = get_node_from_record(record)
+        vernacular_to_struct(node, record)
+      else
+        raise "Cannot serialize: #{pp record}"
+      end
+      hashed = struct.to_h.delete_if { |k,v| v.nil? }
+      hashed[:class] = klass
+      hashed
+    end
+
+    def get_node_from_record(record)
+      if record.respond_to?(:node)
+        record.node
+      elsif record.respond_to?(:node_id)
+        Node.find(record.node_id)
+      elsif record&.has_key?[:node_id]
+        Node.find(record[:node_id])
+      elsif record&.has_key?['node_id']
+        Node.find(record['node_id'])
+      end
     end
 
     def node_to_struct(node)

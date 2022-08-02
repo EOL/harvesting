@@ -266,6 +266,7 @@ class ResourceHarvester
       @process.info("Created diff dir: #{diff_dir}")
     end
     if @resource.requires_full_reharvest?
+      @resource.remove_content(@harvest)
       each_format do |format|
         file = format.diff_file
         fake_diff_from_nothing(format)
@@ -335,6 +336,7 @@ class ResourceHarvester
         @process.warn('There were no differences in this file!') unless any_diff
       end
       flush_model_cache
+      @harvest.update_attribute(:stored_at, Time.now)
     end
   end
 
@@ -368,10 +370,9 @@ class ResourceHarvester
   def flush_model_cache
     Admin.maintain_db_connection(@process)
     measure_progress
-    find_orphan_parent_nodes # Empty now, TODO with deltas.
     find_duplicate_nodes
     store_new
-    log_old
+    store_old
     clear_storage_vars # Allow GC to clean up!
   end
 
@@ -386,10 +387,6 @@ class ResourceHarvester
     @warned = {}
     @diff_size ||= 0 # NOTE the *or* here. We don't want to blow it away if we have it, just initialize it.
     @progress ||= 0
-  end
-
-  def find_orphan_parent_nodes
-    # TODO: if the resource gave us parent IDs, we *could* have unresolved ids that we need to flag.
   end
 
   def measure_progress
@@ -452,17 +449,17 @@ class ResourceHarvester
         end
       end
     end
-    @harvest.update_attribute(:stored_at, Time.now)
   end
 
-  def log_old
+  def store_old
     @old.each do |klass, count|
       @process.warn("Removed #{count} instance#{'s' if count > 1} of #{klass.name}")
     end
   end
 
   def resolve_missing_media_owners
-    # TODO
+    # I don't think we're going to do this, but keep this here b/c it's part of an enum and we can use it for something
+    # else later.
   end
 
   def rebuild_nodes

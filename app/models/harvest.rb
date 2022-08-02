@@ -15,7 +15,7 @@ class Harvest < ApplicationRecord
   has_many :articles, inverse_of: :harvest # destroyed via nodes
   has_many :vernaculars, inverse_of: :harvest # destroyed via nodes
 
-  before_destroy :remove_content
+  before_destroy :remove_content_and_reset
 
   delegate :resume, to: :resource
 

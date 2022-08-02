@@ -213,6 +213,10 @@ class Resource < ApplicationRecord
     path.join("#{name}.tsv")
   end
 
+  def old_records_path
+    path.join('old_records.json')
+  end
+
   def path
     return @path if @path
     raise "Illegal abbreviation, blank is NOT allowed!" if abbr.blank?
@@ -462,8 +466,14 @@ class Resource < ApplicationRecord
     self
   end
 
+  def remove_content_and_reset
+    remove_content
+    delayed_jobs.delete_all
+    unharvested!
+  end
+
   # NOTE: keeps formats, of course.
-  def remove_content
+  def remove_content(harvest = nil)
     removing_content!
     # For some odd reason, the #delete_all on the association attempts to set resource_id: nil, which is wrong:
     [
@@ -481,11 +491,13 @@ class Resource < ApplicationRecord
     Searchkick.callbacks(false) do
       remove_type(Node)
     end
+    if harvest
+      harvests.where(['id IS NOT ?', harvest.id]).destroy_all
+    else
+      harvests.destroy_all
+    end
     remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
-    harvests.destroy_all
-    delayed_jobs.delete_all
     requires_full_reharvest
-    unharvested!
   end
 
   def remove_from_searchkick

@@ -611,6 +611,7 @@ module Store
     def handle_model_based_on_type(klass, model)
       if @type == :old
         destroy_model(klass, model)
+        destroy_model(ImageInfo, model) if klass == Medium && model[:h] && model[:w]
       else
         prepare_model_for_store(klass, model)
       end
@@ -621,9 +622,12 @@ module Store
       match_attributes = model.slice(*matches)
       records = klass.where(match_attributes)
       if records.one?
-        @old[klass] ||= 0
+        record = records.first
+        @old[klass] ||= []
         @old[klass] += 1
-        records.first.destroy
+        @model_mapper ||= ModelMapper.new(@resource, @process)
+        @model_mapper.store_old_json(klass, record)
+        record.destroy
       else
         raise("ERROR: cannot delete #{klass}, found #{records.size} records matching #{pp match_attributes}")
       end
