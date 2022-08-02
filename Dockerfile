@@ -43,4 +43,4 @@ EXPOSE 3000
 
 ENTRYPOINT ["/app/bin/entrypoint.sh"]
 
-CMD ["-c", "/etc/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]
