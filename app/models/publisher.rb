@@ -512,7 +512,7 @@ class Publisher
       build_batch_of_traits(nodes[start_node..last_node])
       write_highest_node_id(nodes[last_node].id)
       start_node = last_node + 1
-      break if last_node >= nodes.size
+      break if start_node >= nodes.size
     end
   end
 
