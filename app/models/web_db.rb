@@ -210,6 +210,7 @@ class WebDb < ApplicationRecord
       connection.execute("DROP TEMPORARY TABLE #{temp_table}")
     end
 
+    # TODO: really this won't work if the file has a timestamp on it, so we need to be able to pass that in...
     def import_csv(resource, table, cols = nil)
       file = resource.publish_table_path(table)
       q = ['LOAD DATA']

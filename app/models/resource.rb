@@ -209,6 +209,7 @@ class Resource < ApplicationRecord
 
   def publish_table_path(table, options = {})
     name = "publish_#{table}"
+    options[:timestamp] = options[:harvest].created_at.to_i if options[:harvest]
     name += "_#{options[:timestamp]}" if options[:timestamp]
     path.join("#{name}.tsv")
   end

@@ -33,7 +33,8 @@ class Publisher
     @resource = resource
     @process = process
     @model_mapper = WebDb::ModelMapper.new(@resource, @process)
-    @trait_filename = harvest.trait_filename
+    @harvest = harvest
+    @trait_filename = @harvest.trait_filename
     @web_resource_id = nil
     @files = {}
     @nodes = {}
@@ -377,7 +378,7 @@ class Publisher
     node_ids = nodes.map(&:id)
     trait_map(node_ids)
     assoc_map(node_ids)
-    meta_file = @resource.publish_table_path('metadata')
+    meta_file = @resource.publish_table_path('metadata', harvest: @harvest)
     start_traits_file(@trait_filename, TRAIT_HEADS)
     start_traits_file(meta_file, META_HEADS)
 
@@ -580,11 +581,11 @@ class Publisher
 
   def remove_existing_pub_files
     WebDb.types.each do |type|
-      remove_file(@resource.publish_table_path(type.pluralize))
+      remove_file(@resource.publish_table_path(type.pluralize, harvest: @harvest))
     end
 
     %i[metadata external_metadata].each do |type|
-      remove_file(@resource.publish_table_path(type))
+      remove_file(@resource.publish_table_path(type, harvest: @harvest))
     end
 
     remove_file(@trait_filename)
@@ -637,7 +638,7 @@ class Publisher
   end
 
   def write_local_csv(table, structs, options = {})
-    file = @resource.publish_table_path(table)
+    file = @resource.publish_table_path(table, harvest: @harvest)
     FileUtils.touch(file)
     # NOTE: this *appends* to the file.
     CSV.open(file, 'ab', col_sep: "\t") do |csv|
