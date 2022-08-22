@@ -3,12 +3,11 @@ class EolFileUtils
   class << self
     # EolFileUtils.clear_resource_dir(resource)
     def clear_resource_dir(resource)
-      # TODO: ok to skip this? we want to keep the diffs dir
-      #flatten_dirs(resource.path) 
       Dir.glob("#{resource.path}/*").each do |file|
         next if File.directory?(file)
-        next if File.basename(file).match?(/^\.*$/)
-        next if File.basename(file).match?(/publish_traits.*/)
+        next if File.basename(file).match?(/^\.*$/) # Dotfiles
+        next if File.basename(file).match?(/publish_traits.*/) # Because these are diffs
+        next if file == MetaXml.filename(resource)
         next if File.basename(file) == Resource.logfile_name
         next if File.basename(file) == Resource.lockfile_name
 

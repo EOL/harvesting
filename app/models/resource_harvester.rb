@@ -33,6 +33,7 @@ class ResourceHarvester
     @previous_harvest = @resource.harvests&.completed&.last
     @uris = {}
     @formats = {}
+    @diffing = false
     @harvest = nil
     @default_trait_resource_pk = 0
     @converted = {}
@@ -65,11 +66,15 @@ class ResourceHarvester
       '>'
   end
 
+  def diff
+    raise "Unable to diff" unless @resource.requires_full_reharvest?
+    @diffing = true
+    start
+  end
+
   # I am trying to re-arrange things. You MUST now call this wrapped in a Resource.with_lock:
   def start
-    @process = @resource.logged_process
-    Searchkick.disable_callbacks
-    begin
+    non_searchkick_process do
       fast_forward = @harvest && !@harvest.stage.nil?
       Harvest.stages.each_key do |stage|
         if fast_forward && harvest.stage != stage
@@ -85,6 +90,14 @@ class ResourceHarvester
         @process.run_step(stage) { send(stage) }
         Admin.maintain_db_connection(@process)
       end
+    end
+  end
+
+  def non_searchkick_process(&block)
+    @process = @resource.logged_process
+    Searchkick.disable_callbacks
+    begin
+      yield
     rescue => e
       @resource&.stop_adding_media_jobs
       log_err(e)
@@ -265,7 +278,7 @@ class ResourceHarvester
       Dir.mkdir(diff_dir)
       @process.info("Created diff dir: #{diff_dir}")
     end
-    if @resource.requires_full_reharvest?
+    if @diffing
       @resource.remove_content(@harvest)
       each_format do |format|
         file = format.diff_file

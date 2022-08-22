@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   resources :bibliographic_citations, only: [:show]
   resources :resources do
     get :harvest
+    get :diff
     get :unlock
     get :re_harvest
     get :resume_harvest

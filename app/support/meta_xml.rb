@@ -20,9 +20,13 @@ class MetaXml
     end
   end
 
+  def filename(resource)
+    "#{resource.path}/meta.xml"
+  end
+
   def initialize(resource)
     @resource = resource
-    filename = "#{@resource.path}/meta.xml"
+    filename = MetaXml.filename(resource)
     build_log_and_raise 'Missing meta.xml file' unless File.exist?(filename)
 
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }

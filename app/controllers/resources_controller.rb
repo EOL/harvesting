@@ -39,6 +39,10 @@ class ResourcesController < ApplicationController
     enqueue_harvest
   end
 
+  def diff
+    enqueue_harvest(:diff)
+  end
+
   def re_harvest
     enqueue_harvest(:re)
   end

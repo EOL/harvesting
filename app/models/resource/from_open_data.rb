@@ -5,13 +5,13 @@ class Resource
         new(url).parse
       end
 
-      def reload(resource)
+      def reload(resource, options = {})
         EolFileUtils.clear_resource_dir(resource)
-        new(resource.opendata_url, resource).parse
+        new(resource.opendata_url, options.merge(resource: resource)).parse
       end
     end
 
-    def initialize(url, resource = nil)
+    def initialize(url, options = {})
       # E.g.: https://opendata.eol.org/dataset/anage/resource/2af10fa0-db2a-4908-bc85-505f691419dd
       @url = url
       @partner = nil
@@ -30,7 +30,8 @@ class Resource
       }
       @stopwords = %w[a about all are an and be by do know or of on out for in is the this to was with what excel dwc
                       dwca]
-      @resource = resource
+      @resource = options[:resource]
+      @diffing = options[:diff]
       @partner = resource.partner if @resource
     end
 
@@ -42,16 +43,22 @@ class Resource
         get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
         file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
         path = @resource.path
-        already_exists = File.exist?("#{path}/meta.xml") && @resource.formats.any?
+        meta_xml_filename = MetaXml.filename(@resource)
+        already_exists = File.exist?(meta_xml_filename) && @resource.formats.any?
+        meta_xml_created_at = File.birthtime(meta_xml_filename) rescue nil
         dir = DropDir.unpack_file(file)
         if already_exists
-          @process.warn('...Resource already exists; re-reading XML...')
-          @resource.re_read_xml
-          @process.info('...new data is now in place. You may harvest it.')
+          if @diffing
+            raise "ERROR: meta.xml appears to have been modified; you may NOT diff this resource, please re-harvest it." unless
+              File.birthtime(meta_xml_filename) != meta_xml_created_at
+            @process.warn('...Resource already exists; meta.xml appears unchanged. Proceed...')
+          else
+            @process.warn('...Resource already exists; re-reading XML...')
+            @resource.re_read_xml
+          end
         else
-          # TODO: Find Excel and write a .from_excel method much like .from_xml...
           fail_with("DropDir: New Resource (#{dir}), but no meta.xml. Cannot proceed!") unless
-            File.exist?("#{dir}/meta.xml")
+            File.exist?(meta_xml_filename)
           @resource.re_read_xml
         end
       end

@@ -26,6 +26,8 @@
           - if @resource.harvests.completed.any?
             .ui.compact.button
               = link_to(t("resources.actions.re_harvest"), resource_re_harvest_path(@resource), data: { confirm: t("resources.actions.re_harvest_confirm") })
+              - unless @resource.requires_full_reharvest?
+                = link_to(t("resources.actions.diff"), resource_diff_path(@resource), data: { confirm: t("resources.actions.diff_confirm") })
           - elsif @resource.harvests.any?
             .ui.compact.button
               = link_to(t("resources.actions.resume_harvest"), resource_resume_harvest_path(@resource))

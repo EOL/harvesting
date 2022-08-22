@@ -272,13 +272,18 @@ class Resource < ApplicationRecord
   def re_download_opendata_and_harvest
     remove_content
     Resource::FromOpenData.reload(self)
-    # TODO: Change this to something nicer, once we can handle deltas.
     harvest
   end
 
   def enqueue_harvest
     harvest_pending!
     Delayed::Job.enqueue(HarvestJob.new(id))
+  end
+
+  def enqueue_diff_harvest
+    harvest_pending!
+    Resource::FromOpenData.reload(self, diff: true)
+    Delayed::Job.enqueue(DiffJob.new(id))
   end
 
   def enqueue_re_harvest
@@ -298,6 +303,10 @@ class Resource < ApplicationRecord
 
   def harvest
     ResourceHarvester.new(self).start
+  end
+
+  def diff
+    ResourceHarvester.new(self).diff
   end
 
   def re_harvest

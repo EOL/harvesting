@@ -18,7 +18,7 @@ class DropDir
       if resource
         resource.updated_files!
         false
-      elsif File.exist?("#{dir}/meta.xml")
+      elsif File.exist?(z)
         resource = Resource.from_xml(dir)
         Rails.logger.info("DropDir: will harvest resource #{resource.name} (#{resource.id})")
         resource.enqueue_harvest

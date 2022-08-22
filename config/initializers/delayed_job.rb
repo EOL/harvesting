@@ -24,119 +24,18 @@ Delayed::Worker.queue_attributes = {
 Delayed::Worker.max_run_time = 7.days # Yes, really. We watch the long-running jobs pretty closely.
 Delayed::Worker.max_attempts = 2
 
-# TODO: You should really move these to a jobs folder.
-HarvestJob = Struct.new(:resource_id) do
+HarvestingBaseJob = Struct.new(:resource_id) do
   def perform
-    Admin.maintain_db_connection
-    Resource.find(resource_id).harvest
+    message = "!! Harvesting base job called perform for resource #{resource.name} (##{resource.id}), NO ACTION TAKEN"
+    Rails.logger.warn(message)
+    Delayed::Worker.logger.warn(message)
   end
 
   def queue_name
     'harvest'
-  end
-
-  def max_attempts
-    1
-  end
-
-  def error(job, exception)
-    Rails.logger.error("** HARVEST JOB ERROR: #{exception.message} TRACE: #{exception.backtrace.join("\n")}")
-  end
-
-  def after(_job)
-    Rails.logger.info("Finished HarvestJob for Resource##{resource_id}")
-    Resource.find(resource_id).unlock rescue nil
-  end
-end
-
-ReHarvestJob = Struct.new(:resource_id) do
-  def perform
-    Admin.maintain_db_connection
-    Resource.find(resource_id).re_harvest
-  end
-
-  def queue_name
-    'harvest'
-  end
-
-  def max_attempts
-    1
-  end
-
-  def after(_job)
-    Rails.logger.info("Finished ReHarvestJob for Resource##{resource_id}")
-    Resource.find(resource_id).unlock rescue nil
-  end
-end
-
-ResumeHarvestJob = Struct.new(:resource_id) do
-  def perform
-    Admin.maintain_db_connection
-    Resource.find(resource_id).resume
-  end
-
-  def queue_name
-    'harvest'
-  end
-
-  def max_attempts
-    1
-  end
-
-  def after(_job)
-    Rails.logger.info("Finished ResumeHarvestJob for Resource##{resource_id}")
-    Resource.find(resource_id).unlock rescue nil
-  end
-end
-
-ReDownloadOpendataHarvestJob = Struct.new(:resource_id) do
-  def perform
-    Admin.maintain_db_connection
-    Resource.find(resource_id).re_download_opendata_and_harvest
-  end
-
-  def queue_name
-    'harvest'
-  end
-
-  def max_attempts
-    1
-  end
-
-  def after(_job)
-    Rails.logger.info("Finished ReDownloadOpendataHarvestJob for Resource##{resource_id}")
-    Resource.find(resource_id).unlock rescue nil
-  end
-end
-
-EnqueueMediaDownloadJob = Struct.new(:resource_id) do
-  def perform
-    Admin.maintain_db_connection
-    Resource.find(resource_id).download_batch_of_missing_images
-  end
-
-  def queue_name
-    'media'
   end
 
   def max_attempts
     1 # We handle this elsewhere.
-  end
-end
-
-RemoveContentJob = Struct.new(:resource_id) do
-  def perform
-    Admin.maintain_db_connection
-    resource = Resource.find(resource_id)
-    message = "!! REMOVING CONTENT for resource #{resource.name} (##{resource.id})"
-    Rails.logger.warn(message)
-    Delayed::Worker.logger.warn(message)
-    resource.remove_content_and_reset
-    resource.harvests.each &:delete
-    `echo "!! Reset log via RemoveContentJob on #{Time.now}" > #{resource.process_log_path}`
-  end
-
-  def queue_name
-    'harvest'
   end
 end
