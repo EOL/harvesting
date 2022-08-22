@@ -75,6 +75,11 @@ class Harvest < ApplicationRecord
     resource.complete
   end
 
+  def complete?
+    !completed_at.nil? && !nodes_count.nil? && nodes_count > 0 && !identifiers_count.nil? &&
+      !scientific_names_count.nil? && scientific_names_count > 0
+  end
+
   def remove_content
     # Because node.destroy does all of this work but MUCH less efficiently, we fake it all here:
     [ScientificName, Medium, Article, Vernacular, Occurrence, Trait, Assoc, Identifier, NodesReference,

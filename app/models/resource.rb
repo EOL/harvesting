@@ -605,7 +605,10 @@ class Resource < ApplicationRecord
 
   def requires_full_reharvest?
     return true unless requires_full_reharvest_after.nil?
-    previous_harvest.nil? || previous_harvest.stage != "complete_harvest_instance"
+    return true if latest_harvest.nil?
+    return false if latest_harvest.complete?
+    # We're checking the previous harvest, then:
+    return false if previous_harvest&.complete?
   end
 
   def latest_harvest

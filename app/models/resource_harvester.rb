@@ -30,7 +30,7 @@ class ResourceHarvester
   def initialize(resource)
     # TODO: this is WAAAY too tighly coupled with the model builder class (at least)
     @resource = resource
-    @previous_harvest = @resource.harvests&.completed&.last
+    @previous_harvest = @resource.latest_harvest
     @uris = {}
     @formats = {}
     @diffing = false
@@ -53,7 +53,7 @@ class ResourceHarvester
   def prep_resume
     @harvest = @resource.latest_harvest
     @harvest.incomplete
-    @previous_harvest = @resource.harvests.complete_non_failed[-2] if @harvest == @previous_harvest
+    @previous_harvest = @resource.previous_harvest if @harvest == @previous_harvest
     @resource.harvesting!
     @harvest.update_attribute(:failed_at, nil)
   end
