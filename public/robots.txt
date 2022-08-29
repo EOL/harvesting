@@ -3,3 +3,4 @@ Request-rate: 1/1
 Disallow: /nodes/
 Disallow: /media/
 Disallow: /bibliographic_citations/
+Disallow: /*?dir=*&order=*&p=*
