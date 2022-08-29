@@ -79,7 +79,7 @@ class Publisher
   def safely_log_file_size(file)
     size = 0
     begin
-      sizes = `wc -l #{file}`
+      sizes = `wc -l #{file.gsub(/(\s)/, "\\\1")}`
       size = sizes.strip.split.first.to_i
       @process.info("(#{size} lines) #{file}")
     rescue Errno::ENOMEM

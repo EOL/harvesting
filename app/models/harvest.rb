@@ -128,7 +128,7 @@ class Harvest < ApplicationRecord
   def diff_size(format)
     file = format.diff_file || format.get_from
     return 0 unless File.exist?(file)
-    `wc -l #{file}`.chomp.split.first
+    `wc -l #{file.gsub(/(\s)/, "\\\1")}`.chomp.split.first
   end
 
   def diff_parser(format)
