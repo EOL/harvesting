@@ -18,10 +18,20 @@ class MetaXml
       # This helps to add the ignored field to the meta_analyzed.json
       puts ",\n#{params.to_json.gsub(',', ",\n")}"
     end
-  end
 
-  def filename(resource)
-    "#{resource.path}/meta.xml"
+    def md5_hash(resource)
+      file = MetaXml.filename(resource)
+      return 'EMPTY' unless File.exist?(file)
+      begin
+        `cat #{file} | md5sum`.split.first
+      rescue
+        'EMPTY'
+      end
+    end
+
+    def filename(resource)
+      "#{resource.path}/meta.xml"
+    end
   end
 
   def initialize(resource)
