@@ -7,7 +7,7 @@ class EolFileUtils
         next if File.directory?(file)
         next if File.basename(file).match?(/^\.*$/) # Dotfiles
         next if File.basename(file).match?(/publish_traits.*/) # Because these are diffs
-        next if file == MetaXml.filename(resource)
+        next if file == resource.meta_xml_filename
         next if File.basename(file) == Resource.logfile_name
         next if File.basename(file) == Resource.lockfile_name
 

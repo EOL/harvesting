@@ -18,25 +18,11 @@ class MetaXml
       # This helps to add the ignored field to the meta_analyzed.json
       puts ",\n#{params.to_json.gsub(',', ",\n")}"
     end
-
-    def md5_hash(resource)
-      file = MetaXml.filename(resource)
-      return 'EMPTY' unless File.exist?(file)
-      begin
-        `cat #{file} | md5sum`.split.first
-      rescue
-        'EMPTY'
-      end
-    end
-
-    def filename(resource)
-      "#{resource.path}/meta.xml"
-    end
   end
 
   def initialize(resource)
     @resource = resource
-    filename = MetaXml.filename(resource)
+    filename = resource.meta_xml_filename
     build_log_and_raise 'Missing meta.xml file' unless File.exist?(filename)
 
     @doc = File.open(filename) { |f| Nokogiri::XML(f) }

@@ -90,6 +90,11 @@ class Resource < ApplicationRecord
 
     def from_xml(loc)
       Resource::FromMetaXml.by_path(loc)
+      store_meta_hash
+    end
+
+    def store_meta_hash
+      meta_hash = md5_hash_from_file
     end
 
     def with_lock(resource_id)
@@ -152,6 +157,19 @@ class Resource < ApplicationRecord
     else
       Delayed::Job.where(%Q{handler LIKE "%\\nresource_id: #{id}\\n%"})
     end
+  end
+
+  def md5_hash_from_file
+    return nil unless File.exist?(meta_xml_filename)
+    begin
+      `cat #{meta_xml_filename} | md5sum`.split.first
+    rescue
+      nil
+    end
+  end
+
+  def meta_xml_filename(resource)
+    "#{path}/meta.xml"
   end
 
   def lockfile_name
@@ -267,6 +285,7 @@ class Resource < ApplicationRecord
 
   def re_read_xml
     Resource::FromMetaXml.new(self).create_models_from_xml
+    store_meta_hash
   end
 
   def re_download_opendata_and_harvest
@@ -606,6 +625,8 @@ class Resource < ApplicationRecord
   def requires_full_reharvest?
     return true unless requires_full_reharvest_after.nil?
     return true if latest_harvest.nil?
+    return true if meta_hash.nil?
+    return true if meta_hash != md5_hash_from_file # The metadata has changed, you MUST re-harvest.
     return false if latest_harvest.complete?
     # We're checking the previous harvest, then:
     return false if previous_harvest&.complete?

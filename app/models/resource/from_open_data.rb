@@ -43,7 +43,7 @@ class Resource
         get_partner_info(noko.css('.breadcrumb li a')[-2]) unless @partner
         file = download_resource(noko.css('p.muted a').first['href'], @resource.abbr)
         path = @resource.path
-        meta_xml_filename = MetaXml.filename(@resource)
+        meta_xml_filename = @resource.meta_xml_filename
         already_exists = File.exist?(meta_xml_filename) && @resource.formats.any?
         meta_xml_created_at = File.birthtime(meta_xml_filename) rescue nil
         dir = DropDir.unpack_file(file)
