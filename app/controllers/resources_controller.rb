@@ -43,6 +43,25 @@ class ResourcesController < ApplicationController
     enqueue_harvest(:diff)
   end
 
+  def publishing_diffs
+    @resource = Resource.find(params[:id])
+    possible_times = Resource.harvest_used_for_publishing_at(params[:published_at].to_i)
+    @files = publishing_files_from_harvest_at(harvest_at)
+    fmt.json {}
+  end
+
+  def publishing_diff_file
+    @resource = Resource.find(params[:id])
+    @filename = Resource.find(params[:filename])
+    last_harvest = @resource.last_harvest
+    diff_filename = last_harvest.diff_since_harvested(@filename)
+    if diff_filename.empty?
+      send_data('', @filename)
+    else
+      send_file(diff_filename)
+    end
+  end
+
   def re_harvest
     enqueue_harvest(:re)
   end

@@ -15,6 +15,8 @@ Rails.application.routes.draw do
   resources :resources do
     get :harvest
     get :diff
+    get :publishing_diffs
+    get :publishing_diff_file
     get :unlock
     get :re_harvest
     get :resume_harvest

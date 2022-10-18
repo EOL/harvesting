@@ -226,10 +226,27 @@ class Resource < ApplicationRecord
   end
 
   def publish_table_path(table, options = {})
-    name = "publish_#{table}"
-    options[:timestamp] = options[:harvest].created_at.to_i if options[:harvest]
-    name += "_#{options[:timestamp]}" if options[:timestamp]
-    path.join("#{name}.tsv")
+    harvest = options[:harvest] || harvests.last
+    path.join("publish_#{table}_#{harvest.created_at.to_i}.tsv")
+  end
+
+  def harvest_used_for_publishing_at(published_at)
+    possible_times = published_nodes_times
+    possible_times.delete_if { |time| time > published_at }
+    raise "FAILURE: the published time was earlier than any harvest." if possible_times.length.zero?
+    possible_times.last
+  end
+
+  def publishing_files_from_harvest_at(harvest_at)
+    Dir.glob("publish_*_#{harvest_at}.tsv", base: path)
+  end
+
+  def published_nodes_times
+    Dir.glob("#{path}/publish_nodes_*tsv").map { |fn| harvest_timestamp_from_tsv(fn) }.sort
+  end
+
+  def harvest_timestamp_from_tsv(filename)
+    filename.sub(/^.*_/, '').sub(/.tsv$/, '').to_i
   end
 
   def old_records_path
