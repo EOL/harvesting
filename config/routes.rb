@@ -46,4 +46,5 @@ Rails.application.routes.draw do
   get "/service/page_id_map/:resource_id" => "service/page_id_map#get", as: "page_id_map", defaults: { format: 'csv' }
 
   match '/ping', to: 'resources#ping', via: :all
+  match '/api/ping', to: 'resources#ping', via: :all
 end

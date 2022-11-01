@@ -3,10 +3,10 @@ class ResourcesController < ApplicationController
 
   # See your environment config; this action should be ignored by logs.
   def ping
-    if ActiveRecord::Base.connection.active?
-      render text: 'pong'
-    else
-      render status: 500
+    respond_to do |format|
+      success = { 'response' => { 'message' => 'Success' } }
+      format.json { render json: success }
+      format.xml { render xml: success.to_xml }
     end
   end
 
