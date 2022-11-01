@@ -151,7 +151,7 @@ class Harvest < ApplicationRecord
       last_file = filename.dup.sub(harvested_at.to_s, last_harvest_at.to_s)
       diff_filename = filename.dup.sub('.tsv', "_#{last_harvest_at}.tsv")
       if !File.exist?("#{path}/#{diff_filename}")
-        cmd = "diff #{path}/#{filename} #{path}/#{last_file} > #{path}/#{diff_filename}")
+        cmd = "diff #{path}/#{filename} #{path}/#{last_file} > #{path}/#{diff_filename}"
         # NOTE: the LC_ALL fixes a problem with unicode and diff.
         system(env.merge('LC_ALL' => 'C'), cmd)
       end
