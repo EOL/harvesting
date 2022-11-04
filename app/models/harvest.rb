@@ -158,5 +158,4 @@ class Harvest < ApplicationRecord
       "#{path}/#{diff_filename}"
     end
   end
-
 end
