@@ -638,6 +638,8 @@ class Publisher
     count = 0
 
     traits.each do |key, trait|
+      # This seems to be a problem spot for DB connection, alas:
+      ActiveRecord::Base.connection.reconnect!
       trait_meta_count = trait.metadata.count
       if trait_meta_count > 20
         @process.info("Trait ##{trait.id} in key #{key} has #{trait_meta_count} metadata... that seems high?")
