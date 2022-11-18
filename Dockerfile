@@ -41,6 +41,6 @@ RUN ln -s /tmp /app/tmp
 
 EXPOSE 3000
 
-ENTRYPOINT ["/app/bin/entrypoint.sh"]
+#DISABLED FOR NOW: ENTRYPOINT ["/app/bin/entrypoint.sh"]
 
 CMD ["-c", "/etc/supervisord.conf"]
