@@ -17,11 +17,14 @@ class Admin
 
     def maintain_db_connection(process = nil)
       tries = 0
+      max_tries = 3
       msgs = []
-      while tries <= 3 and connection_fails?
+      while tries <= max_tries && connection_fails?
         ActiveRecord::Base.connection.reconnect!
         tries += 1
-        msgs << if tries < 1
+        msgs << if tries > max_tries
+          raise "Unable to reconnect to database! Exiting."
+        elsif tries < 1
           'WARNING: lost connection to DB, reconnecting...'
         else
           "WARNING: DB still not responding, re-trying connection (attempt #{tries})..."
@@ -33,10 +36,10 @@ class Admin
     def connection_fails?
       begin
         Resource.exists?(id: 1)
+        false
       rescue
         return true
       end
-      false
     end
 
     def retry_if_connection_fails(&block)
