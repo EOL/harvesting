@@ -610,7 +610,6 @@ class Publisher
       Admin.maintain_db_connection
       metas.find_each do |meta|
         count += add_one_meta_to_csv(meta, trait, csv)
-        Admin.maintain_db_connection
       end
     else
       metas.each do |meta|
