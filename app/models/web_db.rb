@@ -115,7 +115,7 @@ class WebDb < ApplicationRecord
 
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
-      connection.reconnect! unless connected? and connection.active?
+      maintain_db_connection
       tried = false
       begin
         connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
@@ -286,8 +286,39 @@ class WebDb < ApplicationRecord
     end
 
     def exec_query(query)
-      connection.reconnect! unless connected?
+      maintain_db_connection
       connection.exec_query(query)
+    end
+
+    def maintain_db_connection(process = nil)
+      tries = 0
+      max_tries = 3
+      msgs = []
+      while tries <= max_tries && connection_fails?
+        connection.reconnect!
+        tries += 1
+        msgs << if tries > max_tries
+          raise "Unable to reconnect to Web database! Exiting."
+        elsif tries < 1
+          'WARNING: lost connection to Web DB, reconnecting...'
+        else
+          "WARNING: Web DB still not responding, re-trying connection (attempt #{tries})..."
+        end
+      end
+      unless msgs.empty?
+        Rails.logger.warn(msgs.join("\n"))
+        puts msgs.join("\n")
+        process.info(msgs.join("; ")) if process
+      end
+    end
+
+    def connection_fails?
+      begin
+        connection.exec_query('SELECT id FROM ranks LIMIT 1')
+        false
+      rescue
+        return true
+      end
     end
   end
 end

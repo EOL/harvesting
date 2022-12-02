@@ -142,7 +142,12 @@ class Resource < ApplicationRecord
 
   def complete
     harvested!
+    update_counts
+  end
+
+  def update_counts
     update_attributes(nodes_count: Node.where(resource_id: id).count, root_nodes_count: nodes.root.harvested.count)
+    fix_downloaded_media_count
   end
 
   def delayed_jobs
