@@ -7,12 +7,6 @@ class Admin
         puts "++ #{klass}"
         klass.connection.execute("OPTIMIZE TABLE `#{klass.table_name}`")
       end
-      # %w[vernaculars traits traits_references scientific_names resources references occurrences
-      #    occurrence_metadata nodes_references nodes node_ancestors media media_references locations
-      #    identifiers harvests formats fields content_attributions bibliographic_citations
-      #    attributions assocs_references assocs assoc_traits articles harvest_processes].each do |table|
-      #      Node.connection.execute("OPTIMIZE TABLE `#{table}`")
-      #    end
     end
 
     def maintain_db_connection(process = nil)
