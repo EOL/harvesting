@@ -649,11 +649,11 @@ class Publisher
   end
 
   def check_connection
-    Admin.check_connection unless defined?(@time)
-    @time ||= time.now
-    if Time.now > time + 2.minutes
+    Admin.check_connection unless defined?(@@time)
+    @@time ||= Time.now
+    if Time.now > @@time + 2.minutes
       Admin.check_connection
-      time = Time.now
+      @@time = Time.now
     end
   end
 
