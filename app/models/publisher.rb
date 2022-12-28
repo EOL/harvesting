@@ -543,7 +543,7 @@ class Publisher
     CSV.open(meta_file, 'ab') do |csv|
       @process.info("Adding #{@traits.count} traits...")
       add_trait_meta_to_csv(@traits, csv)
-      Admin.check_connection
+      check_connection
       @process.info("Adding #{@assocs.count} assocs...")
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
@@ -607,7 +607,7 @@ class Publisher
     count = 0
 
     if metas.respond_to?(:find_each)
-      Admin.check_connection
+      check_connection
       metas.find_each do |meta|
         count += add_one_meta_to_csv(meta, trait, csv)
       end
@@ -635,8 +635,9 @@ class Publisher
   def add_trait_meta_to_csv(traits, csv)
     count = 0
 
+    time = Time.now
     traits.each do |key, trait|
-      Admin.check_connection
+      check_connection
       trait_meta_count = trait.metadata.count
       if trait_meta_count > 20
         @process.info("Trait ##{trait.id} in key #{key} has #{trait_meta_count} metadata... that seems high?")
@@ -645,6 +646,15 @@ class Publisher
     end
 
     @process.info("#{count} metadata added.")
+  end
+
+  def check_connection
+    Admin.check_connection unless defined(@time)
+    @time ||= time.now
+    if Time.now > time + 2.minutes
+      Admin.check_connection
+      time = Time.now
+    end
   end
 
   # in_harvest_trait should always be passed in the case that the trait that meta belongs to belongs to the current harvest. Otherwise, it must be nil.
