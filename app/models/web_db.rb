@@ -311,5 +311,44 @@ class WebDb < ApplicationRecord
         process.info(msgs.join("; ")) if process
       end
     end
+
+    def connection_fails?
+      begin
+        connection.exec_query('SELECT id FROM ranks LIMIT 1')
+        false
+      rescue
+        return true
+      end
+    end
+
+    def check_connection
+      return true if connected?
+      puts "Disconnected, reconnecting."
+      reconnect
+      return true if connected?
+      puts "STILL disconnected, will keep trying..."
+      max_pause = 512.seconds
+      pause = 1.seconds
+      while pause <= max_pause && ! connected?
+        puts "Waiting #{pause} seconds..."
+        sleep(pause)
+        pause *= 2
+        reconnect
+      end
+    end
+    
+    def reconnect
+      ActiveRecord::Base.connection.reconnect!
+    end
+
+    def connected?
+      return false unless ActiveRecord::Base.connected?
+      begin
+        ActiveRecord::Base.connection.query('select 1 from resources where id = 1')
+        true
+      rescue
+        false
+      end
+    end
   end
 end
