@@ -51,7 +51,7 @@ class HarvestProcess < ApplicationRecord
     breadcrumbs = method_breadcrumbs.split(',')
     return unless breadcrumbs.include?(method_name.to_s)
     breadcrumbs.delete(method_name.to_s)
-    Admin.maintain_db_connection
+    Admin.check_connection
     update_attribute(:method_breadcrumbs, breadcrumbs.join(','))
   end
 end
