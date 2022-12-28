@@ -543,7 +543,7 @@ class Publisher
     CSV.open(meta_file, 'ab') do |csv|
       @process.info("Adding #{@traits.count} traits...")
       add_trait_meta_to_csv(@traits, csv)
-      Admin.maintain_db_connection(@process)
+      Admin.check_connection
       @process.info("Adding #{@assocs.count} assocs...")
       add_trait_meta_to_csv(@assocs, csv)
       add_meta_to_csv(external_trait_metas, csv)
@@ -607,7 +607,7 @@ class Publisher
     count = 0
 
     if metas.respond_to?(:find_each)
-      Admin.maintain_db_connection
+      Admin.check_connection
       metas.find_each do |meta|
         count += add_one_meta_to_csv(meta, trait, csv)
       end
@@ -636,7 +636,7 @@ class Publisher
     count = 0
 
     traits.each do |key, trait|
-      Admin.maintain_db_connection
+      Admin.check_connection
       trait_meta_count = trait.metadata.count
       if trait_meta_count > 20
         @process.info("Trait ##{trait.id} in key #{key} has #{trait_meta_count} metadata... that seems high?")

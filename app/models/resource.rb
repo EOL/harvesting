@@ -310,6 +310,7 @@ class Resource < ApplicationRecord
     harvest
   end
 
+  # NOTE: (because I often search for TSV here) You can't just build TSV for traits, you need to do the whole publish:
   def publish
     Publisher.by_resource(self, logged_process, harvests.last)
   end
@@ -431,7 +432,8 @@ class Resource < ApplicationRecord
   def no_more_images_to_download
     msg = 'NO additional images were found to download'
     fix_downloaded_media_count
-    if count = media.harvested.failed_download.count && count.positive?
+    count = media.harvested.failed_download.count
+    if count&.positive?
       msg += ", NOTE THAT #{count} DOWNLOADS FAILED."
     end
     log_error(msg)

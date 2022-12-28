@@ -114,7 +114,7 @@ class Resource
           file.write(input.read)
         end
       end
-      raise('Did not download') unless File.exist?(path) && File.size(path).positive?
+      raise('Did not download') unless File.exist?(path) && File.size(path)&.positive?
 
       path
     end
