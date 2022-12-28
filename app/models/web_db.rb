@@ -311,14 +311,5 @@ class WebDb < ApplicationRecord
         process.info(msgs.join("; ")) if process
       end
     end
-
-    def connection_fails?
-      begin
-        connection.exec_query('SELECT id FROM ranks LIMIT 1')
-        false
-      rescue
-        return true
-      end
-    end
   end
 end
