@@ -84,7 +84,7 @@ class ResourceHarvester
         fast_forward = false
         @harvest&.send("#{stage}!") # NOTE: there isn't a @harvest on the first step.
         @process.run_step(stage) { send(stage) }
-        Admin.maintain_db_connection(@process)
+        Admin.check_connection
       end
     rescue => e
       @resource&.stop_adding_media_jobs
@@ -144,18 +144,18 @@ class ResourceHarvester
       CSV.open(@file, 'wb', encoding: 'UTF-8') do |csv|
         validate_csv(csv, fields)
       end
-      Admin.maintain_db_connection
+      Admin.check_connection
       @process.info("Valid: #{@file} (#{@file.readlines.size} lines)")
       @converted[@format.id] = true
     end
-    Admin.maintain_db_connection
+    Admin.check_connection
     @harvest.update_attribute(:validated_at, Time.now)
   end
 
   def check_each_column
     fields = {}
     expected_by_file = @headers.dup
-    Admin.maintain_db_connection
+    Admin.check_connection
     @format.fields.each_with_index do |field, i|
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
@@ -167,7 +167,7 @@ class ResourceHarvester
       end
       fields[@headers[i]] = field
       expected_by_file.delete(@headers[i])
-      Admin.maintain_db_connection # We'll be reading the format again after a long pause...
+      Admin.check_connection # We'll be reading the format again after a long pause...
     end
     { expected: expected_by_file, fields: fields }
   end
@@ -368,7 +368,7 @@ class ResourceHarvester
   end
 
   def flush_model_cache
-    Admin.maintain_db_connection(@process)
+    Admin.check_connection
     measure_progress
     find_orphan_parent_nodes # Empty now, TODO with deltas.
     find_duplicate_nodes # TODO: not complete, still a few trouble models.
@@ -721,12 +721,12 @@ class ResourceHarvester
   # eventually, but not now.
   def complete_harvest_instance
     Publisher.by_resource(@resource, @process, @harvest)
-    Admin.maintain_db_connection
+    Admin.check_connection
     @harvest.complete
   end
 
   def each_format(&block)
-    Admin.maintain_db_connection(@process)
+    Admin.check_connection
     count = @resource.formats.size
     raise "No formats!" if count.zero?
     @process.info("Looping over #{count} formats...")
@@ -746,7 +746,7 @@ class ResourceHarvester
       @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       yield
-      Admin.maintain_db_connection(@process)
+      Admin.check_connection
     end
   end
 
@@ -754,7 +754,7 @@ class ResourceHarvester
   # headers in the file (it uses the DB instead)...
   def each_diff(&block)
     @resource.formats.each do |fmt|
-      Admin.maintain_db_connection(@process)
+      Admin.check_connection
       @format = fmt
       fid = "#{@format.id}_diff".to_sym
       unless @formats.has_key?(fid)

@@ -52,7 +52,7 @@ class LoggedProcess
     info("Processing group of #{size} in #{groups} groups of #{group_size}")
     @process.in_group_of_size(groups)
     start_all = Time.now
-    Admin.maintain_db_connection
+    Admin.check_connection
     begin
       set.in_groups_of(group_size, false) do |group|
         start = Time.now

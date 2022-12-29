@@ -115,7 +115,7 @@ class WebDb < ApplicationRecord
 
     def raw_create(table, hash)
       vals = hash.values.map { |val| quote_value(val) }
-      maintain_db_connection
+      check_connection
       tried = false
       begin
         connection.exec_insert("INSERT INTO #{table} (`#{hash.keys.join('`, `')}`) VALUES (#{vals.join(',')})", 'SQL', vals)
@@ -286,7 +286,7 @@ class WebDb < ApplicationRecord
     end
 
     def exec_query(query)
-      maintain_db_connection
+      check_connection
       connection.exec_query(query)
     end
 

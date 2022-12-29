@@ -558,7 +558,7 @@ class Resource < ApplicationRecord
   rescue => e # reports as Mysql2::Error but that doesn't catch it. :S
     log_info("There was an error, retrying: #{e.message}")
     sleep(2)
-    Admin.maintain_db_connection(process_log)
+    Admin.check_connection
     retry rescue "[#{Time.now.strftime('%H:%M:%S.%3N')}] UNABLE TO REMOVE #{klass.name.humanize.pluralize}: timed out"
   end
 
