@@ -411,8 +411,12 @@ class Resource < ApplicationRecord
     # If we've already downloaded the first one, assume most will also be downloaded, so grab a BIG batch, otherwise,
     # just grab a normal batch:
     limited_downloadable = downloadable.limit(Resource.media_download_batch_size * (already_downloaded_one ? 64 : 1))
-    limited_downloadable.update_all(enqueued_at: Time.now)
-    limited_downloadable.each { |image| image.download_and_prep_with_rescue }
+    begin
+      limited_downloadable.update_all(enqueued_at: Time.now)
+      limited_downloadable.each { |image| image.download_and_prep_with_rescue }
+    ensure
+      limited_downloadable.where(downloaded_at: nil).update_all(enqueued_at: nil) # Re-enque any that didn't go!
+    end
   end
 
   def download_missing_images
