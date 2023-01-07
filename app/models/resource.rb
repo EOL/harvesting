@@ -383,18 +383,8 @@ class Resource < ApplicationRecord
   end
 
   def fix_downloaded_media_count
-    reset_undownloaded_enqueued_at_times
     update_attribute(:downloaded_media_count, media.count - undownloaded_media_count)
     update_attribute(:failed_downloaded_media_count, media.harvested.failed_download.count)
-  end
-
-  def reset_undownloaded_enqueued_at_times
-    begin
-      needed_ids = media.needs_download.limit(100).pluck(:id)
-      media.where(id: needed_ids).where('enqueued_at < ?', 10.minutes.ago).update_all(enqueued_at: nil)
-    rescue
-      log_error("Unable to reset undownloaded enqueued_at times, skipping.")
-    end
   end
 
   def log_download_progress
@@ -409,10 +399,11 @@ class Resource < ApplicationRecord
     return if image.nil?
     already_downloaded_one = image.already_downloaded? rescue false
     # If we've already downloaded the first one, assume most will also be downloaded, so grab a BIG batch, otherwise,
-    # just grab a normal batch:
-    limited_downloadable = downloadable.limit(Resource.media_download_batch_size * (already_downloaded_one ? 64 : 1))
+    # just grab a normal batch. Plucking IDs because I think the multi-threaded nature of this process causes overlap in a
+    # harmful way.
+    limited_ids = downloadable.limit(Resource.media_download_batch_size * (already_downloaded_one ? 64 : 1)).pluck(:id)
+    limited_downloadable = Medium.where(id: limited_ids)
     begin
-      limited_downloadable.update_all(enqueued_at: Time.now)
       limited_downloadable.each { |image| image.download_and_prep_with_rescue }
     ensure
       limited_downloadable.where(downloaded_at: nil).update_all(enqueued_at: nil) # Re-enque any that didn't go!
