@@ -157,7 +157,8 @@ class ResourceHarvester
         validate_csv(csv, fields)
       end
       Admin.maintain_db_connection
-      @process.info("Valid: #{@file} (#{@file.readlines.size} lines)")
+      wc = `wc -l #{@file}`.split.first rescue '<?>'
+      @process.info("Valid: #{@file} (#{wc} lines)")
       @converted[@format.id] = true
     end
     Admin.maintain_db_connection
