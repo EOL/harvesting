@@ -278,7 +278,7 @@ class ResourceHarvester
       @process.info("Created diff dir: #{diff_dir}")
     end
     if @diffing
-      each_format 
+      each_format do
         file = @format.diff_file
         diff_format
         wc = EolFileUtils.wc(@file)
@@ -286,7 +286,7 @@ class ResourceHarvester
       end
     else
       @resource.remove_content(@harvest)
-      each_format
+      each_format do
         file = @format.diff_file
         fake_diff_from_nothing(format)
         wc = EolFileUtils.wc(@file)
