@@ -74,8 +74,8 @@ class ResourceHarvester
 
   # I am trying to re-arrange things. You MUST now call this wrapped in a Resource.with_lock:
   def start
-    non_searchkick_process do
-      fast_forward = @harvest && !@harvest.stage.nil?
+    fast_forward = @harvest && !@harvest.stage.nil?
+    non_searchkick_process(fast_forward) do
       Harvest.stages.each_key do |stage|
         if fast_forward && harvest.stage != stage
           @process.info("Already completed stage #{stage}, skipping...")
@@ -93,7 +93,7 @@ class ResourceHarvester
     end
   end
 
-  def non_searchkick_process(&block)
+  def non_searchkick_process(fast_forward, &block)
     @process = @resource.logged_process
     Searchkick.disable_callbacks
     begin
