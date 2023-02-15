@@ -308,11 +308,11 @@ class ResourceHarvester
     run_cmd("echo \".\" >> #{diff}")
   end
 
-  def diff_format(format)
+  def diff_format
     # diff the old version against the new:
-    prev_csv = format.converted_csv_file(@resource.previous_harvest)
-    curr_csv = format.converted_csv_file
-    run_cmd("diff #{prev_csv} #{curr_csv} > #{format.diff_file}")
+    prev_csv = @format.converted_csv_file(@resource.previous_harvest)
+    curr_csv = @format.converted_csv_file
+    run_cmd("diff #{prev_csv} #{curr_csv} > #{@format.diff_file}")
   end
 
   def run_cmd(cmd, env = {})
