@@ -157,7 +157,7 @@ class ResourceHarvester
         validate_csv(csv, fields)
       end
       Admin.maintain_db_connection
-      wc = `wc -l #{@file}`.split.first rescue '<?>'
+      wc = EolFileUtils.wc(@file)
       @process.info("Valid: #{@file} (#{wc} lines)")
       @converted[@format.id] = true
     end
@@ -256,7 +256,8 @@ class ResourceHarvester
       else
         raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
       end
-      @process.info("Converted: #{path} (#{file.readlines.size} lines)")
+      wc = EolFileUtils.wc(@file)
+      @process.info("Converted: #{path} (#{wc} lines)")
     end
   end
 
@@ -281,13 +282,15 @@ class ResourceHarvester
       each_format do |format|
         file = format.diff_file
         fake_diff_from_nothing(format)
-        @process.info("Created diff: #{file} (#{file.readlines.size} lines)")
+        wc = EolFileUtils.wc(file)
+        @process.info("Created diff: #{file} (#{wc} lines)")
       end
     else
       each_format do |format|
         file = format.diff_file
         diff_format
-        @process.info("Created diff: #{file} (#{file.readlines.size} lines)")
+        wc = EolFileUtils.wc(file)
+        @process.info("Created diff: #{file} (#{wc} lines)")
       end
     end
     @harvest.update_attribute(:deltas_created_at, Time.now)
@@ -765,7 +768,8 @@ class ResourceHarvester
       @parser = @formats[fid].diff_parser
       @headers = @formats[fid][:headers]
       @file = @format.diff_file
-      @process.info("Handling diff: #{@file} (#{@file.readlines.size} lines)")
+      wc = EolFileUtils.wc(file)
+      @process.info("Handling diff: #{@file} (#{wc} lines)")
       yield
     end
   end

@@ -19,6 +19,10 @@ class EolFileUtils
       end
     end
 
+    def wc(file)
+      `wc -l #{file}`.split.first rescue '<?>'
+    end
+
     # EolFileUtils.remove_dot_files(dir)
     def remove_dot_files(dir)
       Dir.glob("#{dir}/.*").each do |file|
