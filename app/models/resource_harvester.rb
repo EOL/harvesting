@@ -765,7 +765,7 @@ class ResourceHarvester
         @formats[fid][:parser] = @format.diff_parser
         @formats[fid][:headers] = @format.headers
       end
-      @parser = @formats[fid].diff_parser
+      @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       @file = @format.diff_file
       wc = EolFileUtils.wc(file)
