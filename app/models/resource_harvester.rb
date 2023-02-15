@@ -278,19 +278,19 @@ class ResourceHarvester
       @process.info("Created diff dir: #{diff_dir}")
     end
     if @diffing
-      each_format do |format|
-        file = format.diff_file
+      each_format 
+        file = @format.diff_file
         diff_format
-        wc = EolFileUtils.wc(file)
-        @process.info("Created diff: #{file} (#{wc} lines)")
+        wc = EolFileUtils.wc(@file)
+        @process.info("Created diff: #{@file} (#{wc} lines)")
       end
     else
       @resource.remove_content(@harvest)
-      each_format do |format|
-        file = format.diff_file
+      each_format
+        file = @format.diff_file
         fake_diff_from_nothing(format)
-        wc = EolFileUtils.wc(file)
-        @process.info("Created diff: #{file} (#{wc} lines)")
+        wc = EolFileUtils.wc(@file)
+        @process.info("Created diff: #{@file} (#{wc} lines)")
       end
     end
     @harvest.update_attribute(:deltas_created_at, Time.now)
