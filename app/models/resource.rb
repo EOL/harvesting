@@ -538,7 +538,7 @@ class Resource < ApplicationRecord
       remove_type(Node)
     end
     if harvest
-      harvests.where(['id IS NOT ?', harvest.id]).destroy_all
+      harvests.where(['id <> ?', harvest.id]).destroy_all
     else
       harvests.destroy_all
     end
