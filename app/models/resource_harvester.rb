@@ -439,7 +439,7 @@ class ResourceHarvester
             # you'll end up with media and names with a "parent" that's missing, which will cause errors. :\ You should
             # instead figure out what the problem was and add a filter for the offending chracter(s) to the harvesting
             # code where appropriate.
-            raise "#{e.class} while parsing something around here: #{group[row-1..row+1].to_json}"
+            raise "#{e.class} while parsing something around line #{row}: #{group[row-1..row+1].to_json}"
           else
             group.each_with_index do |instance, index|
               begin
