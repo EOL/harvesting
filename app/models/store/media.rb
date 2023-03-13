@@ -210,6 +210,7 @@ module Store
         val = val.each_char.select { |c| c.bytes.count < 4 }.join('')
       end
       val.gsub(/""+/, '"').gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/^\"\s*(.*)\s*\"$/, '\\1')
+      remove_emojis(val)
     end
 
     def fix_subtype_val(val, subclass)
