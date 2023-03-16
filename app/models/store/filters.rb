@@ -2,11 +2,9 @@ module Store
   # These are just methods that can be called by several other "Store" modules.
   module Filters
     def remove_emojis(val)
-      
-      val.gsub(Unicode::Emoji::REGEX, '').
-         gsub(/[\u{1d600}-\u{1d6ff}]/, ''). # italicized characters
-         gsub(/[\u{2A700}-\u{2BFFF}]/, ''). # Extended Chinese characters
-         gsub(/[\u{1D400}-\u{1D7FF}]/, '')  # Mathematical Alphanumeric Symbols
+      # Also Cutting a wide swath of "unsortable" characters and emojis that the DB can't store:
+      # q.v.: https://www.fileformat.info/info/unicode/block/index.htm
+      val.gsub(/[\u{1D360}-\u{323AF}]/, '')
     end
   end
 end

@@ -61,8 +61,6 @@ gem 'simple_form', '~> 5.1'
 gem 'turbolinks', '~> 5.2'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '~> 4.2'
-# Find (in order to remove) emoji in strings:
-gem 'unicode-emoji', '~> 3.3'
 # Use Unicorn as the app server
 gem 'unicorn', '~> 6.1'
 gem 'unicorn-worker-killer', '~> 0.4'
