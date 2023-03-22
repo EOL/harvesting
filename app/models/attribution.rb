@@ -23,7 +23,17 @@ class Attribution < ApplicationRecord
 
   def sanitize_url
     return nil if url.blank?
-    @sanitize_url ||= URI.escape(URI.unescape(url))
+    # In rare cases (first found with Wikidata), we get a URL that encodes *binary*, and this code will fail:
+    @sanitize_url ||=
+      begin
+        URI.escape(URI.unescape(url))
+      rescue ArgumentError => e
+        if url =~ URI::regexp
+          url
+        else
+          raise e
+        end
+      end
   end
 
   def sanitize_email
