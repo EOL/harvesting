@@ -64,8 +64,9 @@ class Harvest < ApplicationRecord
   def incomplete
     update_attributes(failed_at: nil, completed_at: nil)
   end
-
+  
   def complete
+    Admin.check_connection
     # NOTE: ScientificName goes straight to the model because the relationship goes through nodes.
     update_attributes(completed_at: Time.now,
                       nodes_count: nodes.count,
