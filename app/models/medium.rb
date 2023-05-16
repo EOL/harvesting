@@ -171,6 +171,7 @@ class Medium < ApplicationRecord
       prepper = get_prepper(raw)
       raw = nil # Ensure it's not taking up memory anymore (well, modulo GC). It c/b quite large!
       prepper.prep_medium
+      update_attributes(downloaded_at: Time.now, unmodified_url: unmodified_url, base_url: default_base_url)
     end
   end
 
