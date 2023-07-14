@@ -2,6 +2,7 @@ class Resource < ApplicationRecord
   @logfile_name = 'process.log'
   @lockfile_name = 'harvest.lock'
   @unmatched_file_name = 'unmatched_nodes.txt'
+  @media_download_batch_size = 32
 
   belongs_to :partner, inverse_of: :resources
   belongs_to :default_license, class_name: 'License', inverse_of: :resources
