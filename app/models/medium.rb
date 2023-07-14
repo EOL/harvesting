@@ -164,6 +164,7 @@ class Medium < ApplicationRecord
     ensure_dir_exists
     if already_downloaded?
       create_missing_image_sizes if jpg? # This will skip sizes that already exist.
+      update_attributes(downloaded_at: Time.now)
       resource.update_attribute(:downloaded_media_count, resource.downloaded_media_count + 1)
     else
       abort_if_filetype_unreadable
