@@ -408,6 +408,7 @@ class Resource < ApplicationRecord
     ensure
       limited_downloadable.where(downloaded_at: nil).update_all(enqueued_at: nil) # Re-enque any that didn't go!
     end
+    limited_downloadable.map(&:id)
   end
 
   def download_missing_images
