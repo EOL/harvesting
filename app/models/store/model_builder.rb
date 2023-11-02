@@ -358,12 +358,12 @@ module Store
       if @models[:occurrence][:sex]
         @process.debug('sex exists, treating as Term') if @models[:debug]
         sex = @models[:occurrence].delete(:sex)
-        @models[:occurrence][:sex_term_uri] = fail_on_bad_uri(sex)
+        @models[:occurrence][:sex_term_uri] = fail_on_bad_uri(sex, 'occurrence sex')
       end
       if @models[:occurrence][:lifestage]
         @process.debug('lifestage exists, treating as Term') if @models[:debug]
         lifestage = @models[:occurrence].delete(:lifestage)
-        @models[:occurrence][:lifestage_term_uri] = fail_on_bad_uri(lifestage)
+        @models[:occurrence][:lifestage_term_uri] = fail_on_bad_uri(lifestage, 'occurrence lifestage')
       end
       # TODO: there are some other normalizations and checks we should do here, # I expect.
       prepare_model_for_store(Occurrence, @models[:occurrence])
@@ -371,7 +371,7 @@ module Store
         @process.debug("setting meta #{key} to {#{value}}") if @models[:debug]
         datum = {}
         datum[:occurrence_resource_pk] = @models[:occurrence][:resource_pk]
-        datum[:predicate_term_uri] = fail_on_bad_uri(key)
+        datum[:predicate_term_uri] = fail_on_bad_uri(key, 'occurrence predicate term')
         datum = convert_meta_value(datum, value)
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
@@ -407,19 +407,19 @@ module Store
       occ_meta = !@models[:trait][:of_taxon] && parent.blank?  # Convenience flag to denote occurrence metadata.
       predicate = @models[:trait].delete(:predicate)
       puts "PREDICATE: #{predicate}"
-      @models[:trait][:predicate_term_uri] = fail_on_bad_uri(predicate)
+      @models[:trait][:predicate_term_uri] = fail_on_bad_uri(predicate, 'trait predicate term')
       puts "PRED URI: #{@models[:trait][:predicate_term_uri]}"
       units = @models[:trait].delete(:units)
-      @models[:trait][:units_term_uri] = fail_on_bad_uri(units)
+      @models[:trait][:units_term_uri] = fail_on_bad_uri(units, 'trait unit term')
 
       contributer = @models[:trait].delete(:contributor)
       compiler = @models[:trait].delete(:compiler)
       determined_by = @models[:trait].delete(:determined_by)
 
       unless occ_meta
-        @models[:trait][:contributor_uri] = fail_on_bad_uri(contributer)
-        @models[:trait][:compiler_uri] = fail_on_bad_uri(compiler)
-        @models[:trait][:determined_by_uri] = fail_on_bad_uri(determined_by)
+        @models[:trait][:contributor_uri] = fail_on_bad_uri(contributer, 'trait contributor')
+        @models[:trait][:compiler_uri] = fail_on_bad_uri(compiler, 'trait compiler')
+        @models[:trait][:determined_by_uri] = fail_on_bad_uri(determined_by, 'trait determined by')
       end
 
       # TEMP:
@@ -434,7 +434,7 @@ module Store
       if @models[:trait][:statistical_method]
         @process.debug('statistical method exists, setting to Term') if @models[:debug]
         stat_m = @models[:trait].delete(:statistical_method)
-        @models[:trait][:statistical_method_term_uri] = fail_on_bad_uri(stat_m)
+        @models[:trait][:statistical_method_term_uri] = fail_on_bad_uri(stat_m, 'trait statistical method')
       end
       meta = @models[:trait].delete(:meta) || {}
       klass = Trait
@@ -451,7 +451,7 @@ module Store
         datum[:resource_id] = @resource.id
         datum[:harvest_id] = @harvest.id
         datum[:trait_resource_pk] = trait.resource_pk unless occ_meta
-        datum[:predicate_term_uri] = fail_on_bad_uri(key)
+        datum[:predicate_term_uri] = fail_on_bad_uri(key, 'trait predicate term')
         datum = convert_meta_value(datum, value)
         klass = MetaTrait
         if !@models[:trait][:of_taxon] && parent.blank?
@@ -468,12 +468,12 @@ module Store
       @models[:assoc][:resource_id] = @resource.id
       @models[:assoc][:harvest_id] = @harvest.id
       predicate = @models[:assoc].delete(:predicate)
-      @models[:assoc][:predicate_term_uri] = fail_on_bad_uri(predicate)
+      @models[:assoc][:predicate_term_uri] = fail_on_bad_uri(predicate, 'assoc predicate term')
       meta = @models[:assoc].delete(:meta) || {}
       @models[:assoc][:resource_pk] ||= (@default_trait_resource_pk += 1)
-      @models[:assoc][:contributor_uri] = fail_on_bad_uri(@models[:assoc].delete(:contributor))
-      @models[:assoc][:compiler_uri] = fail_on_bad_uri(@models[:assoc].delete(:compiler))
-      @models[:assoc][:determined_by_uri] = fail_on_bad_uri(@models[:assoc].delete(:determined_by))
+      @models[:assoc][:contributor_uri] = fail_on_bad_uri(@models[:assoc].delete(:contributor), 'assoc contributor')
+      @models[:assoc][:compiler_uri] = fail_on_bad_uri(@models[:assoc].delete(:compiler), 'assoc compiler')
+      @models[:assoc][:determined_by_uri] = fail_on_bad_uri(@models[:assoc].delete(:determined_by), 'assoc determined by')
       build_references(:assoc, AssocsReference)
       # NOTE: JH: "please do [ignore agents for data]. The Contributor column data is appearing in beta, so you’re putting
       # it somewhere, and that’s all that matters for mvp"
@@ -482,7 +482,7 @@ module Store
       meta.each do |key, value|
         @process.debug("setting meta #{key} to {#{value}}") if @models[:debug]
         datum = {}
-        datum[:predicate_term_uri] = fail_on_bad_uri(key)
+        datum[:predicate_term_uri] = fail_on_bad_uri(key, 'assoc predicate term')
         datum[:harvest_id] = @harvest.id
         datum[:resource_id] = @resource.id
         datum[:assoc_resource_fk] = assoc.resource_pk
@@ -606,7 +606,7 @@ module Store
       end
       if Term.uri?(value)
         @process.debug('value recognized as URI, treating as term') if @models[:debug]
-        instance[:object_term_uri] = fail_on_bad_uri(value)
+        instance[:object_term_uri] = fail_on_bad_uri(value, 'term value, looks like a URI')
       end
       # NOTE we have to check both for units AND for a numeric value to see if it's "numeric"
       if instance[:units] || (!Float(value&.tr(',', '')).nil? rescue false) # rubocop:disable Style/RescueModifier
@@ -614,7 +614,7 @@ module Store
         units = instance.delete(:units)
         if Term.uri?(units)
           @process.debug('units looks like a URI, treating as term') if @models[:debug]
-          instance[:units_term_uri] = fail_on_bad_uri(units)
+          instance[:units_term_uri] = fail_on_bad_uri(units, 'term units')
         elsif !units.blank?
           raise("Found a non-URI unit of '#{units}'! ...Forced to ignore.")
 
@@ -640,19 +640,23 @@ module Store
       end
       if Term.uri?(value)
         @process.debug('treating value as a URI') if @models[:debug]
-        datum[:object_term_uri] = fail_on_bad_uri(value)
+        datum[:object_term_uri] = fail_on_bad_uri(value, 'object term meta value')
       else
         datum[:literal] = value
       end
       datum
     end
 
-    def fail_on_bad_uri(uri)
-      @process.debug('#fail_on_bad_uri') if @models[:debug]
+    def fail_on_bad_uri(uri, type='')
+      @process.debug("#fail_on_bad_uri (#{type.blank? ? 'no hint' : type})") if @models[:debug]
       return nil if uri.blank?
 
-      @process.debug('URI is NOT blank, continue...') if @models[:debug]
-      raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri.downcase)
+      unless EolTerms.includes_uri?(uri.downcase)
+        msg = "Missing Term for URI `#{uri}`"
+        msg += " (#{type})" unless type.blank?
+        msg += ", must be added!" 
+        raise "Missing Term for URI `#{uri}`, must be added!" unless EolTerms.includes_uri?(uri.downcase)
+      end
 
       uri.downcase # This is perhaps SLIGHTLY dangerous, but: URIs are SUPPOSED to be case-insensitive!
     end
