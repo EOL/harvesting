@@ -26,7 +26,7 @@ class Resource
           format = resource.formats.last
           filename = format.get_from
           basename = File.basename(filename)
-          filename = MetaXml.filename(resource)
+          filename = resource.meta_xml_filename
           unless File.exist?(filename)
             # puts "SKIPPING missing meta file for format: #{format.id}"
             next

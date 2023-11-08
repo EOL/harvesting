@@ -134,7 +134,7 @@ class PublishDiff < ApplicationRecord
       self.removed_traits_path = removed_traits_path
     end
 
-    publish_meta_path = resource.publish_table_path(:metadata)
+    publish_meta_path = resource.publish_table_path('metadata')
     any_new_metas = false
     if File.exist?(publish_meta_path)
       CSV.open(new_metadata_path, 'wb', headers: Publisher::META_HEADS, write_headers: true) do |new_metas|

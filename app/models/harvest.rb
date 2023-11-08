@@ -128,7 +128,7 @@ class Harvest < ApplicationRecord
   def diff_size(format)
     file = format.diff_file || format.get_from
     return 0 unless File.exist?(file)
-    `wc -l #{file}`.chomp.split.first
+    `wc -l #{file.gsub(/(\s)/, "\\\1")}`.chomp.split.first
   end
 
   def diff_parser(format)
@@ -138,11 +138,24 @@ class Harvest < ApplicationRecord
   end
 
   def trait_filename
-    options = {}
-    options[:timestamp] = self.created_at.to_i if resource.can_perform_trait_diffs?
-    resource.publish_table_path('traits', options)
+    resource.publish_table_path('traits', harvest: self)
   end
 
-private
-
+  def diff_since_harvested(filename)
+    harvested_at = resource.harvest_timestamp_from_tsv(filename)
+    last_harvest_at = created_at.to_i
+    if last_harvest_at == harvested_at
+      ''
+    else
+      path = resource.path
+      last_file = filename.dup.sub(harvested_at.to_s, last_harvest_at.to_s)
+      diff_filename = filename.dup.sub('.tsv', "_#{last_harvest_at}.tsv")
+      if !File.exist?("#{path}/#{diff_filename}")
+        cmd = "diff #{path}/#{filename} #{path}/#{last_file} > #{path}/#{diff_filename}"
+        # NOTE: the LC_ALL fixes a problem with unicode and diff.
+        system(env.merge('LC_ALL' => 'C'), cmd)
+      end
+      "#{path}/#{diff_filename}"
+    end
+  end
 end

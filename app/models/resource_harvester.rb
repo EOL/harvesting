@@ -74,8 +74,8 @@ class ResourceHarvester
 
   # I am trying to re-arrange things. You MUST now call this wrapped in a Resource.with_lock:
   def start
-    non_searchkick_process do
-      fast_forward = @harvest && !@harvest.stage.nil?
+    fast_forward = @harvest && !@harvest.stage.nil?
+    non_searchkick_process(fast_forward) do
       Harvest.stages.each_key do |stage|
         if fast_forward && harvest.stage != stage
           @process.info("Already completed stage #{stage}, skipping...")
@@ -93,7 +93,7 @@ class ResourceHarvester
     end
   end
 
-  def non_searchkick_process(&block)
+  def non_searchkick_process(fast_forward, &block)
     @process = @resource.logged_process
     Searchkick.disable_callbacks
     begin
@@ -157,21 +157,19 @@ class ResourceHarvester
         validate_csv(csv, fields)
       end
       Admin.maintain_db_connection
-      @process.info("Valid: #{@file} (#{@file.readlines.size} lines)")
+      wc = EolFileUtils.wc(@file)
+      @process.info("Valid: #{@file} (#{wc} lines)")
       @converted[@format.id] = true
     end
-    # For whatever reason, Admin.maintain_db_connection does not work here.
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     @harvest.update_attribute(:validated_at, Time.now)
   end
 
   def check_each_column
     fields = {}
     expected_by_file = @headers.dup
-    # For some reason, verify_connection is NOT catching the state we're in for this case, so:
-    ActiveRecord::Base.connection.reconnect!
+    Admin.maintain_db_connection
     @format.fields.each_with_index do |field, i|
-      Admin.maintain_db_connection
       raise(Exceptions::ColumnMissing, "MISSING COLUMN: #{@format.represents}: #{field.expected_header}") if
         @headers[i].nil?
 
@@ -258,7 +256,8 @@ class ResourceHarvester
       else
         raise "Failed system call { #{cmd} } #{$CHILD_STATUS}"
       end
-      @process.info("Converted: #{path} (#{file.readlines.size} lines)")
+      wc = EolFileUtils.wc(@file)
+      @process.info("Converted: #{path} (#{wc} lines)")
     end
   end
 
@@ -279,17 +278,19 @@ class ResourceHarvester
       @process.info("Created diff dir: #{diff_dir}")
     end
     if @diffing
-      @resource.remove_content(@harvest)
-      each_format do |format|
-        file = format.diff_file
-        fake_diff_from_nothing(format)
-        @process.info("Created diff: #{file} (#{file.readlines.size} lines)")
+      each_format do
+        file = @format.diff_file
+        diff_format
+        wc = EolFileUtils.wc(@file)
+        @process.info("Created diff: #{@file} (#{wc} lines)")
       end
     else
-      each_format do |format|
-        file = format.diff_file
-        diff_format
-        @process.info("Created diff: #{file} (#{file.readlines.size} lines)")
+      @resource.remove_content(@harvest)
+      each_format do
+        file = @format.diff_file
+        fake_diff_from_nothing(format)
+        wc = EolFileUtils.wc(@file)
+        @process.info("Created diff: #{@file} (#{wc} lines)")
       end
     end
     @harvest.update_attribute(:deltas_created_at, Time.now)
@@ -307,11 +308,11 @@ class ResourceHarvester
     run_cmd("echo \".\" >> #{diff}")
   end
 
-  def diff_format(format)
+  def diff_format
     # diff the old version against the new:
-    prev_csv = format.converted_csv_file(@resource.previous_harvest)
-    curr_csv = format.converted_csv_file
-    run_cmd("diff #{prev_csv} #{curr_csv} > #{format.diff_file}")
+    prev_csv = @format.converted_csv_file(@resource.previous_harvest)
+    curr_csv = @format.converted_csv_file
+    run_cmd("diff #{prev_csv} #{curr_csv} > #{@format.diff_file}")
   end
 
   def run_cmd(cmd, env = {})
@@ -723,7 +724,7 @@ class ResourceHarvester
   # eventually, but not now.
   def complete_harvest_instance
     Publisher.by_resource(@resource, @process, @harvest)
-    ActiveRecord::Base.connection.reconnect! # With large resources, it will have disconnected here.
+    Admin.maintain_db_connection
     @harvest.complete
   end
 
@@ -764,10 +765,11 @@ class ResourceHarvester
         @formats[fid][:parser] = @format.diff_parser
         @formats[fid][:headers] = @format.headers
       end
-      @parser = @formats[fid].diff_parser
+      @parser = @formats[fid][:parser]
       @headers = @formats[fid][:headers]
       @file = @format.diff_file
-      @process.info("Handling diff: #{@file} (#{@file.readlines.size} lines)")
+      wc = EolFileUtils.wc(file)
+      @process.info("Handling diff: #{@file} (#{wc} lines)")
       yield
     end
   end

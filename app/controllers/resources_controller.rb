@@ -3,10 +3,10 @@ class ResourcesController < ApplicationController
 
   # See your environment config; this action should be ignored by logs.
   def ping
-    if ActiveRecord::Base.connection.active?
-      render text: 'pong'
-    else
-      render status: 500
+    respond_to do |format|
+      success = { 'response' => { 'message' => 'Success' } }
+      format.json { render json: success }
+      format.xml { render xml: success.to_xml }
     end
   end
 
@@ -41,6 +41,25 @@ class ResourcesController < ApplicationController
 
   def diff
     enqueue_harvest(:diff)
+  end
+
+  def publishing_diffs
+    @resource = Resource.find(params[:id])
+    possible_times = @resource.harvest_used_for_publishing_at(params[:published_at].to_i)
+    @files = @resource.publishing_files_from_harvest_at(harvest_at)
+    fmt.json {}
+  end
+
+  def publishing_diff_file
+    @resource = Resource.find(params[:id])
+    @filename = params[:filename]
+    last_harvest = @resource.last_harvest
+    diff_filename = last_harvest.diff_since_harvested(@filename)
+    if diff_filename.empty?
+      send_data('', @filename)
+    else
+      send_file(diff_filename)
+    end
   end
 
   def re_harvest

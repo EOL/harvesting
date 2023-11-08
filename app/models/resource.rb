@@ -90,6 +90,11 @@ class Resource < ApplicationRecord
 
     def from_xml(loc)
       Resource::FromMetaXml.by_path(loc)
+      store_meta_hash
+    end
+
+    def store_meta_hash
+      meta_hash = md5_hash_from_file
     end
 
     def with_lock(resource_id)
@@ -154,6 +159,19 @@ class Resource < ApplicationRecord
     end
   end
 
+  def md5_hash_from_file
+    return nil unless File.exist?(meta_xml_filename)
+    begin
+      `cat #{meta_xml_filename} | md5sum`.split.first
+    rescue
+      nil
+    end
+  end
+
+  def meta_xml_filename(resource)
+    "#{path}/meta.xml"
+  end
+
   def lockfile_name
     "#{path}/#{Resource.lockfile_name}"
   end
@@ -208,10 +226,27 @@ class Resource < ApplicationRecord
   end
 
   def publish_table_path(table, options = {})
-    name = "publish_#{table}"
-    options[:timestamp] = options[:harvest].created_at.to_i if options[:harvest]
-    name += "_#{options[:timestamp]}" if options[:timestamp]
-    path.join("#{name}.tsv")
+    harvest = options[:harvest] || harvests.last
+    path.join("publish_#{table}_#{harvest.created_at.to_i}.tsv")
+  end
+
+  def harvest_used_for_publishing_at(published_at)
+    possible_times = published_nodes_times
+    possible_times.delete_if { |time| time > published_at }
+    raise "FAILURE: the published time was earlier than any harvest." if possible_times.length.zero?
+    possible_times.last
+  end
+
+  def publishing_files_from_harvest_at(harvest_at)
+    Dir.glob("publish_*_#{harvest_at}.tsv", base: path)
+  end
+
+  def published_nodes_times
+    Dir.glob("#{path}/publish_nodes_*tsv").map { |fn| harvest_timestamp_from_tsv(fn) }.sort
+  end
+
+  def harvest_timestamp_from_tsv(filename)
+    filename.sub(/^.*_/, '').sub(/.tsv$/, '').to_i
   end
 
   def old_records_path
@@ -267,6 +302,7 @@ class Resource < ApplicationRecord
 
   def re_read_xml
     Resource::FromMetaXml.new(self).create_models_from_xml
+    store_meta_hash
   end
 
   def re_download_opendata_and_harvest
@@ -502,7 +538,7 @@ class Resource < ApplicationRecord
       remove_type(Node)
     end
     if harvest
-      harvests.where(['id IS NOT ?', harvest.id]).destroy_all
+      harvests.where(['id <> ?', harvest.id]).destroy_all
     else
       harvests.destroy_all
     end
@@ -606,6 +642,8 @@ class Resource < ApplicationRecord
   def requires_full_reharvest?
     return true unless requires_full_reharvest_after.nil?
     return true if latest_harvest.nil?
+    return true if meta_hash.nil?
+    return true if meta_hash != md5_hash_from_file # The metadata has changed, you MUST re-harvest.
     return false if latest_harvest.complete?
     # We're checking the previous harvest, then:
     return false if previous_harvest&.complete?

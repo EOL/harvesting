@@ -99,7 +99,7 @@ class Format < ApplicationRecord
     subdir = path.join(subdir)
     harvest ||= resource.latest_harvest
     FileUtils.mkdir_p(subdir) unless File.exist?(subdir)
-    path.join(subdir, "#{resource.abbr}_#{represents}_#{harvest.id}_#{format.id}.#{ext}").to_s.gsub(' ', '\\ ')
+    path.join(subdir, "#{resource.abbr}_#{represents}_#{harvest.id}_#{id}.#{ext}").to_s.gsub(' ', '\\ ')
   end
 
   def converted_csv_file(harvest = nil)

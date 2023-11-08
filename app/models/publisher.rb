@@ -79,7 +79,7 @@ class Publisher
   def safely_log_file_size(file)
     size = 0
     begin
-      sizes = `wc -l #{file}`
+      sizes = `wc -l #{file.gsub(/(\s)/, "\\\1")}`
       size = sizes.strip.split.first.to_i
       @process.info("(#{size} lines) #{file}")
     rescue Errno::ENOMEM
@@ -455,11 +455,9 @@ class Publisher
     count = 0
 
     if metas.respond_to?(:find_each)
-      # For whatever reason, Admin.maintain_db_connection does not work here.
-      ActiveRecord::Base.connection.reconnect!
+      Admin.maintain_db_connection
       metas.find_each do |meta|
         count += add_one_meta_to_csv(meta, trait, csv)
-        ActiveRecord::Base.connection.reconnect!
       end
     else
       metas.each do |meta|
