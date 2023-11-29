@@ -164,11 +164,11 @@ class Publisher
 
   def add_refs(object)
     object.references.each do |ref|
-      next if @referents.key?(ref.id)
-
-      referent = @model_mapper.referant_to_struct(ref)
-      timestamp(referent)
-      @referents[ref.id] = referent
+      unless @referents.key?(ref.id)
+        referent = @model_mapper.referant_to_struct(ref)
+        timestamp(referent)
+        @referents[ref.id] = referent
+      end
       reference = @model_mapper.reference_to_struct(object)
       reference.parent_id = object.id # NOTE: this is a HARV DB ID and should be replaced later.
       reference.referent_id = ref.id # NOTE: this is also a harv ID, and will need to be replaced.
