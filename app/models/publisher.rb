@@ -194,16 +194,16 @@ class Publisher
 
   def add_refs(object)
     object.references.each do |ref|
-      next if @referents.key?(ref.id)
-
-      t = Time.now.to_s(:db)
-      referent = Struct::WebReferent.new
-      referent.body = clean_values(ref.body)
-      referent.created_at = t
-      referent.updated_at = t
-      referent.resource_id = @web_resource_id
-      referent.harv_db_id = ref.id
-      @referents[ref.id] = referent
+      unless @referents.key?(ref.id)
+        t = Time.now.to_s(:db)
+        referent = Struct::WebReferent.new
+        referent.body = clean_values(ref.body)
+        referent.created_at = t
+        referent.updated_at = t
+        referent.resource_id = @web_resource_id
+        referent.harv_db_id = ref.id
+        @referents[ref.id] = referent
+      end
       reference = Struct::WebReference.new
       reference.parent_type = object.class.name
       reference.parent_id = object.id # NOTE: this is a HARV DB ID and should be replaced later.
