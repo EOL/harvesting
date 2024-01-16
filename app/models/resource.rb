@@ -571,7 +571,7 @@ class Resource < ApplicationRecord
     max = klass.where(resource_id: id).maximum(:id)
     index = min
     batch_size = 10_000
-    batch_size = 2_000 if klass.to_s =~ /Trait$/
+    batch_size = 2_000 if klass.to_s =~ /Trait/
     loop do
       klass.connection.execute("DELETE FROM `#{klass.table_name}` WHERE id >= #{index} AND "\
         "id < #{index + batch_size} AND resource_id = #{id}")
