@@ -533,7 +533,7 @@ class Resource < ApplicationRecord
     else
       log_info("++ Batch removal of #{total_count} instances...")
       batch_size = 10_000
-      batch_size = 2_000 if klass =~ /Trait/
+      batch_size = 2_000 if klass.to_s =~ /Trait/
       times = 0
       expected_times = (total_count / batch_size)
       max_times = expected_times * 2 # No floating point math here, sloppiness okay.
