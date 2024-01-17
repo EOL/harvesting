@@ -121,7 +121,6 @@ class Medium < ApplicationRecord
     format
   end
 
-
   def basename
     "#{resource_id}.#{resource_pk&.tr('^-_A-Za-z0-9', '_')}"
   end
@@ -150,6 +149,13 @@ class Medium < ApplicationRecord
     new_last_bit = {_: last_bit}.to_query[2..-1]
     sanitized_source_url = "#{first_bit}/#{new_last_bit}"
     raise "Unable to resolve URL #{sanitized_source_url}" if bad_url == sanitized_source_url
+  end
+
+  def remove_from_disk
+    return unless image?
+    Dir.glob("#{Rails.public_path.join(path)}/#{basename}.*").each do |variant|
+      File.unlink(variant)
+    end
   end
 
   def download_and_prep_with_rescue

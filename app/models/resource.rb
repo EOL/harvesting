@@ -523,6 +523,10 @@ class Resource < ApplicationRecord
     Node.search('*', where: { resource_id: id }, limit: 5000)
   end
 
+  def remove_media_from_disk
+    media.image.find_each {|medium| medium.remove_from_disk }
+  end
+
   # NOTE: using harvest ids because everything is indexed on those:
   def remove_type(klass)
     log_info("## remove_type: #{klass}")
