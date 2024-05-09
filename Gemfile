@@ -22,7 +22,7 @@ gem 'dalli', '~> 2.7'
 gem 'delayed_job', '~> 4.1'
 gem 'delayed_job_active_record', '~> 4.1'
 # Store users securely:
-gem 'devise', '~> 4.8'
+gem 'devise', '~> 4.9'
 # Enums with simple_form:
 gem 'enum_help', '~> 0.0'
 # Because ERB is just plain silly compared to Haml:
