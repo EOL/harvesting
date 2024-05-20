@@ -111,7 +111,7 @@ en:
       rights_statement: "Rights statement:"
       usage_statement: "Usage statement:"
       sizes: "Available sizes:"
-      subclass: "Media type:"
+      subcategory: "Media type:"
       format: "Format:"
       resource: "Resource:"
       harvest: "Harvest:"

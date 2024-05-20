@@ -460,7 +460,7 @@ class Publisher
     web_medium = Struct::WebMedium.new
     web_medium.page_id = node.page_id
     web_medium.harv_db_id = medium.id
-    web_medium.subclass = Medium.subclasses[medium.subclass]
+    web_medium.subcategory = Medium.subcategories[medium.subcategory]
     web_medium.format = Medium.formats[medium.format]
     web_medium.owner = medium.owner
     # TODO: ImageInfo from medium.sizes
