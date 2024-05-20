@@ -162,7 +162,7 @@ The following fields are populated by the global names parser process:
 ### Media
 
 - page_id
-- subclass (must be one of: image video sound map_image js_map)
+- subcategory (must be one of: image video sound map_image js_map)
 - format (must be one of: jpg youtube flash vimeo mp3 ogg wav mp4)
 - owner
 - guid

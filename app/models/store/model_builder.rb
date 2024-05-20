@@ -195,8 +195,8 @@ module Store
     def build_medium
       @process.debug('#build_medium') if @models[:debug]
       unless medium_types_valid?
-        @process.warn("skipping invalid medium (missing format or subtype) with resource_pk #{@models[:medium][:resource_pk]}, subclass "\
-          "#{@models[:medium][:subclass]} (from #{@models[:medium][:original_type]}), format "\
+        @process.warn("skipping invalid medium (missing format or subtype) with resource_pk #{@models[:medium][:resource_pk]}, subcategory "\
+          "#{@models[:medium][:subcategory]} (from #{@models[:medium][:original_type]}), format "\
           "#{@models[:medium][:format]} (from #{@models[:medium][:original_format]})")
         return
       end
@@ -232,7 +232,7 @@ module Store
 
     def medium_types_valid?
       @process.debug('#medium_types_valid') if @models[:debug]
-      @models[:medium][:subclass].present? &&
+      @models[:medium][:subcategory].present? &&
         (@models[:medium][:is_article] || @models[:medium][:format].present?)
     end
 
@@ -264,7 +264,7 @@ module Store
         raise "Attempt to specify both source_url and source_page_url on Article #{@models[:article][:resource_pk]}"
       end
       # Articles have far less information than media:
-      %i[subclass format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|
+      %i[subcategory format is_article name_verbatim description_verbatim source_page_url].each do |superfluous_field|
         @process.debug("Skipping superfluous #{superfluous_field}") if @models[:debug]
         @models[:article].delete(superfluous_field)
       end

@@ -18,10 +18,10 @@ module Store
       @models[:medium][:language_code_verbatim] = val # we will 'find' it later.
     end
 
-    # Sets subclass. NOT format.
+    # Sets subcategory. NOT format.
     def to_media_type(field, val)
       @models[:medium] ||= {}
-      if @models[:medium].key?(:subclass) # We've already got one.
+      if @models[:medium].key?(:subcategory) # We've already got one.
         @process.debug("Skipping media type {#{val}}; already specified.") if field.debugging
         return
       end
@@ -42,15 +42,15 @@ module Store
         if @media_type_mappings.key?(norm_val)
           @media_type_mappings[norm_val]
         else
-          @process.warn(%Q{Could not find a media type (subclass) of "#{norm_val}"}) unless
+          @process.warn(%Q{Could not find a media type (subcategory) of "#{norm_val}"}) unless
             @missing_media_types.key?(norm_val)
           @missing_media_types[norm_val] = true
           nil
         end
       @models[:medium][:original_type] = norm_val
       @process.debug("Set original_type to #{norm_val}") if field.debugging
-      @models[:medium][:subclass] = type
-      @process.debug("Set subclass to #{type}") if field.debugging
+      @models[:medium][:subcategory] = type
+      @process.debug("Set subcategory to #{type}") if field.debugging
       return unless type == :article
 
       @models[:medium][:is_article] = true
@@ -58,7 +58,7 @@ module Store
     end
 
     # http://rs.tdwg.org/audubon_core/subtype
-    # Sets format, and *possibly* subclass, if one is strictly inferred. Best to set subclass with to_media_type
+    # Sets format, and *possibly* subcategory, if one is strictly inferred. Best to set subcategory with to_media_type
     def to_media_subtype(field, val)
       @models[:medium] ||= {}
       @media_subtype_mappings ||= {
@@ -80,7 +80,7 @@ module Store
         'map' => :map_image,
         'map_image' => :map_image
       }
-      norm_val = fix_subtype_val(val.downcase, @models[:medium][:subclass])
+      norm_val = fix_subtype_val(val.downcase, @models[:medium][:subcategory])
       type = if @media_subtype_mappings.key?(norm_val)
                @media_subtype_mappings[norm_val]
              else
@@ -92,8 +92,8 @@ module Store
       @models[:medium][:original_format] = norm_val
       @process.debug("Set medium original_format to #{norm_val}") if field.debugging
       if type == :map_image
-        @models[:medium][:subclass] = type # Maps are a SUBCLASS in this code, but were a "format" in v2...
-        @process.debug("Set medium subclass to #{type}") if field.debugging
+        @models[:medium][:subcategory] = type # Maps are a SUBCLASS in this code, but were a "format" in v2...
+        @process.debug("Set medium subcategory to #{type}") if field.debugging
       else
         @models[:medium][:format] = type
         @process.debug("Set medium format to #{type}") if field.debugging
@@ -213,13 +213,13 @@ module Store
       remove_emojis(val)
     end
 
-    def fix_subtype_val(val, subclass)
+    def fix_subtype_val(val, subcategory)
       fixed_val = val
 
       if val == 'application/ogg'
-        if subclass == :video
+        if subcategory == :video
           fixed_val = 'video/ogg'
-        elsif subclass == :sound
+        elsif subcategory == :sound
           fixed_val = 'audio/ogg'
         end
       end

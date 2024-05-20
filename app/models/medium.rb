@@ -15,7 +15,7 @@ class Medium < ApplicationRecord
 
 
   # NOTE: these MUST be kept in sync with the eol_website codebase! Be careful. Sorry for the conflation.
-  enum subclass: %i[image video sound map_image js_map]
+  enum subcategory: %i[image video sound map_image js_map]
   enum format: {
     jpg: 0,
     youtube: 1,
@@ -200,7 +200,7 @@ class Medium < ApplicationRecord
   end
 
   def safe_name
-    name.blank? ? "#{subclass.titleize} of #{node.canonical}" : name
+    name.blank? ? "#{subcategory.titleize} of #{node.canonical}" : name
   end
 
   def download_raw_data

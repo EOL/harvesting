@@ -4,7 +4,7 @@
 - else
   = image_tag("#{root_url}#{@medium.base_url}.260x190.jpg")
 .ui.list
-  - %i[guid resource_pk unmodified_url name_verbatim name source_page_url source_url base_url rights_statement usage_statement sizes subclass w h crop_x_pct crop_y_pct crop_w_pct crop_h_pct owner description_verbatim description].each do |field|
+  - %i[guid resource_pk unmodified_url name_verbatim name source_page_url source_url base_url rights_statement usage_statement sizes subcategory w h crop_x_pct crop_y_pct crop_w_pct crop_h_pct owner description_verbatim description].each do |field|
     .item
       %strong= t("media.fields.#{field}")
       - if field.to_s =~ /_url$/
