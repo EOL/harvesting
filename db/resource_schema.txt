@@ -87,7 +87,7 @@ media:
   string:   usage_statement
   string:   bibliographic_citation_pk
   string:   language_code_verbatim
-  integer:  subclass
+  integer:  subcategory
   integer:  resource_id
   integer:  harvest_id
   integer:  license_id (normalized)

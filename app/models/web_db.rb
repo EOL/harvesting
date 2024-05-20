@@ -56,8 +56,7 @@ class WebDb < ApplicationRecord
       rank = full_rank.downcase
       return nil if rank.blank?
       return @ranks[rank] if @ranks.key?(rank)
-      process.warn("Encountered new rank, please ensure there are handlers for it: #{rank}")
-      @ranks[rank] = raw_create_rank(rank) # NOTE this is NOT #raw_create, q.v..
+      process.warn("Encountered new rank, THIS WILL NOT WORK unless there are handlers for it: #{rank}")
     end
 
     def role(full_role, process)
@@ -167,13 +166,6 @@ class WebDb < ApplicationRecord
       return 0 if val.is_a? FalseClass
 
       "'#{val.to_s.gsub(/'/, "''")}'"
-    end
-
-    # Ranks need to be updated as soon as they are inserted, argh...
-    def raw_create_rank(name)
-      id = raw_create('ranks', name: name)
-      connection.exec_update("UPDATE ranks SET treat_as = #{id} WHERE ID = #{id}", 'SQL', [id, id])
-      id
     end
 
     def map_ids(table, field, options = {})

@@ -3,7 +3,7 @@ json.current_page @media.current_page
 json.media @media do |medium|
   # TODO: make sure name_verbatim and description_verbatim have at least been copied...
   json.extract! medium,
-    *%i[guid resource_pk subclass format owner source_url name description unmodified_url
+    *%i[guid resource_pk subcategory format owner source_url name description unmodified_url
         source_page_url rights_statement usage_statement sizes location_id bibliographic_citation_id]
 
   json.page_id medium.node&.page_id # SOMETIMES, there's no node with this resource_pk! TODO: handle during harvest.
