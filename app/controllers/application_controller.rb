@@ -1,5 +1,5 @@
 class ApplicationController < ActionController::Base
-  include Pundit::Authorization
+  include Pundit # ::Authorization  <-- doesn't work, even though there's a message saying it's required. Sigh.
 
   protect_from_forgery with: :null_session
 
