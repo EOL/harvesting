@@ -1,4 +1,5 @@
 class Field < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :format, inverse_of: :fields
 
   acts_as_list scope: :format

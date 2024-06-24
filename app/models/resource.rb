@@ -1,4 +1,5 @@
 class Resource < ApplicationRecord
+  establish_connection Rails.env.to_sym
   @logfile_name = 'process.log'
   @lockfile_name = 'harvest.lock'
   @unmatched_file_name = 'unmatched_nodes.txt'
@@ -466,7 +467,7 @@ class Resource < ApplicationRecord
     WebDB.change_resource_id(id, new_id)
     Resource.where(id: id).update_all(id: new_id)
     id = new_id
-    WebDb.update_resource(self)
+    PublishingDb.update_resource(self)
     Node.where(resource_id: new_id).in_batches { |batch| batch.reindex }
     self
   end

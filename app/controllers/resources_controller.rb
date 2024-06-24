@@ -104,7 +104,7 @@ class ResourcesController < ApplicationController
       @resource.change_abbr(resource_params['abbr'])
     end
     if @resource.update(resource_params)
-      resp = WebDb.update_resource(@resource)
+      resp = PublishingDb.update_resource(@resource)
       flash[:notice] = I18n.t('resources.flash.updated', name: @resource.name, path: resource_path(@resource))
       flash[:notice] += " (#{resp})" unless resp.blank?
       redirect_to @resource

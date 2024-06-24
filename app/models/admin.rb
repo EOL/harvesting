@@ -48,7 +48,7 @@ class Admin
         raise e if tried
         tried = true
         ActiveRecord::Base.connection.reconnect!
-        WebDb.connection.reconnect!
+        PublishingDb.connection.reconnect!
         retry
       end
     end

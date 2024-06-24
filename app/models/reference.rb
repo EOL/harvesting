@@ -1,4 +1,5 @@
 class Reference < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource, inverse_of: :references
   has_many :nodes_references, inverse_of: :reference
   # has_many :article_references, inverse_of: :reference

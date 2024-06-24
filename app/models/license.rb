@@ -1,4 +1,5 @@
 class License < ApplicationRecord
+  establish_connection Rails.env.to_sym
   has_many :resources, inverse_of: :license
   has_many :media, inverse_of: :license
   has_many :articles, inverse_of: :license

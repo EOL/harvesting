@@ -1,4 +1,5 @@
 class Term < ApplicationRecord
+  establish_connection Rails.env.to_sym
   enum used_for: %i[unknown measurement association value metadata]
 
   def self.uri?(uri)

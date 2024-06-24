@@ -1,6 +1,7 @@
 # Each resource needs to have several file formats defined... e.g.: taxa, agents, refs, etc. ...This model represents
 # those file format definitions.
 class Format < ApplicationRecord
+  establish_connection Rails.env.to_sym
   default_scope { order(represents: :asc) }
 
   has_many :fields, -> { order(position: :asc) }, inverse_of: :format, dependent: :delete_all

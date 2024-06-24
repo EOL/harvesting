@@ -1,5 +1,6 @@
 # Just a unique identifier to help us build a single place to store images that we download from URLs.
 class DownloadedUrl < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :medium
   before_save :hash_url
 

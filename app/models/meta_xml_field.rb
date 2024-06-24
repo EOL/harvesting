@@ -1,5 +1,6 @@
 # See Flattener class.
 class MetaXmlField < ApplicationRecord
+  establish_connection Rails.env.to_sym
   class << self
     def load
       filename = Rails.root.join('db', 'data', 'meta_analyzed.json')

@@ -1,4 +1,5 @@
 class Medium < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource, inverse_of: :media
   belongs_to :harvest, inverse_of: :media
   belongs_to :node, inverse_of: :media

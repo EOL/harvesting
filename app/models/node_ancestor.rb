@@ -1,5 +1,6 @@
 # See Flattener class.
 class NodeAncestor < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource, inverse_of: :node_ancestors
   belongs_to :node, inverse_of: :node_ancestors
   belongs_to :ancestor, class_name: 'Node', inverse_of: :descendants

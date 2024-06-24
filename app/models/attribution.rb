@@ -2,6 +2,7 @@
 # the name, but, as represented (with a role attached), these really are *attributions*, not "agents". Someday perhaps
 # we'll abstract the two, but not now.
 class Attribution < ApplicationRecord
+  establish_connection Rails.env.to_sym
   has_many :content_attributions, inverse_of: :attribution
 
   # TODO: this is lame. Just publish agents and store them over there, so we can render them properly.

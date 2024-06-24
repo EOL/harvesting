@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  establish_connection Rails.env.to_sym
   # Removed :registerable because we don't want people signing up without "permission".
   devise :confirmable, :database_authenticatable, :lockable, :recoverable, :rememberable, :trackable, :validatable
   validates :email, presence: true

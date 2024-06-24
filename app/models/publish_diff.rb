@@ -1,4 +1,5 @@
 class PublishDiff < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource
   validates_presence_of :resource_id, :t1, :t2, :status
 

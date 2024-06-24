@@ -1,5 +1,6 @@
 # An measurement formed by combining a 'measurment or fact' with an 'occurrence'.
 class Trait < ApplicationRecord
+  establish_connection Rails.env.to_sym
   # These are used during the CSV-writing stage of pre-publishing:
   attr_accessor :citation, :method, :remarks, :sample_size
 

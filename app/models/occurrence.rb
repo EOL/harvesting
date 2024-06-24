@@ -2,6 +2,7 @@
 # this is used as a holding-place for information which we'll use to build
 # traits, later.
 class Occurrence < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :harvest, inverse_of: :occurrences
   belongs_to :node, inverse_of: :occurrences
 

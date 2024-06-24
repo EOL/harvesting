@@ -1,4 +1,5 @@
 class Harvest < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource, inverse_of: :harvests
   has_many :nodes, inverse_of: :harvest # NOTE: see #remove_content...
   has_many :scientific_names, through: :nodes, source: 'scientific_names'

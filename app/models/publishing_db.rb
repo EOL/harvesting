@@ -1,14 +1,8 @@
 # For connecting to the website Database. NOTE: This code is not especially concerned about SQL-injection, as the data
 # are all either from a trusted database or from a trusted resource file. NOTHING HERE COMES FROM USERS.
-class WebDb < ApplicationRecord
+class PublishingDb < ApplicationRecord
   self.abstract_class = true
-  cfg = ApplicationRecord.configurations[Rails.env]
-  cfg['database'] = Rails.application.secrets.web_db[:database]
-  cfg['username'] = Rails.application.secrets.web_db[:username]
-  cfg['password'] = Rails.application.secrets.web_db[:password]
-  cfg['host']     = Rails.application.secrets.web_db[:host]
-  cfg['port']     = Rails.application.secrets.web_db[:port]
-  establish_connection cfg
+  establish_connection :publishing
   @types = %w[referent node identifier scientific_name node_ancestor vernacular article medium image_info page_content
               reference attribution content_section bibliographic_citation]
   @page_columns_to_update =

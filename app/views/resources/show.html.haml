@@ -2,7 +2,7 @@
   %h1= @resource.name
 .ui.tiny.attached.menu
   -# TODO: HACK! We need real secrets for this to work, argh:
-  - id = WebDb.resource_id(@resource) rescue ''
+  - id = PublishingDb.resource_id(@resource) rescue ''
   - base = Rails.application.secrets.host[:url] || 'http://eol.org'
   .item= link_to(t("resources.actions.publishing_side"), "#{base}/resources/#{id}")
   - if policy(@resource).update?

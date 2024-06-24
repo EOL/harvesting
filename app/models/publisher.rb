@@ -78,7 +78,7 @@ class Publisher
   def by_resource
     @process.run_step('overall_tsv_creation') do
       learn_resource_publishing_id
-      WebDb.init
+      PublishingDb.init
       create_tsv
     end
     @process.info('Done. Check your files:')
@@ -98,7 +98,7 @@ class Publisher
   end
 
   def learn_resource_publishing_id
-    @web_resource_id = WebDb.resource_id(@resource)
+    @web_resource_id = PublishingDb.resource_id(@resource)
   end
 
   def create_tsv
@@ -176,7 +176,7 @@ class Publisher
     web_node.canonical_form = clean_values(node.safe_canonical)
     web_node.scientific_name = clean_values(node.safe_scientific)
     web_node.has_breadcrumb = clean_values(!node.no_landmark?)
-    web_node.rank_id = WebDb.rank(node.rank, @process)
+    web_node.rank_id = PublishingDb.rank(node.rank, @process)
     web_node.is_hidden = 0
     web_node.created_at = Time.now.to_s(:db)
     web_node.updated_at = Time.now.to_s(:db)
@@ -227,7 +227,7 @@ class Publisher
       attribution.content_resource_fk = clean_values(content_attribution.content_resource_fk)
       attribution.content_type = content_attribution.content_type
       attribution.content_id = content_attribution.content_id # NOTE this is the HARVEST DB ID. It will be replaced.
-      attribution.role_id = WebDb.role(content_attribution.attribution.role, @process)
+      attribution.role_id = PublishingDb.role(content_attribution.attribution.role, @process)
       attribution.url = content_attribution.attribution.sanitize_url
       @attributions << attribution
     end
@@ -381,7 +381,7 @@ class Publisher
     name_struct.page_id = node.page_id
     name_struct.harv_db_id = name_model.id
     name_struct.canonical_form = clean_values(name_model.canonical_italicized)
-    name_struct.taxonomic_status_id = WebDb.taxonomic_status(name_model.taxonomic_status_verbatim&.downcase, @process)
+    name_struct.taxonomic_status_id = PublishingDb.taxonomic_status(name_model.taxonomic_status_verbatim&.downcase, @process)
     name_struct.is_preferred = clean_values(name_model.is_preferred)
     name_struct.created_at = Time.now.to_s(:db)
     name_struct.updated_at = Time.now.to_s(:db)
@@ -472,8 +472,8 @@ class Publisher
     web_medium.description = clean_values(medium.description_verbatim) if medium.description.blank?
     web_medium.base_url = fixed_medium_url(medium, 'base')
     web_medium.unmodified_url = fixed_medium_url(medium, 'unmodified')
-    web_medium.license_id = WebDb.license(medium.license&.source_url, @process)
-    web_medium.language_id = WebDb.language(medium.language, @process)
+    web_medium.license_id = PublishingDb.license(medium.license&.source_url, @process)
+    web_medium.language_id = PublishingDb.language(medium.language, @process)
     web_medium
   end
 
@@ -487,8 +487,8 @@ class Publisher
     web_article.created_at = Time.now.to_s(:db)
     web_article.updated_at = Time.now.to_s(:db)
     web_article.resource_id = @web_resource_id
-    web_article.license_id = WebDb.license(article.license&.source_url, @process)
-    web_article.language_id = WebDb.language(article.language, @process)
+    web_article.license_id = PublishingDb.license(article.license&.source_url, @process)
+    web_article.language_id = PublishingDb.language(article.language, @process)
     web_article
   end
 
@@ -730,7 +730,7 @@ class Publisher
     web_vern.page_id = node.page_id
     web_vern.harv_db_id = vernacular.id
     web_vern.resource_id = @web_resource_id
-    web_vern.language_id = WebDb.language(vernacular.language, @process)
+    web_vern.language_id = PublishingDb.language(vernacular.language, @process)
     web_vern.created_at = Time.now.to_s(:db)
     web_vern.updated_at = Time.now.to_s(:db)
     web_vern.is_preferred = 0 # This will be fixed by the code mentioned above, run on the website.
@@ -762,7 +762,7 @@ class Publisher
   end
 
   def remove_existing_pub_files
-    WebDb.types.each do |type|
+    PublishingDb.types.each do |type|
       remove_file(@resource.publish_table_path(type.pluralize))
     end
 

@@ -1,4 +1,5 @@
 class Article < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource, inverse_of: :articles
   belongs_to :harvest, inverse_of: :articles
   belongs_to :node, inverse_of: :articles, optional: true

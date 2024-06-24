@@ -1,4 +1,5 @@
 class ScientificName < ApplicationRecord
+  establish_connection Rails.env.to_sym
   belongs_to :resource, inverse_of: :scientific_names
   belongs_to :node, inverse_of: :scientific_names
   belongs_to :dataset, inverse_of: :scientific_names

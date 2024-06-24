@@ -11,6 +11,14 @@ default: &default
   password: <%= Rails.application.secrets.db[:password] || "" %>
   socket: /tmp/mysql.sock
 
+publishing:
+  <<: *common
+  host: <%= Rails.application.secrets.publishing_db[:host] %>
+  port: <%= Rails.application.secrets.publishing_db[:port] %>
+  database: <%= Rails.application.secrets.publishing_db[:database] %>
+  username: <%= Rails.application.secrets.publishing_db[:username] %>
+  password: <%= Rails.application.secrets.publishing_db[:password] %>
+
 development:
   <<: *default
   database: harvester_development
