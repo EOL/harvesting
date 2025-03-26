@@ -43,6 +43,8 @@ gem 'lograge', '~> 0.11'
 gem 'mysql2', '0.5.3'
 # Used in parsing XML for new resources:
 gem 'nokogiri', '~> 1.13'
+# Logging:
+gem 'prometheus-client', '~> 4.2'
 # Debugging:
 gem 'pry-rails', '~> 0.3'
 # Authorization:

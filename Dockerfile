@@ -39,6 +39,8 @@ RUN bundle install --jobs 10 --retry 5
 
 RUN ln -s /tmp /app/tmp
 
+RUN chmod +x /app/bin/entrypoint.sh
+
 EXPOSE 3000
 
 ENTRYPOINT ["/app/bin/entrypoint.sh"]
