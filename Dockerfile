@@ -32,7 +32,7 @@ COPY config/imagemagick_policy.xml /etc/ImageMagick-6/policy.xml
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY Gemfile ./
 
-RUN gem install bundler:2.1.4
+RUN gem install bundler:2.6.6
 
 RUN bundle config set without 'test development staging'
 RUN bundle install --jobs 10 --retry 5
