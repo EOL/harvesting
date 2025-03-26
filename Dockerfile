@@ -1,5 +1,5 @@
-FROM ruby:2.6.8-bullseye
-MAINTAINER Jeremy Rice <jrice@eol.org>
+FROM ruby:2.7.8-bullseye
+LABEL Maintainer="Jeremy Rice <jrice@eol.org>"
 LABEL Description="EOL Harvester"
 
 ENV LAST_FULL_REBUILD 2021-11-03
