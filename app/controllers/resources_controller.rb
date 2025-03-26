@@ -24,7 +24,7 @@ class ResourcesController < ApplicationController
 
   def show
     @resource = Resource.find(params[:id])
-    RESOURCE_REQUESTS.increment(abbr: @resource.abbr)
+    RESOURCE_REQUESTS.increment
     @formats = Format.where(resource_id: @resource.id)
     respond_to do |fmt|
       fmt.html do
