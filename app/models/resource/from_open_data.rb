@@ -110,7 +110,7 @@ class Resource
       require 'open-uri'
       File.open(path, 'wb') do |file|
         # TODO: we should probably move this to Net::HTTP.open or URI.open, which is more secure. Or just use wget.
-        open(link, 'rb') do |input|
+        URI.open(link, 'rb') do |input|
           file.write(input.read)
         end
       end
