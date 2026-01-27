@@ -3,7 +3,7 @@ GIT
   revision: c200bbd9feb6ce2199995fed860aa6918699380d
   branch: main
   specs:
-    eol_terms (0.9.96)
+    eol_terms (0.9.86)
       yaml
 
 GEM
