@@ -487,41 +487,11 @@ class Resource < ApplicationRecord
     update_attribute(:failed_downloaded_media_count, 0)
     update_attribute(:nodes_count, 0)
     update_attribute(:root_nodes_count, 0)
-    remove_from_searchkick
-    Searchkick.callbacks(false) do
-      remove_type(Node)
-    end
+    remove_type(Node)
     remove_type_via_resource(NodeAncestor) # NOTE: This is BY FAR the longest step, still. Sigh.
     harvests.destroy_all
     delayed_jobs.delete_all
     unharvested!
-  end
-
-  def remove_from_searchkick
-    nodes = get_searchkick_nodes
-    while(nodes.count > 0)
-      begin
-        log_info("Starting batch with ID #{nodes.first.id}...")
-        Node.searchkick_index.bulk_delete(nodes)
-      rescue
-        log_info('Failed! ...Sleeping for a moment...')
-        sleep(60)
-        log_info('Re-trying...')
-        nodes.each do |node|
-          begin
-            Node.searchkick_index.bulk_delete([node]) # Using same method for consistency
-          rescue => e
-            raise "FAILED removing ElasticSearch index for Node #{node.id}: #{e.message}"
-          end
-        end
-      ensure
-        nodes = get_searchkick_nodes
-      end
-    end
-  end
-
-  def get_searchkick_nodes
-    Node.search('*', where: { resource_id: id }, limit: 5000)
   end
 
   def remove_media_from_disk

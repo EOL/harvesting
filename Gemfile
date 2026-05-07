@@ -53,9 +53,6 @@ gem 'pundit', '~> 2.1'
 gem 'rmagick', '~> 4.2'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 6.0'
-# ElasticSearch:
-gem 'searchkick', '~> 4.4' # Depends on elasticsearch, which needs to be running our version.
-gem 'elasticsearch', '~> 6.8' # Needs to be in sync with the version of ES you are running.
 # Making forms simpler:
 gem 'simple_form', '~> 5.1'
 # Turbolinks makes following links in your web application faster. Read more:

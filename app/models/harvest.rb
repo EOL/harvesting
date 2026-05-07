@@ -91,10 +91,7 @@ class Harvest < ApplicationRecord
     # NOTE: halved the size of these batches in Apr 2019 because of timeouts.
     nodes.pluck(:id).in_groups_of(2500, false) do |batch|
       remove_ancestors_natively(batch)
-      Node.remove_indexes(id: batch)
-      Searchkick.callbacks(false) do
-        remove_nodes_natively(batch)
-      end
+      remove_nodes_natively(batch)
     end
     update_attribute(:completed_at, Time.now) unless completed_at
     begin

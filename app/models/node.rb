@@ -2,7 +2,6 @@
 # by the resource.
 class Node < ApplicationRecord
   establish_connection Rails.env.to_sym
-  searchkick
 
   belongs_to :parent, class_name: 'Node', inverse_of: :children
   belongs_to :resource, inverse_of: :nodes
@@ -26,11 +25,6 @@ class Node < ApplicationRecord
   scope :root, -> { where('parent_id IS NULL') }
   scope :harvested, -> { where(removed_by_harvest_id: nil) }
 
-  # NOTE: special scope used by Searchkick
-  scope :search_import, -> {
-    where('page_id IS NOT NULL').includes(:parent, :scientific_name, :scientific_names, :children, node_ancestors: :ancestor)
-  }
-
   # Denotes the context in which the (non-zero) landmark ID should be used. Additional description:
   # https://github.com/EOL/eol_website/issues/5
   enum landmark: %i[no_landmark minimal abbreviated extended full]
@@ -38,12 +32,6 @@ class Node < ApplicationRecord
   class << self
     def native_virus
       @native_virus ||= where(resource_id: Resource.native.id, canonical: 'Viruses') # Or we could look for page_id: 5006 ... but hey.
-    end
-
-    def remove_indexes(filter)
-      Node.where(filter).find_each do |node|
-        Node.searchkick_index.remove(node)
-      end
     end
 
     def re_parse_ranks
@@ -55,26 +43,6 @@ class Node < ApplicationRecord
         end
       end
     end
-  end
-
-  # NOTE: special method used by Searchkick
-  def search_data
-    {
-      id: id,
-      resource_id: resource_id,
-      page_id: page_id,
-      authors: authors,
-      synonyms: scientific_names.map(&:canonical),
-      synonym_authors: all_authors,
-      canonical: canonical,
-      ancestor_page_ids: ancestor_page_ids,
-      children: child_names,
-      is_hybrid: scientific_name.try(:hybrid?),
-      is_virus: scientific_name.try(:virus?),
-      is_surrogate: scientific_name.try(:surrogate?),
-      rank: rank,
-      ancestor_ranks: ancestor_ranks
-    }
   end
 
   def as_json(*)

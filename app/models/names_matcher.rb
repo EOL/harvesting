@@ -320,12 +320,10 @@ class NamesMatcher
     end
     @matching_log << @strategies[opts[:strategy]]
     results = send(@strategies[opts[:strategy]], node)
-    # TODO - After Searchkick upgrade: if results.total_count == 1
     if results.size == 1
       @matching_log << "matched node #{results.first[:id]} (Resource #{results.first[:resource_id]})"
       return save_match(node, results.first[:page_id], 'single hit')
     end
-    # TODO - After Searchkick upgrade: return more_than_one_match(node, results, opts) if results.total_count > 1
     return more_than_one_match(node, results, opts) if results.size > 1
     return unmapped(node, 'virus') if node.scientific_name.virus?
     opts[:strategy] += 1

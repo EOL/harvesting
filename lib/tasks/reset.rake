@@ -8,7 +8,6 @@ namespace :reset do
       Rake::Task['db:drop'].invoke
       Rake::Task['db:create'].invoke
       Rake::Task['db:migrate'].invoke
-      Rake::Task['searchkick:reindex:all'].invoke
       Rake::Task['db:seed'].invoke
     end
 
@@ -32,7 +31,6 @@ namespace :reset do
   task first: :environment do
     Rake::Task['log:clear'].invoke
     Rake::Task['db:reset'].invoke
-    Rake::Task['searchkick:reindex:all'].invoke
     ResourceHarvester.new(Resource.native).start
   end
 

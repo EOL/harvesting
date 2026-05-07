@@ -69,7 +69,6 @@ class ResourceHarvester
   # I am trying to re-arrange things. You MUST now call this wrapped in a Resource.with_lock:
   def start
     @process = @resource.logged_process
-    Searchkick.disable_callbacks
     begin
       fast_forward = @harvest && !@harvest.stage.nil?
       Harvest.stages.each_key do |stage|
@@ -90,7 +89,6 @@ class ResourceHarvester
       @resource&.stop_adding_media_jobs
       log_err(e)
     ensure
-      Searchkick.enable_callbacks
       time = @process.exit
       @harvest.update_attribute(:time_in_minutes, (time / 60.0).ceil) unless fast_forward
     end
@@ -681,9 +679,7 @@ class ResourceHarvester
 
   def reindex_search
     # TODO: I don't think we *need* to enable/disable, here... but I'm being safe:
-    Searchkick.enable_callbacks
     Node.where(harvest_id: @harvest.id).reindex
-    Searchkick.disable_callbacks
     @harvest.update_attribute(:indexed_at, Time.now)
   end
 
